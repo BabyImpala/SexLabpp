@@ -304,7 +304,7 @@ float _ExpressionDelay
 
 bool property IsSilent hidden
 	bool function get()
-		return !_Voice || _IsForcedSilent || OpenMouth
+		return !_Voice || _IsForcedSilent
 	endFunction
 endProperty
 
@@ -1446,7 +1446,7 @@ Function Initialize()
 	_CanOrgasm = true
 	_hasOrgasm = false
 	_AllowRedress = true
-	ForceOpenMouth	= false
+	ForceOpenMouth = false
 	; Integers
 	_sex = -1
 	_livestatus = 0

@@ -1585,10 +1585,10 @@ Function SortAliasesToPositions()
 EndFunction
 
 Sound Function GetAliasSound(sslActorAlias akThis, String asVoice, int aiStrength)
-	return sslBaseVoice.GetSoundObject(asVoice, aiStrength, _ContextTags, _ActiveScene, _ActiveStage, ActorAlias.Find(akThis))
+	return sslBaseVoice.GetSoundObject(asVoice, aiStrength, _ActiveScene, ActorAlias.Find(akThis), akThis.OpenMouth)
 EndFunction
 Sound Function GetAliasOrgasmSound(sslActorAlias akThis, String asVoice)
-	return sslBaseVoice.GetOrgasmSound(asVoice, _ContextTags, _ActiveScene, _ActiveStage, ActorAlias.Find(akThis))
+	return sslBaseVoice.GetOrgasmSound(asVoice, _ActiveScene, ActorAlias.Find(akThis), true, akThis.OpenMouth)
 EndFunction
 
 ; ------------------------------------------------------- ;
