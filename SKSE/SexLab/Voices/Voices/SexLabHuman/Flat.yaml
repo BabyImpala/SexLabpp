@@ -1,0 +1,22 @@
+Name: "[SexLab] Flat"
+
+Actor:
+  Sex: Female
+  Race: Human
+  Pitch: Normal
+
+Tags:
+  - female
+  - quiet
+  - flat
+
+Voices:
+  0xC7A8A|SexLab.esm: 0
+  0xC7A8C|SexLab.esm: 75
+Orgasm: 0xC7A8E|SexLab.esm
+
+Extra:
+  - Voices:
+      0xC7A8D|SexLab.esm: 0
+    Conditions:
+      Muffled: true
