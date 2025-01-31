@@ -46,7 +46,7 @@ bool function HasRaceID(string RaceKey, string RaceID) global
   return SexLabRegistry.MapRaceKeyToID(RaceKey) > 0
 EndFunction
 bool function HasRaceKey(string RaceKey) global
-  return SexLabRegistry.GetAllRaceKeys(false).Find(RaceKey) > 0
+  return GetAllRaceKeys().Find(RaceKey) > 0
 EndFunction
 bool function ClearRaceKey(string RaceKey) global
   return true
