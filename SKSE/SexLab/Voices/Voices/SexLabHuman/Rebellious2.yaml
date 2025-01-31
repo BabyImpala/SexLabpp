@@ -20,11 +20,3 @@ Extra:
     Orgasm: 0xCA99C|SexLab.esm
     Conditions:
       Muffled: true
-  - Voices:
-      - 0xCA96A|SexLab.esm: 0
-    Conditions:
-      Submissive: true
-  - Voices:
-      - 0xCA965|SexLab.esm: 0
-    Conditions:
-      Aggressive: true
