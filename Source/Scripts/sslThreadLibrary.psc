@@ -92,22 +92,23 @@ EndFunction
 /;
 
 Actor[] Function SortActors(Actor[] Positions, bool FemaleFirst = true)
-  int[] sexes = sslActorLibrary.GetSexAll(Positions)
+  Actor[] retVal = PapyrusUtil.RemoveActor(Positions, none)
+  int[] sexes = sslActorLibrary.GetSexAll(retVal)
   int i = 1
-  While(i < Positions.Length)
-    Actor it = Positions[i]
+  While(i < retVal.Length)
+    Actor it = retVal[i]
     int _it = sexes[i]
     int n = i - 1
     While(n >= 0 && !IsLesserGender(sexes[n], _it, FemaleFirst))
-      Positions[n + 1] = Positions[n]
+      retVal[n + 1] = retVal[n]
       sexes[n + 1] = sexes[n]
       n -= 1
     EndWhile
-    Positions[n + 1] = it
+    retVal[n + 1] = it
     sexes[n + 1] = _it
     i += 1
   EndWhile
-  return Positions
+  return retVal
 EndFunction
 bool Function IsLesserGender(int i, int n, bool abFemaleFirst)
   If (n == i)
