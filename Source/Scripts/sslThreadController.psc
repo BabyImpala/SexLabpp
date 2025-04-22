@@ -76,15 +76,15 @@ Event MenuEvent(string asEventName, string asStringArg, float afNumArg, form akS
 	If(asEventName == "SL_StageAdvance")
 		PlayNextImpl(asStringArg)
 	ElseIf(asEventName == "SL_SetSpeed")
-	If (!sslSystemConfig.HasAnimSpeedSE())
-		sslLog.Log("SetSpeed: AnimSpeedSE not found")
-		return
-	EndIf
-	int i = 0
-	While (i < Positions.Length)
-		sslAnimSpeedHelper.SetAnimationSpeed(Positions[i], afNumArg, 0.5, 0)
-		i += 1
-	EndWhile
+		If (!sslSystemConfig.HasAnimSpeedSE())
+			sslLog.Log("SetSpeed: AnimSpeedSE not found")
+			return
+		EndIf
+		int i = 0
+		While (i < ActorAlias.Length)
+			ActorAlias[i].UpdateBaseSpeed(afNumArg)
+			i += 1
+		EndWhile
 	ElseIf(asEventName == "SL_EndScene")
 		EndAnimation()
 	EndIf
@@ -198,7 +198,7 @@ Function AdjustCoordinate(bool abBackwards, bool abStageOnly, float afValue, int
 	While(true)
 		PlayHotkeyFX(0, abBackwards)
 		SexLabRegistry.UpdateOffset(scene_, stage_, AdjustPos, afValue, aiOffsetType)
-		; UpdatePlacement(AdjustPos, AdjustAlias)
+		; UpdatePlacement(AdjustAlias.GetActorReference())
 		Utility.Wait(0.1)
 		If(!Input.IsKeyPressed(Hotkeys[aiKeyIdx]))
 			UpdateTimer(5)

@@ -147,13 +147,12 @@ EndFunction
 ; --- Voice                                           --- ;
 ; ------------------------------------------------------- ;
 
-String Function GetActorVoice()
-	return _Voice
-EndFUnction
+String Function GetActorVoice() native ; TODO: impl
 
+Function SetActorVoiceImpl(String asNewVoice) native ; TODO: impl
 Function SetActorVoice(String asNewVoice, bool abForceSilent)
+	SetActorVoiceImpl(asNewVoice)
 	_IsForcedSilent = abForceSilent
-	_Voice = asNewVoice
 EndFunction
 
 bool Function IsSilent()
@@ -164,12 +163,11 @@ EndFunction
 ; --- Expression                                      --- ;
 ; ------------------------------------------------------- ;
 
-String Function GetActorExpression()
-	return _Expression
-EndFunction
+String Function GetActorExpression() native	; TODO: impl
 
+Function SetActorExpressionImpl(String asExpression) native ; TODO: impl
 Function SetActorExpression(String asExpression)
-	_Expression = asExpression
+	SetActorExpressionImpl(asExpression)
 	TryRefreshExpression()
 EndFunction
 
@@ -190,12 +188,23 @@ Function SetPathing(int aiPathingFlag)
 EndFunction
 
 ; ------------------------------------------------------- ;
-; --- AnimSpeed --									--- ;
+; --- AnimSpeed                                       --- ;
 ; ------------------------------------------------------- ;
-Function SetAnimSpeedByEnjoyment()
-	Error("Called from invalid state", "SetAnimSpeedByEnjoyment()")
+
+Function UpdateBaseSpeed(float afBaseSpeed)
+	_AnimationSpeedBase = afBaseSpeed
 EndFunction
 
+Function UpdateAnimationSpeed()
+	If (!sslSystemConfig.HasAnimSpeedSE())
+		return
+	EndIf
+	float animSpeed = _AnimationSpeedBase
+	If (_Config.SetAnimSpeedByEnjoyment)
+		animSpeed *= PapyrusUtil.ClampFloat((GetFullEnjoyment() as float) / 90, 0.8, 1.2)
+	EndIf
+	sslAnimSpeedHelper.SetAnimationSpeed(_ActorRef, animSpeed, UPDATE_INTERVAL / 2, 0)
+EndFunction
 
 ; *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-* ;
 ; ----------------------------------------------------------------------------- ;
@@ -251,6 +260,8 @@ Actor _killer
 int _AnimVarIsNPC
 bool _AnimVarbHumanoidFootIKDisable
 
+float _AnimationSpeedBase
+
 ; Center
 ObjectReference _myMarker
 
@@ -296,7 +307,6 @@ Form _Strapon			; Strapon used by the animation
 Form _HadStrapon	; Strapon worn prior to animation start
 
 ; Voice
-String _Voice
 bool _IsForcedSilent
 float _BaseDelay
 float _VoiceDelay
@@ -304,13 +314,11 @@ float _ExpressionDelay
 
 bool property IsSilent hidden
 	bool function get()
-		return !_Voice || _IsForcedSilent
+		return _IsForcedSilent || GetActorVoice() == ""
 	endFunction
 endProperty
 
 ; Expressions
-String _Expression
-
 bool Property ForceOpenMouth Auto Hidden
 bool Property OpenMouth
 	bool Function Get()
@@ -464,9 +472,6 @@ State Ready
 		; Delayed Initialization
 		_AnimVarIsNPC = _ActorRef.GetAnimationVariableInt("IsNPC")
 		_AnimVarbHumanoidFootIKDisable = _ActorRef.GetAnimationVariableBool("bHumanoidFootIKDisable")
-		If (!_IsForcedSilent && !_Voice)
-			_Voice = sslVoiceSlots.SelectVoice(_ActorRef)
-		EndIf
 		If (_sex <= 2)	; NPC: Strapon, Expression
 			If (_sex == 0)
 				_BaseDelay = _Config.MaleVoiceDelay
@@ -480,17 +485,6 @@ State Ready
 						_Strapon = _HadStrapon
 					EndIf
 				EndIf
-			EndIf
-			If (_Config.UseExpressions && !_Expression)
-				String[] expr
-				If (IsVictim())
-					expr = sslExpressionSlots.GetExpressionsByStatus(_ActorRef, 1)
-				ElseIf (IsAggressor())
-					expr = sslExpressionSlots.GetExpressionsByStatus(_ActorRef, 2)
-				Else
-					expr = sslExpressionSlots.GetExpressionsByStatus(_ActorRef, 0)
-				EndIf
-				_Expression = expr[Utility.RandomInt(0, expr.Length - 1)]
 			EndIf
 		Else	; Creature
 			_BaseDelay = 3.0
@@ -510,9 +504,9 @@ State Ready
 			return
 		EndIf
 		String LogInfo = ""
-		LogInfo += "Voice[" + _Voice + "] "
 		LogInfo += "Strapon[" + _Strapon + "] "
-		LogInfo += "Expression[" + _Expression + "] "
+		LogInfo += "Voice[" + GetActorVoice() + "] "
+		LogInfo += "Expression[" + GetActorExpression() + "]"
 		Log(LogInfo)
 	EndEvent
 
@@ -678,7 +672,7 @@ Form[] Function StripByData(int aiStripData, int[] aiDefaults, int[] aiOverwrite
 	And the "Playing" state, in this state actors are assumed in the animation and have voice logic and all applied to them
 /;
 
-float Property UpdateInterval = 0.250 AutoReadOnly Hidden
+float Property UPDATE_INTERVAL = 0.250 AutoReadOnly Hidden
 Int Property HoldBackKeyCode = 0x100 AutoReadOnly Hidden ; LMB
 
 float _LoopDelay
@@ -695,7 +689,7 @@ State Animating
 		_LoopLovenseDelay = 0
 		_LovenseGenital = false
 		_LovenseAnal = false
-		RegisterForSingleUpdate(UpdateInterval)
+		RegisterForSingleUpdate(UPDATE_INTERVAL)
 		If (_ActorRef == _PlayerRef)
 			RegisterForKey(HoldBackKeyCode)
 		EndIf
@@ -734,14 +728,12 @@ State Animating
 			_LoopEnjoymentDelay = 0
 			UpdateEffectiveEnjoymentCalculations()
 		EndIf
-		If (_Config.SetAnimSpeedByEnjoyment && sslSystemConfig.HasAnimSpeedSE())
-			SetAnimSpeedByEnjoyment()
-		EndIf
+		UpdateAnimationSpeed()
 		int strength = CalcReaction()
 		If (_LoopDelay >= _VoiceDelay && !IsSilent)
 			_LoopDelay = 0.0
 			bool lipsync = !OpenMouth && _Config.UseLipSync && _sex <= 2
-			Sound snd = _Thread.GetAliasSound(Self, _Voice, strength)
+			Sound snd = _Thread.GetAliasSound(Self, GetActorVoice(), strength)
 			sslBaseVoice.PlaySound(_ActorRef, snd, strength, lipsync)
 		EndIf
 		If (IsSeparateOrgasm())
@@ -774,20 +766,15 @@ State Animating
 				_LovenseAnal = LovenseAnal
 			EndIf
 		Else
-			_LoopLovenseDelay -= UpdateInterval
+			_LoopLovenseDelay -= UPDATE_INTERVAL
 		EndIf
 		RefreshExpressionEx(strength)
 		; Loop
-		_LoopDelay += UpdateInterval
-		_LoopEnjoymentDelay += UpdateInterval
-		_LoopContextCheckDelay += UpdateInterval
-		RegisterForSingleUpdate(UpdateInterval)
+		_LoopDelay += UPDATE_INTERVAL
+		_LoopEnjoymentDelay += UPDATE_INTERVAL
+		_LoopContextCheckDelay += UPDATE_INTERVAL
+		RegisterForSingleUpdate(UPDATE_INTERVAL)
 	EndEvent
-
-	Function SetAnimSpeedByEnjoyment() 
-		float _FullEnjoymentMOD = PapyrusUtil.ClampFloat((GetFullEnjoyment() as float) / 90, 0.8, 1.2)
-		sslAnimSpeedHelper.SetAnimationSpeedRelative(_ActorRef, _FullEnjoymentMOD, UpdateInterval, 0)
-	EndFunction
 
 	Function TryRefreshExpression()
 		RefreshExpression()
@@ -803,9 +790,10 @@ State Animating
 			sslBaseExpression.OpenMouth(_ActorRef)
 			Utility.Wait(0.7)
 		EndIf
-		If (_Expression && _livestatus == LIVESTATUS_ALIVE)
-			sslBaseExpression.ApplyExpression(_Expression, _ActorRef, afStrength)
-			Log("Expression? " + _Expression + "; Strength? " + afStrength + "; OpenMouth? " + OpenMouth, "sslBaseExpression.ApplyExpression()")
+		String expression = GetActorExpression()
+		If (expression && _Config.UseExpressions && _livestatus == LIVESTATUS_ALIVE)
+			sslBaseExpression.ApplyExpression(expression, _ActorRef, afStrength)
+			Log("Expression? " + expression + "; Strength? " + afStrength + "; OpenMouth? " + OpenMouth, "sslBaseExpression.ApplyExpression()")
 		EndIf
 	EndFunction
 
@@ -839,7 +827,7 @@ State Animating
 					_hasOrgasm = false
 					return
 				ElseIf (time - _lastHoldBack < GetHoldbackTimeWindow())
-					 ; value small cuz (_EnjoymentDelay/UpdateInterval == 6)
+					 ; value small cuz (_EnjoymentDelay/UPDATE_INTERVAL == 6)
 					 ; the boost in 3 secondds will be 0.24
 					_EnjFactor += 0.02
 					_hasOrgasm = false
@@ -864,7 +852,7 @@ State Animating
 				Game.ShakeCamera(none, _Config.ShakeStrength, _Config.ShakeStrength + 1.0)
 			EndIf
 			If (!IsSilent)
-				Sound snd = _Thread.GetAliasOrgasmSound(Self, _Voice)
+				Sound snd = _Thread.GetAliasOrgasmSound(Self, GetActorVoice())
 				PlayLouder(snd, _ActorRef, _Config.VoiceVolume)
 			EndIf
 			PlayLouder(_Config.OrgasmFX, _ActorRef, _Config.SFXVolume)
@@ -912,7 +900,7 @@ State Animating
 		; Arousal
 		float arousalScene = PapyrusUtil.ClampFloat(_FullEnjoyment as float, 0, 100)
 		SexlabStatistics.SetStatistic(_ActorRef, 17, arousalScene)
-		RegisterForSingleUpdate(UpdateInterval)
+		RegisterForSingleUpdate(UPDATE_INTERVAL)
 		_hasOrgasm = false
 		Log(GetActorName() + ": Orgasms[" + _OrgasmCount + "] FullEnjoyment [" + _FullEnjoyment + "]")
 	EndFunction
@@ -985,9 +973,7 @@ State Animating
 			float arousalScene = PapyrusUtil.ClampFloat(_FullEnjoyment as float, 0, 100)
 			SexlabStatistics.SetStatistic(_ActorRef, 17, arousalScene)
 		EndIf
-		If(_Expression || sslBaseExpression.IsMouthOpen(_ActorRef))
-			sslBaseExpression.CloseMouth(_ActorRef)
-		EndIf
+		sslBaseExpression.CloseMouth(_ActorRef)
 		_ActorRef.ClearExpressionOverride()
 		_ActorRef.ResetExpressionOverrides()
 		sslBaseExpression.ClearMFG(_ActorRef)
@@ -1435,10 +1421,7 @@ Function Initialize()
 	_HadStrapon = none
 	_Strapon = none
 	; Voice
-	_Voice = none
 	_IsForcedSilent = false
-	; Expression
-	_Expression = ""
 	; Flags
 	_victim = false
 	_CanOrgasm = true
@@ -1455,6 +1438,7 @@ Function Initialize()
 	; Floats
 	_LastOrgasm = 0.0
 	_StartedAt = 0.0
+	_AnimationSpeedBase = 1.0
 	ResetEnjoymentVariables()
 EndFunction
 
@@ -1577,15 +1561,14 @@ bool property MalePosition hidden
 endProperty
 
 sslBaseExpression function GetExpression()
-	return _Config.ExpressionSlots.GetByRegistrar(_Expression)
+	return _Config.ExpressionSlots.GetByRegistrar(GetActorExpression())
 endFunction
 Function SetExpression(sslBaseExpression ToExpression)
-	_Expression = ToExpression.Registry
-	TryRefreshExpression()
+	SetActorExpression(ToExpression.Registry)
 EndFunction
 
 sslBaseVoice function GetVoice()
-	return _Config.VoiceSlots.GetByRegistrar(_Voice)
+	return _Config.VoiceSlots.GetByRegistrar(GetActorVoice())
 endFunction
 Function SetVoice(sslBaseVoice ToVoice = none, bool ForceSilence = false)
 	If (ToVoice)
