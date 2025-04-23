@@ -56,13 +56,15 @@ Event OnConfigInit()
 	; Animation Settings
 	_PlFurnOpt = new String[4]
 	_PlFurnOpt[0] = "$SSL_Never"
-	_PlFurnOpt[1] = "$SSL_Always"
-	_PlFurnOpt[2] = "$SSL_AskAlways"
-	_PlFurnOpt[3] = "$SSL_AskNotSub"
+	_PlFurnOpt[1] = "$SSL_Somtimes"
+	_PlFurnOpt[2] = "$SSL_Always"
+	_PlFurnOpt[3] = "$SSL_AskAlways"
+	_PlFurnOpt[4] = "$SSL_AskNotSub"
 
 	_NPCFurnOpt = new String[2]
 	_NPCFurnOpt[0] = "$SSL_Never"
-	_NPCFurnOpt[1] = "$SSL_Always"
+	_NPCFurnOpt[1] = "$SSL_Somtimes"
+	_NPCFurnOpt[2] = "$SSL_Always"
 
 	_FadeOpt = new string[3]
 	_FadeOpt[0] = "$SSL_Never"
@@ -78,11 +80,6 @@ Event OnConfigInit()
 	_ClimaxTypes[0] = "$SSL_Climax_0"	; Default
 	_ClimaxTypes[1] = "$SSL_Climax_1"	; Legacy
 	_ClimaxTypes[2] = "$SSL_Climax_2"	; Extern
-
-	_PlayerBedOptions = new String[3]
-	_PlayerBedOptions[0] = "$SSL_Never"
-	_PlayerBedOptions[1] = "$SSL_IfNotVictim"
-	_PlayerBedOptions[2] = "$SSL_Always"
 
 	_Sexes = new String[3]
 	_Sexes[0] = "$SSL_Male"
@@ -332,7 +329,6 @@ String[] _NPCFurnOpt
 string[] _FadeOpt
 String[] _FilterOpt
 String[] _ClimaxTypes
-String[] _PlayerBedOptions
 String[] _Sexes
 
 Function AnimationSettings()
@@ -376,9 +372,8 @@ Function AnimationSettings()
 	AddToggleOptionST("DisableTeleport","$SSL_DisableTeleport", Config.DisableTeleport)
 	AddToggleOptionST("ShowInMap","$SSL_ShowInMap", Config.ShowInMap)
 	AddToggleOptionST("SetAnimSpeedByEnjoyment", "$SSL_SetAnimSpeedByEnjoyment", Config.SetAnimSpeedByEnjoyment, DoDisable(!sslSystemConfig.HasAnimSpeedSE()))
-	; TODO: Reimplement these once the new UI stands
-	; AddTextOptionST("NPCBed","$SSL_NPCsUseBeds", Chances[ClampInt(Config.NPCBed, 0, 2)])
-	AddTextOptionST("AskBed", "$SSL_AskBed", _PlayerBedOptions[sslSystemConfig.GetSettingInt("iAskBed")])
+	AddTextOptionST("FurnitureNPC","$SSL_FurnitureNPC", _NPCFurnOpt[sslSystemConfig.GetSettingInt("iNPCBed")])
+	AddMenuOptionST("FurniturePlayer", "$SSL_FurniturePlayer", _PlFurnOpt[sslSystemConfig.GetSettingInt("iAskBed")])
 EndFunction
 
 state DisableScale
@@ -1084,13 +1079,6 @@ Event OnSelectST()
 	ElseIf (s[0] == "StopCurrentAnimations")
 		ShowMessage("$SSL_StopRunningAnimations", false)
 		ThreadSlots.StopAll()
-	ElseIf (s[0] == "AskBed")
-		int idx = sslSystemConfig.GetSettingInt("iAskBed") + 1
-		If (idx == _PlayerBedOptions.Length)
-			idx = 0
-		EndIf
-		sslSystemConfig.SetSettingInt("iAskBed", idx)
-		SetTextOptionValueST(_PlayerBedOptions[idx])
 	EndIf
 EndEvent
 
@@ -1297,6 +1285,14 @@ Event OnMenuOpenST()
 		SetMenuDialogStartIndex(SexLabRegistry.MapRaceKeyToId(_voiceActiveRaceKey))
 		SetMenuDialogDefaultIndex(0)
 		SetMenuDialogOptions(SexLabRegistry.GetAllRaceKeys(false))
+	ElseIf (s[0] == "FurniturePlayer")
+		SetMenuDialogStartIndex(sslSystemConfig.GetSettingInt("iAskBed"))
+		SetMenuDialogDefaultIndex(0)
+		SetMenuDialogOptions(_PlFurnOpt)
+	ElseIf (s[0] == "FurnitureNPC")
+		SetMenuDialogStartIndex(sslSystemConfig.GetSettingInt("iNPCBed"))
+		SetMenuDialogDefaultIndex(0)
+		SetMenuDialogOptions(_NPCFurnOpt)
 	EndIf
 EndEvent
 
@@ -1352,6 +1348,12 @@ Event OnMenuAcceptST(int aiIndex)
 		_voiceActiveRaceKey = SexLabRegistry.MapRaceIDToRaceKey(aiIndex)
 		_voices = sslVoiceSlots.GetAllVoices(_voiceActiveRaceKey)
 		ForcePageReset()
+	ElseIf (s[0] == "FurniturePlayer")
+		sslSystemConfig.SetSettingInt("iAskBed", aiIndex)
+		SetMenuOptionValueST(_PlFurnOpt[aiIndex])
+	ElseIf (s[0] == "FurnitureNPC")
+		sslSystemConfig.SetSettingInt("iAskBedNPC", aiIndex)
+		SetMenuOptionValueST(_NpcFurnOpt[aiIndex])
 	EndIf
 EndEvent
 
@@ -1502,8 +1504,8 @@ Event OnHighlightST()
 		SetInfoText("$SSL_ExpressionScalingInfo")
 	ElseIf (s[0] == "activeVoices")
 		SetInfoText("$SSL_ActiveVoicesHighlight")
-	ElseIf (s[0] == "AskBed")
-		SetInfoText("$SSL_InfoAskBed")
+	Else
+		SetInfoText("$SSL_" + s[0] + "Highlight")
 	EndIf
 EndEvent
 
