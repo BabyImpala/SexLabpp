@@ -197,9 +197,24 @@ Function ResetOffsetA(String asID, String asStage) native global
 int Function GetStripData(String asID, String asStage, int n) native global
 int[] Function GetStripDataA(String asID, String asStage) native global
 
-; If the specific extra is flagged with the given custom extra
-bool Function HasExtraCustom(String asID, int n, String asExtra) native global
-; Return custom extra data for the specific position
-String[] Function GetExtraCustom(String asID, int n) native global
-; Concatinate the custom extra data for each position and return an array [0-N] containing data for each actor
-String[] Function GetExtraCustomA(String asID) native global
+; --- Scene Annotations
+
+; Check if a specific annotation exists for the given scene
+bool Function HasSceneAnnotation(String asID, String asTag) native global
+; Remove a specific annotation from the given scene
+Function RemoveSceneAnnotation(String asID, String asTag) native global
+; Add a specific annotation to the given scene
+Function AddSceneAnnotation(String asID, String asTag) native global
+; Get all annotations for the given scene
+String[] Function GetSceneAnnotations(String asID) native global
+
+; --- Position Annotations
+
+; Check if a specific annotation exists for the given position in the scene
+bool Function HasPositionAnnotation(String asID, int n, String asTag) native global
+; Remove a specific annotation from the given position in the scene
+Function RemovePositionAnnotation(String asID, int n, String asTag) native global
+; Add a specific annotation to the given position in the scene
+Function AddPositionAnnotation(String asID, int n, String asTag) native global
+; Get all annotations for the given position in the scene
+String[] Function GetPositionAnnotations(String asID, int n) native global
