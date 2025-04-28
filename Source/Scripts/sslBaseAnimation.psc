@@ -273,7 +273,7 @@ float[] function _GetStageAdjustments(string Registrar, string AdjustKey, int St
   LogRedundant()
 EndFunction
 float[] function GetPositionAdjustments(string AdjustKey, int Position, int Stage)
-	return SexLabRegistry.GetOffset(Registry, GetStageBounded(Stage), Position)
+	return SexLabRegistry.GetStageOffset(Registry, GetStageBounded(Stage), Position)
 endFunction
 
 float[] function _GetAllAdjustments(string Registrar, string AdjustKey) global
@@ -288,7 +288,7 @@ float[] function GetAllAdjustments(string AdjustKey)
 		int base = i * count
 		int n = 0
 		While (n < count)
-			float[] offsets = SexLabRegistry.GetOffset(Registry, path[i], n)
+			float[] offsets = SexLabRegistry.GetStageOffset(Registry, path[i], n)
 			ret[base + 0] = offsets[0]
 			ret[base + 1] = offsets[1]
 			ret[base + 2] = offsets[2]
@@ -320,7 +320,7 @@ function _PositionOffsets(string Registrar, string AdjustKey, string LastKey, in
 EndFunction
 float[] function PositionOffsets(float[] Output, string AdjustKey, int Position, int Stage, int BedTypeID = 0)
 	String stage_ = GetStageBounded(Stage)
-	float[] offsets = SexLabRegistry.GetOffset(Registry, stage_, Position)
+	float[] offsets = SexLabRegistry.GetStageOffset(Registry, stage_, Position)
 	If (Output.Length == 4)
 		Output[0] = offsets[0]
 		Output[1] = offsets[1]
@@ -332,7 +332,7 @@ endFunction
 
 float[] function RawOffsets(float[] Output, int Position, int Stage)
 	String stage_ = GetStageBounded(Stage)
-	float[] offsets = SexLabRegistry.GetOffsetRaw(Registry, stage_, Position)
+	float[] offsets = SexLabRegistry.GetStageOffsetRaw(Registry, stage_, Position)
 	If (Output.Length == 4)
 		Output[0] = offsets[0]
 		Output[1] = offsets[1]
@@ -357,14 +357,14 @@ function _SetAdjustment(string Registrar, string AdjustKey, int Stage, int Slot,
   LogRedundant()
 EndFunction
 function SetAdjustment(string AdjustKey, int Position, int Stage, int Slot, float Adjustment)
-	SexLabRegistry.UpdateOffset(Registry, GetStageBounded(Stage), Position, Adjustment, Slot)
+	SexLabRegistry.SetStageOffset(Registry, GetStageBounded(Stage), Position, Adjustment, Slot)
 endFunction
 
 float function _GetAdjustment(string Registrar, string AdjustKey, int Stage, int nth) global
   LogRedundant()
 EndFunction
 float function GetAdjustment(string AdjustKey, int Position, int Stage, int Slot)
-	return SexLabRegistry.GetOffset(Registry, GetStageBounded(Stage), Position)[Slot]
+	return SexLabRegistry.GetStageOffset(Registry, GetStageBounded(Stage), Position)[Slot]
 endFunction
 
 float function _UpdateAdjustment(string Registrar, string AdjustKey, int Stage, int nth, float by) global

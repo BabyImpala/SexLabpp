@@ -81,7 +81,7 @@ Event MenuEvent(string asEventName, string asStringArg, float afNumArg, form akS
 		EndIf
 	ElseIf (asEventName == "SL_SetSpeed")
 		If (!sslSystemConfig.HasAnimSpeedSE())
-			sslLog.Log("SetSpeed: AnimSpeedSE not found")
+			Log("SetSpeed: AnimSpeedSE not found")
 			return
 		EndIf
 		int i = 0
@@ -101,9 +101,15 @@ Event MenuEvent(string asEventName, string asStringArg, float afNumArg, form akS
 	ElseIf (asEventName == "SL_EndScene")
 		EndAnimation()
 	ElseIf (asEventName == "SL_SetAnnotations")
-		; TODO: impl
+		UpdateAnnotations(asStringArg)
 	ElseIf (asEventName == "SL_SetOffset")
-		; TODO: impl
+		If (akSender == none)
+			SetSceneOffset(afNumArg, asStringArg)
+		ElseIf (akSender as Actor)
+			SetStageOffset(akSender as Actor, afNumArg, asStringArg)
+		Else
+			Log("SetOffset: Sender is not an actor")
+		EndIf
 	ElseIf (asEventName == "SL_StartAdjustOffset")
 		; TODO: impl
 	EndIf
@@ -130,7 +136,7 @@ Function PickRandomScene(String asNewScene)
 EndFunction
 
 Function MoveScene()
-	If (!SexLabRegistry.IsCompatibleCenter(Game.GetPlayer()))
+	If (!SexLabRegistry.IsCompatibleCenter(GetActiveScene(), Game.GetPlayer()))
 		Debug.Notification("This scene does not support repositioning")
 		return
 	EndIf
@@ -178,6 +184,44 @@ Function MoveScene()
 	EndIf
 	Game.EnablePlayerControls()
 	CenterOnObject(PlayerRef)
+EndFunction
+
+Function UpdateAnnotations(string asString)
+	String activeScene = GetActiveScene()
+	String[] annotations = PapyrusUtil.StringSplit(asString, ",")
+	int i = 0
+	While(i < annotations.Length)
+		SexLabRegistry.AddSceneAnnotation(activeScene, annotations[i])
+		i += 1
+	EndWhile
+EndFunction
+
+int Function GetOffsetIdx(String asOffsetType)
+	String[] types = new String[4]
+	types[0] = "X"
+	types[1] = "Y"
+	types[2] = "Z"
+	types[3] = "R"
+	return types.Find(asOffsetType)
+EndFunction
+
+Function SetSceneOffset(float afOffsetValue, String asOffsetType)
+	String activeScene = GetActiveScene()
+	int idx = GetOffsetIdx(asOffsetType)
+	SexLabRegistry.SetSceneOffset(activeScene, afOffsetValue, idx)
+	ResetStage()
+EndFunction
+
+Function SetStageOffset(Actor akAffectedActor, float afOffsetValue, String asOffsetType)
+	int idx = GetOffsetIdx(asOffsetType)
+	int n = GetPositions().Find(akAffectedActor)
+	String activeScene = GetActiveScene()
+	String activeStage = ""
+	If (sslSystemConfig.GetSettingBool("bAdjustTargetStage"))
+		activeStage = GetActiveStage()
+	EndIf
+	SexLabRegistry.SetStageOffset(activeScene, activeStage, n, afOffsetValue, idx)
+	UpdatePlacement(akAffectedActor)
 EndFunction
 
 
@@ -290,7 +334,7 @@ Function AdjustCoordinate(bool abBackwards, bool abStageOnly, float afValue, int
 	bool first_pass = true
 	While(true)
 		PlayHotkeyFX(0, abBackwards)
-		SexLabRegistry.UpdateOffset(scene_, stage_, AdjustPos, afValue, aiOffsetType)
+		SexLabRegistry.SetStageOffset(scene_, stage_, AdjustPos, afValue, aiOffsetType)
 		; UpdatePlacement(AdjustAlias.GetActorReference())
 		Utility.Wait(0.1)
 		If(!Input.IsKeyPressed(Hotkeys[aiKeyIdx]))
@@ -364,7 +408,7 @@ Function AdjustChange(bool backwards = false)
 EndFunction
 
 Function RestoreOffsets()
-	SexLabRegistry.ResetOffsetA(GetActiveScene(), GetActiveStage())
+	SexLabRegistry.ResetStageOffsetA(GetActiveScene(), GetActiveStage())
 	RealignActors()
 EndFunction
 

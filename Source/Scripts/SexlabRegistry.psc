@@ -184,21 +184,31 @@ int[] Function GetRaceIDPositionA(String asID) native global
 String Function GetRaceKeyPosition(String asID, int n) native global
 String[] Function GetRaceKeyPositionA(String asID) native global
 
-; Offset data for the specified position in the given stage, Raw ignores user settings
-; returned as [X, Y, Z, Rotation]
-float[] Function GetOffset(String asID, String asStage, int n) native global
-float[] Function GetOffsetRaw(String asID, String asStage, int n) native global
-; Update  Offsets for the specified position and stage. Pass an empty stage to edit the offset of all stages at once
-Function UpdateOffset(String asID, String asStage, int n, float afValue, int aiOffsetID) native global
-Function UpdateOffsetA(String asID, String asStage, int n, float[] afNewOffset) native global
-Function ResetOffset(String asID, String asStage, int n) native global
-Function ResetOffsetA(String asID, String asStage) native global
-
 ; Get relevant strip info for the specified stage and position
 ; Strip Data is represented by a 8 bit flag:
 ; None = 0 | Helmet = 0x1 | Gloves = 0x2 | Boots = 0x4 | Default = 0x80 | All = 0xFF
 int Function GetStripData(String asID, String asStage, int n) native global
 int[] Function GetStripDataA(String asID, String asStage) native global
+
+; --- Offsets
+; Offsets are stored as arrays: [X, Y, Z, Rotation]
+; All array uses below will use this pattern. Index arguments expect an index in this range
+
+; The offset for the entire scene. If not a furniture scene, will return [0, 0, 0, 0]
+float[] Function GetSceneOffset(String asID) native global
+float[] Function GetSceneOffsetRaw(String asID) native global
+; Edit offset for the given scene. Will fail if the scene does not use furniture
+Function SetSceneOffset(String asID, float afValue, int aiOffsetID) native global
+Function SetSceneOffsetA(String asID, float[] afNewOffset) native global
+Function ResetSceneOffset(String asID) native global
+; Offsets for the specified position in the given stage, 'raw' ignores unedited (SLSB) offsets
+float[] Function GetStageOffset(String asID, String asStage, int n) native global
+float[] Function GetStageOffsetRaw(String asID, String asStage, int n) native global
+; Update  Offsets for the specified position and stage. Pass an empty stage to edit the offset of all stages at once
+Function SetStageOffset(String asID, String asStage, int n, float afValue, int aiOffsetID) native global
+Function SetStageOffsetA(String asID, String asStage, int n, float[] afNewOffset) native global
+Function ResetStageOffset(String asID, String asStage, int n) native global
+Function ResetStageOffsetA(String asID, String asStage) native global
 
 ; --- Scene Annotations
 
