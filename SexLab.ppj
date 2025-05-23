@@ -11,7 +11,7 @@
         <Variable Name="ThisProject" Value="."/>
         <Variable Name="Rel" Value=".\.release"/>
         <Variable Name="MO2" Value=".."/>
-        <Variable Name="Ver" Value="V2.15.2"/>
+        <Variable Name="Ver" Value="V2.15.5"/>
     </Variables>
     <Imports>
         <!-- <Import>@ThisProject\Scripts\Source</Import> -->
@@ -22,7 +22,7 @@
         <Import>@MO2\SkyUI SDK\Source\Scripts</Import>
         <Import>@MO2\XP32 Maximum Skeleton Special Extended\Source\Scripts</Import>
         <Import>@MO2\Race Menu Sources\Source\Scripts</Import>
-        <Import>@MO2\ConsoleUtilSSE\Source\Scripts</Import>
+        <Import>@MO2\ConsoleUtil Extended\Source\Scripts</Import>
         <Import>@MO2\JContainers SE\source\scripts</Import>
         <Import>@MO2\UIExtensions\Source\Scripts</Import>
         <Import>@MO2\MfgFix NG\Source\Scripts</Import>
