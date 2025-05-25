@@ -205,6 +205,8 @@ EndFunction
 ; If this actor is pariticpating in the scene
 bool Function HasActor(Actor akActor)
 EndFunction
+bool Function HasPlayer()
+EndFunction
 
 ; Retrieve all positions in the current scene. Order of actors is unspecified
 Actor[] Function GetPositions()
