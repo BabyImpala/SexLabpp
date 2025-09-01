@@ -760,7 +760,6 @@ State Making_M
 		Else
 			_ThreadTags = SexLabRegistry.GetCommonTags(_PrimaryScenes)
 		EndIf
-		Config.CacheEnjJsonValues()
 		Log("Thread validated, playing animation: " + activeScene + ", " + SexLabRegistry.GetSceneName(activeScene), "StartThread()")
 		SendThreadEvent("AnimationStarting")
 	EndEvent
@@ -1089,7 +1088,7 @@ State Animating
 		Else
 			bool penetration = HasCollisionAction(CTYPE_Vaginal, none, none) || HasCollisionAction(CTYPE_Anal, none, none)
 			bool oral = HasCollisionAction(CTYPE_Oral, none, none)
-			If Config.DebugMode2
+			If Config.DebugMode
 				Log("SFX Testing; penetration = " + penetration + " / oral = " + oral)
 			EndIf
 			If (oral && penetration)

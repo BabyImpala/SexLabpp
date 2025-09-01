@@ -509,7 +509,7 @@ State Ready
 		__SETUP_DONE = true
 		; Post Delayed Initialization
 		UpdateBaseEnjoymentCalculations()
-		If (!_Config.DebugMode2)
+		If (!_Config.DebugMode)
 			return
 		EndIf
 		String LogInfo = ""
@@ -798,7 +798,7 @@ State Animating
 		String expression = GetActorExpression()
 		If (expression && _Config.UseExpressions && _livestatus == LIVESTATUS_ALIVE)
 			sslBaseExpression.ApplyExpression(expression, _ActorRef, afStrength)
-			If (_Config.DebugMode2)
+			If (_Config.DebugMode)
 				Log("Expression? " + expression + "; Strength? " + afStrength + "; OpenMouth? " + OpenMouth, "sslBaseExpression.ApplyExpression()")
 			EndIf
 		EndIf
@@ -1101,7 +1101,7 @@ function ApplyCum()	; NOTE: Temporary?
 		bool oralPen = _Thread.IsOralComplex(_ActorRef)
 		bool analPen = _Thread.IsAnalComplex(_ActorRef)
 
-		If _Config.DebugMode2
+		If _Config.DebugMode
 			Log("ApplyCum(): Adding v = " + vaginalPen + " o = " + oralPen + " a = " + analPen)
 		EndIf
 
@@ -1294,7 +1294,7 @@ Function UpdateBaseEnjoymentCalculations()
 	_PainContext = CalcContextPain(BestRelation)
 	_EnjFactor = CalcContextEnjFactor(SameSexThread, BestRelation)
 	_BaseFactor = _EnjFactor
-	If _Config.DebugMode3
+	If _Config.DebugMode
 		DebugBaseCalcVariables()
 	EndIf
 EndFunction
@@ -1312,7 +1312,7 @@ Function UpdateEffectiveEnjoymentCalculations()
 	UpdateEnjoyment(_FullEnjoyment)
 	UpdateArousalStat()
 	; Debug
-	If _Config.DebugMode3
+	If _Config.DebugMode
 		DebugEffectiveCalcVariables()
 	EndIf
 EndFunction
