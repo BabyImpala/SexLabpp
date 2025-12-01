@@ -111,6 +111,8 @@ String[] Function MergeSplitTags(String asTags, String asTagsSuppress, bool abRe
   EndIf
 EndFunction
 
+String Function GetTranslation(String asStr) global native
+
 ; *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-* ;
 ; ----------------------------------------------------------------------------- ;
 ;								██╗     ███████╗ ██████╗  █████╗  ██████╗██╗   ██╗							;
