@@ -1,0 +1,80 @@
+name: Build SKSE Plugin
+
+on:
+  push:
+    branches: [ ce-dev, animation ]
+  pull_request:
+    branches: [ ce-dev, animation ]
+
+jobs:
+  build-windows:
+    name: Build (Windows, MSVC)
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
+
+      - name: Ensure submodules are initialized recursively
+        shell: bash
+        run: |
+          git submodule sync --recursive
+          git submodule update --init --recursive
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Generate config
+        run: |
+          python scripts/generate_config.py || echo "generate_config.py not present or failed; continuing"
+
+      - name: Set up xmake
+        uses: xmake-io/github-action-setup-xmake@v1
+        with:
+          xmake-version: latest
+
+      - name: Cache xmake build
+        uses: actions/cache@v4
+        with:
+          path: |
+            C:\Users\runneradmin\.xmake
+            build
+          key: xmake-${{ runner.os }}-${{ hashFiles('xmake.lua') }}
+          restore-keys: |
+            xmake-${{ runner.os }}-
+
+      - name: Configure (Release x64)
+        run: |
+          xmake f -m releasedbg -a x64 -y
+
+      - name: Build
+        run: |
+          xmake -y
+
+      - name: Locate built DLLs and PDBs
+        shell: pwsh
+        run: |
+          $artifacts = Get-ChildItem -Recurse -File -Include *.dll, *.pdb -Path ./build, ./.xmake | ForEach-Object { $_.FullName }
+          if (-not $artifacts -or $artifacts.Count -eq 0) {
+            Write-Host "No DLLs or PDBs found in build outputs; listing tree for diagnostics"
+            Get-ChildItem -Recurse -Path . | Out-String | Write-Output
+            $artifacts = @()
+          }
+          New-Item -ItemType Directory -Force -Path artifacts | Out-Null
+          foreach ($artifact in $artifacts) {
+            Copy-Item $artifact artifacts/ -Force
+          }
+          # Always create a marker file so the artifact step has something
+          Set-Content -Path artifacts/BUILD_INFO.txt -Value "Built on $((Get-Date).ToString())"
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: skse-plugin-windows-x64
+          path: artifacts
+          if-no-files-found: warn
