@@ -1,4 +1,4 @@
 [submodule "lib/CommonLibSSE-NG"]
 	path = lib/CommonLibSSE-NG
-	url = https://github.com/UaineMazoku/CommonLibVR.git
-	branch = fix-default-obj
+	url = https://github.com/alandtse/CommonLibVR.git
+	branch = ng
