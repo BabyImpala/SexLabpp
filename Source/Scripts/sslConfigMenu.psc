@@ -1486,7 +1486,10 @@ Event OnHighlightST()
 		SetInfoText("$SSL_InfoToggleFreeCamera")
 	Else
         String valName = StringUtil.Substring(s[0], 1)
-		SetInfoText("$SSL_" + valName + "Highlight")
+		String tlKey = "$SSL_" + valName + "Highlight"
+		If SexLabUtil.GetTranslation(tlKey) != ""
+			SetInfoText(tlKey)
+		EndIf
 	EndIf
 EndEvent
 
