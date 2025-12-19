@@ -516,7 +516,9 @@ Function TimersStripping()
 	EndWhile
 	; Stripping
 	AddHeaderOption("$SSL_Stripping")
-	AddMenuOptionST("TSModeSelect", "$SSL_View", _stripView[_stripViewIdx])
+	AddEmptyOption()
+	AddEmptyOption()
+	AddMenuOptionST("TSModeSelect", "$SSL_TSModeSelect", _stripView[_stripViewIdx])
 	AddTextOption("", "$SSL_StrippingFst_" + _stripViewIdx, OPTION_FLAG_DISABLED)
 	AddTextOption("", "$SSL_StrippingSnd_" + _stripViewIdx, OPTION_FLAG_DISABLED)
 	; iStripForms: 0b[Weapon][Female | Submissive][Aggressive]
@@ -1423,9 +1425,11 @@ Event OnHighlightST()
 		String[] tags = sslBaseExpression.GetExpressionTags(_expression[_expressionIdx])
 		SetInfoText("Tags: " + PapyrusUtil.StringJoin(tags, ", "))
 	Else
-		String tlKey = "$SSL_" + s[0] + "Highlight"
-		If SexLabUtil.GetTranslation(tlKey) != ""
-			SetInfoText(tlKey)
+		If (s[0] != "expredit" && s[0] != "expredittag" && s[0] != "M" && s[0] != "R")
+			String tlKey = "$SSL_" + s[0] + "Highlight"
+			If SexLabUtil.GetTranslation(tlKey) != ""
+				SetInfoText(tlKey)
+			EndIf
 		EndIf
 	EndIf
 EndEvent

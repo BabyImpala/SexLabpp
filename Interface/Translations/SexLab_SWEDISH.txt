@@ -12,7 +12,6 @@ $SSL_Male	Male
 $SSL_Female	Female
 $SSL_Futa	Futa
 $SSL_Creature	Creature
-$SSL_View	View
 $SSL_NoTarget	(No Target)
 $SSL_Apply	Apply
 $SSL_Enabled	Enabled
@@ -23,6 +22,8 @@ $SSL_High	High
 $SSL_ConflictControl{}{}	This key is already mapped to:\n{} ({})\n\nAre you sure you want to continue?
 $SSL_ConflictControl{}	This key is already mapped to:\n{}\n\nAre you sure you want to continue?
 $SSL_KeyCannotBeDisabled	This key is mandatory to be assigned and cannot be disabled.
+$SSL_TSModeSelect	Scenes Category
+$SSL_TSModeSelectHighlight	Choose the category of scenes for which the strip settings on this page are being configured
 
 # --------------- Races -----------------------------------------------------
 
@@ -175,19 +176,19 @@ $SSL_PlayerSettings	Player Settings
 $SSL_bAutoAdvance	Auto Advance Stages
 $SSL_bAutoAdvanceHighlight	Animations will automatically advance by timer when player is involved.
 $SSL_bDisablePlayer	Disable Victim Controls
-$SSL_bDisablePlayerHighlight	When player is the victim in an animation animation controls are not enabled.
+$SSL_bDisablePlayerHighlight	When player is the victim in an animation, animation controls are not enabled.
 $SSL_bAutoTFC	Automatic Free Camera
 $SSL_bAutoTFCHighlight	If enabled, will automatically enable the free flying camera (TFC) when animation involving the player starts.
 $SSL_fAutoSUCSM	Free Camera Speed
 $SSL_fAutoSUCSMHighlight	When starting the free camera this will be the default speed it will move at.
 $SSL_PlayerSex	Player Sex
 $SSL_{}Sex	{}'s Sex
-$SSL_SexSelectHighlight	How SexLab perceives this actor's sex. This is used to determine which position(s) an actor can be placed in during scenes.\nHas no direct influence on how an actor acts or looks.
+$SSL_SexSelectHighlight	How SexLab perceives this actor's sex. This is used to determine which position(s) an actor can be placed in during scenes. Has no direct influence on how an actor acts or looks.
 
 # ------ Extra effects
 $SSL_ExtraEffects	Extra Effects
 
-$SSL_ClimaxType	ClimaxType
+$SSL_ClimaxType	Climax Type
 $SSL_ClimaxTypeHighlight	The behavior of climaxes during Scenes.
 $SSL_Climax_0	Scene (Orgasm Stages)
 $SSL_Climax_1	Legacy (Animation End)
@@ -342,6 +343,7 @@ $SSL_StageTimer_0	Stage 1 Length
 $SSL_StageTimer_1	Stage 2 Length
 $SSL_StageTimer_2	Stage 3 Length
 $SSL_StageTimer_3	Ending Stage Length
+$SSL_StageTimersHighlight	
 
 # ------ Stripping
 $SSL_Stripping	Stripping
@@ -391,10 +393,14 @@ $SSL_Weapons	[--] Weapons
 
 # ------------------ Toggle Animations --------------------------------------------------
 $SSL_ToggleAnimations	Toggle Animations
-$SSL_TogglePackage	Filter by Package
+$SSL_TogglePackage	Filter by Animation Pack
+$SSL_TogglePackageHighlight	Filter animations of a specific animation pack/module only
 $SSL_ToggleGroup	Filter by Group
+$SSL_togglecategoryHighlight	Filter animations by human/creature category
 $SSL_ToggleVisible	Toggle Visible
+$SSL_ToggleVisibleHighlight	Enable or disable all animations filtered on this page
 $SSL_TagFilter	Filter by Tags
+$SSL_toggletagsHighlight	Filter animations by tags
 $SSL_Page{}{}	Page {}/{}
 
 
@@ -407,17 +413,24 @@ $SSL_ToggleMatchMakerHighlight	Enable Matchmaker. Spells will be added to the sp
 # ------ Tag Settings
 $SSL_MatchMakerTagsSettings	Tag Settings
 $SSL_InputTags	Tags:
+$SSL_matchmakerInputTagsHighlight	Resulting tag string based on tag inputs below
 $SSL_InputRequiredTags	Required Tags:
+$SSL_matchmakerInputRequiredTagsHighlight	A list of comma-separated tags, all of which must be present simultaneously in the filtered scene(s)
 $SSL_InputExcludedTags	Excluded Tags:
+$SSL_matchmakerInputExcludedTagsHighlight	A list of comma-separated tags, none of which shall be present in the filtered scene(s)
 $SSL_InputOptionalTags	Optional Tags:
+$SSL_matchmakerInputOptionalTagsHighlight	A list of comma-separated tags, at least one of which shall be present in the filtered scene(s)
 $SSL_TextResetTags	Reset Tags
+$SSL_TextResetTagsHighlight	Resets all tag input fields
 $SSL_ResetTagsHere	Click
 $SSL_TagResetAreYouSure	Reset all tags, are you sure?
 
 # ------ Actor Settings
 $SSL_MatchMakerActorSettings	Actor Settings
 $SSL_bSubmissivePlayer	Submissive Player
+$SSL_bSubmissivePlayerHighlight	Filter scenes with player in the submissive position
 $SSL_bSubmissiveTarget	Submissive Target
+$SSL_bSubmissiveTargetHighlight	Filter scenes with target actor in the submissive position
 
 # ------------------ Enjoyment --------------------------------------------------
 $SSL_EnjoymentSettings	Enjoyment Settings
@@ -458,13 +471,13 @@ $SSL_iGameSelectNextPosHighlight	Hotkey to cycle/select the next position or act
 
 # ------ Game Hotkeys
 $SSL_iEnjGameStaminaCost	Game Stamina Cost
-$SSL_iEnjGameStaminaCostHighlight	The amount of stamina to be depleted upon a relevant minigame action.
+$SSL_iEnjGameStaminaCostHighlight	The amount of STAMINA to be depleted upon a relevant minigame action.
 $SSL_iEnjGameMagickaCost	Game Magicka Cost
-$SSL_iEnjGameMagickaCostHighlight	The amount of magicka to be depleted upon a relevant minigame action.
+$SSL_iEnjGameMagickaCostHighlight	The amount of MAGICKA to be depleted upon a relevant minigame action.
 $SSL_iEdgingRewardType	Edging State Reward Type
 $SSL_iEdgingRewardTypeHighlight	Reward for successfully maintaining edging state (enjoyment beyond 100).\n0: Only Enjoyment Boost\n1: Additional Stamina Restoration\n2: Additional Magicka Restoration\n3: Additional Health Restoration
 $SSL_iEdgeSpamPunishType	Edge Spam Penalty Type
-$SSL_iEdgingRewardTypeHighlight	Penalty for spamming clicks before the edging time window.\n0: Only Enjoyment Penalties\n1: Additional Stamina Depletion\n2: Additional Magicka Depletion\n3: Additional Health Depletion
+$SSL_iEdgeSpamPunishTypeHighlight	Penalty for spamming clicks before the edging time window.\n0: Only Enjoyment Penalties\n1: Additional Stamina Depletion\n2: Additional Magicka Depletion\n3: Additional Health Depletion
 
 # ------ General Configs
 $SSL_iEnjGainOnStageSkip	Stage Skip Enj Gain
@@ -559,13 +572,16 @@ $SSL_ScaleMode_Cubic	Cubic
 $SSL_ScaleMode_Exponential	Exponential
 
 $SSL_ModifyingExpression	Modifying Expression
+$SSL_enableexpressionHighlight	Enable or disable the expression being modified currently
 $SSL_ExpressionScaling	Scaling Function
-$SSL_ExpressionScalingHighlight	Scaling behavior to map expression progress to scene enjoyment.\nLinear: Steady and even increase | Squared: Fast initial increase, slow mid section, second spyke as orgasm approaches\nCubic: Slow start, gradual ramp up as orgasm approaches | Exponential: Very slow start, rapid growth as orgasm approaches
 $SSL_ExpressionsNormal	Available in regular Scenes
 $SSL_ExpressionsVictim	Available as submissive
 $SSL_ExpressionsAggressor	Available as dominant
+$SSL_ExpressionScalingHighlight	Scaling behavior to map expression progress to scene enjoyment.\nLinear: Steady and even increase\nSquared: Fast initial increase, slow mid section, second spike as orgasm approaches\nCubic: Slow start, gradual ramp up as orgasm approaches\nExponential: Very slow start, rapid growth as orgasm approaches
 $SSL_EditFemale	Edit Female Data
+$SSL_expressioneditfemaleHighlight	
 $SSL_TestOnPlayer	Test On Player
+$SSL_expressiontestHighlight	
 
 $SSL_WarnTestExpression{}	Testing selected expression on {}. Continue?
 $SSL_WarnTestExpressionLowOrHight	Test current expression's low (left) or high (right) profile?
@@ -577,6 +593,7 @@ $SSL_RestoredTestExpression	Expression restored...
 $SSL_EditExpressions_0	Expression Data (Low)
 $SSL_EditExpressions_1	Expression Data (High)
 $SSL_MoodType	Mood Type
+$SSL_expreditHighlight	
 $SSL_MoodStrength	Mood Strength
 $SSL_Phoneme	Phoneme
 $SSL_Modifier	Modifier
@@ -599,6 +616,7 @@ $SSL_StripEditor	Strip Item Editor
 
 $SSL_Equipment{}	Equipment - {}
 $SSL_FullInventory	Show Full Inventory
+$SSL_FullInventoryHighlight	Allows all items in actor's inventory to show up for strip behavior editing
 $SSL_AlwaysRemove	Always Remove
 $SSL_NeverRemove	Never Remove
 $SSL_StripItemSlots{}	Biped Slots: {}
@@ -611,14 +629,17 @@ $SSL_Installation	Installation
 $SSL_bDebugMode	Debug Mode
 $SSL_bDebugModeHighlight	Enable extra logs for thread and scene info.\nThis can slow down the framework but may help troubleshooting issues.
 $SSL_StopCurrentAnimations	Stop Current Animations
+$SSL_StopCurrentAnimationsHighlight	Stops all active SexLab threads, regardless of player involvement
 $SSL_StopRunningAnimations	All currently running animations are now halting
 $SSL_ResetStripOverrides	Reset Strip Overrides
+$SSL_ResetStripOverridesHighlight	Resets all custom strip settings set by the user
 $SSL_CleanSystem	Reinitialize Framework
+$SSL_CleanSystemHighlight	Reinstalls SexLab; not recommended!
 $SSL_WarnCleanSystem	Running this will re-install the framework, resetting most script internal data. Do you want to continue?
 $SSL_Resetting	Resetting...
 $SSL_CurrentlyInstalling	SexLab is being initialized...
 $SSL_ForceRegisterVoices	Legacy: Force Registration
-$SSL_ForceRegisterVoicesHighlight	Send mod events which used to be send by SexLab to notify 3rd party mods that they may now register their own voices/expressions.\nSexLab P+ no longer sends these events, so this option has to be used if you are using mods which require this event to be sent.
+$SSL_ForceRegisterVoicesHighlight	Send mod events which used to be send by SexLab to notify 3rd party mods that they may now register their own voices/expressions (IMPORTANT: SexLab P+ no longer sends these events, so this option has to be used if you are using mods which require this event to be sent)
 
 $RegistryInfo	Registry Status
 $SSL_Animations	Animations
@@ -628,8 +649,10 @@ $SSL_Expressions	Expressions
 # ------ Available Strap-ons
 $SSL_AvailableStrapons	Available Strap-ons
 $SSL_RebuildStraponList	Rebuild Strap-on List
+$SSL_RebuildStraponListHighlight	Updates the strap-ons list accessible to the framework
 $SSL_FoundStrapon	Found and saved strap-ons for use
 $SSL_NoStrapons	Found no supported strap-on mods
+$SSL_toggleStraponHighlight	Click to disable the use of this strap-on by SexLab
 
 
 # ------------------ Legacy --------------------------------------------------
