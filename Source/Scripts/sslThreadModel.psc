@@ -1812,7 +1812,7 @@ bool[] Function ListDetectedRimTagsInter(Actor akPosition)
     If !HasSceneTag("RimTagged") ;hentairim
         return Utility.CreateBoolArray(1, False)
     EndIf
-	string[] rimTags = SexLabRegistry.GetPositionAnnotations(GetActiveScene(), GetActiveStage(), GetPositionIdx(akPosition))
+	string[] rimTags = SexLabRegistry.GetPositionTags(GetActiveScene(), GetActiveStage(), GetPositionIdx(akPosition))
 	bool[] rimActive = Utility.CreateBoolArray(28, False)
 	int i = 0
 	int len = rimTags.Length
