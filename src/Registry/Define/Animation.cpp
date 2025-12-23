@@ -161,7 +161,7 @@ namespace Registry
 		enum Extra : uint8_t
 		{
 			Submissive = 1 << 0,
-			Vamprie = 1 << 1,
+			Vampire = 1 << 1,
 			Unconscious = 1 << 2
 		};
 		float scale;
@@ -173,7 +173,7 @@ namespace Registry
 		Decode::Read(a_stream, scale);
 		a_stream.read(reinterpret_cast<char*>(&extra), 1);
 
-		data = ActorFragment(sex, race, scale, extra.all(Extra::Vamprie), extra.all(Extra::Submissive), extra.all(Extra::Unconscious));
+		data = ActorFragment(sex, race, scale, extra.all(Extra::Vampire), extra.all(Extra::Submissive), extra.all(Extra::Unconscious));
 
 		if (a_version > 1 && a_version < 4) {
 			uint64_t extra_custom;
