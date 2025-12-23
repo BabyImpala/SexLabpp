@@ -516,7 +516,9 @@ Function TimersStripping()
 	EndWhile
 	; Stripping
 	AddHeaderOption("$SSL_Stripping")
-	AddMenuOptionST("TSModeSelect", "$SSL_View", _stripView[_stripViewIdx])
+	AddEmptyOption()
+	AddEmptyOption()
+	AddMenuOptionST("TSModeSelect", "$SSL_TSModeSelect", _stripView[_stripViewIdx])
 	AddTextOption("", "$SSL_StrippingFst_" + _stripViewIdx, OPTION_FLAG_DISABLED)
 	AddTextOption("", "$SSL_StrippingSnd_" + _stripViewIdx, OPTION_FLAG_DISABLED)
 	; iStripForms: 0b[Weapon][Female | Submissive][Aggressive]
