@@ -199,7 +199,7 @@ namespace Thread
 	bool Instance::ReplaceCenterRef(RE::TESObjectREFR* a_ref)
 	{
 		assert(a_ref);
-		if (a_ref == center.GetRef()) {
+		if (a_ref == center.GetRef() && !a_ref->IsPlayerRef()) {
 			return false;
 		}
 		const auto centerStr = center.offset.type.ToString();
