@@ -196,25 +196,6 @@ Function SetPathing(int aiPathingFlag)
 	_PathingFlag = PapyrusUtil.ClampInt(_PathingFlag, PATHING_DISABLE, PATHING_FORCE)
 EndFunction
 
-; ------------------------------------------------------- ;
-; --- AnimSpeed                                       --- ;
-; ------------------------------------------------------- ;
-
-Function UpdateBaseSpeed(float afBaseSpeed)
-	_AnimationSpeedBase = afBaseSpeed
-EndFunction
-
-Function UpdateAnimationSpeed()
-	If (!sslSystemConfig.HasAnimSpeedSE())
-		return
-	EndIf
-	float animSpeed = _AnimationSpeedBase
-	If (_Config.SetAnimSpeedByEnjoyment)
-		animSpeed *= PapyrusUtil.ClampFloat((GetFullEnjoyment() as float) / 90, 0.8, 1.2)
-	EndIf
-	sslAnimSpeedHelper.SetAnimationSpeed(_ActorRef, animSpeed, UPDATE_INTERVAL / 2, 0)
-EndFunction
-
 ; *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-* ;
 ; ----------------------------------------------------------------------------- ;
 ;        ██╗███╗   ██╗████████╗███████╗██████╗ ███╗   ██╗ █████╗ ██╗            ;
@@ -268,8 +249,6 @@ Actor _killer
 
 int _AnimVarIsNPC
 bool _AnimVarbHumanoidFootIKDisable
-
-float _AnimationSpeedBase
 
 ; Center
 ObjectReference _myMarker
@@ -739,7 +718,6 @@ State Animating
 			_LoopEnjoymentDelay = 0
 			UpdateEffectiveEnjoymentCalculations()
 		EndIf
-		UpdateAnimationSpeed()
 		int strength = CalcReaction()
 		If (_LoopDelay >= _VoiceDelay && !IsSilent)
 			_LoopDelay = 0.0
@@ -1165,7 +1143,6 @@ Function Initialize()
 	; Floats
 	_LastOrgasm = 0.0
 	_StartedAt = 0.0
-	_AnimationSpeedBase = 1.0
 	ResetEnjoymentVariables()
 EndFunction
 

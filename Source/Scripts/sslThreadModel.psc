@@ -1111,6 +1111,7 @@ State Animating
 				_SFXTimer = 0.8
 			EndIf
 		EndIf
+		UpdateAnimationSpeed()
 		RegisterForSingleUpdate(ANIMATING_UPDATE_INTERVAL)
 	EndEvent
 
@@ -1642,6 +1643,7 @@ Function Initialize()
 	_ThreadTags = Utility.CreateStringArray(0)
 	_ContextTags = Utility.CreateStringArray(0)
 	_Hooks = Utility.CreateStringArray(0)
+	_AnimationSpeedBase = 1.0
 	; Enter thread selection pool
 	DestroyInstance()
 	GoToState(STATE_IDLE)
@@ -2483,6 +2485,45 @@ Function ProcessEnjGameArg(String arg = "", Actor akActor, Actor akPartner, floa
 	If ((NoStaminaScenario || MaleOrgasmEndScenario) && NotEndStageScenario && SoloDuoScenario)
 		SkipTo(SexLabRegistry.GetEndingStages(GetActiveScene())[0])
 	EndIf
+EndFunction
+
+; -------------------------------------------------- ;
+; --- AnimSpeed                                  --- ;
+; -------------------------------------------------- ;
+
+float _AnimationSpeedBase
+
+Function UpdateBaseSpeed(float afBaseSpeed)
+	_AnimationSpeedBase = afBaseSpeed
+EndFunction
+
+float Function CalcInstThreadAnimSpeed()
+	float animSpeed = 0.0
+	If (Config.SetAnimSpeedByEnjoyment)
+		int i = 0
+		While (i < _Positions.Length)
+			float actorSpeed = _AnimationSpeedBase * PapyrusUtil.ClampFloat(GetEnjoyment(_Positions[i]) as float / 90, 0.8, 1.2)
+			If (actorSpeed > animSpeed)
+				animSpeed = actorSpeed
+			EndIf
+			i += 1
+		EndWhile
+	Else
+		animSpeed = _AnimationSpeedBase
+	EndIf
+	return animSpeed
+EndFunction
+
+Function UpdateAnimationSpeed()
+	If (!sslSystemConfig.HasAnimSpeedSE())
+		return
+	EndIf
+	float animSpeed = CalcInstThreadAnimSpeed()
+	int i = 0
+	While (i < _Positions.Length)
+		sslAnimSpeedHelper.SetAnimationSpeed(_Positions[i], animSpeed, ANIMATING_UPDATE_INTERVAL / 3, 0)
+		i += 1
+	EndWhile
 EndFunction
 
 ; *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-* ;

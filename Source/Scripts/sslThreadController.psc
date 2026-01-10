@@ -86,11 +86,7 @@ Event MenuEvent(string asEventName, string asStringArg, float afNumArg, form akS
 			Log("SetSpeed: AnimSpeedSE not found")
 			return
 		EndIf
-		int i = 0
-		While (i < ActorAlias.Length)
-			ActorAlias[i].UpdateBaseSpeed(afNumArg)
-			i += 1
-		EndWhile
+		UpdateBaseSpeed(afNumArg)
 		If (afNumArg == 0.0)
 			_AutoAdvanceCache = AutoAdvance as int
 			AutoAdvance = false
