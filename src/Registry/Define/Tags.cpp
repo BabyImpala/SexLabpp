@@ -135,6 +135,13 @@ namespace Registry
 		}
 	}
 
+	void TagData::IntersectTags(const TagData& a_tags)
+	{
+		_basetags.set((_basetags & a_tags._basetags).get());
+		std::erase_if(_extratags, [&](const auto& tag) { return !a_tags.HasTag(tag); });
+		std::erase_if(_annotations, [&](const auto& tag) { return !a_tags.HasTag(tag); });
+	}
+
 	void TagData::RemoveAnnotation(const RE::BSFixedString& a_tag)
 	{
 		const auto where = std::find(_annotations.begin(), _annotations.end(), a_tag);

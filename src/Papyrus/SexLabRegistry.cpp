@@ -539,6 +539,7 @@ namespace Papyrus::SexLabRegistry
 	std::vector<RE::BSFixedString> GetCommonTags(STATICARGS, std::vector<RE::BSFixedString> a_ids)
 	{
 		const auto lib = Registry::Library::GetSingleton();
+		bool first = true;
 		Registry::TagData ret{};
 		for (auto&& sceneid : a_ids) {
 			const auto scene = lib->GetSceneById(sceneid);
@@ -546,7 +547,12 @@ namespace Papyrus::SexLabRegistry
 				a_vm->TraceStack("Invalid scene id", a_stackID);
 				break;
 			}
-			ret.AddTag(scene->tags);
+			if (first) {
+				first = false;
+				ret.AddTag(scene->tags);
+			} else {
+				ret.IntersectTags(scene->tags);
+			}
 		}
 		return ret.AsVector();
 	}
