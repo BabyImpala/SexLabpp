@@ -2475,15 +2475,17 @@ Function ProcessEnjGameArg(String arg = "", Actor akActor, Actor akPartner, floa
 			EndIf
 		EndIf
 	EndIf
-	
 	;GameDamageMagicka(PartnerRef, GameModSelfSta)
+EndFunction
+
+Function EnjBasedSkipToLastStage(bool abSkip)
 	;for solo/duo scenes, skip to last scene stage if any actor has ran out of stamina or male has orgasmed
-	bool NoStaminaScenario = (Config.NoStaminaEndsScene == 1) && (akActor.GetActorValuePercentage("Stamina") < 0.10) && (GetSubmissives().Length == 0)
-	bool MaleOrgasmEndScenario = (Config.MaleOrgasmEndsScene == 1) && (GetActorSex(akActor) == 0) && (GetOrgasmCount(akActor) > 0)
 	bool NotEndStageScenario = (GetLegacyStageNum() < GetLegacyStagesCount())
 	bool SoloDuoScenario = (_Positions.Length == 1 || _Positions.Length == 2) 
-	If ((NoStaminaScenario || MaleOrgasmEndScenario) && NotEndStageScenario && SoloDuoScenario)
+	If (abSkip && NotEndStageScenario && SoloDuoScenario)
 		SkipTo(SexLabRegistry.GetEndingStages(GetActiveScene())[0])
+		_StageTimer -= (GetTimer() / 1.25)
+		UpdateBaseSpeed(0.8)
 	EndIf
 EndFunction
 

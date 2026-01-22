@@ -712,6 +712,8 @@ State Animating
 		If ((_FullEnjoyment > 90) && (_Config.SeparateOrgasms || _Config.InternalEnjoymentEnabled))
 			DoOrgasm()
 		EndIf
+		bool NoStaminaEndScenario = (_Config.NoStaminaEndsScene && !_victim && _ActorRef.GetActorValuePercentage("Stamina") < 0.10)
+		_Thread.EnjBasedSkipToLastStage(NoStaminaEndScenario)
 		If (_LoopLovenseDelay <= 0)
 			If (_ActorRef == _PlayerRef && sslLovense.IsLovenseInstalled())
 				int lovenseStrength = sslSystemConfig.GetSettingInt("iLovenseStrength")
@@ -854,6 +856,7 @@ State Animating
 			If (_OrgasmCount > _Config.MaxNoPainOrgasmMale)
 				_FullEnjoyment -= (_OrgasmCount - _Config.MaxNoPainOrgasmMale) * 20
 			EndIf
+			_Thread.EnjBasedSkipToLastStage(_Config.MaleOrgasmEndsScene)
 		Else
 			If (_OrgasmCount > _Config.MaxNoPainOrgasmFemale)
 				_FullEnjoyment -= (_OrgasmCount - _Config.MaxNoPainOrgasmFemale) * 20
@@ -1437,14 +1440,14 @@ Function StoreExcitementState(String arg = "")
 	string ActorName = GetActorName()
 	If (arg == "Backup")
 		StorageUtil.SetFloatValue(None, ("EnjBackupTime_" + ActorName),  SexLabUtil.GetCurrentGameRealTime())
-		;StorageUtil.SetIntValue(None, ("LastOrgasmCount_" + ActorName), _OrgasmCount)
+		StorageUtil.SetIntValue(None, ("LastOrgasmCount_" + ActorName), _OrgasmCount)
 		If _FullEnjoyment > 10
 			StorageUtil.SetIntValue(None, ("LastEnjoyment_" + ActorName), _FullEnjoyment)
 		EndIf
 	ElseIf (arg == "Restore")
 		float TimeSinceEnjBackup = (SexLabUtil.GetCurrentGameRealTime() - StorageUtil.GetFloatValue(None, ("EnjBackupTime_" + ActorName)))
 		If (TimeSinceEnjBackup < 60)
-			;_OrgasmCount = StorageUtil.GetIntValue(None, ("LastOrgasmCount_" + ActorName))
+			_OrgasmCount = StorageUtil.GetIntValue(None, ("LastOrgasmCount_" + ActorName))
 			int LastEnjoyment = StorageUtil.GetIntValue(None, ("LastEnjoyment_" + ActorName))
 			_FullEnjoyment = (LastEnjoyment as float * (1 - (TimeSinceEnjBackup/60))) as int
 		EndIf
