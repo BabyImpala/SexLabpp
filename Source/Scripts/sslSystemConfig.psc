@@ -1065,6 +1065,22 @@ endFunction
 ; --------------------------------------------------------------------------------------- ;
 ; *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-* ;
 
+string[] _interTypes
+
+string[] Property NameAllInteractions hidden
+  string[] Function Get()
+    If !_interTypes
+      ;IMP: order depends on int assigned to interTypes in sslThreadModel; leave both as-is!
+      string type_names = "pStimulation,aAnimObjFace,pAnimObjFace,pSuckingToes,pGrinding," \
+      + "pSkullfuck,aHandJob,aFootJob,aBoobJob,bKissing,aSuckingToes,pFacial,aOral," \
+      + "aLickingShaft,aDeepthroat,pVaginal,pAnal,aFacial,aGrinding,pHandJob,pFootJob," \
+      + "pBoobJob,pLickingShaft,pOral,pDeepthroat,aSkullfuck,aVaginal,aAnal"
+      _interTypes = StringUtil.Split(type_names, ",")
+    EndIf
+    return _interTypes
+  EndFunction
+EndProperty
+
 ; ----------------------------------------------- ;
 ; --- MAIN CONFIG                             --- ;
 ; ----------------------------------------------- ;
@@ -1077,12 +1093,12 @@ bool Property InternalEnjoymentEnabled hidden
     SetSettingBool("bInternalEnjoymentEnabled", value)
   EndFunction
 EndProperty
-int Property InterDetectionStrength hidden
-  int Function Get()
-    return GetSettingInt("iInterDetectionStrength")
+bool Property UsePhysicBasedDetection hidden
+  bool Function Get()
+    return GetSettingBool("bUsePhysicBasedDetection")
   EndFunction
-  Function Set(int aiSet)
-    SetSettingInt("iInterDetectionStrength", aiSet)
+  Function Set(bool value)
+    SetSettingBool("bUsePhysicBasedDetection", value)
   EndFunction
 EndProperty
 float Property EnjRaiseMultInter hidden

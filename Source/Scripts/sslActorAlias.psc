@@ -801,7 +801,7 @@ State Animating
 				return
 			EndIf
 			If (_Config.SeparateOrgasms || _Config.InternalEnjoymentEnabled)
-				If ((_FullEnjoyment > 90 && _FullEnjoyment < 180) && ((time - _lastHoldBack) < FindEdgingTimeWindow()))
+				If (_Config.GameEnabled && (_FullEnjoyment > 90 && _FullEnjoyment < 180) && ((time - _lastHoldBack) < FindEdgingTimeWindow()))
 					GameRewardTimedEdging()
 					_hasOrgasm = false
 					return
@@ -1191,7 +1191,6 @@ float _ContextCheckDelay
 ; Base
 bool _CrtMaleHugePP
 int _ConSubStatus
-int _ActorInterInfo
 float _PainContext
 float _EnjFactor
 float _BaseFactor
@@ -1221,7 +1220,6 @@ Function ResetEnjoymentVariables()
 	; Base
 	_CrtMaleHugePP = False
 	_ConSubStatus = _Thread.CONSENT_CONNONSUB
-	_ActorInterInfo = _Thread.ACTORINT_NONPART
 	_PainContext = 0.0
 	_EnjFactor = 0.0
 	_BaseFactor = 0.0
@@ -1257,7 +1255,6 @@ Function UpdateBaseEnjoymentCalculations()
 	_ConSubStatus = _Thread.IdentifyConsentSubStatus()
 	bool SameSexThread = _Thread.SameSexThread()
 	float BestRelation  = _Thread.GetBestRelationForScene(_ActorRef, _ConSubStatus) as float
-	_ActorInterInfo = _Thread.GuessActorInterInfo(_ActorRef, _sex, _victim, _ConSubStatus, SameSexThread)
 	_arousalBase = PapyrusUtil.ClampFloat(SexlabStatistics.GetStatistic(_ActorRef, 17), 0.0, 100.0)
 	_PainContext = CalcContextPain(BestRelation)
 	_EnjFactor = CalcContextEnjFactor(SameSexThread, BestRelation)
@@ -1272,7 +1269,7 @@ Function UpdateEffectiveEnjoymentCalculations()
 		return
 	EndIf
 	; Interactions
-	_TypeInterStr = _Thread.CreateInteractionString(_ActorRef, _ActorInterInfo)
+	_TypeInterStr = _Thread.CreateInteractionString(_ActorRef)
 	_InterFactor = _Thread.CalculateInteractionFactor(_ActorRef, _TypeInterStr)
 	; Enjoyment
 	float EnjEffective = CalcEffectiveEnjoyment()
@@ -1505,6 +1502,7 @@ Function GameRegisterEdgeAttempt()
 			_EnjFactor -= 0.03
 			If (_EnjFactor < 0.0)
 				_FullEnjoyment -= 50 ; penalty for excessive edging spam
+				_EnjFactor = _BaseFactor/2
 			EndIf
 			int PenaltyType = _Config.EdgeSpamPunishType
 			If PenaltyType == 1
@@ -1551,9 +1549,8 @@ EndFunction
 Function DebugBaseCalcVariables()
 	string BaseCalcLog = "[ENJ] EnjFactor: " + _EnjFactor + ", BaseArousal: " + _arousalBase + ", SameSexThread: " + _Thread.SameSexThread()\
 	+ ", Sexuality: " + SexlabStatistics.GetSexuality(_ActorRef) + ", BestRelation: " + _Thread.GetBestRelationForScene(_ActorRef, _ConSubStatus)\
-	+ ", ConSubStatus: " + _ConSubStatus + ", IsVictim: " + _victim + ", CrtMaleHugePP: " + _CrtMaleHugePP + ", ActorInterInfo: " + _ActorInterInfo\
-	+ ", VaginalXP: " + SexlabStatistics.GetStatistic(_ActorRef, 2) as int + ", AnalXP: " + SexlabStatistics.GetStatistic(_ActorRef, 3) as int\
-	+ ", ContextPain: " + _PainContext as int
+	+ ", ConSubStatus: " + _ConSubStatus + ", IsVictim: " + _victim + ", CrtMaleHugePP: " + _CrtMaleHugePP + ", ContextPain: " + _PainContext as int\
+	+ ", VaginalXP: " + SexlabStatistics.GetStatistic(_ActorRef, 2) as int + ", AnalXP: " + SexlabStatistics.GetStatistic(_ActorRef, 3) as int
 	Log(BaseCalcLog)
 EndFunction
 

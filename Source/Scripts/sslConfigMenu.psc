@@ -803,7 +803,7 @@ Function EnjoymentSettings()
 	
 	AddHeaderOption("Primary Settings")
 	AddStateOptionBool("bInternalEnjoymentEnabled", "$SSL_bInternalEnjoymentEnabled")
-	AddStateOptionSlider("iInterDetectionStrength", "$SSL_iInterDetectionStrength", 4, 1, 4, 1, "{0}")
+	AddStateOptionBool("bUsePhysicBasedDetection", "$SSL_bUsePhysicBasedDetection")
 	AddStateOptionSlider("fEnjRaiseMultInter", "$SSL_fEnjRaiseMultInter", 1.2, 0, 3, 0.1, "{1}")
 
 	AddHeaderOption("Game Toggles")

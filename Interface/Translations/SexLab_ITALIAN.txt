@@ -437,8 +437,8 @@ $SSL_EnjoymentSettings	Enjoyment Settings
 # ------ Primary Settings
 $SSL_bInternalEnjoymentEnabled	Enable Internal Enjoyment
 $SSL_bInternalEnjoymentEnabledHighlight	Toggles the internal enjoyment system. Should stay enabled unless an external mod desires to take full control of the enjoyment calculus.
-$SSL_iInterDetectionStrength	Interaction Detection Method
-$SSL_iInterDetectionStrengthHighlight	Select the method relied upon to determine physical interactions among actors during scenes.\n1: Stage Tags (not recommended)\n2: Position Tags (from HentaiRim)\n3: Real-Time Collision Detection (default)\n4: Mixed Method (safest, but not the most accurate)
+$SSL_bUsePhysicBasedDetection	Enable Collision Detections
+$SSL_bUsePhysicBasedDetectionHighlight	Toggles the use of advanced collision type-guessing based on relative bone positions and movements.\nCollision typing offers real-time info on the interactions an actor is involved in at any given moment.\nIf disabled, the system will instead rely upon position tags (from HentaiRim).
 $SSL_fEnjRaiseMultInter	EnjRaise Mult: Interactions
 $SSL_fEnjRaiseMultInterHighlight	The main multiplier/factor determining the rate at which enjoyment increases for an actor based on detected interactions. Higher values mean faster enjoyment raise and vice versa.\n Can be reduced to zero if user desires enjoyment raise to depend solely on the enjoyment minigame.
 

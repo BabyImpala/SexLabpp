@@ -1691,10 +1691,6 @@ Int Property CONSENT_NONCONNONSUB 	= 1 AutoReadOnly Hidden
 Int Property CONSENT_CONSUB 		= 2 AutoReadOnly Hidden
 Int Property CONSENT_NONCONSUB 		= 3 AutoReadOnly Hidden
 
-Int Property ACTORINT_NONPART 		= 0 AutoReadOnly Hidden
-Int Property ACTORINT_PASSIVE 		= 1 AutoReadOnly Hidden
-Int Property ACTORINT_ACTIVE 		= 2 AutoReadOnly Hidden
-
 ;--> actor is getting non-penile stimulation
 int Property pStimulation			= 0  AutoReadOnly Hidden	;pos_crotch is being fingered, fisted, or toys_inserted
 int Property aAnimObjFace			= 1  AutoReadOnly Hidden	;pos_anim_obj is in front of partner's face
@@ -1742,39 +1738,6 @@ EndProperty
 ; --- Interactions Detections                    --- ;
 ; -------------------------------------------------- ;
 
-string[] Function NameAllInteractions() global
-    string[] interTypes = new string[28]
-    interTypes[0] = "pStimulation"
-    interTypes[1] = "aAnimObjFace"
-    interTypes[2] = "pAnimObjFace"
-    interTypes[3] = "pSuckingToes"
-    interTypes[4] = "pGrinding"
-    interTypes[5] = "pSkullfuck"
-    interTypes[6] = "aHandJob"
-    interTypes[7] = "aFootJob"
-    interTypes[8] = "aBoobJob"
-    interTypes[9] = "bKissing"
-    interTypes[10] = "aSuckingToes"
-    interTypes[11] = "pFacial"
-    interTypes[12] = "aOral"
-    interTypes[13] = "aLickingShaft"
-    interTypes[14] = "aDeepthroat"
-    interTypes[15] = "pVaginal"
-    interTypes[16] = "pAnal"
-    interTypes[17] = "aFacial"
-    interTypes[18] = "aGrinding"
-    interTypes[19] = "pHandJob"
-    interTypes[20] = "pFootJob"
-    interTypes[21] = "pBoobJob"
-    interTypes[22] = "pLickingShaft"
-    interTypes[23] = "pOral"
-    interTypes[24] = "pDeepthroat"
-    interTypes[25] = "aSkullfuck"
-    interTypes[26] = "aVaginal"
-    interTypes[27] = "aAnal"
-    return interTypes
-EndFunction
-
 bool[] Function ListDetectedPhysicsInter(Actor akPosition)
 	;not relying on GetCollisionActions() to avoid slow papyrus loops and else-ifs
 	If !IsInteractionRegistered()
@@ -1811,117 +1774,38 @@ bool[] Function ListDetectedPhysicsInter(Actor akPosition)
 	return phyActive
 EndFunction
 
-bool[] Function ListDetectedRimTagsInter(Actor akPosition)
+bool[] Function ListDetectedPosTagsInter(Actor akPosition)
     If !HasSceneTag("RimTagged") ;hentairim
         return Utility.CreateBoolArray(1, False)
     EndIf
-	string[] rimTags = SexLabRegistry.GetPositionTags(GetActiveScene(), GetActiveStage(), GetPositionIdx(akPosition))
-	bool[] rimActive = Utility.CreateBoolArray(28, False)
+	string[] posTags = SexLabRegistry.GetPositionTags(GetActiveScene(), GetActiveStage(), GetPositionIdx(akPosition))
+	bool[] tagActive = Utility.CreateBoolArray(28, False)
+	string[] interTypes = Config.NameAllInteractions
 	int i = 0
-	int len = rimTags.Length
+	int len = posTags.Length
 	While (i < len)
-		string tag = rimTags[i]
-		If (tag=="kis")
-			rimActive[bKissing] = true
-		ElseIf (tag=="sst" || tag=="fst" || tag=="bst")
-			rimActive[pStimulation] = true
-		ElseIf (tag=="ssb" || tag=="fsb")
-			rimActive[aOral] = true
-		ElseIf (tag=="smf" || tag=="fmf" || tag=="cun")
-			rimActive[pOral] = true
-		ElseIf (tag=="shj" || tag=="fhj")
-			rimActive[pHandJob] = true
-		ElseIf (tag=="sfj" || tag=="ffj")
-			rimActive[pFootJob] = true
-		ElseIf (tag=="stf" || tag=="ftf")
-			rimActive[pBoobJob] = true
-		ElseIf tag=="sdv" || tag=="fdv"
-			rimActive[aVaginal] = true
-		ElseIf tag=="sda" || tag=="fda"
-			rimActive[aAnal] = true
-		ElseIf (tag=="svp" || tag=="fvp" || tag=="sdp" || tag=="fdp" || tag=="scg" || tag=="fcg")
-			rimActive[pVaginal] = true
-		ElseIf (tag=="sap" || tag=="fap" || tag=="sdp" || tag=="fdp" || tag=="sac" || tag=="fac")
-			rimActive[pAnal] = true
-		EndIf
+		int tagIdx = interTypes.Find(posTags[i])
+		If (tagIdx != -1)
+            tagActive[tagIdx] = true
+        EndIf
 		i += 1
 	EndWhile
-	return rimActive
-EndFunction
-
-bool[] Function ListDetectedASLTagsInter(int ActorInterInfo)
-	If HasStageTag("RimTagged") || (ActorInterInfo == ACTORINT_NONPART) 
-		return Utility.CreateBoolArray(1, False)
-	EndIf
-	bool stageHJ = HasStageTag("Masturbation") || HasStageTag("HandJob") || HasStageTag("Fingering")
-	bool stageFJ = HasStageTag("FootJob") || HasStageTag("Feet")
-	bool stageBJ = HasStageTag("BoobJob")
-	bool stageGR = HasStageTag("Grinding")
-	bool stageOR = HasStageTag("Oral")
-	bool stageVG = HasStageTag("Vaginal")
-	bool stageAN = HasStageTag("Anal")
-	;actor assumed passive/receiving overall is active for some action
-	bool isActive = (ActorInterInfo == ACTORINT_ACTIVE)
-	bool isPassive = (ActorInterInfo == ACTORINT_PASSIVE)
-	If (stageOR||stageHJ||stageFJ||stageBJ) 
-		If isPassive
-			isPassive = False
-			isActive = true
-		ElseIf isActive
-			isActive = False
-			isPassive = true
-		EndIf
-	EndIf
-	bool[] aslActive = Utility.CreateBoolArray(28, False)
-	aslActive[bKissing] = HasStageTag("Kissing")
-	aslActive[aGrinding] = stageGR && isActive
-	aslActive[pGrinding] = stageGR && isPassive
-	aslActive[aHandJob] = stageHJ && isActive
-	aslActive[pHandJob] = stageHJ && isPassive
-	aslActive[aFootJob] = stageFJ && isActive
-	aslActive[pFootJob] = stageFJ && isPassive
-	aslActive[aBoobJob] = stageBJ && isActive
-	aslActive[pBoobJob] = stageBJ && isPassive
-	aslActive[aOral] = stageOR && isActive
-	aslActive[pOral] = stageOR && isPassive
-	aslActive[aVaginal] = stageVG && isActive
-	aslActive[pVaginal] = stageVG && isPassive
-	aslActive[aAnal] = stageAN && isActive
-	aslActive[pAnal] = stageAN && isPassive
-	return aslActive
+	return tagActive
 EndFunction
 
 ; -------------------------------------------------- ;
 ; --- Interactions Factors                       --- ;
 ; -------------------------------------------------- ;
 
-string Function CreateInteractionString(Actor akPosition, int ActorInterInfo, int iStrength = -1)
-    If (iStrength == -1)
-        iStrength = Config.InterDetectionStrength
-    EndIf
-	If (iStrength < 0 || iStrength > 4)
-		iStrength = 4
-	EndIf
+string Function CreateInteractionString(Actor akPosition)
 	string ret = "..."
-	string[] interTypes = NameAllInteractions()
-	If iStrength == 1
-		return InterateForInteractionString(interTypes, ListDetectedASLTagsInter(ActorInterInfo))
-	ElseIf iStrength == 2
-		return InterateForInteractionString(interTypes, ListDetectedRimTagsInter(akPosition))
-	ElseIf iStrength == 3
-		return InterateForInteractionString(interTypes, ListDetectedPhysicsInter(akPosition))
-	ElseIf iStrength == 4
+	string[] interTypes = Config.NameAllInteractions
+	If Config.UsePhysicBasedDetection
 		ret = InterateForInteractionString(interTypes, ListDetectedPhysicsInter(akPosition))
-		If !ret
-			ret = InterateForInteractionString(interTypes, ListDetectedRimTagsInter(akPosition))
-			If !ret
-				ret = InterateForInteractionString(interTypes, ListDetectedASLTagsInter(ActorInterInfo))
-			EndIf
-		EndIf
-		return ret
 	Else
-		return ret
+		ret = InterateForInteractionString(interTypes, ListDetectedPosTagsInter(akPosition))
 	EndIf
+	return ret
 EndFunction
 
 float Function CalculateInteractionFactor(Actor akPosition, string InteractionString)
@@ -2138,42 +2022,6 @@ EndFunction
 ; -------------------------------------------------- ;
 ; --- Utility Functions                          --- ;
 ; -------------------------------------------------- ;
-
-int Function GuessActorInterInfo(Actor akPosition, int ActorSex, bool ActorIsSub, int ConSubStatus, bool SameSexThread)
-	;IMP: roles will be reversed for oral/handjob/etc (passive is giving; active is receiving)
-	int ActorInterInfo = ACTORINT_NONPART
-	If ConSubStatus > CONSENT_NONCONNONSUB
-		bool FemDom = HasSceneTag("FemDom")
-		If !SameSexThread
-			If (ActorIsSub && !FemDom) || (!ActorIsSub && FemDom)
-				ActorInterInfo = ACTORINT_PASSIVE
-			ElseIf (!ActorIsSub && !FemDom) || (ActorIsSub && FemDom)
-				ActorInterInfo = ACTORINT_ACTIVE
-			EndIf
-		Else
-			If ActorIsSub
-				ActorInterInfo = ACTORINT_PASSIVE
-			ElseIf !ActorIsSub
-				ActorInterInfo = ACTORINT_ACTIVE
-			EndIf
-		EndIf
-	Else
-		If !SameSexThread
-			If ActorSex == 1 || ActorSex == 4
-				ActorInterInfo = ACTORINT_PASSIVE
-			Else ; ignoring complexities with futas
-				ActorInterInfo = ACTORINT_ACTIVE
-			EndIf
-		Else
-			If _Positions.Length > 1 && GetPositionIdx(akPosition) == 0
-				ActorInterInfo = ACTORINT_PASSIVE
-			Else
-				ActorInterInfo = ACTORINT_ACTIVE
-			EndIf
-		EndIf
-	EndIf
-	return ActorInterInfo
-EndFunction
 
 string Function InterateForInteractionString(string[] interTypes, bool[] interActive)
 	string ret = ""
