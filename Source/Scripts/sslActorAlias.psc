@@ -249,6 +249,8 @@ Actor _killer
 int _AnimVarIsNPC
 bool _AnimVarbHumanoidFootIKDisable
 
+bool _ActorLocked
+
 ; Orgasms
 int _OrgasmCount
 bool _CanOrgasm
@@ -325,6 +327,10 @@ endProperty
 float _StartedAt
 float _LastOrgasm
 
+bool Function ActorIsLocked()
+	return _ActorLocked
+EndFunction
+
 ; ------------------------------------------------------- ;
 ; --- Alias IDLE                                      --- ;
 ; ------------------------------------------------------- ;
@@ -396,8 +402,6 @@ EndFunction
 	Pre animation start. The alias is waiting for the underlying thread to begin the animation
 /;
 
-bool __SETUP_DONE
-
 State Ready
 	Event OnBeginState()
 		RegisterForModEvent("SSL_PREPARE_Thread" + _Thread.tid, "OnDoPrepare")
@@ -448,7 +452,6 @@ State Ready
 		EndIf
 		_ActorRef.SetFactionRank(_AnimatingFaction, 1)
 		_ActorRef.EvaluatePackage()
-		__SETUP_DONE = false
 		GoToState(STATE_PAUSED)
 		If (asStringArg != "skip")
 			_Thread.PrepareDone()
@@ -475,7 +478,6 @@ State Ready
 		EndIf
 		_VoiceDelay = _BaseDelay
 		_ExpressionDelay = _BaseDelay * 2
-		__SETUP_DONE = true
 		; Post Delayed Initialization
 		UpdateBaseEnjoymentCalculations()
 		If (!_Config.DebugMode)
@@ -533,10 +535,10 @@ State Paused
 	EndFunction
 	Event OnStartPlaying(string asEventName, string asStringArg, float afNumArg, form akSender)
 		UnregisterForModEvent("SSL_READY_Thread" + _Thread.tid)
-		While (!__SETUP_DONE)
+		LockActor()
+		While (!_Thread.AllActorsLocked())
 			Utility.Wait(0.05)
 		EndWhile
-		LockActor()
 		If (_sex <= 2)
 			If (DoUndress)
 				DoUndress = false
@@ -593,6 +595,7 @@ State Paused
 		_ActorRef.SetAnimationVariableBool("bHumanoidFootIKDisable", 1)
 		SendDefaultAnimEvent()
 		GoToState(STATE_PLAYING)
+		_ActorLocked = True
 	EndFunction
 	
 	Function RemoveStrapon()
@@ -886,6 +889,7 @@ State Animating
 		EndIf
 		UnlockActorImpl()
 		GoToState(STATE_PAUSED)
+		_ActorLocked = False
 	EndFunction
 	
 	Function ResetPosition(int aiStripData, int aiPositionGenders)
@@ -1118,6 +1122,7 @@ Function Initialize()
 	_hasOrgasm = false
 	_AllowRedress = true
 	ForceOpenMouth = false
+	_ActorLocked = false
 	; Integers
 	_sex = -1
 	_livestatus = 0

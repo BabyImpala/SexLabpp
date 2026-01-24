@@ -497,6 +497,17 @@ bool Property IsLocked hidden
 	EndFunction
 EndProperty
 
+bool Function AllActorsLocked()
+	int i = 0
+	While (i < _Positions.Length)
+		If (!ActorAlias[i].ActorIsLocked())
+			return false
+		EndIf
+		i += 1
+	EndWhile
+	return true
+EndFunction
+
 ; Every valid state will oerwrite this
 ; Should this ever be called, then the Thread was in an unspecified state and will be reset
 int Function GetStatus()
