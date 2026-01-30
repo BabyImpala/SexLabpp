@@ -1572,21 +1572,48 @@ bool Function IsOralComplex(Actor ActorRef)
 EndFunction
 
 Function ApplyCumFX(Actor SourceRef)
-	; TODO: If there is no schlong, consider failing silently
-	If (!Config.UseCum)
-		return
-	EndIf
+	If (!IsCollisionRegistered() || !Config.UseCum)
+        return
+    EndIf
 	int i = 0
-	while i < _Positions.Length
-		int otherSex = GetNthPositionSex(i)
-
-		Log("Checking for cum FX: " + i + " " + otherSex)
-
-		if (i != GetPosition(SourceRef)) && (otherSex == 1 || otherSex == 2 || otherSex == 4 || (SameSexThread() && (otherSex == 0 || otherSex == 3)))
-			ActorAlias[i].ApplyCum()
-		endIf
+	While (i < _Positions.Length)
+		Actor TargetRef = _Positions[i]
+		If (TargetRef != SourceRef && TargetRef.Is3DLoaded())
+			Cell ParentCell = TargetRef.GetParentCell()
+			If (ParentCell && ParentCell.IsAttached())
+				;variable names are from SourceRef's (male/futa) perspective
+				;bool pHandJob_ = HasCollisionAction(CTYPE_HandJob, TargetRef, SourceRef)
+				;bool pFootJob_ = HasCollisionAction(CTYPE_FootJob, TargetRef, SourceRef)
+				;bool pBoobJob_ = HasCollisionAction(CTYPE_BoobJob, TargetRef, SourceRef)
+				;bool aFacial_ = HasCollisionAction(CTYPE_Facial, TargetRef, SourceRef)
+				;bool aSkullfuck_ = HasCollisionAction(CTYPE_Skullfuck, TargetRef, SourceRef)
+				bool pOral_ = HasCollisionAction(CTYPE_Oral, TargetRef, SourceRef)
+				bool pDeepthroat_ = HasCollisionAction(CTYPE_Deepthroat, TargetRef, SourceRef)
+				bool pLickingShaft_ = HasCollisionAction(CTYPE_LickingShaft, TargetRef, SourceRef)
+				bool aVaginal_ = HasCollisionAction(CTYPE_Vaginal, TargetRef, SourceRef)
+				bool aAnal_ = HasCollisionAction(CTYPE_Anal, TargetRef, SourceRef)
+				bool any_oral = pOral_ || pDeepthroat_ || pLickingShaft_
+				Log("ApplyCumFX(): Source [" + SexLabUtil.ActorName(SourceRef) + "] Target [" + SexLabUtil.ActorName(TargetRef) + "] CumFX_Types [O: " + any_oral + ", V: " + aVaginal_ + ", A: " + aAnal_ + "]")
+				int aiType = -2
+				If (aVaginal_)
+					aiType = ActorLib.FX_VAGINAL
+				ElseIf (aAnal_)
+					aiType = ActorLib.FX_ANAL
+				ElseIf (any_oral)
+					aiType = ActorLib.FX_ORAL
+				EndIf
+				If (aiType != -2)
+					ActorLib.AddCumFx(TargetRef, aiType)
+					Int handle = ModEvent.Create("OnCumFxApplied")
+					ModEvent.PushForm(handle, TargetRef)
+					ModEvent.PushForm(handle, SourceRef)
+					ModEvent.PushInt(handle, aiType)
+					ModEvent.Send(handle)
+				EndIf
+			EndIf
+		EndIf
 		i += 1
-	endWhile
+	EndWhile
 EndFunction
 
 ; ------------------------------------------------------- ;

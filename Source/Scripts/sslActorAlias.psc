@@ -1064,32 +1064,6 @@ Function Redress()
 EndFunction
 
 ; ------------------------------------------------------- ;
-; --- Orgasm FX                                  --- ;
-; ------------------------------------------------------- ;
-
-function ApplyCum()	; NOTE: Temporary?
-	; TODO: _Tread.ApplyCumFX(Source = _ActorRef)
-
-	; Log("START", "ApplyCum")
-	if _ActorRef && _ActorRef.Is3DLoaded()
-		Cell ParentCell = _ActorRef.GetParentCell()
-
-		bool vaginalPen = _Thread.IsVaginalComplex(_ActorRef)
-		bool oralPen = _Thread.IsOralComplex(_ActorRef)
-		bool analPen = _Thread.IsAnalComplex(_ActorRef)
-
-		If _Config.DebugMode
-			Log("ApplyCum(): Adding v = " + vaginalPen + " o = " + oralPen + " a = " + analPen)
-		EndIf
-
-		if (vaginalPen || oralPen || analPen) && ParentCell && ParentCell.IsAttached() 
-			; thanks a lot for removing ActorLib scrab
-			(Game.GetFormFromFile(0xD62, "SexLab.esm") as sslActorLibrary).AddCum(_ActorRef, vaginalPen, oralPen, analPen)
-		endIf
-	endIf
-endFunction
-
-; ------------------------------------------------------- ;
 ; --- Initialization                                  --- ;
 ; ------------------------------------------------------- ;
 ;/
