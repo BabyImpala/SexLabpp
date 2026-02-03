@@ -4,6 +4,8 @@
 #include "Util/Premutation.h"
 #include "Registry/Util/RayCast/ObjectBound.h"
 
+// TODO: delete
+
 namespace Thread::NiNode
 {
 	bool RotateNode(RE::NiPointer<RE::NiNode> niNode, const NiMath::Segment& sNode, const RE::NiPoint3& pTarget, float maxAngleAdjust)
@@ -42,36 +44,6 @@ namespace Thread::NiNode
 
 		RE::NiUpdateData data{ 0.5f, RE::NiUpdateData::Flag::kNone };
 		niNode->Update(data);
-		return true;
-	}
-
-	NiPosition::Snapshot::Snapshot(NiPosition& a_position) :
-		position(a_position),
-		bHead([&]() {
-			const auto nihead = a_position.nodes.head.get();
-			if (!nihead)
-				return ObjectBound{};
-			auto ret = ObjectBound::MakeBoundingBox(nihead);
-			return ret ? *ret : ObjectBound{};
-		}())
-	{}
-
-	bool NiPosition::Snapshot::GetHeadHeadInteractions(const Snapshot& a_partner)
-	{
-		const auto mouthstart = GetMouthStartPoint();
-		const auto partnermouthstart = a_partner.GetMouthStartPoint();
-		if (!mouthstart || !partnermouthstart)
-			return false;
-		const auto distance = mouthstart->GetDistance(*partnermouthstart);
-		if (distance > Settings::fDistanceMouth)
-			return false;
-		const auto vMyHead = *mouthstart - position.nodes.head->world.translate;
-		const auto vPartnerHead = *partnermouthstart - a_partner.position.nodes.head->world.translate;
-		auto angle = NiMath::GetAngleDegree(vMyHead, vPartnerHead);
-		if (std::abs(angle - 180) > Settings::fAngleKissing) {
-			return false;
-		}
-		interactions.emplace_back(a_partner.position.actor, Interaction::Action::Kissing, distance);
 		return true;
 	}
 
@@ -394,31 +366,6 @@ namespace Thread::NiNode
 		};
 		const auto& n = a_partner.position.nodes;
 		return get(n.animobj_a) || get(n.animobj_b) || get(n.animobj_r) || get(n.animobj_l);
-	}
-
-	std::optional<RE::NiPoint3> NiPosition::Snapshot::GetMouthStartPoint() const
-	{
-		auto ret = GetThroatPoint();
-		if (!ret) {
-			return std::nullopt;
-		}
-		const auto& nihead = position.nodes.head;
-		assert(nihead);
-		const auto distforward = bHead.boundMax.y * 0.88f;
-		const auto vforward = nihead->world.rotate.GetVectorY();
-		return (vforward * distforward) + *ret;
-	}
-
-	std::optional<RE::NiPoint3> NiPosition::Snapshot::GetThroatPoint() const
-	{
-		if (!bHead.IsValid()) {
-			return std::nullopt;
-		}
-		const auto& nihead = position.nodes.head;
-		assert(nihead);
-		const auto distdown = bHead.boundMin.z * 0.17f;
-		const auto vup = nihead->world.rotate.GetVectorZ();
-		return (vup * distdown) + nihead->world.translate;
 	}
 
 }	 // namespace Thread::NiNode

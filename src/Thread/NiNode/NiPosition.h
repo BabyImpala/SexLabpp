@@ -5,6 +5,8 @@
 #include "Registry/Define/Sex.h"
 #include "Registry/Util/RayCast/ObjectBound.h"
 
+// TODO: delete
+
 namespace Thread::NiNode
 {
 	/// @brief Rotate a_schlong s.t. a_target is on the line drawn by its orientation
@@ -55,9 +57,6 @@ namespace Thread::NiNode
 	{
 		struct Snapshot
 		{
-			Snapshot(NiPosition& a_position);
-			~Snapshot() = default;
-
 			// This interacting with partner penis
 			bool GetHeadPenisInteractions(const Snapshot& a_partner, std::shared_ptr<Node::NodeData::Schlong> a_schlong);
 			bool GetCrotchPenisInteractions(const Snapshot& a_partner, std::shared_ptr<Node::NodeData::Schlong> a_schlong);
@@ -68,13 +67,8 @@ namespace Thread::NiNode
 			bool GetVaginaVaginaInteractions(const Snapshot& a_partner);
 			bool GetVaginaLimbInteractions(const Snapshot& a_partner);
 			// Misc/Non Sexual
-			bool GetHeadHeadInteractions(const Snapshot& a_partner);
 			bool GetHeadFootInteractions(const Snapshot& a_partner);
 			bool GetHeadAnimObjInteractions(const Snapshot& a_partner);
-
-		public:
-			std::optional<RE::NiPoint3> GetMouthStartPoint() const;
-			std::optional<RE::NiPoint3> GetThroatPoint() const;
 
 		public:
 			NiPosition& position;
