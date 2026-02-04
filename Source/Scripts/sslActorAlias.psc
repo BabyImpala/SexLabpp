@@ -418,7 +418,6 @@ State Ready
 		_ActorRef.SetActorValue("Paralysis", 0.0)
 		float interval = 0.05
 		If(_ActorRef == _PlayerRef)
-			Game.SetPlayerAIDriven()
 			If (UI.IsMenuOpen("Dialogue Menu"))
 				UI.InvokeString("Dialogue Menu", "_global.skse.CloseMenu", "Dialogue Menu")
 				While (UI.IsMenuOpen("Dialogue Menu"))
@@ -570,9 +569,6 @@ State Paused
 				MiscUtil.SetFreeCameraState(true)
 				MiscUtil.SetFreeCameraSpeed(_Config.AutoSUCSM)
 			EndIf
-		Else
-			ActorUtil.AddPackageOverride(_ActorRef, _Thread.DoNothingPackage, 100, 1)
-			_ActorRef.EvaluatePackage()
 		EndIf
 		Debug.SendAnimationEvent(_ActorRef, "IdleFurnitureExit")
 		Debug.SendAnimationEvent(_ActorRef, "AnimObjectUnequip")
@@ -595,9 +591,6 @@ State Paused
 			MiscUtil.SetFreeCameraState(false)
 			Game.EnablePlayerControls(abMovement=true, abFighting=false, abCamSwitch=true, abLooking=true, \
 				abSneaking=true, abMenu=true, abActivate=false, abJournalTabs=true, aiDisablePOVType=0)
-		Else
-			ActorUtil.RemovePackageOverride(_ActorRef, _Thread.DoNothingPackage)
-			_ActorRef.EvaluatePackage()
 		EndIf
 		UnlockActorImpl()
 		Log("Unlocked Actor: " + GetActorName())

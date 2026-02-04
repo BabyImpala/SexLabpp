@@ -475,7 +475,6 @@ bool Property HasPlayer Hidden
 EndProperty
 
 sslSystemConfig Property Config Auto
-Package Property DoNothingPackage Auto	; used in the alias scripts
 Message Property InvalidCenterMsg Auto	; Invalid new cewnter -> [0: Keep Old Center, 1: End Scene]
 
 ; Constants
@@ -2430,6 +2429,8 @@ EndFunction
 ;				╚══════╝╚══════╝ ╚═════╝ ╚═╝  ╚═╝ ╚═════╝   ╚═╝   				;
 ; ----------------------------------------------------------------------------- ;
 ; *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-* ;
+
+Package Property DoNothingPackage Auto	; used previously in the alias scripts
 
 sslThreadLibrary Property ThreadLib Hidden
 	sslThreadLibrary Function Get()
