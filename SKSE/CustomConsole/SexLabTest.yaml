@@ -1,13 +1,35 @@
-name: debug
-script: Debug
+name: SexLab
+alias: sl
+script: sslConsoleCommands
 help: SexLab debug script
 subs:
-  - name: notification
-    alias: notify
-    func: Notification
-    help: Debug.Notifcation
+  - name: ml-start
+    alias: mlstart
+    func: MLStart
+    help: Start recording of data to train typing models
     args:
-      - name: message
+      - name: type
         type: String
         required: true
-        help: Message to print
+        help: Type of the action to record
+      - name: enabled
+        type: bool
+        required: true
+        help: If the given type is currently active
+  - name: ml-switch
+    alias: mlswitch
+    func: MLSwitch
+    help: Switch the enabled state of the trained type
+    args:
+      - name: enabled
+        type: int
+        default: -1
+        required: false
+        help: If the given type is currently active (-1 to switch, 0 to disable, 1 to enable)
+  - name: ml-stop
+    alias: mlstop
+    func: MLStop
+    help: Stop recording of data to train typing models
+  - name: ml-drop
+    func: MLDrop
+    help: Clear recorded data for training typing models
