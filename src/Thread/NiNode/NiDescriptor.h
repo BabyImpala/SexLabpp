@@ -12,6 +12,8 @@ namespace Thread::NiNode
 		Facing,
 		Time,
 		Velocity,
+		Oscillation,
+		Impulse,
 		Stability,
 	};
 	constexpr static inline size_t NUM_FEATURES = magic_enum::enum_count<Feature>();
@@ -38,7 +40,7 @@ namespace Thread::NiNode
 				assert(!std::isnan(value));
 				ret += coeff * value;
 			}
-			return ret;
+			return std::clamp(ret, 0.0f, 1.0f);
 		}
 
 		std::string ToString() const
@@ -91,6 +93,6 @@ namespace Thread::NiNode
 		static inline float bias{ NaN };
 	};
 
-	using KissingDescriptor = InteractionDescriptor<1, Feature::Distance, Feature::Facing, Feature::Time, Feature::Velocity, Feature::Stability>;
+	using KissingDescriptor = InteractionDescriptor<1, Feature::Distance, Feature::Facing, Feature::Time, Feature::Velocity, Feature::Oscillation, Feature::Impulse>;
 
 }  // namespace Thread::NiNode
