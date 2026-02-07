@@ -22,7 +22,7 @@ namespace Thread::NiNode
 		float Length() const { return trajectory.Length(); }
 
 		/// @brief Check if motion describes a valid movement
-		bool DescribesMotion() const { return !trajectory.isPoint; }
+		bool DescribesMotion() const { return !trajectory.IsPoint(); }
 
 	  public:
 		NiMath::Segment trajectory;			// dominant motion segment

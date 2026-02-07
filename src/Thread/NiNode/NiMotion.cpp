@@ -51,7 +51,7 @@ namespace Thread::NiNode
 		if (_size < 2) {
 			return NiMath::Segment(_size == 1 ? GetNthMoment(c, 0) : RE::NiPoint3::Zero());
 		}
-		return NiMath::LeastSquares(_moments[c], FLT_EPSILON);
+		return NiMath::BestFit(_moments[c]);
 	}
 
 	MotionDescriptor NiMotion::DescribeMotion(Anchor c) const
