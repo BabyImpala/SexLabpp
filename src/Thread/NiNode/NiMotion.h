@@ -22,7 +22,7 @@ namespace Thread::NiNode
 		float Length() const { return trajectory.Length(); }
 
 		/// @brief Check if motion describes a valid movement
-		bool Valid() const { return duration && !trajectory.isPoint; }
+		bool DescribesMotion() const { return !trajectory.isPoint; }
 
 	  public:
 		NiMath::Segment trajectory;			// dominant motion segment
@@ -60,9 +60,20 @@ namespace Thread::NiNode
 		size_t Length() const { return _size; }
 		size_t Capacity() const { return _capacity; }
 
+		/// @brief Get the nth most recent moment for the given anchor (0 = oldest, Size()-1 = latest)
 		const RE::NiPoint3& GetNthMoment(Anchor c, size_t n) const;
 		const ObjectBound& GetNthHeadBound(size_t n) const;
 		float GetNthTimestamp(size_t n) const;
+		
+		/// @brief Get the most recent moment for the given anchor
+		const RE::NiPoint3& GetLatestMoment(Anchor c) const { return GetNthMoment(c, _size - 1); }
+		const ObjectBound& GetLatestHeadBound() const { return GetNthHeadBound(_size - 1); }
+		float GetLatestTimestamp() const { return GetNthTimestamp(_size - 1); }
+
+		/// @brief Get the oldest moment for the given anchor
+		const RE::NiPoint3& GetFirstMoment(Anchor c) const { return GetNthMoment(c, 0); }
+		const ObjectBound& GetFirstHeadBound() const { return GetNthHeadBound(0); }
+		float GetFirstTimestamp() const { return GetNthTimestamp(0); }
 
 		/// @brief Iterate through all stored moments for the given anchor, in chronological order
 		/// @param c Anchor to iterate

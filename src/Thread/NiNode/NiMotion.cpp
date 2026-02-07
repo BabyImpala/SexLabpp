@@ -63,17 +63,8 @@ namespace Thread::NiNode
 		}
 
 		out.duration = GetNthTimestamp(_size - 1) - GetNthTimestamp(0);
-		if (out.duration <= 0.0f || out.trajectory.isPoint) {
-			logger::error("NiMotion::DescribeMotion: Invalid duration {} or point-like trajectory", out.duration);
-			return out;
-		}
-
 		auto axis = out.trajectory.Vector();
-		const auto len = axis.Unitize();
-		if (len < FLT_EPSILON) {
-			logger::error("NiMotion::DescribeMotion: Trajectory length too small {}", len);
-			return out;
-		}
+		axis.Unitize();
 		const auto mean = out.Mean();
 
 		// Initialize accumulators
