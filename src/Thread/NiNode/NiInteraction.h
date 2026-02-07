@@ -10,7 +10,20 @@ namespace Thread::NiNode
 		enum class Type
 		{
 			None = 0,
+			Vaginal,
+			Anal,
+			Oral,
+			Grinding,
+			Deepthroat,
+			Skullfuck,
+			LickingShaft,
+			FootJob,
+			HandJob,
 			Kissing,
+			Facial,
+			AnimObjFace,
+			ToeSucking,
+			Boobjob,
 		} type{ Type::None };
 		float confidence{ 0.0f };  // 0..1
 		float duration{ 0.0f };	   // ms? COMEBACK: check units
@@ -26,6 +39,19 @@ namespace Thread::NiNode
 		constexpr static inline size_t NUM_TYPES = magic_enum::enum_count<Type>();
 	};
 
+	NiInteraction EvaluateVaginal(const NiMotion& a_motionA, const NiMotion& a_motionB);
+	NiInteraction EvaluateAnal(const NiMotion& a_motionA, const NiMotion& a_motionB);
+	NiInteraction EvaluateOral(const NiMotion& a_motionA, const NiMotion& a_motionB);
+	NiInteraction EvaluateGrinding(const NiMotion& a_motionA, const NiMotion& a_motionB);
+	NiInteraction EvaluateDeepthroat(const NiMotion& a_motionA, const NiMotion& a_motionB);
+	NiInteraction EvaluateSkullfuck(const NiMotion& a_motionA, const NiMotion& a_motionB);
+	NiInteraction EvaluateLickingShaft(const NiMotion& a_motionA, const NiMotion& a_motionB);
+	NiInteraction EvaluateFootJob(const NiMotion& a_motionA, const NiMotion& a_motionB);
+	NiInteraction EvaluateHandJob(const NiMotion& a_motionA, const NiMotion& a_motionB);
 	NiInteraction EvaluateKissing(const NiMotion& a_motionA, const NiMotion& a_motionB);
+	NiInteraction EvaluateFacial(const NiMotion& a_motionA, const NiMotion& a_motionB);
+	NiInteraction EvaluateAnimObjFace(const NiMotion& a_motionA, const NiMotion& a_motionB);
+	NiInteraction EvaluateToeSucking(const NiMotion& a_motionA, const NiMotion& a_motionB);
+	NiInteraction EvaluateBoobjob(const NiMotion& a_motionA, const NiMotion& a_motionB);
 
 }  // namespace Thread::NiNode
