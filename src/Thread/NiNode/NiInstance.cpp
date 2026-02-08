@@ -146,7 +146,8 @@ namespace Thread::NiNode
 				interaction.timeActive = 0.0f;
 				continue;
 			}
-			float conf = NiMath::Sigmoid(interaction.descriptor->Predict());
+			const float confRaw = interaction.descriptor->Predict();
+			const float conf = NiMath::Sigmoid(confRaw);
 			assert(conf >= 0.0f && conf <= 1.0f);
 			const auto doActive = !interaction.active && conf >= Settings::fEnterThreshold;
 			const auto doInactive = interaction.active && conf < Settings::fExitThreshold;
