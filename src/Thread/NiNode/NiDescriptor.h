@@ -41,6 +41,7 @@ namespace Thread::NiNode
 			Oscillation,
 			Impulse,
 			Stability,
+			StabilityVariance,
 			AngleXY,
 			AngleXZ,
 			AngleYZ,
