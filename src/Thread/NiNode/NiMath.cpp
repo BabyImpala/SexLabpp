@@ -2,6 +2,24 @@
 
 namespace Thread::NiNode::NiMath
 {
+	namespace
+	{
+		inline RE::NiPoint3 ProjectToXY(const RE::NiPoint3& v)
+		{
+			return { v.x, v.y, 0.0f };
+		}
+
+		inline RE::NiPoint3 ProjectToXZ(const RE::NiPoint3& v)
+		{
+			return { v.x, 0.0f, v.z };
+		}
+
+		inline RE::NiPoint3 ProjectToYZ(const RE::NiPoint3& v)
+		{
+			return { 0.0f, v.y, v.z };
+		}
+	}
+
 	Segment Segment::ShortestSegmentTo(const Segment& other) const
 	{
 		if (IsPoint() && other.IsPoint()) {
@@ -182,7 +200,7 @@ namespace Thread::NiNode::NiMath
 			+ (K * K) * (1.0f - std::cosf(step));
 	}
 
-	float GetCosAngle(const RE::NiPoint3& v1, const RE::NiPoint3& v2)
+	float GetAngleCos(const RE::NiPoint3& v1, const RE::NiPoint3& v2)
 	{
 		const auto dot = v1.Dot(v2);
 		const auto l = v1.Length() * v2.Length();
@@ -191,7 +209,7 @@ namespace Thread::NiNode::NiMath
 	
 	float GetAngle(const RE::NiPoint3& v1, const RE::NiPoint3& v2)
 	{
-		return std::acosf(GetCosAngle(v1, v2));
+		return std::acosf(GetAngleCos(v1, v2));
 	}
 
 	float GetAngleDegree(const RE::NiPoint3& v1, const RE::NiPoint3& v2)
@@ -212,6 +230,21 @@ namespace Thread::NiNode::NiMath
 	float GetAngleYZ(const RE::NiMatrix3& rot)
 	{
 		return std::atan2(-rot.entry[1][2], rot.entry[1][1]);
+	}
+	
+	float GetAngleXZ(const RE::NiPoint3& u, const RE::NiPoint3& v)
+	{
+		return GetAngleCos(ProjectToXZ(u), ProjectToXZ(v));
+	}
+
+	float GetAngleXY(const RE::NiPoint3& u, const RE::NiPoint3& v)
+	{
+		return GetAngleCos(ProjectToXY(u), ProjectToXY(v));
+	}
+
+	float GetAngleYZ(const RE::NiPoint3& u, const RE::NiPoint3& v)
+	{
+		return GetAngleCos(ProjectToYZ(u), ProjectToYZ(v));
 	}
 	
 	RE::NiPoint3 ProjectedComponent(RE::NiPoint3 U, RE::NiPoint3 V)

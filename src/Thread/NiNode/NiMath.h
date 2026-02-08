@@ -36,7 +36,7 @@ namespace Thread::NiNode::NiMath
 	/// @param v2 The second vector
 	/// @return The angle, in radians
 	float GetAngle(const RE::NiPoint3& v1, const RE::NiPoint3& v2);
-	float GetCosAngle(const RE::NiPoint3& v1, const RE::NiPoint3& v2);
+	float GetAngleCos(const RE::NiPoint3& v1, const RE::NiPoint3& v2);
 	float GetAngleDegree(const RE::NiPoint3& v1, const RE::NiPoint3& v2);
 
 	/// @brief Get the angle when projecting the matrix onto a specific plane
@@ -45,6 +45,10 @@ namespace Thread::NiNode::NiMath
 	float GetAngleXZ(const RE::NiMatrix3& rot);
 	float GetAngleXY(const RE::NiMatrix3& rot);
 	float GetAngleYZ(const RE::NiMatrix3& rot);
+	/// @brief Project vectors onto the specified world plane and get the angle between the projections
+	float GetAngleXZ(const RE::NiPoint3& u, const RE::NiPoint3& v);
+	float GetAngleXY(const RE::NiPoint3& u, const RE::NiPoint3& v);
+	float GetAngleYZ(const RE::NiPoint3& u, const RE::NiPoint3& v);
 
 	/// @brief Compute the projected component of U relative to V
 	RE::NiPoint3 ProjectedComponent(RE::NiPoint3 U, RE::NiPoint3 V);
@@ -57,6 +61,12 @@ namespace Thread::NiNode::NiMath
 	{
 		const int i = static_cast<int>(f);
 		return f > i ? i + 1 : i;
+	}
+
+	/// @brief Sigmoid function
+	inline float Sigmoid(float x)
+	{
+		return 1.0f / (1.0f + std::exp(-x));
 	}
 
 }	 // namespace Thread::NiNode::NiMath
