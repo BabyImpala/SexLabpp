@@ -18,6 +18,7 @@ namespace Thread::NiNode
 		_timestamps[idx] = timeStamp;
 
 		if (const auto niHead = nodes.head) {
+			_moments[Anchor::vHeadX][idx] = niHead->world.rotate.GetVectorX();
 			_moments[Anchor::vHeadY][idx] = niHead->world.rotate.GetVectorY();
 			_moments[Anchor::vHeadZ][idx] = niHead->world.rotate.GetVectorZ();
 			_moments[Anchor::pHead][idx] = nodes.head->world.translate;
@@ -53,8 +54,8 @@ namespace Thread::NiNode
 		}
 
 		const auto sCrotch = nodes.GetCrotchSegment();
-		_moments[Anchor::pCrotchStart][idx] = sCrotch.first;
-		_moments[Anchor::pCrotchEnd][idx] = sCrotch.second;
+		_moments[Anchor::pSpineLower][idx] = sCrotch.first;
+		_moments[Anchor::pPelvis][idx] = sCrotch.second;
 		
 		_writeIndex = (_writeIndex + 1) % _capacity;
 		_size = std::min(_size + 1, _capacity);

@@ -28,6 +28,16 @@ namespace Thread::NiNode
 			Boobjob,
 		};
 		constexpr static inline size_t NUM_TYPES = magic_enum::enum_count<Type>();
+
+		enum Area
+		{
+			None = 0,
+			Pelvis,
+			Mouth,
+
+		};
+		constexpr static inline size_t NUM_AREAS = magic_enum::enum_count<Area>();
+
 	}
 
 	class INiDescriptor
