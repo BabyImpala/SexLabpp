@@ -112,6 +112,8 @@ String[] Function MergeSplitTags(String asTags, String asTagsSuppress, bool abRe
   EndIf
 EndFunction
 
+String Function GetTranslation(String asStr) global native
+
 ; *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-* ;
 ; ----------------------------------------------------------------------------- ;
 ;								██╗     ███████╗ ██████╗  █████╗  ██████╗██╗   ██╗							;
@@ -150,6 +152,16 @@ endFunction
 string function ActorName(Actor ActorRef) global
 	return ActorRef.GetLeveledActorBase().GetName()
 endFunction
+
+string[] function ActorNames(Actor[] ActorRefs) global
+    string[] ret = PapyrusUtil.StringArray(ActorRefs.Length)
+    int i = 0
+    while (i < ActorRefs.Length)
+        ret[i] = ActorName(ActorRefs[i])
+        i += 1
+    endwhile
+    return ret
+EndFunction
 
 int Function GetSex(Actor akActor) global
 	return SexLabRegistry.GetSex(akActor, false)

@@ -35,12 +35,9 @@ SoundCategory property AudioVoice auto
 ; --- Config Properties                               --- ;
 ; ------------------------------------------------------- ;
 
-float Function GetMinSetupTime() native global
-
 int Function GetAnimationCount() native global
-;float[] Function GetEnjoymentFactors() native global
-;int Function GetEnjoymentSettingInt(String asSetting) native global
-;float Function GetEnjoymentSettingFlt(String asSetting) native global
+float[] Function GetEnjoymentFactors() native global
+float Function GetEnjoymentFactor(int aiValue) native global
 Form[] Function GetStrippableItems(Actor akActor, bool abWornOnly) native global
 
 bool Function GetSettingBool(String asSetting) native global
@@ -260,7 +257,7 @@ bool property SubmissiveTarget hidden
 	Function Set(bool aSet)
 	  SetSettingBool("bSubmissiveTarget", aSet)
 	EndFunction
-  EndProperty
+EndProperty
 
 ; Integers
 int property AskBed hidden
@@ -480,6 +477,14 @@ int property TargetActor hidden
     SetSettingInt("iTargetActor", aiSet)
   EndFunction
 EndProperty
+bool property HideHUD hidden
+	bool Function Get()
+	  return GetSettingBool("bHideHUD")
+	EndFunction
+	Function Set(bool aSet)
+	  SetSettingBool("bHideHUD", aSet)
+	EndFunction
+EndProperty
 
 ; Floats
 float property CumTimer hidden
@@ -680,7 +685,7 @@ Event OnKeyDown(int keyCode)
   ElseIf (keyCode == ToggleFreeCamera)
     ToggleFreeCamera()
   ElseIf (keyCode == TargetActor)
-    If (_ActiveControl)
+    If (_ActiveControl && !_ActiveControl.HasPlayer)
       DisableThreadControl(_ActiveControl)
     Else
       SetTargetActor()
@@ -1059,6 +1064,26 @@ endFunction
 ; --------------------------------------------------------------------------------------- ;
 ; *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-* ;
 
+string[] _interTypes
+
+string[] Property NameAllInteractions hidden
+  string[] Function Get()
+    If !_interTypes
+      ;IMP: order depends on int assigned to interTypes in sslThreadModel; leave both as-is!
+      string type_names = "pStimulation,aAnimObjFace,pAnimObjFace,pSuckingToes,pGrinding," \
+      + "pSkullfuck,aHandJob,aFootJob,aBoobJob,bKissing,aSuckingToes,pFacial,aOral," \
+      + "aLickingShaft,aDeepthroat,pVaginal,pAnal,aFacial,aGrinding,pHandJob,pFootJob," \
+      + "pBoobJob,pLickingShaft,pOral,pDeepthroat,aSkullfuck,aVaginal,aAnal"
+      _interTypes = StringUtil.Split(type_names, ",")
+    EndIf
+    return _interTypes
+  EndFunction
+EndProperty
+
+; ----------------------------------------------- ;
+; --- MAIN CONFIG                             --- ;
+; ----------------------------------------------- ;
+
 bool Property InternalEnjoymentEnabled hidden
   bool Function Get()
     return GetSettingBool("bInternalEnjoymentEnabled")
@@ -1067,12 +1092,12 @@ bool Property InternalEnjoymentEnabled hidden
     SetSettingBool("bInternalEnjoymentEnabled", value)
   EndFunction
 EndProperty
-int Property InterDetectionStrength hidden
-  int Function Get()
-    return GetSettingInt("iInterDetectionStrength")
+bool Property FallbackToTagsForDetection hidden
+  bool Function Get()
+    return GetSettingBool("bFallbackToTagsForDetection")
   EndFunction
-  Function Set(int aiSet)
-    SetSettingInt("iInterDetectionStrength", aiSet)
+  Function Set(bool value)
+    SetSettingBool("bFallbackToTagsForDetection", value)
   EndFunction
 EndProperty
 float Property EnjRaiseMultInter hidden
@@ -1086,16 +1111,8 @@ EndProperty
 
 ; ----------------------------------------------- ;
 ; --- GENERAL CONFIG                          --- ;
-; ----------------------------------- ----------- ;
+; ----------------------------------------------- ;
 
-int Property EnjGainOnStageSkip hidden
-  int Function Get()
-    return GetSettingInt("iEnjGainOnStageSkip")
-  EndFunction
-  Function Set(int aiSet)
-    SetSettingInt("iEnjGainOnStageSkip", aiSet)
-  EndFunction
-EndProperty
 bool Property NoStaminaEndsScene hidden
   bool Function Get()
     return GetSettingBool("bNoStaminaEndsScene")
@@ -1171,7 +1188,7 @@ EndProperty
 
 ; ----------------------------------------------- ;
 ; --- ACTOR MULT                              --- ;
-; ----------------------------------- ----------- ;
+; ----------------------------------------------- ;
 float Property EnjMultVictim hidden
   float Function Get()
     return GetSettingFlt("fEnjMultVictim")
@@ -1215,53 +1232,13 @@ EndProperty
 
 ; ----------------------------------------------- ;
 ; --- GAME CONFIG                             --- ;
-; ----------------------------------- ----------- ;
+; ----------------------------------------------- ;
 bool Property GameEnabled hidden
   bool Function Get()
     return GetSettingBool("bGameEnabled")
   EndFunction
   Function Set(bool value)
     SetSettingBool("bGameEnabled", value)
-  EndFunction
-EndProperty
-bool Property GamePlayerAutoplay hidden
-  bool Function Get()
-    return GetSettingBool("bGamePlayerAutoplay")
-  EndFunction
-  Function Set(bool value)
-    SetSettingBool("bGamePlayerAutoplay", value)
-  EndFunction
-EndProperty
-bool Property GamePlayerVictimAutoplay hidden
-  bool Function Get()
-    return GetSettingBool("bGamePlayerVictimAutoplay")
-  EndFunction
-  Function Set(bool value)
-    SetSettingBool("bGamePlayerVictimAutoplay", value)
-  EndFunction
-EndProperty
-bool Property GameNPCAutoplay hidden
-  bool Function Get()
-    return GetSettingBool("bGameNPCAutoplay")
-  EndFunction
-  Function Set(bool value)
-    SetSettingBool("bGameNPCAutoplay", value)
-  EndFunction
-EndProperty
-bool Property GameEnjReductionChance hidden
-  bool Function Get()
-    return GetSettingBool("bGameEnjReductionChance")
-  EndFunction
-  Function Set(bool value)
-    SetSettingBool("bGameEnjReductionChance", value)
-  EndFunction
-EndProperty
-bool Property GameHoldbackWithPartner hidden
-  bool Function Get()
-    return GetSettingBool("bGameHoldbackWithPartner")
-  EndFunction
-  Function Set(bool value)
-    SetSettingBool("bGameHoldbackWithPartner", value)
   EndFunction
 EndProperty
 int Property GameUtilityKey hidden
@@ -1302,6 +1279,38 @@ int Property GameSelectNextPos hidden
   EndFunction
   Function Set(int aiSet)
     SetSettingInt("iGameSelectNextPos", aiSet)
+  EndFunction
+EndProperty
+int Property GameStaminaCost hidden
+  int Function Get()
+    return GetSettingInt("iEnjGameStaminaCost")
+  EndFunction
+  Function Set(int aiSet)
+    SetSettingInt("iEnjGameStaminaCost", aiSet)
+  EndFunction
+EndProperty
+int Property GameMagickaCost hidden
+  int Function Get()
+    return GetSettingInt("iEnjGameMagickaCost")
+  EndFunction
+  Function Set(int aiSet)
+    SetSettingInt("iEnjGameMagickaCost", aiSet)
+  EndFunction
+EndProperty
+bool Property GameRequiredOnHighEnj hidden
+  bool Function Get()
+    return GetSettingBool("bGameRequiredOnHighEnj")
+  EndFunction
+  Function Set(bool value)
+    SetSettingBool("bGameRequiredOnHighEnj", value)
+  EndFunction
+EndProperty
+bool Property GameSpamDelayPenalty hidden
+  bool Function Get()
+    return GetSettingBool("bGameSpamDelayPenalty")
+  EndFunction
+  Function Set(bool value)
+    SetSettingBool("bGameSpamDelayPenalty", value)
   EndFunction
 EndProperty
 

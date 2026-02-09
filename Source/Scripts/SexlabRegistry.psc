@@ -98,10 +98,15 @@ bool Function IsSceneTagA(String asID, String[] asTags) native global
 ; Check if some given tag is part of a given stage
 bool Function IsStageTag(String asID, String asStage, String asTag) native global
 bool Function IsStageTagA(String asID, String asStage, String[] asTags) native global
+; Check if some given tag is part of a given position
+bool Function IsPositionTag(String asID, String asStage, int n, String asTag) native global
+bool Function IsPositionTagA(String asID, String asStage, int n, String[] asTags) native global
 ; Get all tags of this Scene. Scene tags are a merged representation of all stage tags
 String[] Function GetSceneTags(String asID) native global
-; Get all of this stages tags
+; Get all of this stage's tags
 String[] Function GetStageTags(String asID, String asStage) native global
+; Get all of this position's tags
+String[] Function GetPositionTags(String asID, String asStage, int n) native global
 ; From a list of scenes, get the tags which are shared among all of them
 String[] Function GetCommonTags(String[] asIDs) native global
 
@@ -224,10 +229,10 @@ String[] Function GetSceneAnnotations(String asID) native global
 ; --- Position Annotations
 
 ; Check if a specific annotation exists for the given position in the scene
-bool Function HasPositionAnnotation(String asID, String asStage, int n, String asTag) native global
+bool Function HasPositionAnnotation(String asID, int n, String asTag) native global
 ; Remove a specific annotation from the given position in the scene
-Function RemovePositionAnnotation(String asID, String asStage, int n, String asTag) native global
+Function RemovePositionAnnotation(String asID, int n, String asTag) native global
 ; Add a specific annotation to the given position in the scene
-Function AddPositionAnnotation(String asID, String asStage, int n, String asTag) native global
+Function AddPositionAnnotation(String asID, int n, String asTag) native global
 ; Get all annotations for the given position in the scene
-String[] Function GetPositionAnnotations(String asID, String asStage, int n) native global
+String[] Function GetPositionAnnotations(String asID, int n) native global
