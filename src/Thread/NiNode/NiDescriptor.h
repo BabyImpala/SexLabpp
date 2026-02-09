@@ -107,22 +107,20 @@ namespace Thread::NiNode
 			std::string section { magic_enum::enum_name<NiType::Type>(Id) };
 			bias = static_cast<float>(inifile.GetDoubleValue(section.c_str(), "bias", NaN));
 			if (std::isnan(bias)) {
-				logger::error("Descriptor bias not initialized (NaN).");
-				assert(false && "Descriptor bias not initialized");
-				throw std::runtime_error("Descriptor bias not initialized");
+				const auto err = std::format("Descriptor '{}': Missing bias value", section);
+				throw std::runtime_error(err);
 			}
 			const auto features = magic_enum::enum_entries<Feature>();
 			for (const auto& [feature, name] : features) {
 				const auto lower = Util::CastLower(std::string{ name });
 				const auto value = static_cast<float>(inifile.GetDoubleValue(section.c_str(), lower.c_str(), NaN));
 				if (std::isnan(value)) {
-					logger::error("Descriptor '{}': Missing value for feature '{}'", section, lower);
-					assert(false && "Missing descriptor feature value");
-					throw std::runtime_error("Missing descriptor feature value");
+					const auto err = std::format("Descriptor '{}': Missing value for feature '{}'", section, lower);
+					throw std::runtime_error(err);
 				}
 				coefficients[static_cast<size_t>(feature)] = value;
 			}
-			logger::info("{}: Loaded {} coefficients, bias={:.3f}", section, coefficients.size(), bias);
+			logger::info("{}: Loaded {} coefficients, bias={:.3f}", section, coefficients, bias);
 		}
 
 	  private:

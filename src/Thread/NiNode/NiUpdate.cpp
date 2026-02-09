@@ -10,6 +10,7 @@ namespace Thread::NiNode
 	{
 		if (!InitializeDescriptors()) {
 			logger::critical("Failed to initialize descriptors. NiNode interactions will not work.");
+			assert(false && "Failed to initialize descriptors");
 			return;
 		}
 	
