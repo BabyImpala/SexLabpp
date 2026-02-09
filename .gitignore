@@ -21,3 +21,8 @@ meta.ini
 *.pdb
 *.pex
 *.swf
+
+.env*
+!.env.example
+dist/SexLab.esm
+SexLab.ppj
