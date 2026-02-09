@@ -89,7 +89,7 @@ MCM_SETTING(fTimers, std::vector<float>({ 10.0f, 15.0f, 25.0f, 7.0f }))
 MCM_SETTING(bInternalEnjoymentEnabled, true)
 MCM_SETTING(bGameEnabled, true)
 
-MCM_SETTING(bUsePhysicBasedDetection, true)
+MCM_SETTING(bFallbackToTagsForDetection, true)
 MCM_SETTING(bNoStaminaEndsScene, false)
 MCM_SETTING(bMaleOrgasmEndsScene, false)
 MCM_SETTING(bDomMustOrgasm, true)
