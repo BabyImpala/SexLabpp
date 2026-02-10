@@ -7,6 +7,7 @@
 #include "Thread/Interface/SelectionMenu.h"
 #include "Thread/NiNode/NiUpdate.h"
 #include "UserData/StripData.h"
+#include "Thread/Collision/CollisionHandler.h"
 
 // class EventHandler :
 // 	public Singleton<EventHandler>,
@@ -51,6 +52,9 @@ static void SKSEMessageHandler(SKSE::MessagingInterface::Message* message)
 				std::_Exit(EXIT_FAILURE);
 			return;
 		}
+		SKSE::AllocTrampoline(static_cast<size_t>(1) << 5);
+		Thread::Collision::CollisionHandler::Install();
+		Thread::NiNode::NiUpdate::Install();
 		Registry::Library::GetSingleton()->Initialize();
 		UserData::StripData::GetSingleton()->Load();
 		Settings::InitializeData();
@@ -71,7 +75,7 @@ static void SKSEMessageHandler(SKSE::MessagingInterface::Message* message)
 extern "C" DLLEXPORT bool SKSEAPI SKSEPlugin_Load(const SKSE::LoadInterface* a_skse)
 {
 	constexpr auto PLUGIN_NAME = "SexLabUtil"sv;
-	const auto InitLogger = []() -> bool {
+	const auto InitLogger = [&]() -> bool {
 #ifndef NDEBUG
 		auto sink = std::make_shared<spdlog::sinks::msvc_sink_mt>();
 #else
@@ -117,7 +121,6 @@ extern "C" DLLEXPORT bool SKSEAPI SKSEPlugin_Load(const SKSE::LoadInterface* a_s
 
 	Thread::Interface::SceneMenu::Register();
 	Thread::Interface::SelectionMenu::Register();
-	Thread::NiNode::NiUpdate::Install();
 
 	const auto serialization = SKSE::GetSerializationInterface();
 	serialization->SetUniqueID('slpp');

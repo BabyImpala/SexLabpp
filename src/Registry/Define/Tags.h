@@ -88,6 +88,8 @@ namespace Registry
 		void RemoveTag(const TagData& a_tag);
 		void RemoveTag(const RE::BSFixedString& a_tag);
 
+		void IntersectTags(const TagData& a_tags);
+
 		/// @brief If this has (all of) the arguments tags
 		_NODISCARD bool HasTag(Tag a_tag) const;
 		_NODISCARD bool HasTag(const RE::BSFixedString& a_tag) const;

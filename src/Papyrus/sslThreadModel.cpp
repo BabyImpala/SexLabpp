@@ -82,22 +82,22 @@ namespace Papyrus::ThreadModel
 						view->InvokeNoReturn("_global.skse.CloseMenu", &arg, 1);
 					}
 				}
-				actor->actorState1.lifeState = RE::ACTOR_LIFE_STATE::kAlive;
+				actor->AsActorState()->actorState1.lifeState = RE::ACTOR_LIFE_STATE::kAlive;
 			} else {
-				switch (actor->actorState1.lifeState) {
+				switch (actor->AsActorState()->actorState1.lifeState) {
 				case RE::ACTOR_LIFE_STATE::kUnconcious:
-					actor->SetActorValue(RE::ActorValue::kVariable05, STATUS05::Unconscious);
+					actor->AsActorValueOwner()->SetActorValue(RE::ActorValue::kVariable05, STATUS05::Unconscious);
 					break;
 				case RE::ACTOR_LIFE_STATE::kDying:
 				case RE::ACTOR_LIFE_STATE::kDead:
-					actor->SetActorValue(RE::ActorValue::kVariable05, STATUS05::Dying);
+					actor->AsActorValueOwner()->SetActorValue(RE::ActorValue::kVariable05, STATUS05::Dying);
 					actor->Resurrect(false, true);
 					break;
 				}
-				actor->actorState1.lifeState = RE::ACTOR_LIFE_STATE::kRestrained;
+				actor->AsActorState()->actorState1.lifeState = RE::ACTOR_LIFE_STATE::kRestrained;
 			}
 
-			if (actor->IsWeaponDrawn()) {
+			if (actor->AsActorState()->IsWeaponDrawn()) {
 				const auto factory = RE::IFormFactory::GetConcreteFormFactoryByType<RE::Script>();
 				if (const auto script = factory ? factory->Create() : nullptr) {
 					script->SetCommand("rae weaponsheathe");
@@ -118,7 +118,7 @@ namespace Papyrus::ThreadModel
 			actor->StopInteractingQuick(true);
 			// actor->SetCollision(false);
 
-			if (const auto process = actor->currentProcess) {
+			if (const auto process = actor->GetActorRuntimeData().currentProcess) {
 				process->ClearMuzzleFlashes();
 			}
 			actor->StopMoving(1.0f);
@@ -132,18 +132,18 @@ namespace Papyrus::ThreadModel
 				return;
 			}
 			Registry::Scale::GetSingleton()->RemoveScale(actor);
-			switch (static_cast<int32_t>(actor->GetActorValue(RE::ActorValue::kVariable05))) {
+			switch (static_cast<int32_t>(actor->AsActorValueOwner()->GetActorValue(RE::ActorValue::kVariable05))) {
 			case STATUS05::Unconscious:
-				actor->actorState1.lifeState = RE::ACTOR_LIFE_STATE::kUnconcious;
+				actor->AsActorState()->actorState1.lifeState = RE::ACTOR_LIFE_STATE::kUnconcious;
 				break;
 			default:
-				actor->actorState1.lifeState = RE::ACTOR_LIFE_STATE::kAlive;
+				actor->AsActorState()->actorState1.lifeState = RE::ACTOR_LIFE_STATE::kAlive;
 				break;
 			}
 			if (actor->IsPlayerRef()) {
 				RE::PlayerCharacter::GetSingleton()->SetAIDriven(false);
 			} else {
-				actor->SetActorValue(RE::ActorValue::kVariable05, 0.0f);
+				actor->AsActorValueOwner()->SetActorValue(RE::ActorValue::kVariable05, 0.0f);
 			}
 			Thread::Collision::CollisionHandler::GetSingleton()->RemoveActor(actor->GetFormID());
 			// actor->SetCollision(true);
@@ -177,6 +177,9 @@ namespace Papyrus::ThreadModel
 			const auto actor = a_alias->GetActorReference();
 			if (!actor) {
 				a_vm->TraceStack("ReferenceAlias must be filled with an actor reference", a_stackID);
+				return a_mergewith;
+			}
+			if (!actor->IsHumanoid()) {
 				return a_mergewith;
 			}
 			if (a_mergewith.size() < 3) {
@@ -235,8 +238,8 @@ namespace Papyrus::ThreadModel
 					}
 					break;
 				}
-				if (form->IsWeapon() && actor->currentProcess) {
-					if (actor->currentProcess->GetEquippedRightHand() == form)
+				if (form->IsWeapon() && actor->GetActorRuntimeData().currentProcess) {
+					if (actor->GetActorRuntimeData().currentProcess->GetEquippedRightHand() == form)
 						a_mergewith[Right] = form;
 					else
 						a_mergewith[Left] = form;
@@ -474,21 +477,16 @@ namespace Papyrus::ThreadModel
 	std::vector<int> GetCollisionActions(QUESTARGS, RE::Actor* a_position, RE::Actor* a_partner)
 	{
 		GET_INSTANCE({});
-		auto process = instance->GetNiInstance();
-		if (!process) {
+		auto niInstance = instance->GetNiInstance();
+		if (!niInstance) {
 			a_vm->TraceStack("Not registered", a_stackID);
 			return {};
 		}
-		std::vector<int> ret{};
-		process->VisitPositions([&](auto& p) {
-			if (a_position && p.actor->formID != a_position->formID)
-				return false;
-			for (auto&& type : p.interactions) {
-				if (a_partner && type.partner->formID != a_partner->formID)
-					continue;
-				ret.push_back(static_cast<int>(type.action));
-			}
-			return false;
+		const auto idxA = a_position ? a_position->formID : 0;
+		const auto idxB = a_partner ? a_partner->formID : 0;
+		const auto interactions = niInstance->GetInteractions(idxA, idxB, Thread::NiNode::NiType::Type::None);
+		const auto ret = std::ranges::fold_left(interactions, std::vector<int>{}, [](auto&& acc, const auto& it) {
+			return (acc.push_back(static_cast<int>(it->GetType())), acc);
 		});
 		return ret;
 	}
@@ -496,23 +494,15 @@ namespace Papyrus::ThreadModel
 	bool HasCollisionAction(QUESTARGS, int a_type, RE::Actor* a_position, RE::Actor* a_partner)
 	{
 		GET_INSTANCE({});
-		auto process = instance->GetNiInstance();
-		if (!process) {
+		auto niInstance = instance->GetNiInstance();
+		if (!niInstance) {
 			a_vm->TraceStack("Not registered", a_stackID);
 			return false;
 		}
-		return process->VisitPositions([&](auto& p) {
-			if (a_position && p.actor->formID != a_position->formID)
-				return false;
-			for (auto&& type : p.interactions) {
-				if (a_partner && type.partner->formID != a_partner->formID)
-					continue;
-				if (a_type != -1 && a_type != static_cast<int>(type.action))
-					continue;
-				return true;
-			}
-			return false;
-		});
+		const auto idxA = a_position ? a_position->formID : 0;
+		const auto idxB = a_partner ? a_partner->formID : 0;
+		const auto interactions = niInstance->GetInteractions(idxA, idxB, Thread::NiNode::NiType::Type(a_type));
+		return !interactions.empty();
 	}
 
 	RE::Actor* GetPartnerByAction(QUESTARGS, RE::Actor* a_position, int a_type)
@@ -521,97 +511,42 @@ namespace Papyrus::ThreadModel
 			a_vm->TraceStack("Actor is none", a_stackID);
 			return nullptr;
 		}
-		GET_INSTANCE({});
-		auto process = instance->GetNiInstance();
-		if (!process) {
-			a_vm->TraceStack("Not registered", a_stackID);
-			return nullptr;
-		}
-		RE::Actor* ret = nullptr;
-		process->VisitPositions([&](auto& p) {
-			if (p.actor->formID != a_position->formID)
-				return false;
-			for (auto&& type : p.interactions) {
-				if (a_type != -1 && a_type != static_cast<int>(type.action))
-					continue;
-				ret = type.partner.get();
-				return true;
-			}
-			return false;
-		});
-		return ret;
+		const auto ret = GetPartnersByAction(a_vm, a_stackID, a_qst, a_position, a_type);
+		return ret.empty() ? nullptr : ret.front();
 	}
 
 	std::vector<RE::Actor*> GetPartnersByAction(QUESTARGS, RE::Actor* a_position, int a_type)
 	{
 		GET_INSTANCE({});
-		auto process = instance->GetNiInstance();
-		if (!process) {
+		auto niInstance = instance->GetNiInstance();
+		if (!niInstance) {
 			a_vm->TraceStack("Not registered", a_stackID);
 			return {};
 		}
-		std::vector<RE::Actor*> ret{};
-		process->VisitPositions([&](auto& p) {
-			if (a_position && p.actor->formID != a_position->formID)
-				return false;
-			for (auto&& type : p.interactions) {
-				if (a_type != -1 && a_type != static_cast<int>(type.action))
-					continue;
-				ret.push_back(type.partner.get());
-			}
-			return false;
-		});
-		return ret;
+		const auto idxA = a_position ? a_position->formID : 0;
+		return niInstance->GetInteractionPartners(idxA, Thread::NiNode::NiType::Type(a_type));
 	}
 
 	RE::Actor* GetPartnerByTypeRev(QUESTARGS, RE::Actor* a_position, int a_type)
 	{
 		if (!a_position) {
 			a_vm->TraceStack("Actor is none", a_stackID);
-			return {};
+			return nullptr;
 		}
-		GET_INSTANCE({});
-		auto process = instance->GetNiInstance();
-		if (!process) {
-			a_vm->TraceStack("Not registered", a_stackID);
-			return {};
-		}
-		RE::Actor* ret = nullptr;
-		process->VisitPositions([&](auto& p) {
-			for (auto&& type : p.interactions) {
-				if (a_position->formID == type.partner->formID) {
-					if (a_type == -1 || a_type == static_cast<int>(type.action)) {
-						ret = p.actor.get();
-						return true;
-					}
-					break;
-				}
-			}
-			return false;
-		});
-		return ret;
+		const auto ret = GetPartnersByTypeRev(a_vm, a_stackID, a_qst, a_position, a_type);
+		return ret.empty() ? nullptr : ret.front();
 	}
 
 	std::vector<RE::Actor*> GetPartnersByTypeRev(QUESTARGS, RE::Actor* a_position, int a_type)
 	{
 		GET_INSTANCE({});
-		auto process = instance->GetNiInstance();
-		if (!process) {
+		auto niInstance = instance->GetNiInstance();
+		if (!niInstance) {
 			a_vm->TraceStack("Not registered", a_stackID);
 			return {};
 		}
-		std::vector<RE::Actor*> ret{};
-		process->VisitPositions([&](auto& p) {
-			for (auto&& type : p.interactions) {
-				if (!a_position || a_position->formID == type.partner->formID) {
-					if (a_type == -1 || a_type == static_cast<int>(type.action))
-						ret.push_back(p.actor.get());
-					break;
-				}
-			}
-			return false;
-		});
-		return ret;
+		const auto idxB = a_position ? a_position->formID : 0;
+		return niInstance->GetInteractionPartnersRev(idxB, Thread::NiNode::NiType::Type(a_type));
 	}
 
 	float GetActionVelocity(QUESTARGS, RE::Actor* a_position, RE::Actor* a_partner, int a_type)
@@ -620,30 +555,25 @@ namespace Papyrus::ThreadModel
 			a_vm->TraceStack("Actor is none", a_stackID);
 			return 0.0f;
 		}
-		if (a_type == -1) {
+		if (a_type == 0) {
 			a_vm->TraceStack("Type cant be 'any'", a_stackID);
 			return 0.0f;
 		}
 		GET_INSTANCE({});
-		auto process = instance->GetNiInstance();
-		if (!process) {
+		auto niInstance = instance->GetNiInstance();
+		if (!niInstance) {
 			a_vm->TraceStack("Not registered", a_stackID);
 			return 0.0f;
 		}
 		float ret = 0.0f;
-		process->VisitPositions([&](auto& p) {
-			if (p.actor->formID != a_position->formID)
-				return false;
-			for (auto&& type : p.interactions) {
-				if (a_partner && a_partner->formID != type.partner->formID)
-					continue;
-				if (a_type != static_cast<int>(type.action))
-					continue;
-				ret = type.velocity;
-				return true;
-			}
-			return false;
-		});
+		const auto idxA = a_position->formID;
+		const auto idxB = a_partner ? a_partner->formID : 0;
+		const auto interactions = niInstance->GetInteractions(idxA, idxB, Thread::NiNode::NiType::Type(a_type));
+		if (!interactions.empty()) {
+			ret = interactions.front()->velocity;
+		} else {
+			a_vm->TraceStack("No such interaction found", a_stackID);
+		}
 		return ret;
 	}
 

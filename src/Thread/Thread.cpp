@@ -15,6 +15,7 @@ namespace Thread
 		}
 		try {
 			auto instance = std::make_unique<Instance>(a_linkedQst, a_submissives, a_scenes, a_furniturePreference);
+			std::unique_lock lock{_mInstances};
 			instances.emplace_back(std::move(instance));
 			return true;
 		} catch (const std::exception& e) {
@@ -25,11 +26,13 @@ namespace Thread
 
 	void Instance::DestroyInstance(RE::TESQuest* a_linkedQst)
 	{
+		std::unique_lock lock{_mInstances};
 		std::erase_if(instances, [&](const auto& instance) { return instance->linkedQst == a_linkedQst; });
 	}
 
 	Instance* Instance::GetInstance(RE::TESQuest* a_linkedQst)
 	{
+		std::shared_lock lock{_mInstances};
 		for (auto&& instance : instances) {
 			if (instance->linkedQst == a_linkedQst) {
 				return instance.get();
@@ -196,7 +199,7 @@ namespace Thread
 	bool Instance::ReplaceCenterRef(RE::TESObjectREFR* a_ref)
 	{
 		assert(a_ref);
-		if (a_ref == center.GetRef()) {
+		if (a_ref == center.GetRef() && !a_ref->IsPlayerRef()) {
 			return false;
 		}
 		const auto centerStr = center.offset.type.ToString();

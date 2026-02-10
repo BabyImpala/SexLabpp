@@ -30,13 +30,7 @@ namespace Registry
 		stream.read(hash.data(), Decode::HASH_SIZE);
 
 		uint64_t scene_count;
-		if (version >= 4) {
-			uint32_t size;
-			Decode::Read(stream, size);
-			scene_count = static_cast<uint64_t>(size);
-		} else {
-			Decode::Read(stream, scene_count);
-		}
+		Decode::Read(stream, scene_count);
 		scenes.reserve(scene_count);
 		for (size_t i = 0; i < scene_count; i++) {
 			scenes.push_back(std::make_unique<Scene>(stream, hash, version));
@@ -46,18 +40,16 @@ namespace Registry
 	Scene::Scene(std::ifstream& a_stream, std::string_view a_hash, uint8_t a_version) :
 		hash(a_hash), enabled(true)
 	{
+		
+		// initialize start_animation to avoid crash
+		start_animation=nullptr;
+
 		id.resize(Decode::ID_SIZE);
 		a_stream.read(id.data(), Decode::ID_SIZE);
 		Decode::Read(a_stream, name);
 		// --- Position Infos
 		uint64_t info_count;
-		if (a_version >= 4) {
-			uint32_t size;
-			Decode::Read(a_stream, size);
-			info_count = static_cast<uint64_t>(size);
-		} else {
-			Decode::Read(a_stream, info_count);
-		}
+		Decode::Read(a_stream, info_count);
 		positions.reserve(info_count);
 		for (size_t i = 0; i < info_count; i++) {
 			positions.emplace_back(a_stream, a_version);
@@ -105,15 +97,11 @@ namespace Registry
 		});
 		// --- Stages
 		std::string startstage(Decode::ID_SIZE, 'X');
-		a_stream.read(startstage.data(), Decode::ID_SIZE);
+		if (a_version < 4) {
+			a_stream.read(startstage.data(), Decode::ID_SIZE);
+ 		}
 		uint64_t stage_count;
-		if (a_version >= 4) {
-			uint32_t size;
-			Decode::Read(a_stream, size);
-			stage_count = static_cast<uint64_t>(size);
-		} else {
-			Decode::Read(a_stream, stage_count);
-		}
+		Decode::Read(a_stream, stage_count);
 		stages.reserve(stage_count);
 		for (size_t i = 0; i < stage_count; i++) {
 			const auto& stage = stages.emplace_back(
@@ -124,19 +112,16 @@ namespace Registry
 				start_animation = stage.get();
 			}
 		}
-		if (!start_animation) {
+		if (!start_animation && stages.size() == 0) {
 			const auto err = std::format("Start animation {} is not found in scene {}", startstage, id);
 			throw std::runtime_error(err.c_str());
 		}
+		if (!start_animation) {
+			start_animation = stages[0].get();
+		}
 		// --- Graph
 		uint64_t graph_vertices;
-		if (a_version >= 4) {
-			uint32_t size;
-			Decode::Read(a_stream, size);
-			graph_vertices = static_cast<uint64_t>(size);
-		} else {
-			Decode::Read(a_stream, graph_vertices);
-		}
+		Decode::Read(a_stream, graph_vertices);
 		if (graph_vertices != stage_count) {
 			const auto err = std::format("Invalid graph vertex count; expected {} but got {}", stage_count, graph_vertices);
 			throw std::runtime_error(err.c_str());
@@ -151,13 +136,7 @@ namespace Registry
 			}
 			std::vector<const Stage*> edges{};
 			uint64_t edge_count;
-			if (a_version >= 4) {
-				uint32_t size;
-				Decode::Read(a_stream, size);
-				edge_count = static_cast<uint64_t>(size);
-			} else {
-				Decode::Read(a_stream, edge_count);
-			}
+			Decode::Read(a_stream, edge_count);
 			std::string edgeid(Decode::ID_SIZE, 'X');
 			for (size_t n = 0; n < edge_count; n++) {
 				a_stream.read(edgeid.data(), Decode::ID_SIZE);
@@ -182,7 +161,7 @@ namespace Registry
 		enum Extra : uint8_t
 		{
 			Submissive = 1 << 0,
-			Vamprie = 1 << 1,
+			Vampire = 1 << 1,
 			Unconscious = 1 << 2
 		};
 		float scale;
@@ -194,7 +173,7 @@ namespace Registry
 		Decode::Read(a_stream, scale);
 		a_stream.read(reinterpret_cast<char*>(&extra), 1);
 
-		data = ActorFragment(sex, race, scale, extra.all(Extra::Vamprie), extra.all(Extra::Submissive), extra.all(Extra::Unconscious));
+		data = ActorFragment(sex, race, scale, extra.all(Extra::Vampire), extra.all(Extra::Submissive), extra.all(Extra::Unconscious));
 
 		if (a_version > 1 && a_version < 4) {
 			uint64_t extra_custom;
@@ -235,7 +214,7 @@ namespace Registry
 	{
 		if (a_version == 3) Decode::Read<int8_t>(a_stream);
 		if (a_version >= 4) {
-			uint32_t extra_custom;
+			uint64_t extra_custom;
 			Decode::Read(a_stream, extra_custom);
 			tags.reserve(extra_custom);
 			for (size_t j = 0; j < extra_custom; j++) {

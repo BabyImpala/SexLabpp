@@ -153,7 +153,7 @@ namespace Thread::NiNode::Node
 		assert(a_basenode);
 		do {
 			auto& parent = nodes.back();
-			auto& childs = parent->children;
+			auto& childs = parent->GetChildren();
 			switch (childs.size()) {
 			case 0:
 				break;
@@ -213,15 +213,14 @@ namespace Thread::NiNode::Node
 			}
 		default:
 			{
-				std::vector<Eigen::Vector3f> argV{};
+				std::vector<RE::NiPoint3> argV{};
 				argV.reserve(nodes.size());
 				for (auto&& node : nodes) {
 					if (!node)
 						continue;
-					auto argT = NiMath::ToEigen(node->world.translate);
-					argV.push_back(argT);
+					argV.push_back(node->world.translate);
 				}
-				return NiMath::LeastSquares(argV, MIN_SCHLONG_LEN);
+				return NiMath::BestFit(argV);
 			}
 		}
 	}

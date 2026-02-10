@@ -140,50 +140,56 @@ namespace Papyrus::SystemConfig
 		return static_cast<int32_t>(Registry::Library::GetSingleton()->GetSceneCount());
 	}
 
+	static const std::vector<float*> EnjoymentFactorsList = {
+		&Settings::f_pStimulation,
+		&Settings::f_aAnimObjFace,
+		&Settings::f_pAnimObjFace,
+		&Settings::f_pSuckingToes,
+		&Settings::f_pGrinding,
+		&Settings::f_pSkullfuck,
+		&Settings::f_aHandJob,
+		&Settings::f_aFootJob,
+		&Settings::f_aBoobJob,
+		&Settings::f_bKissing,
+		&Settings::f_aSuckingToes,
+		&Settings::f_pFacial,
+		&Settings::f_aOral,
+		&Settings::f_aLickingShaft,
+		&Settings::f_aDeepthroat,
+		&Settings::f_pVaginal,
+		&Settings::f_pAnal,
+		&Settings::f_aFacial,
+		&Settings::f_aGrinding,
+		&Settings::f_pHandJob,
+		&Settings::f_pFootJob,
+		&Settings::f_pBoobJob,
+		&Settings::f_pLickingShaft,
+		&Settings::f_pOral,
+		&Settings::f_pDeepthroat,
+		&Settings::f_aSkullfuck,
+		&Settings::f_aVaginal,
+		&Settings::f_aAnal
+	};
+
 	std::vector<float> GetEnjoymentFactors(RE::StaticFunctionTag*)
 	{
-		return {
-			Settings::fEnjGrinding,
-			Settings::fEnjHandActive,
-			Settings::fEnjHandPassive,
-			Settings::fEnjFootActive,
-			Settings::fEnjFootPassive,
-			Settings::fEnjOralActive,
-			Settings::fEnjOralPassive,
-			Settings::fEnjVaginalActive,
-			Settings::fEnjVaginalPassive,
-			Settings::fEnjAnalActive,
-			Settings::fEnjAnalPassive
-		};
+		std::vector<float> values;
+		values.reserve(EnjoymentFactorsList.size());
+		for (float* ptr : EnjoymentFactorsList) {
+				values.push_back(ptr ? *ptr : 0.0f);
+		}
+		return values;
 	}
 
-	int GetEnjoymentSettingInt(VM* a_vm, StackID a_stackID, RE::StaticFunctionTag*, RE::BSFixedString a_setting)
+	float GetEnjoymentFactor(RE::StaticFunctionTag*, int32_t idx)
 	{
-		if (a_setting == "iMaxNoPainOrgasmsM")
-			return Settings::iMaxNoPainOrgasmsM;
-		else if (a_setting == "iMaxNoPainOrgasmsF")
-			return Settings::iMaxNoPainOrgasmsF;
-		const auto err = std::format("Invalid Setting {}", a_setting.c_str());
-		a_vm->TraceStack(err.c_str(), a_stackID);
-		return 0;
-	}
-
-	float GetEnjoymentSettingFlt(VM* a_vm, StackID a_stackID, RE::StaticFunctionTag*, RE::BSFixedString a_setting)
-	{
-		if (a_setting == "fFactorNonInterEnjRaise")
-			return Settings::fFactorNonInterEnjRaise;
-		else if (a_setting == "fFactorInterEnjRaise")
-			return Settings::fFactorInterEnjRaise;
-		else if (a_setting == "fTimeMax")
-			return Settings::fTimeMax;
-		else if (a_setting == "fRequiredXP")
-			return Settings::fRequiredXP;
-		else if (a_setting == "fBoostTime")
-			return Settings::fBoostTime;
-		else if (a_setting == "fPenaltyTime")
-			return Settings::fPenaltyTime;
-		const auto err = std::format("Invalid Setting {}", a_setting.c_str());
-		a_vm->TraceStack(err.c_str(), a_stackID);
+		if (idx < 0 || static_cast<size_t>(idx) >= EnjoymentFactorsList.size()) {
+			return 0.0f; 
+		}
+		float* ptr = EnjoymentFactorsList[idx];
+		if (ptr) {
+			return *ptr;
+		}
 		return 0.0f;
 	}
 
@@ -209,11 +215,6 @@ namespace Papyrus::SystemConfig
 			ret.push_back(form);
 		}
 		return ret;
-	}
-
-	float GetMinSetupTime(RE::StaticFunctionTag*)
-	{
-		return std::min<float>(Settings::fMinSetupTime, 0.1f);
 	}
 
 }	 // namespace Papyrus

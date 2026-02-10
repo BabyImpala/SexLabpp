@@ -54,8 +54,8 @@ namespace Thread::Interface
 			UpdatePositions();
 			UpdateActiveScene();
 			input->AddEventSink<RE::InputEvent*>(this);
-			controls->ToggleControls(RE::ControlMap::UEFlag::kActivate, false);
-			controls->ToggleControls(RE::ControlMap::UEFlag::kMovement, false);
+			controls->ToggleControls(RE::ControlMap::UEFlag::kActivate, false, false);
+			controls->ToggleControls(RE::ControlMap::UEFlag::kMovement, false, false);
 			if (Settings::bHideHUD) {
 				RE::UIMessageQueue::GetSingleton()->AddMessage(RE::HUDMenu::MENU_NAME, RE::UI_MESSAGE_TYPE::kHide, nullptr);
 			}
@@ -64,15 +64,15 @@ namespace Thread::Interface
 		case Type::kHide:
 			logger::info("SceneMenu closed.");
 			RE::UIMessageQueue::GetSingleton()->AddMessage(RE::HUDMenu::MENU_NAME, RE::UI_MESSAGE_TYPE::kShow, nullptr);
-			controls->ToggleControls(RE::ControlMap::UEFlag::kActivate, true);
-			controls->ToggleControls(RE::ControlMap::UEFlag::kMovement, true);
+			controls->ToggleControls(RE::ControlMap::UEFlag::kActivate, true, false);
+			controls->ToggleControls(RE::ControlMap::UEFlag::kMovement, true, false);
 			controls->AllowTextInput(false);
 			input->RemoveEventSink(this);
 			threadInstance = nullptr;
 			return Result::kHandled;
 		case Type::kUserEvent:
 		case Type::kScaleformEvent:
-			if (RE::ControlMap::GetSingleton()->textEntryCount <= 0)
+			if (RE::ControlMap::GetSingleton()->GetRuntimeData().textEntryCount <= 0)
 				return Result::kPassOn;
 			__fallthrough;
 		default:
@@ -257,14 +257,18 @@ namespace Thread::Interface
 		auto enumName = magic_enum::enum_name(navType);
 		if (enumName.empty())
 			return EventResult::kContinue;
-		std::string navEq{ enumName };
-		Util::ToLower(navEq);
-		std::vector<RE::GFxValue> args{
-			RE::GFxValue(navEq.c_str()),
-			RE::GFxValue(mode),
-			RE::GFxValue(reset)
-		};
-		this->uiMovie->InvokeNoReturn("_root.main.handleInputEx", args.data(), static_cast<uint32_t>(args.size()));
+		SKSE::GetTaskInterface()->AddUITask([=]() {
+			std::string navEq{ enumName };
+			Util::ToLower(navEq);
+			std::vector<RE::GFxValue> args{
+				RE::GFxValue(navEq.c_str()),
+				RE::GFxValue(mode),
+				RE::GFxValue(reset)
+			};
+			if (this->uiMovie) {
+				this->uiMovie->InvokeNoReturn("_root.main.handleInputEx", args.data(), static_cast<uint32_t>(args.size()));
+			}
+		});
 		return EventResult::kContinue;
 	}
 

@@ -8,7 +8,7 @@ namespace Registry
 	ActorFragment::Value RaceKeyToValue(RaceKey a) { return ActorFragment::Value(static_cast<ActorFragment::ValueType>(a.value) << 3); }
 
 	ActorFragment::ActorFragment(REX::EnumSet<Sex> a_sex, RaceKey a_race, float a_scale, bool a_vampire, bool a_submissive, bool a_unconscious) :
-		actor(nullptr), value(Value::None), scale(a_scale)
+	  actor(nullptr), value(Value::None), scale(a_scale)
 	{
 		if (a_sex.all(Sex::Male))
 			value.set(Male);
@@ -38,7 +38,7 @@ namespace Registry
 	}
 
 	ActorFragment::ActorFragment(RE::Actor* a_actor, bool a_submissive) :
-		actor(a_actor), value(Value::None), scale(Scale::GetSingleton()->GetScale(a_actor))
+	  actor(a_actor), value(Value::None), scale(Scale::GetSingleton()->GetScale(a_actor))
 	{
 		const auto sex = Registry::GetSex(a_actor);
 		switch (sex) {
@@ -60,7 +60,7 @@ namespace Registry
 			throw std::runtime_error(std::format("Cannt build fragment from Actor {:X}: Invalid RaceKey", a_actor->GetFormID()));
 		case RaceKey::Human:
 			value.set(Human);
-			if (a_actor->HasKeywordWithType(RE::DEFAULT_OBJECT::kKeywordVampire)) {
+			if (a_actor->HasKeywordWithType(RE::DefaultObjectID::kKeywordVampire)) {
 				value.set(Vampire);
 			}
 			break;
@@ -68,7 +68,7 @@ namespace Registry
 			value.set(RaceKeyToValue(race));
 			break;
 		}
-		if (a_submissive, a_actor->IsDead() || a_actor->IsUnconscious() || a_actor->GetActorValue(RE::ActorValue::kVariable05) < 0)
+		if (a_submissive, a_actor->IsDead() || a_actor->AsActorState()->IsUnconscious() || a_actor->AsActorValueOwner()->GetActorValue(RE::ActorValue::kVariable05) < 0)
 			value.set(Unconscious);
 		if (a_submissive) {
 			value.set(Submissive);
@@ -92,7 +92,7 @@ namespace Registry
 		SET_SEX(Male);
 		SET_SEX(Female);
 		SET_SEX(Futa);
-#undef SET
+#undef SET_SEX
 		return ret;
 	}
 
@@ -181,7 +181,7 @@ namespace Registry
 			// if (IsVampire()) {
 			// 	Add(Value::Vampire);
 			// } else {
-				Duplicate(Value::Vampire);
+			Duplicate(Value::Vampire);
 			// }
 			break;
 		case RaceKey::Canine:

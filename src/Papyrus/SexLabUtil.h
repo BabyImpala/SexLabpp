@@ -93,6 +93,24 @@ namespace Papyrus::SexLabUtil
 		return (calendar->GetCurrentGameTime() / timescale) * seconds_per_day;
 	}
 
+	std::string GetTranslation(RE::StaticFunctionTag*, std::string a_str)
+	{
+		std::string ret;
+		if (SKSE::Translation::Translate(a_str, ret)) {
+			if (ret.empty() || ret == a_str) {
+				return "";
+			}
+			return ret;
+		}
+		return "";
+	}
+
+	bool IsGodModeEnabled(RE::StaticFunctionTag*)
+	{
+		const auto player = RE::PlayerCharacter::GetSingleton();
+		return player->IsGodMode();
+	}
+
 	inline bool Register(VM* a_vm)
 	{
 		REGISTERFUNC(HasKeywordSub, "SexLabUtil", true);
@@ -104,6 +122,8 @@ namespace Papyrus::SexLabUtil
 		REGISTERFUNC(FloatMinMaxValue, "SexLabUtil", true);
 		REGISTERFUNC(MakeActorArray, "SexLabUtil", true);
 		REGISTERFUNC(GetCurrentGameRealTime, "SexLabUtil", true);
+		REGISTERFUNC(GetTranslation, "SexLabUtil", true);
+		REGISTERFUNC(IsGodModeEnabled, "SexLabUtil", true);
 
 		return true;
 	}
