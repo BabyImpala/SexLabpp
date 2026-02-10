@@ -577,6 +577,12 @@ namespace Papyrus::ThreadModel
 		return ret;
 	}
 
+	void SetAnimationPlaybackSpeed(QUESTARGS, float a_playbackSpeed)
+	{
+		GET_INSTANCE();
+		instance->SetAnimationPlaybackSpeed(a_playbackSpeed);
+	}
+
 	void AddExperience(QUESTARGS, std::vector<RE::Actor*> a_positions, RE::BSFixedString a_scene, std::vector<RE::BSFixedString> a_playedstages)
 	{
 		const auto scene = Registry::Library::GetSingleton()->GetSceneById(a_scene);

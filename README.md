@@ -13,7 +13,6 @@ A high performance and stability patch for SexLab for Skyrim SE.
 	* Race Menu (Modders Package): [Nexus][RM-Nexus]
 	* MfgFix NG: [Nexus][MFG-Nexus] | [GitHub][MFG-GitHub]
 	* SkyrimLovense: [Nexus][SL-Nexus] | [GitHub][SL-GitHub]
-	* AnimSpeedSE: [Patreon][AS-Patreon]
 
 ## Building
 
@@ -95,4 +94,3 @@ This project primarily falls under the [Apache License Version 2.0](./LICENSE). 
 [MFG-GitHub]: https://github.com/KrisV-777/Mfg-Fix-NG
 [SL-Nexus]: https://www.nexusmods.com/skyrimspecialedition/mods/133698
 [SL-GitHub]: https://github.com/KrisV-777/Skyrim-Lovense
-[AS-Patreon]: https://www.patreon.com/posts/103787087

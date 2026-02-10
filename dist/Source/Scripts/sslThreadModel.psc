@@ -2213,16 +2213,11 @@ float Function CalcInstThreadAnimSpeed()
 EndFunction
 
 Function UpdateAnimationSpeed()
-	If (!sslSystemConfig.HasAnimSpeedSE())
-		return
-	EndIf
 	float animSpeed = CalcInstThreadAnimSpeed()
-	int i = 0
-	While (i < _Positions.Length)
-		sslAnimSpeedHelper.SetAnimationSpeed(_Positions[i], animSpeed, ANIMATING_UPDATE_INTERVAL / 3, 0)
-		i += 1
-	EndWhile
+	SetAnimationPlaybackSpeed(animSpeed)
 EndFunction
+
+Function SetAnimationPlaybackSpeed(float afAnimationSpeed) native
 
 ; *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-* ;
 ; ----------------------------------------------------------------------------- ;

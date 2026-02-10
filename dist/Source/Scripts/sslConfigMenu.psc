@@ -368,7 +368,7 @@ Function AnimationSettings()
 	AddStateOptionBool("bRedressVictim", "$SSL_bRedressVictim")
 	AddStateOptionBool("bDisableTeleport", "$SSL_bDisableTeleport")
 	AddStateOptionBool("bShowInMap", "$SSL_bShowInMap")
-	AddStateOptionBool("bSetAnimSpeedByEnjoyment", "$SSL_bSetAnimSpeedByEnjoyment", !sslSystemConfig.HasAnimSpeedSE())
+	AddStateOptionBool("bSetAnimSpeedByEnjoyment", "$SSL_bSetAnimSpeedByEnjoyment")
 	AddMenuOptionST("FurnitureNPC", "$SSL_FurnitureNPC", _NPCFurnOpt[sslSystemConfig.GetSettingInt("iNPCBed")])
 	AddMenuOptionST("FurniturePlayer", "$SSL_FurniturePlayer", _PlFurnOpt[sslSystemConfig.GetSettingInt("iAskBed")])
 EndFunction

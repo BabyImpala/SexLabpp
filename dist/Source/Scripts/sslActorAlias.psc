@@ -641,9 +641,7 @@ State Paused
 		If (sslLovense.IsLovenseInstalled())
 			sslLovense.StopAllActions()
 		EndIf
-		If (sslSystemConfig.HasAnimSpeedSE())
-			sslAnimSpeedHelper.ResetAnimationSpeed(_ActorRef)
-		EndIf
+		_Thread.SetAnimationPlaybackSpeed(1.0)
 		UnregisterForModEvent("SSL_ORGASM_Thread" + _Thread.tid)
 		StoreExcitementState("Backup")
 		UnregisterEnjGameKeys()

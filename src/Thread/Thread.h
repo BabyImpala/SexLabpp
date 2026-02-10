@@ -92,6 +92,7 @@ namespace Thread
 
 		bool GetAutoplayEnabled();
 		void SetAutoplayEnabled(bool a_enabled);
+		void SetAnimationPlaybackSpeed(float playbackSpeed);
 
 		void SetEnjoyment(RE::Actor* a_position, float a_enjoyment);
 		const Registry::Expression* GetExpression(RE::Actor* a_position);

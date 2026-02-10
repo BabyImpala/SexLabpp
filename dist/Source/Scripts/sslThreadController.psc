@@ -68,10 +68,6 @@ Event MenuEvent(string asEventName, string asStringArg, float afNumArg, form akS
 			PlayNextImpl(asStringArg)
 		EndIf
 	ElseIf (asEventName == "SL_SetSpeed")
-		If (!sslSystemConfig.HasAnimSpeedSE())
-			Log("SetSpeed: AnimSpeedSE not found")
-			return
-		EndIf
 		UpdateBaseSpeed(afNumArg)
 		If (afNumArg == 0.0)
 			_AutoAdvanceCache = AutoAdvance as int

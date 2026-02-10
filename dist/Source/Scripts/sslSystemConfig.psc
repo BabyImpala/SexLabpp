@@ -591,10 +591,6 @@ bool property HasMFGFix hidden
   EndFunction
 EndProperty
 
-bool Function HasAnimSpeedSE() global
-  return SKSE.GetPluginVersion("AnimSpeedSE") > -1 || SKSE.GetPluginVersion("AnimSpeedSEX") > -1
-EndFunction
-
 ; ------------------------------------------------------- ;
 ; --- Config Accessors                                --- ;
 ; ------------------------------------------------------- ;
@@ -995,9 +991,6 @@ Function Reload()
   If (DebugMode)
     Debug.OpenUserLog("SexLabDebug")
     Debug.TraceUser("SexLabDebug", "Config Reloading...")
-  EndIf
-  If (!HasAnimSpeedSE())
-    SetAnimSpeedByEnjoyment = false
   EndIf
   AudioVoice.SetVolume(VoiceVolume)
   AudioSFX.SetVolume(SFXVolume)

@@ -237,6 +237,56 @@ namespace Thread
 		Script::SetProperty(scriptObj, "AutoAdvance", a_enabled);
 	}
 
+	void Instance::SetAnimationPlaybackSpeed(float playbackSpeed)
+	{
+		std::vector<std::pair<RE::BSAnimationGraphManagerPtr, std::unique_ptr<RE::BSSpinLockGuard>>> lockedGraphs;
+
+		for (auto& position : positions) {
+			const auto* actor = position.data.GetActor();
+			if (!actor) {
+				continue;
+			}
+
+			RE::BSAnimationGraphManagerPtr graphMgr;
+			if (!actor->GetAnimationGraphManager(graphMgr) || !graphMgr) {
+				continue;
+			}
+
+			auto& runtime = graphMgr->GetRuntimeData();
+			lockedGraphs.emplace_back(
+			  graphMgr,
+			  std::make_unique<RE::BSSpinLockGuard>(runtime.updateLock));
+		}
+
+		for (auto& [graphMgr, lock] : lockedGraphs) {
+			auto& runtime = graphMgr->GetRuntimeData();
+			auto activeGraph = runtime.activeGraph;
+
+			RE::BShkbAnimationGraph* animationGraph = graphMgr->graphs[activeGraph].get();
+			if (!animationGraph || !animationGraph->behaviorGraph) {
+				continue;
+			}
+
+			auto* activeNodes = *reinterpret_cast<RE::hkArray<RE::hkbNodeInfo>**>(
+			  &animationGraph->behaviorGraph->activeNodes);
+			if (!activeNodes) {
+				continue;
+			}
+
+			for (const RE::hkbNodeInfo& activeNode : *activeNodes) {
+				if (!activeNode.nodeClone) {
+					continue;
+				}
+				if (auto* clip = skyrim_cast<RE::hkbClipGenerator*>(activeNode.nodeClone)) {
+					clip->playbackSpeed = playbackSpeed;
+					if (clip->animationControl) {
+						clip->animationControl->playbackSpeed = playbackSpeed;
+					}
+				}
+			}
+		}
+	}
+
 	void Instance::SetEnjoyment(RE::Actor* a_position, float a_enjoyment)
 	{
 		// COMEBACK: If enjoyment is moved into backend, update this
