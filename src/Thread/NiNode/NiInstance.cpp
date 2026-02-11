@@ -83,10 +83,23 @@ namespace Thread::NiNode
 	  RE::FormID a_idB,
 	  NiType::Type a_type) const
 	{
+		ForEachCluster([&](RE::ActorPtr a, RE::ActorPtr b, const NiInteractionCluster& cluster) {
+			for (const auto& interaction : cluster.interactions) {
+				if (interaction.GetType() != a_type && a_type != NiType::Type::None)
+					continue;
+				callback(a, b, interaction);
+			}
+		},
+		  a_idA, a_idB, a_type != NiType::Type::None ? NiType::GetClusterForType(a_type) : NiType::Cluster::None);
+	}
+
+	void NiInstance::ForEachCluster(const std::function<void(RE::ActorPtr, RE::ActorPtr, const NiInteractionCluster&)>& callback,
+	  RE::FormID a_idA, RE::FormID a_idB, NiType::Cluster a_cluster) const
+	{
 		const auto idxA = GetActorIndex(a_idA);
 		const auto idxB = GetActorIndex(a_idB);
 		if ((a_idA != 0 && idxA == IDX_INVALID) || (a_idB != 0 && idxB == IDX_INVALID)) {
-			logger::error("ForEachInteraction: Actor IDs {:X} or {:X} not found", a_idA, a_idB);
+			logger::error("ForEachCluster: Actor IDs {:X} or {:X} not found", a_idA, a_idB);
 			return;
 		}
 
@@ -97,9 +110,12 @@ namespace Thread::NiNode
 				continue;
 			if (idxB != second && idxB != IDX_UNSPECIFIED)
 				continue;
-			const auto& interactions = a_type != NiType::Type::None ? std::span(&state.interactions[static_cast<size_t>(a_type)], 1) : std::span(state.interactions);
-			for (auto& interaction : interactions) {
-				callback(positions[first].actor, positions[second].actor, interaction);
+			const auto& clusters =
+			  a_cluster != NiType::Cluster::None ?
+				std::span(&state.interactionClusters[static_cast<size_t>(a_cluster)], 1) :
+				std::span(state.interactionClusters);
+			for (auto& cluster : clusters) {
+				callback(positions[first].actor, positions[second].actor, cluster);
 			}
 		}
 	}
@@ -125,43 +141,37 @@ namespace Thread::NiNode
 			return;
 
 		if (b.IsSex(Registry::Sex::Male)) {
-			if (a.IsSex(Registry::Sex::Female)) {
-				state.interactions[NiType::Vaginal] = EvaluateVaginal(mA, mB);
-				state.interactions[NiType::Grinding] = EvaluateGrinding(mA, mB);
-			}
-			state.interactions[NiType::Anal] = EvaluateAnal(mA, mB);
-			state.interactions[NiType::Oral] = EvaluateOral(mA, mB);
-			state.interactions[NiType::Deepthroat] = EvaluateDeepthroat(mA, mB);
-			state.interactions[NiType::Skullfuck] = EvaluateSkullfuck(mA, mB);
-			state.interactions[NiType::LickingShaft] = EvaluateLickingShaft(mA, mB);
+			state.interactionClusters[static_cast<size_t>(NiType::Cluster::Crotch)] = EvaluateCrotchInteractions(mA, mB);
+			state.interactionClusters[static_cast<size_t>(NiType::Cluster::Head)] = EvaluateHeadInteractions(mA, mB);
 		}
-		if (a != b) {
+		if (a == b) {
 			return;
 		}
-		state.interactions[NiType::Kissing] = EvaluateKissing(mA, mB);
+		state.interactionClusters[static_cast<size_t>(NiType::Cluster::Kissing)] = EvaluateKissingCluster(mA, mB);
 	}
 
-	void NiInstance::UpdateHysteresis(PairInteractionState& state, float a_timeStamp)
+	void NiInstance::UpdateHysteresis(PairInteractionState&, float)
 	{
-		const float delta = a_timeStamp - state.lastUpdateTime;
-		for (auto&& interaction : state.interactions) {
-			if (!interaction.descriptor) {
-				interaction.active = false;
-				interaction.timeActive = 0.0f;
-				continue;
-			}
-			const float confRaw = interaction.descriptor->Predict();
-			const float conf = NiMath::Sigmoid(confRaw);
-			assert(conf >= 0.0f && conf <= 1.0f);
-			const auto doActive = !interaction.active && conf >= Settings::fEnterThreshold;
-			const auto doInactive = interaction.active && conf < Settings::fExitThreshold;
-			if (doActive || doInactive) {
-				interaction.active = doActive;
-				interaction.timeActive = 0.0f;
-			} else {
-				interaction.timeActive += delta;
-			}
-		}
+		// const float delta = a_timeStamp - state.lastUpdateTime;
+		// TODO: impl
+		// for (auto&& interaction : state.interactions) {
+		// 	if (!interaction.descriptor) {
+		// 		interaction.active = false;
+		// 		interaction.timeActive = 0.0f;
+		// 		continue;
+		// 	}
+		// 	const float confRaw = interaction.descriptor->Predict();
+		// 	const float conf = NiMath::Sigmoid(confRaw);
+		// 	assert(conf >= 0.0f && conf <= 1.0f);
+		// 	const auto doActive = !interaction.active && conf >= Settings::fEnterThreshold;
+		// 	const auto doInactive = interaction.active && conf < Settings::fExitThreshold;
+		// 	if (doActive || doInactive) {
+		// 		interaction.active = doActive;
+		// 		interaction.timeActive = 0.0f;
+		// 	} else {
+		// 		interaction.timeActive += delta;
+		// 	}
+		// }
 	}
 
 }  // namespace Thread::NiNode

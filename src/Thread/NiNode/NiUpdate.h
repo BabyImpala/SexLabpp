@@ -8,7 +8,7 @@ namespace Thread::NiNode
 	{
 		struct MLTrainingState
 		{
-			NiType::Type type{ NiType::None };
+			NiType::Type type{ NiType::Type::None };
 			std::vector<std::string> recordedData{};
 			bool enabled{ false };
 			size_t frameInterval{ 20 };

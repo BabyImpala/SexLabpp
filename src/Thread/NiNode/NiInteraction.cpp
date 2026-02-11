@@ -4,22 +4,26 @@
 
 namespace Thread::NiNode
 {
+
+	bool NiInteractionCluster::IncludesType(NiType::Type type) const
+	{
+		return std::ranges::any_of(interactions, [type](const NiInteraction& interaction) {
+			return interaction.GetType() == type;
+		});
+	}
+
+	NiType::Cluster NiInteractionCluster::GetClusterType() const
+	{
+		if (interactions.empty()) {
+			return NiType::Cluster::None;
+		}
+		return NiType::GetClusterForType(interactions.front().GetType());
+	}
+
 	namespace
 	{
 		template <typename NiDescriptorType>
-		void AddAngleScores(NiDescriptorType& descriptor, const RE::NiPoint3& vecA, const RE::NiPoint3& vecB)
-		{
-			const auto scoreXY = NiMath::GetAngleXY(vecA, vecB);
-			const auto scoreXZ = NiMath::GetAngleXZ(vecA, vecB);
-			const auto scoreYZ = NiMath::GetAngleYZ(vecA, vecB);
-
-			descriptor.AddValue(INiDescriptor::Feature::AngleXY, scoreXY);
-			descriptor.AddValue(INiDescriptor::Feature::AngleXZ, scoreXZ);
-			descriptor.AddValue(INiDescriptor::Feature::AngleYZ, scoreYZ);
-		}
-
-		template <typename NiDescriptorType>
-		void AddBasicPairedScores(NiDescriptorType& descriptor, const MotionDescriptor& motionA, const MotionDescriptor& motionB)
+		void AddBasicPairedScores01(NiDescriptorType* descriptor, const MotionDescriptor& motionA, const MotionDescriptor& motionB)
 		{
 			const float duration = std::min(motionA.duration, motionB.duration);
 			const float timeScore = duration / Settings::fMinTypeDuration;
@@ -28,217 +32,138 @@ namespace Thread::NiNode
 			const float stabilityScore = 0.5f * (motionA.positionalVariance + motionB.positionalVariance);
 			const float stabilityVarScore = 0.5f * (motionA.directionalVariance + motionB.directionalVariance);
 
-			descriptor.AddValue(INiDescriptor::Feature::Time, timeScore);
-			descriptor.AddValue(INiDescriptor::Feature::Oscillation, oscillationScore);
-			descriptor.AddValue(INiDescriptor::Feature::Impulse, impulseScore);
-			descriptor.AddValue(INiDescriptor::Feature::Stability, stabilityScore);
-			descriptor.AddValue(INiDescriptor::Feature::StabilityVariance, stabilityVarScore);
+			descriptor->AddValue(INiDescriptor::Feature::Time01, timeScore);
+			descriptor->AddValue(INiDescriptor::Feature::Oscillation01, oscillationScore);
+			descriptor->AddValue(INiDescriptor::Feature::Impulse01, impulseScore);
+			descriptor->AddValue(INiDescriptor::Feature::Stability01, stabilityScore);
+			descriptor->AddValue(INiDescriptor::Feature::StabilityVariance01, stabilityVarScore);
+		}
+
+		template <typename NiDescriptorType>
+		void AddBasicPairedScores02(NiDescriptorType* descriptor, const MotionDescriptor& motionA, const MotionDescriptor& motionB)
+		{
+			const float duration = std::min(motionA.duration, motionB.duration);
+			const float timeScore = duration / Settings::fMinTypeDuration;
+			const float oscillationScore = 0.5f * (motionA.oscillation + motionB.oscillation);
+			const float impulseScore = 0.5f * (motionA.impulse + motionB.impulse);
+			const float stabilityScore = 0.5f * (motionA.positionalVariance + motionB.positionalVariance);
+			const float stabilityVarScore = 0.5f * (motionA.directionalVariance + motionB.directionalVariance);
+
+			descriptor->AddValue(INiDescriptor::Feature::Time02, timeScore);
+			descriptor->AddValue(INiDescriptor::Feature::Oscillation02, oscillationScore);
+			descriptor->AddValue(INiDescriptor::Feature::Impulse02, impulseScore);
+			descriptor->AddValue(INiDescriptor::Feature::Stability02, stabilityScore);
+			descriptor->AddValue(INiDescriptor::Feature::StabilityVariance02, stabilityVarScore);
+		}
+
+		template <typename NiDescriptorType>
+		void AddBasicPairedScores03(NiDescriptorType* descriptor, const MotionDescriptor& motionA, const MotionDescriptor& motionB)
+		{
+			const float duration = std::min(motionA.duration, motionB.duration);
+			const float timeScore = duration / Settings::fMinTypeDuration;
+			const float oscillationScore = 0.5f * (motionA.oscillation + motionB.oscillation);
+			const float impulseScore = 0.5f * (motionA.impulse + motionB.impulse);
+			const float stabilityScore = 0.5f * (motionA.positionalVariance + motionB.positionalVariance);
+			const float stabilityVarScore = 0.5f * (motionA.directionalVariance + motionB.directionalVariance);
+
+			descriptor->AddValue(INiDescriptor::Feature::Time03, timeScore);
+			descriptor->AddValue(INiDescriptor::Feature::Oscillation03, oscillationScore);
+			descriptor->AddValue(INiDescriptor::Feature::Impulse03, impulseScore);
+			descriptor->AddValue(INiDescriptor::Feature::Stability03, stabilityScore);
+			descriptor->AddValue(INiDescriptor::Feature::StabilityVariance03, stabilityVarScore);
 		}
 	}
 
-	NiInteraction EvaluateVaginal(const NiMotion& a_motionA, const NiMotion& a_motionB)
+	NiInteractionCluster EvaluateCrotchInteractions(const NiMotion& a_motionA, const NiMotion& a_motionB)
 	{
-		NiInteraction result{};
-		assert(a_motionA.HasSufficientData() && a_motionB.HasSufficientData());
-		if (!a_motionA.HasMomentData(NiMotion::pVaginalStart) || !a_motionB.HasMomentData(NiMotion::pSchlongTip)) {
-			return result;
-		}
-
-		// a_motionA: receiving actor (vagina/anal)
+		// a_motionA: receiving actor (vagina/anal/grinding)
 		// a_motionB: penetrating actor (with schlong)
-		const auto vaginalEntryMotion = a_motionA.DescribeMotion(NiMotion::pVaginalStart);
-		const auto schlongTipMotion = a_motionB.DescribeMotion(NiMotion::pSchlongTip);
-		if (!vaginalEntryMotion.DescribesMotion() && !schlongTipMotion.DescribesMotion()) {
-			return result;
-		}
-
-		const auto pVaginaStart = a_motionA.GetLatestMoment(NiMotion::pVaginalStart);
-		const auto pSchlongStart = a_motionB.GetLatestMoment(NiMotion::pSchlongBase);
-		const auto pSchlongEnd = a_motionB.GetLatestMoment(NiMotion::pSchlongTip);
-		const NiMath::Segment sSchlong{ pSchlongStart, pSchlongEnd };
-
-		const auto sDistance = sSchlong.ShortestSegmentTo(pVaginaStart);
-		const auto distance = sDistance.Length();
-		if (distance > Settings::fDistanceCrotch * 2.0f) {
-			return result;
-		}
-
-		const float avgVelocity = 0.5f * (vaginalEntryMotion.avgSpeed + schlongTipMotion.avgSpeed);
-		const auto vSchlong = schlongTipMotion.DescribesMotion() ? schlongTipMotion.trajectory.Vector() : sSchlong.Vector();
-		const auto pVaginaEnd = a_motionA.GetLatestMoment(NiMotion::pVaginalEnd);
-		auto vVagina = vaginalEntryMotion.DescribesMotion() ? vaginalEntryMotion.trajectory.Vector() : (pVaginaEnd - pVaginaStart);
-		NiMath::EnsureParallelDirection(vVagina, vSchlong);
-
-		const float distanceScore = distance / Settings::fDistanceCrotch;
-		const float velocityScore = avgVelocity / Settings::fMinSpeedPenetration;
-
-		auto descriptor = NiDescriptor<NiType::Vaginal>();
-		AddAngleScores(descriptor, vVagina, vSchlong);
-		AddBasicPairedScores(descriptor, vaginalEntryMotion, schlongTipMotion);
-		descriptor.AddValue(INiDescriptor::Feature::Distance, distanceScore);
-		descriptor.AddValue(INiDescriptor::Feature::Velocity, velocityScore);
-
-		result.descriptor = std::make_unique<NiDescriptor<NiType::Vaginal>>(std::move(descriptor));
-		result.velocity = avgVelocity;
-
-		return result;
-	}
-
-	NiInteraction EvaluateAnal(const NiMotion& a_motionA, const NiMotion& a_motionB)
-	{
-		NiInteraction result{};
-		assert(a_motionA.HasSufficientData() && a_motionB.HasSufficientData());
-		if (!a_motionA.HasMomentData(NiMotion::pAnalStart) || !a_motionB.HasMomentData(NiMotion::pSchlongTip)) {
-			return result;
-		}
-
-		// a_motionA: receiving actor (anal)
-		// a_motionB: penetrating actor (with schlong)
-		const auto analEntryMotion = a_motionA.DescribeMotion(NiMotion::pAnalStart);
-		const auto schlongTipMotion = a_motionB.DescribeMotion(NiMotion::pSchlongTip);
-		if (!analEntryMotion.DescribesMotion() && !schlongTipMotion.DescribesMotion()) {
-			return result;
-		}
-
-		const auto pAnalStart = a_motionA.GetLatestMoment(NiMotion::pAnalStart);
-		const auto pSchlongStart = a_motionB.GetLatestMoment(NiMotion::pSchlongBase);
-		const auto pSchlongEnd = a_motionB.GetLatestMoment(NiMotion::pSchlongTip);
-		const NiMath::Segment sSchlong{ pSchlongStart, pSchlongEnd };
-
-		const auto sDistance = sSchlong.ShortestSegmentTo(pAnalStart);
-		const auto distance = sDistance.Length();
-		if (distance > Settings::fDistanceCrotch * 2.0f) {
-			return result;
-		}
-
-		const float avgVelocity = 0.5f * (analEntryMotion.avgSpeed + schlongTipMotion.avgSpeed);
-		const auto vSchlong = schlongTipMotion.DescribesMotion() ? schlongTipMotion.trajectory.Vector() : sSchlong.Vector();
-		const auto pAnalEnd = a_motionA.GetLatestMoment(NiMotion::pAnalEnd);
-		auto vAnal = analEntryMotion.DescribesMotion() ? analEntryMotion.trajectory.Vector() : (pAnalEnd - pAnalStart);
-		NiMath::EnsureParallelDirection(vAnal, vSchlong);
-
-		const float distanceScore = distance / Settings::fDistanceCrotch;
-		const float velocityScore = avgVelocity / Settings::fMinSpeedPenetration;
-
-		auto descriptor = NiDescriptor<NiType::Anal>();
-		AddAngleScores(descriptor, vAnal, vSchlong);
-		AddBasicPairedScores(descriptor, analEntryMotion, schlongTipMotion);
-		descriptor.AddValue(INiDescriptor::Feature::Distance, distanceScore);
-		descriptor.AddValue(INiDescriptor::Feature::Velocity, velocityScore);
-
-		result.descriptor = std::make_unique<NiDescriptor<NiType::Anal>>(std::move(descriptor));
-		result.velocity = avgVelocity;
-
-		return result;
-	}
-
-	NiInteraction EvaluateOral(const NiMotion& a_motionA, const NiMotion& a_motionB)
-	{
-		NiInteraction result{};
-		assert(a_motionA.HasSufficientData() && a_motionB.HasSufficientData());
-		const auto headBound = a_motionA.GetLatestHeadBound();
-		if (!a_motionB.HasMomentData(NiMotion::pSchlongTip) || !headBound.IsValid()) {
-			return result;
-		}
-
-		// a_motionA: receiving actor (head)
-		// a_motionB: penetrating actor (with schlong)
-		const auto headEntryMotion = a_motionA.DescribeMotion(NiMotion::pHead);
-		const auto schlongBaseMotion = a_motionB.DescribeMotion(NiMotion::pSchlongBase);
-		if (!headEntryMotion.DescribesMotion() && !schlongBaseMotion.DescribesMotion()) {
-			return result;
-		}
-
-		const auto pSchlongStart = a_motionB.GetLatestMoment(NiMotion::pSchlongBase);
-		const auto pSchlongEnd = a_motionB.GetLatestMoment(NiMotion::pSchlongTip);
-		const NiMath::Segment sSchlong{ pSchlongStart, pSchlongEnd };
-		const auto pMouth = a_motionA.GetLatestMoment(NiMotion::pMouth);
-
-		const auto distance = sSchlong.ShortestSegmentTo(pMouth).Length();
-		const auto distanceLimit = headBound.boundMax.y * Settings::fCloseToHeadRatio;
-		if (distance > distanceLimit * 2.0f) {
-			return result;
-		}
-		const auto avgVelocity = 0.5f * (headEntryMotion.avgSpeed + schlongBaseMotion.avgSpeed);
-
-		const auto vHead = a_motionA.GetLatestMoment(NiMotion::vHeadY);
-		auto vSchlong = schlongBaseMotion.DescribesMotion() ? schlongBaseMotion.trajectory.Vector() : sSchlong.Vector();
-		NiMath::EnsureAntiParallelDirection(vSchlong, vHead);
-
-		const float distanceScore = distance / distanceLimit;
-		const float velocityScore = avgVelocity / Settings::fMinSpeedPenetration;
-
-		auto descriptor = NiDescriptor<NiType::Oral>();
-		AddAngleScores(descriptor, vHead, vSchlong);
-		AddBasicPairedScores(descriptor, headEntryMotion, schlongBaseMotion);
-		descriptor.AddValue(INiDescriptor::Feature::Distance, distanceScore);
-		descriptor.AddValue(INiDescriptor::Feature::Velocity, velocityScore);
-
-		result.descriptor = std::make_unique<NiDescriptor<NiType::Oral>>(std::move(descriptor));
-		result.velocity = avgVelocity;
-
-		return result;
-	}
-
-	NiInteraction EvaluateGrinding(const NiMotion& a_motionA, const NiMotion& a_motionB)
-	{
-		NiInteraction result{};
+		NiInteractionCluster result{};
 		assert(a_motionA.HasSufficientData() && a_motionB.HasSufficientData());
 		if (!a_motionB.HasMomentData(NiMotion::pSchlongTip)) {
 			return result;
 		}
 
-		// a_motionA: receiving actor (crotch)
-		// a_motionB: penetrating actor (with schlong)
-		const auto crotchEntryMotion = a_motionA.DescribeMotion(NiMotion::pPelvis);
 		const auto schlongTipMotion = a_motionB.DescribeMotion(NiMotion::pSchlongTip);
-		if (!crotchEntryMotion.DescribesMotion() && !schlongTipMotion.DescribesMotion()) {
-			return result;
-		}
-
-		const auto pPelvis = a_motionA.GetLatestMoment(NiMotion::pPelvis);
 		const auto pSchlongStart = a_motionB.GetLatestMoment(NiMotion::pSchlongBase);
 		const auto pSchlongEnd = a_motionB.GetLatestMoment(NiMotion::pSchlongTip);
 		const NiMath::Segment sSchlong{ pSchlongStart, pSchlongEnd };
-
-		const auto sDistance = sSchlong.ShortestSegmentTo(pPelvis);
-		const auto distance = sDistance.Length();
-		if (distance > Settings::fDistanceCrotch * 2.0f) {
-			return result;
-		}
-
-		const float avgVelocity = 0.5f * (crotchEntryMotion.avgSpeed + schlongTipMotion.avgSpeed);
 		const auto vSchlong = schlongTipMotion.DescribesMotion() ? schlongTipMotion.trajectory.Vector() : sSchlong.Vector();
-		const auto pSpineLower = a_motionA.GetLatestMoment(NiMotion::pSpineLower);
-		auto vCrotch = crotchEntryMotion.DescribesMotion() ? crotchEntryMotion.trajectory.Vector() : (pSpineLower - pPelvis);
-		NiMath::EnsureParallelDirection(vCrotch, vSchlong);
 
-		const float distanceScore = distance / Settings::fDistanceCrotch;
-		const float velocityScore = avgVelocity / Settings::fMinSpeedPenetration;
+		auto descV = std::make_unique<NiDescriptor<NiType::Type::Vaginal>>();
+		auto descA = std::make_unique<NiDescriptor<NiType::Type::Anal>>();
+		auto descG = std::make_unique<NiDescriptor<NiType::Type::Grinding>>();
 
-		auto descriptor = NiDescriptor<NiType::Grinding>();
-		AddAngleScores(descriptor, vCrotch, vSchlong);
-		AddBasicPairedScores(descriptor, crotchEntryMotion, schlongTipMotion);
-		descriptor.AddValue(INiDescriptor::Feature::Distance, distanceScore);
-		descriptor.AddValue(INiDescriptor::Feature::Velocity, velocityScore);
+		const auto EvaluateInteraction = [&](NiMotion::Anchor motionAnchor, NiMotion::Anchor motionAnchorEnd)
+		  -> std::optional<std::tuple<const MotionDescriptor, RE::NiPoint3, float, float, float>> {
+			if (!a_motionA.HasMomentData(motionAnchor)) {
+				return std::nullopt;
+			}
+			const auto motion = a_motionA.DescribeMotion(motionAnchor);
+			if (!motion.DescribesMotion() && !schlongTipMotion.DescribesMotion()) {
+				return std::nullopt;
+			}
+			const auto pEntry = a_motionA.GetLatestMoment(motionAnchor);
+			const auto sDistance = sSchlong.ShortestSegmentTo(pEntry);
+			const auto distance = sDistance.Length();
+			if (distance > Settings::fDistanceCrotch * 2.0f) {
+				return std::nullopt;
+			}
+			const float avgVelocity = 0.5f * (motion.avgSpeed + schlongTipMotion.avgSpeed);
+			const auto pEntryEnd = a_motionA.GetLatestMoment(motionAnchorEnd);
+			auto vEntry = motion.DescribesMotion() ? motion.trajectory.Vector() : (pEntryEnd - pEntry);
+			NiMath::EnsureParallelDirection(vEntry, vSchlong);
 
-		result.descriptor = std::make_unique<NiDescriptor<NiType::Grinding>>(std::move(descriptor));
-		result.velocity = avgVelocity;
+			float distanceScore = distance / Settings::fDistanceCrotch;
+			float velocityScore = avgVelocity / Settings::fMinSpeedPenetration;
+			return { { motion, vEntry, distanceScore, velocityScore, avgVelocity } };
+		};
+
+#define ADD_DATA(res, idx)                                                     \
+	if (res) {                                                                 \
+		const auto& [motion, vEntry, distanceScore, velocityScore, _] = *res;  \
+		const auto cos = NiMath::GetAngleCos(vEntry, vSchlong);                \
+		descV->AddValue(INiDescriptor::Feature::Angle##idx, cos);              \
+		descA->AddValue(INiDescriptor::Feature::Angle##idx, cos);              \
+		descG->AddValue(INiDescriptor::Feature::Angle##idx, cos);              \
+		AddBasicPairedScores##idx(descV.get(), motion, schlongTipMotion);      \
+		AddBasicPairedScores##idx(descA.get(), motion, schlongTipMotion);      \
+		AddBasicPairedScores##idx(descG.get(), motion, schlongTipMotion);      \
+		descV->AddValue(INiDescriptor::Feature::Distance##idx, distanceScore); \
+		descV->AddValue(INiDescriptor::Feature::Velocity##idx, velocityScore); \
+		descA->AddValue(INiDescriptor::Feature::Distance##idx, distanceScore); \
+		descA->AddValue(INiDescriptor::Feature::Velocity##idx, velocityScore); \
+		descG->AddValue(INiDescriptor::Feature::Distance##idx, distanceScore); \
+		descG->AddValue(INiDescriptor::Feature::Velocity##idx, velocityScore); \
+	}
+
+		const auto resV = EvaluateInteraction(NiMotion::pVaginalStart, NiMotion::pVaginalEnd);
+		const auto resA = EvaluateInteraction(NiMotion::pAnalStart, NiMotion::pAnalEnd);
+		const auto resG = EvaluateInteraction(NiMotion::pPelvis, NiMotion::pSpineLower);
+		ADD_DATA(resV, 01)
+		ADD_DATA(resA, 02)
+		ADD_DATA(resG, 03)
+
+#undef ADD_DATA
+
+		result.interactions.emplace_back(std::move(descV), std::get<4>(*resV));
+		result.interactions.emplace_back(std::move(descA), std::get<4>(*resA));
+		result.interactions.emplace_back(std::move(descG), std::get<4>(*resG));
 
 		return result;
 	}
 
-	NiInteraction EvaluateDeepthroat(const NiMotion& a_motionA, const NiMotion& a_motionB)
+	NiInteractionCluster EvaluateHeadInteractions(const NiMotion& a_motionA, const NiMotion& a_motionB)
 	{
-		NiInteraction result{};
+		// a_motionA: receiving actor
+		// a_motionB: penetrating actor (with schlong)
+		NiInteractionCluster result{};
 		assert(a_motionA.HasSufficientData() && a_motionB.HasSufficientData());
 		const auto headBound = a_motionA.GetLatestHeadBound();
 		if (!a_motionB.HasMomentData(NiMotion::pSchlongBase) || !headBound.IsValid()) {
 			return result;
 		}
 
-		// a_motionA: receiving actor (head)
-		// a_motionB: penetrating actor (with schlong)
 		const auto headEntryMotion = a_motionA.DescribeMotion(NiMotion::pHead);
 		const auto schlongBaseMotion = a_motionB.DescribeMotion(NiMotion::pSchlongBase);
 		if (!headEntryMotion.DescribesMotion() && !schlongBaseMotion.DescribesMotion()) {
@@ -248,134 +173,67 @@ namespace Thread::NiNode
 		const auto pSchlongStart = a_motionB.GetLatestMoment(NiMotion::pSchlongBase);
 		const auto pSchlongEnd = a_motionB.GetLatestMoment(NiMotion::pSchlongTip);
 		const NiMath::Segment sSchlong{ pSchlongStart, pSchlongEnd };
-		const auto pHead = a_motionA.GetLatestMoment(NiMotion::pHead);
-
-		const auto pPelvis = a_motionA.GetLatestMoment(NiMotion::pPelvis);
-		const float distanceLimit = headBound.boundMax.y * Settings::fVeryCloseToHeadRatio;
-		const float distance = headBound.IsPointInside(pPelvis) ? 0.1f : pHead.GetDistance(pSchlongEnd);
-		if (distance > distanceLimit * 2.0f) {
-			return result;
-		}
-
-		const auto avgVelocity = 0.5f * (headEntryMotion.avgSpeed + schlongBaseMotion.avgSpeed);
-		const auto vHead = a_motionA.GetLatestMoment(NiMotion::vHeadY);
 		auto vSchlong = schlongBaseMotion.DescribesMotion() ? schlongBaseMotion.trajectory.Vector() : sSchlong.Vector();
-		NiMath::EnsureAntiParallelDirection(vSchlong, vHead);
 
-		const float distanceScore = distance / distanceLimit;
-		const float velocityScore = avgVelocity / Settings::fMinSpeedPenetration;
-
-		auto descriptor = NiDescriptor<NiType::Deepthroat>();
-		AddAngleScores(descriptor, vHead, vSchlong);
-		AddBasicPairedScores(descriptor, headEntryMotion, schlongBaseMotion);
-		descriptor.AddValue(INiDescriptor::Feature::Distance, distanceScore);
-		descriptor.AddValue(INiDescriptor::Feature::Velocity, velocityScore);
-
-		result.descriptor = std::make_unique<NiDescriptor<NiType::Deepthroat>>(std::move(descriptor));
-		result.velocity = avgVelocity;
-
-		return result;
-	}
-
-	NiInteraction EvaluateSkullfuck(const NiMotion& a_motionA, const NiMotion& a_motionB)
-	{
-		NiInteraction result{};
-		assert(a_motionA.HasSufficientData() && a_motionB.HasSufficientData());
-		const auto headBound = a_motionA.GetLatestHeadBound();
-		if (!a_motionB.HasMomentData(NiMotion::pSchlongBase) || !headBound.IsValid()) {
-			return result;
-		}
-
-		// a_motionA: receiving actor (head)
-		// a_motionB: penetrating actor (with schlong)
-		const auto headEntryMotion = a_motionA.DescribeMotion(NiMotion::pHead);
-		const auto schlongBaseMotion = a_motionB.DescribeMotion(NiMotion::pSchlongBase);
-		if (!headEntryMotion.DescribesMotion() && !schlongBaseMotion.DescribesMotion()) {
-			return result;
-		}
-
-		const auto pSchlongStart = a_motionB.GetLatestMoment(NiMotion::pSchlongBase);
-		const auto pSchlongEnd = a_motionB.GetLatestMoment(NiMotion::pSchlongTip);
-		const NiMath::Segment sSchlong{ pSchlongStart, pSchlongEnd };
-		const auto pHead = a_motionA.GetLatestMoment(NiMotion::pHead);
-
-		const auto distance = pSchlongEnd.GetDistance(pHead);
-		const auto distanceLimit = headBound.boundMax.y * Settings::fCloseToHeadRatio;
-		if (distance > distanceLimit * 2.0f) {
-			return result;
-		}
-		const auto avgVelocity = 0.5f * (headEntryMotion.avgSpeed + schlongBaseMotion.avgSpeed);
-
-		const auto vHead = a_motionA.GetLatestMoment(NiMotion::vHeadY);
-		auto vSchlong = schlongBaseMotion.DescribesMotion() ? schlongBaseMotion.trajectory.Vector() : sSchlong.Vector();
-		NiMath::EnsureAntiParallelDirection(vSchlong, vHead);
-
-		const float distanceScore = distance / distanceLimit;
-		const float velocityScore = avgVelocity / Settings::fMinSpeedPenetration;
-
-		auto descriptor = NiDescriptor<NiType::Skullfuck>();
-		AddAngleScores(descriptor, vHead, vSchlong);
-		AddBasicPairedScores(descriptor, headEntryMotion, schlongBaseMotion);
-		descriptor.AddValue(INiDescriptor::Feature::Distance, distanceScore);
-		descriptor.AddValue(INiDescriptor::Feature::Velocity, velocityScore);
-
-		result.descriptor = std::make_unique<NiDescriptor<NiType::Skullfuck>>(std::move(descriptor));
-		result.velocity = avgVelocity;
-
-		return result;
-	}
-
-	NiInteraction EvaluateLickingShaft(const NiMotion& a_motionA, const NiMotion& a_motionB)
-	{
-		NiInteraction result{};
-		assert(a_motionA.HasSufficientData() && a_motionB.HasSufficientData());
-		const auto headBound = a_motionA.GetLatestHeadBound();
-		if (!a_motionB.HasMomentData(NiMotion::pSchlongBase) || !headBound.IsValid()) {
-			return result;
-		}
-
-		// a_motionA: receiving actor (head)
-		// a_motionB: penetrating actor (with schlong)
-		const auto headEntryMotion = a_motionA.DescribeMotion(NiMotion::pHead);
-		const auto schlongBaseMotion = a_motionB.DescribeMotion(NiMotion::pSchlongBase);
-		if (!headEntryMotion.DescribesMotion() && !schlongBaseMotion.DescribesMotion()) {
-			return result;
-		}
-
-		const auto pSchlongStart = a_motionB.GetLatestMoment(NiMotion::pSchlongBase);
-		const auto pSchlongEnd = a_motionB.GetLatestMoment(NiMotion::pSchlongTip);
-		const NiMath::Segment sSchlong{ pSchlongStart, pSchlongEnd };
 		const auto pMouth = a_motionA.GetLatestMoment(NiMotion::pMouth);
+		const auto pHead = a_motionA.GetLatestMoment(NiMotion::pHead);
+		const auto pPelvis = a_motionA.GetLatestMoment(NiMotion::pPelvis);
 
-		const float distanceLimit = headBound.boundMax.y * Settings::fVeryCloseToHeadRatio;
-		const float distance = sSchlong.ShortestSegmentTo(pMouth).Length();
-		if (distance > distanceLimit * 2.0f) {
+		const float distanceClose = headBound.boundMax.y * Settings::fCloseToHeadRatio;
+		const float distanceVeryClose = headBound.boundMax.y * Settings::fVeryCloseToHeadRatio;
+		const float distanceOral = sSchlong.ShortestSegmentTo(pMouth).Length();
+		const float distanceSkull = pSchlongEnd.GetDistance(pHead);
+		const float distanceDP = headBound.IsPointInside(pPelvis) ? 0.1f : pHead.GetDistance(pSchlongEnd);
+		if (distanceSkull > distanceClose * 3.0f) {
 			return result;
 		}
 
+		const auto vHeadY = a_motionA.GetLatestMoment(NiMotion::vHeadY);
+		const auto vHeadX = a_motionA.GetLatestMoment(NiMotion::vHeadX);
+		const auto vHeadZ = a_motionA.GetLatestMoment(NiMotion::vHeadZ);
+		NiMath::EnsureAntiParallelDirection(vSchlong, vHeadY);
+
+		const auto cosY = NiMath::GetAngleCos(vHeadY, vSchlong);
+		const auto cosX = NiMath::GetAngleCos(vHeadX, vSchlong);
+		const auto cosZ = NiMath::GetAngleCos(vHeadZ, vSchlong);
+
 		const auto avgVelocity = 0.5f * (headEntryMotion.avgSpeed + schlongBaseMotion.avgSpeed);
-		const auto vHead = a_motionA.GetLatestMoment(NiMotion::vHeadX);
-		auto vSchlong = schlongBaseMotion.DescribesMotion() ? schlongBaseMotion.trajectory.Vector() : sSchlong.Vector();
-		NiMath::EnsureAntiParallelDirection(vSchlong, vHead);
+		const auto velocityScore = avgVelocity / Settings::fMinSpeedPenetration;
+		const auto distanceScoreOral = distanceOral / distanceClose;
+		const auto distanceScoreShaft = distanceOral / distanceVeryClose;
+		const auto distanceScoreSkull = distanceSkull / distanceClose;
+		const auto distanceScoreDP = distanceDP / distanceVeryClose;
 
-		const float distanceScore = distance / distanceLimit;
-		const float velocityScore = avgVelocity / Settings::fMinSpeedPenetration;
+		auto descO = std::make_unique<NiDescriptor<NiType::Type::Oral>>();
+		auto descDP = std::make_unique<NiDescriptor<NiType::Type::Deepthroat>>();
+		auto descSK = std::make_unique<NiDescriptor<NiType::Type::Skullfuck>>();
+		auto descLS = std::make_unique<NiDescriptor<NiType::Type::LickingShaft>>();
 
-		auto descriptor = NiDescriptor<NiType::LickingShaft>();
-		AddAngleScores(descriptor, vHead, vSchlong);
-		AddBasicPairedScores(descriptor, headEntryMotion, schlongBaseMotion);
-		descriptor.AddValue(INiDescriptor::Feature::Distance, distanceScore);
-		descriptor.AddValue(INiDescriptor::Feature::Velocity, velocityScore);
+#define ADD_DATA(descriptor)                                                      \
+	descriptor->AddValue(INiDescriptor::Feature::Angle01, cosY);                  \
+	descriptor->AddValue(INiDescriptor::Feature::Angle02, cosX);                  \
+	descriptor->AddValue(INiDescriptor::Feature::Angle03, cosZ);                  \
+	AddBasicPairedScores01(descriptor.get(), headEntryMotion, schlongBaseMotion); \
+	descriptor->AddValue(INiDescriptor::Feature::Distance01, distanceScoreOral);  \
+	descriptor->AddValue(INiDescriptor::Feature::Distance02, distanceScoreShaft); \
+	descriptor->AddValue(INiDescriptor::Feature::Distance03, distanceScoreSkull); \
+	descriptor->AddValue(INiDescriptor::Feature::Distance04, distanceScoreDP);    \
+	descriptor->AddValue(INiDescriptor::Feature::Velocity01, velocityScore);      \
+	result.interactions.emplace_back(std::move(descriptor), avgVelocity);
 
-		result.descriptor = std::make_unique<NiDescriptor<NiType::LickingShaft>>(std::move(descriptor));
-		result.velocity = avgVelocity;
+		ADD_DATA(descO)
+		ADD_DATA(descDP)
+		ADD_DATA(descSK)
+		ADD_DATA(descLS)
+
+#undef ADD_DATA
 
 		return result;
 	}
 
-	NiInteraction EvaluateKissing(const NiMotion& a_motionA, const NiMotion& a_motionB)
+	NiInteractionCluster EvaluateKissingCluster(const NiMotion& a_motionA, const NiMotion& a_motionB)
 	{
-		NiInteraction result{};
+		NiInteractionCluster result{};
 		assert(a_motionA.HasSufficientData() && a_motionB.HasSufficientData());
 
 		const auto mouthA = a_motionA.DescribeMotion(NiMotion::pMouth);
@@ -387,20 +245,27 @@ namespace Thread::NiNode
 
 		const float avgVelocity = 0.5f * (mouthA.avgSpeed + mouthB.avgSpeed);
 		const auto vHeadYA = a_motionA.GetLatestMoment(NiMotion::vHeadY);
+		const auto vHeadXA = a_motionA.GetLatestMoment(NiMotion::vHeadX);
+		const auto vHeadZA = a_motionA.GetLatestMoment(NiMotion::vHeadZ);
 		const auto vHeadYB = a_motionB.GetLatestMoment(NiMotion::vHeadY);
+		const auto vHeadXB = a_motionB.GetLatestMoment(NiMotion::vHeadX);
+		const auto vHeadZB = a_motionB.GetLatestMoment(NiMotion::vHeadZ);
 
 		const float distanceScore = mouthDistance / Settings::fDistanceMouth;
 		const float velocityScore = avgVelocity / Settings::fMaxKissSpeed;
+		const float cosX = NiMath::GetAngleCos(vHeadYA, vHeadYB);
+		const float cosY = NiMath::GetAngleCos(vHeadXA, vHeadXB);
+		const float cosZ = NiMath::GetAngleCos(vHeadZA, vHeadZB);
 
-		auto descriptor = NiDescriptor<NiType::Kissing>();
-		AddAngleScores(descriptor, vHeadYA, vHeadYB);
-		AddBasicPairedScores(descriptor, mouthA, mouthB);
-		descriptor.AddValue(INiDescriptor::Feature::Distance, distanceScore);
-		descriptor.AddValue(INiDescriptor::Feature::Velocity, velocityScore);
+		auto descriptor = std::make_unique<NiDescriptor<NiType::Type::Kissing>>();
+		descriptor->AddValue(INiDescriptor::Feature::Angle01, cosX);
+		descriptor->AddValue(INiDescriptor::Feature::Angle02, cosY);
+		descriptor->AddValue(INiDescriptor::Feature::Angle03, cosZ);
+		AddBasicPairedScores01(descriptor.get(), mouthA, mouthB);
+		descriptor->AddValue(INiDescriptor::Feature::Distance01, distanceScore);
+		descriptor->AddValue(INiDescriptor::Feature::Velocity01, velocityScore);
 
-		result.descriptor = std::make_unique<NiDescriptor<NiType::Kissing>>(std::move(descriptor));
-		result.velocity = avgVelocity;
-
+		result.interactions.emplace_back(std::move(descriptor), avgVelocity);
 		return result;
 	}
 
