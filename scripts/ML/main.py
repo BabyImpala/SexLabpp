@@ -187,5 +187,10 @@ if __name__ == "__main__":
     out_dir = Path(args.out_dir) if args.out_dir else None
     model_path = _run_training(mods_path=args.mods_path, out_dir=out_dir)
 
-    ini_path = Path(args.ini_path) if args.ini_path else Path("dist/SKSE/SexLab/LinearModel.ini")
+    if args.ini_path:
+        ini_path = Path(args.ini_path)
+    else:
+        repo_root = Path(__file__).resolve().parents[2]
+        ini_path = repo_root / "dist" / "SKSE" / "SexLab" / "LinearModel.ini"
+    
     unify_ini_files(model_path, ini_path)
