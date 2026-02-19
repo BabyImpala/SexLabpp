@@ -2071,32 +2071,23 @@ EndFunction
 ; --- Enjoyment Game                         --- ;
 ; ---------------------------------------------- ;
 
-Function GameAdjustEnj(Actor akActor, Actor akPartner, int AdjustBy = 0)
-	If (AdjustBy != 0)
-		AdjustEnjoyment(akPartner, AdjustBy)
-		return
-	Else
-		float arousalstat = PapyrusUtil.ClampFloat(SexlabStatistics.GetStatistic(akPartner, 17), 0.0, 100.0)
-		AdjustBy = PapyrusUtil.ClampInt((arousalstat as int / 50), 1, 2)
-		int basesex = GetActorSex(akPartner)
-		If (basesex != 0 || basesex != 3)
-			AdjustBy += GetOrgasmCount(akPartner)
-		EndIf
-		AdjustEnjoyment(akPartner, AdjustBy)
-	EndIf
-EndFunction
-
 Function GameRaiseEnjoyment(Actor akActor, Actor akPartner)
-	If (akActor.GetActorValuePercentage("Stamina") > 0.10)
+	If (SexLabUtil.IsGodModeEnabled())
+		AdjustEnjoyment(akPartner, 1)
+		return
+	ElseIf (akActor.GetActorValuePercentage("Stamina") > Config.GameStaminaCost)
 		akActor.DamageActorValue("Stamina", Config.GameStaminaCost)
-		GameAdjustEnj(akActor, akPartner)
+		AdjustEnjoyment(akPartner, 1)
 	EndIf
 EndFunction
 
 Function GameHoldback(Actor akActor, Actor akPartner)
-	If (akActor.GetActorValuePercentage("Magicka") > 0.10)
+	If (SexLabUtil.IsGodModeEnabled())
+		AdjustEnjoyment(akPartner, -1)
+		return
+	ElseIf (akActor.GetActorValuePercentage("Magicka") > Config.GameMagickaCost)
 		akActor.DamageActorValue("Magicka", Config.GameMagickaCost)
-		GameAdjustEnj(akActor, akPartner, -1)
+		AdjustEnjoyment(akPartner, -1)
 	EndIf
 EndFunction
 
