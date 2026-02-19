@@ -788,12 +788,14 @@ State Animating
 		Else
 			_LoopLovenseDelay -= UPDATE_INTERVAL
 		EndIf
-		If ((_FullEnjoyment >= 100) && (_Config.SeparateOrgasms || _Config.InternalEnjoymentEnabled))
-			DoOrgasm()
-		EndIf
-		bool NoStaminaEndScenario = (_Config.NoStaminaEndsScene && !_victim && _ActorRef.GetActorValuePercentage("Stamina") < 0.10)
-		If NoStaminaEndScenario
-			_Thread.EnjBasedSkipToLastStage(true)
+		If (_bEnjEnabled)
+			If (_FullEnjoyment >= 100)
+				DoOrgasm()
+			EndIf
+			bool NoStaminaEndScenario = (_Config.NoStaminaEndsScene && !_victim && _ActorRef.GetActorValuePercentage("Stamina") < 0.10)
+			If NoStaminaEndScenario
+				_Thread.EnjBasedSkipToLastStage(true)
+			EndIf
 		EndIf
 		; Loop
 		_LoopDelay += UPDATE_INTERVAL
@@ -886,21 +888,23 @@ State Animating
 		_LastOrgasm = SexLabUtil.GetCurrentGameRealTime()
 		_OrgasmCount += 1
 		; Enjoyment
-		_FullEnjoyment = 0
-		_arousalBase = 0
-		SexlabStatistics.SetStatistic(_ActorRef, 17, _arousalBase)
-		_EnjFactor = _BaseFactor
-		If (_sex == 0 || _sex == 3)
-			If (_OrgasmCount > _Config.MaxNoPainOrgasmMale)
-				_FullEnjoyment -= (_OrgasmCount - _Config.MaxNoPainOrgasmMale) * 20
+		If (_bEnjEnabled)
+			_FullEnjoyment = 0
+			_arousalBase = 0
+			SexlabStatistics.SetStatistic(_ActorRef, 17, _arousalBase)
+			_EnjFactor = _BaseFactor
+			If (_sex == 0 || _sex == 3)
+				If (_OrgasmCount > _Config.MaxNoPainOrgasmMale)
+					_FullEnjoyment -= (_OrgasmCount - _Config.MaxNoPainOrgasmMale) * 20
+				EndIf
+				_Thread.EnjBasedSkipToLastStage(_Config.MaleOrgasmEndsScene)
+			Else
+				If (_OrgasmCount > _Config.MaxNoPainOrgasmFemale)
+					_FullEnjoyment -= (_OrgasmCount - _Config.MaxNoPainOrgasmFemale) * 20
+				EndIf
 			EndIf
-			_Thread.EnjBasedSkipToLastStage(_Config.MaleOrgasmEndsScene)
-		Else
-			If (_OrgasmCount > _Config.MaxNoPainOrgasmFemale)
-				_FullEnjoyment -= (_OrgasmCount - _Config.MaxNoPainOrgasmFemale) * 20
-			EndIf
+			UpdateEffectiveEnjoymentCalculations()
 		EndIf
-		UpdateEffectiveEnjoymentCalculations()
 		RegisterForSingleUpdate(UPDATE_INTERVAL)
 		_hasOrgasm = false
 		Log(GetActorName() + ": Orgasms[" + _OrgasmCount + "] FullEnjoyment [" + _FullEnjoyment + "]")
@@ -1394,16 +1398,17 @@ int function CalcReaction()
 EndFunction
 
 bool Function WaitForOrgasm()
-	If _Config.InternalEnjoymentEnabled
-		bool EnjScenario = (_Config.HighEnjOrgasmWait && ((_FullEnjoyment > 80 && _OrgasmCount == 0) || (_FullEnjoyment > 100)))
-		bool PlayerSceanrio = (_Config.PlayerMustOrgasm && (_ActorRef == _PlayerRef) && _OrgasmCount == 0)
-		bool DomScenario = (_Config.DomMustOrgasm && !_victim && _OrgasmCount == 0 && \
-		(_ConSubStatus == _Thread.CONSENT_CONSUB || _ConSubStatus == _Thread.CONSENT_NONCONSUB))
-		If (EnjScenario || DomScenario || PlayerSceanrio)
-			return true
-		EndIf
+	If (!_bEnjEnabled)
+		return False
 	EndIf
-	return false
+	bool EnjScenario = (_Config.HighEnjOrgasmWait && (_FullEnjoyment > 80))
+	bool PlayerSceanrio = (_Config.PlayerMustOrgasm && (_ActorRef == _PlayerRef) && _OrgasmCount == 0)
+	bool DomScenario = (_Config.DomMustOrgasm && !_victim && _OrgasmCount == 0 && \
+	(_ConSubStatus == _Thread.CONSENT_CONSUB || _ConSubStatus == _Thread.CONSENT_NONCONSUB))
+	If (EnjScenario || DomScenario || PlayerSceanrio)
+		return True
+	EndIf
+	return False
 EndFunction
 
 Function StoreExcitementState(String arg = "")
@@ -1449,8 +1454,10 @@ Function RegisterRaiseEnjAttempt()
 				_FullEnjoyment -= 50 
 				_EnjFactor = (_BaseFactor/2)
 			EndIf
-			_ActorRef.DamageActorValue("Stamina", 2 * _Config.GameStaminaCost)
-			_ActorRef.DamageActorValue("Magicka", 2 * _Config.GameMagickaCost)	
+			If (!SexLabUtil.IsGodModeEnabled())
+				_ActorRef.DamageActorValue("Stamina", 2 * _Config.GameStaminaCost)
+				_ActorRef.DamageActorValue("Magicka", 2 * _Config.GameMagickaCost)
+			EndIf
 		EndIf
 	EndIf
 	_lastHoldBack = SexLabUtil.GetCurrentGameRealTime()
