@@ -748,7 +748,6 @@ State Animating
 		EndIf
 		_CurrentInteractions = _Thread.ListDetectedInteractionsInternal(_ActorRef)
 		If (_LoopEnjoymentDelay >= _EnjoymentDelay)
-			_LoopEnjoymentDelay = 0
 			UpdateEffectiveEnjoymentCalculations()
 		EndIf
 		int strength = CalcReaction()
@@ -818,9 +817,13 @@ State Animating
 			Utility.Wait(0.7)
 		EndIf
 		String expression = GetActorExpression()
-		If (expression && _Config.UseExpressions && _livestatus == LIVESTATUS_ALIVE)
+		bool ExpresssionsEnabled = (expression && _Config.UseExpressions && _livestatus == LIVESTATUS_ALIVE)
+		If (ExpresssionsEnabled)
 			sslBaseExpression.ApplyExpression(expression, _ActorRef, afStrength)
-			If (_Config.DebugMode)
+		EndIf
+		If (_LoopEnjoymentDelay >= _EnjoymentDelay)
+			_LoopEnjoymentDelay = 0
+			If (_Config.DebugMode && ExpresssionsEnabled)
 				Log("Expression? " + expression + "; Strength? " + afStrength + "; OpenMouth? " + OpenMouth, "sslBaseExpression.ApplyExpression()")
 			EndIf
 		EndIf
@@ -1225,9 +1228,10 @@ Function ResetEnjoymentVariables()
 EndFunction
 
 Function UpdateBaseEnjoymentCalculations()
-	If (!_Config.InternalEnjoymentEnabled || !_Config.SeparateOrgasms || GetIsDead())
+	If (!_Config.InternalEnjoymentEnabled || !_Config.SeparateOrgasms || GetIsDead() || !_Thread.HasPlayer)
 		return
 	EndIf
+	ResetEnjoymentVariables()
 	_bEnjEnabled = True
 	StoreExcitementState("Restore")
 	RegisterEnjGameKeys()
@@ -1393,8 +1397,11 @@ float Function EnjFindConSubStatusMult()
 EndFunction
 
 int function CalcReaction()
-	int ret = Math.Abs(_FullEnjoyment) as int
-	return PapyrusUtil.ClampInt(ret, 0, 100)
+	If (_bEnjEnabled)
+		int ret = Math.Abs(_FullEnjoyment) as int
+		return PapyrusUtil.ClampInt(ret, 0, 100)
+	EndIf
+	return 50
 EndFunction
 
 bool Function WaitForOrgasm()
