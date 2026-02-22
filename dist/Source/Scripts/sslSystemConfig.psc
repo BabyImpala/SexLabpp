@@ -485,6 +485,14 @@ bool property HideHUD hidden
 	  SetSettingBool("bHideHUD", aSet)
 	EndFunction
 EndProperty
+bool property HideUI hidden
+	bool Function Get()
+	  return GetSettingBool("bHideUI")
+	EndFunction
+	Function Set(bool aSet)
+	  SetSettingBool("bHideUI", aSet)
+	EndFunction
+EndProperty
 
 ; Floats
 float property CumTimer hidden
