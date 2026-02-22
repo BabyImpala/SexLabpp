@@ -482,9 +482,9 @@ State Ready
 			If (DoUndress)
 				DoUndress = false
 				If (_sex == 0)
-					Debug.SendAnimationEvent(_ActorRef, "Arrok_Undress_G1")
+					Debug.SendAnimationEvent(_ActorRef, "SexLab_MaleUndress")
 				Else
-					Debug.SendAnimationEvent(_ActorRef, "Arrok_Undress_G1")
+					Debug.SendAnimationEvent(_ActorRef, "SexLab_FemaleUndress")
 				EndIf
 				Utility.Wait(0.6)
 			EndIf
