@@ -48,7 +48,9 @@ MCM_SETTING(iTargetActor, 49)
 MCM_SETTING(bAdjustTargetStage, false)
 MCM_SETTING(fAdjustStepSize, 0.5f)
 MCM_SETTING(bAdjustStage, true)
+
 MCM_SETTING(bHideHUD, false)
+MCM_SETTING(bHideUI, false)
 
 // MCM_SETTING(iAdjustStage, 157)
 // MCM_SETTING(iBackwards, 54)

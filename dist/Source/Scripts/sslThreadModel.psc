@@ -1083,7 +1083,7 @@ State Animating
 					SendThreadEvent("OrgasmStart")
 					TriggerOrgasm()
 				EndIf
-			ElseIf (ctype == Config.CLIMAXTYPE_SCENE)
+			ElseIf ((ctype == Config.CLIMAXTYPE_SCENE) || (!HasPlayer))
 				int[] cactors = SexLabRegistry.GetClimaxingActors(GetActiveScene(), asNewStage)
 				If (cactors.Length > 0)
 					SendThreadEvent("OrgasmStart")
@@ -2075,7 +2075,7 @@ Function GameRaiseEnjoyment(Actor akActor, Actor akPartner)
 	If (SexLabUtil.IsGodModeEnabled())
 		AdjustEnjoyment(akPartner, 1)
 		return
-	ElseIf (akActor.GetActorValuePercentage("Stamina") > Config.GameStaminaCost)
+	ElseIf (akActor.GetActorValue("Stamina") > Config.GameStaminaCost)
 		akActor.DamageActorValue("Stamina", Config.GameStaminaCost)
 		AdjustEnjoyment(akPartner, 1)
 	EndIf
@@ -2085,7 +2085,7 @@ Function GameHoldback(Actor akActor, Actor akPartner)
 	If (SexLabUtil.IsGodModeEnabled())
 		AdjustEnjoyment(akPartner, -1)
 		return
-	ElseIf (akActor.GetActorValuePercentage("Magicka") > Config.GameMagickaCost)
+	ElseIf (akActor.GetActorValue("Magicka") > Config.GameMagickaCost)
 		akActor.DamageActorValue("Magicka", Config.GameMagickaCost)
 		AdjustEnjoyment(akPartner, -1)
 	EndIf
