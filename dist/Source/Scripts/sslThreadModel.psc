@@ -1866,17 +1866,17 @@ Faction Property PlayerMarriedFaction Auto
 ; -------------------------------------------------- ;
 
 float Function CalculateInteractionFactor(Actor akPosition, bool[] interActive)
-	float factorTotal = 0.5
+	float factorTotal = 0.25
 	float[] factorValues = sslSystemConfig.GetEnjoymentFactors()
 	int len = interActive.Length
 	int i = 0
 	While (i < len)
 		If (interActive[i])
 			; velFactor: [Range: 1.0 to 2.0]
-			; factorValue: [Default: 1 to 12] [Adjusted: 0.583 to 4.25]
-			; factorType: [Result: 0.583 to 8.5]
+			; factorValue: [Default: 1 to 12] [Adjusted: 0.2 to 2.4]
+			; factorType: [Result: 0.2 to 4.8]
 			float velFactor = CalcInterVelocityFactor(akPosition, i)
-			float adjustedFactor = 0.25 + (factorValues[i] / 3.0)
+			float adjustedFactor = 0.25 + (factorValues[i] / 5.0)
 			factorTotal += (adjustedFactor * velFactor)
 			;Log("InterFactor: TYPE: " + i + ", Value: " + factorValues[i] + ", Adjusted: " + adjustedFactor)
 		EndIf

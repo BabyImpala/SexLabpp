@@ -706,8 +706,6 @@ float Property UPDATE_INTERVAL = 0.250 AutoReadOnly Hidden
 
 float _LoopDelay
 float _LoopLovenseDelay
-float _LoopEnjoymentDelay
-
 bool _LovenseGenital
 bool _LovenseAnal
 
@@ -747,9 +745,7 @@ State Animating
 			return
 		EndIf
 		_CurrentInteractions = _Thread.ListDetectedInteractionsInternal(_ActorRef)
-		If (_LoopEnjoymentDelay >= _EnjoymentDelay)
-			UpdateEffectiveEnjoymentCalculations()
-		EndIf
+		UpdateEffectiveEnjoymentCalculations()
 		int strength = CalcReaction()
 		If (_LoopDelay >= _VoiceDelay && !IsSilent)
 			_LoopDelay = 0.0
@@ -759,42 +755,9 @@ State Animating
 		EndIf
 		RefreshExpressionEx(strength)
 		If (_LoopLovenseDelay <= 0)
-			If (_ActorRef == _PlayerRef && sslLovense.IsLovenseInstalled())
-				int lovenseStrength = sslSystemConfig.GetSettingInt("iLovenseStrength")
-				bool LovenseGenital = IsGenitalInteraction()
-				bool LovenseAnal = IsAnalPenetrated()
-				If (!LovenseGenital && !LovenseAnal && (_LovenseGenital || _LovenseAnal))
-					sslLovense.StopAllActions()
-				Else
-					If (LovenseGenital)
-						If (!_LovenseGenital)
-							sslLovense.StartGenitalAction(lovenseStrength)
-						EndIf
-					ElseIf (_LovenseGenital)
-						sslLovense.StopGenitalAction(!LovenseAnal)
-					EndIf
-					If (LovenseAnal)
-						If (!_LovenseAnal)
-							sslLovense.StartAnalAction(lovenseStrength)
-						EndIf
-					ElseIf (_LovenseAnal)
-						sslLovense.StopAnalAction(!LovenseGenital)
-					EndIf
-				EndIf
-				_LovenseGenital = LovenseGenital
-				_LovenseAnal = LovenseAnal
-			EndIf
+			RefreshLovenseActions()
 		Else
 			_LoopLovenseDelay -= UPDATE_INTERVAL
-		EndIf
-		If (_bEnjEnabled)
-			If (_FullEnjoyment >= 100)
-				DoOrgasm()
-			EndIf
-			bool NoStaminaEndScenario = (_Config.NoStaminaEndsScene && !_victim && _ActorRef.GetActorValuePercentage("Stamina") < 0.10)
-			If NoStaminaEndScenario
-				_Thread.EnjBasedSkipToLastStage(true)
-			EndIf
 		EndIf
 		; Loop
 		_LoopDelay += UPDATE_INTERVAL
@@ -817,16 +780,41 @@ State Animating
 			Utility.Wait(0.7)
 		EndIf
 		String expression = GetActorExpression()
-		bool ExpresssionsEnabled = (expression && _Config.UseExpressions && _livestatus == LIVESTATUS_ALIVE)
-		If (ExpresssionsEnabled)
+		If (expression && _Config.UseExpressions && _livestatus == LIVESTATUS_ALIVE)
 			sslBaseExpression.ApplyExpression(expression, _ActorRef, afStrength)
 		EndIf
-		If (_LoopEnjoymentDelay >= _EnjoymentDelay)
-			_LoopEnjoymentDelay = 0
-			If (_Config.DebugMode && ExpresssionsEnabled)
-				Log("Expression? " + expression + "; Strength? " + afStrength + "; OpenMouth? " + OpenMouth, "sslBaseExpression.ApplyExpression()")
+		If (_Config.DebugMode)
+			Log("Expression? " + expression + "; Strength? " + afStrength + "; OpenMouth? " + OpenMouth, "sslBaseExpression.ApplyExpression()")
+		EndIf
+	EndFunction
+
+	Function RefreshLovenseActions()
+		If ((_ActorRef != _PlayerRef) || (!sslLovense.IsLovenseInstalled()))
+			return
+		EndIf
+		int lovenseStrength = sslSystemConfig.GetSettingInt("iLovenseStrength")
+		bool LovenseGenital = IsGenitalInteraction()
+		bool LovenseAnal = IsAnalPenetrated()
+		If (!LovenseGenital && !LovenseAnal && (_LovenseGenital || _LovenseAnal))
+			sslLovense.StopAllActions()
+		Else
+			If (LovenseGenital)
+				If (!_LovenseGenital)
+					sslLovense.StartGenitalAction(lovenseStrength)
+				EndIf
+			ElseIf (_LovenseGenital)
+				sslLovense.StopGenitalAction(!LovenseAnal)
+			EndIf
+			If (LovenseAnal)
+				If (!_LovenseAnal)
+					sslLovense.StartAnalAction(lovenseStrength)
+				EndIf
+			ElseIf (_LovenseAnal)
+				sslLovense.StopAnalAction(!LovenseGenital)
 			EndIf
 		EndIf
+		_LovenseGenital = LovenseGenital
+		_LovenseAnal = LovenseAnal
 	EndFunction
 
 	Function PlayLouder(Sound SFX, ObjectReference FromRef, float Volume)
@@ -975,6 +963,10 @@ endFunction
 Function RefreshExpressionEx(float afStrength)
 	Error("Cannot refresh expression outside of playing state", "RefreshExpressionEx()")
 EndFunction
+Function RefreshLovenseActions()
+	Error("Cannot process lovense actions outside of playing state", "RefreshLovenseActions()")
+EndFunction
+
 function DoOrgasm(bool Forced = false)
 	Error("Cannot create an orgasm outside of playing state", "DoOrgasm()")
 endFunction
@@ -1177,6 +1169,7 @@ Function UpdateEnjoyment(float afEnjoyment) native
 
 ; Defaults
 float _EnjoymentDelay
+float _LoopEnjoymentDelay
 ; Base
 bool _bEnjEnabled
 bool _CrtMaleHugePP
@@ -1202,7 +1195,8 @@ float _lastHoldBack
 
 Function ResetEnjoymentVariables()
 	; Defaults
-	_EnjoymentDelay = 1.5
+	_EnjoymentDelay = 0.8
+	_LoopEnjoymentDelay = 0.0
 	; Base
 	_bEnjEnabled = False
 	_CrtMaleHugePP = False
@@ -1250,9 +1244,19 @@ Function UpdateBaseEnjoymentCalculations()
 EndFunction
 
 Function UpdateEffectiveEnjoymentCalculations()
-	If (!_bEnjEnabled)
+	If ((!_bEnjEnabled) || (_LoopEnjoymentDelay < _EnjoymentDelay))
 		return
 	EndIf
+	If (_FullEnjoyment >= 100)
+		DoOrgasm()
+		return
+	EndIf
+	bool NoStaminaEndScenario = (_Config.NoStaminaEndsScene && !_victim && _ActorRef.GetActorValuePercentage("Stamina") < 0.10)
+	If (NoStaminaEndScenario)
+		_Thread.EnjBasedSkipToLastStage(true)
+		return
+	EndIf
+	_LoopEnjoymentDelay = 0.0
 	_InterFactor = _Thread.CalculateInteractionFactor(_ActorRef, _CurrentInteractions)
 	_FullEnjoyment = CalcEffectiveEnjoyment() as int
 	UpdateEnjoyment(_FullEnjoyment as float)
