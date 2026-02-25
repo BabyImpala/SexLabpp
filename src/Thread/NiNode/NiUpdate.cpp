@@ -1,126 +1,145 @@
 #include "NiUpdate.h"
 
-#include <SimpleIni.h>
-
-#include "NiDescriptor.h"
+#include "NiMath.h"
 
 namespace Thread::NiNode
 {
-	void NiUpdate::Install()
+	NiInstance::NiInstance(const std::vector<RE::Actor*>& a_positions, const Registry::Scene* a_scene) :
+		positions([&]() {
+			std::vector<NiNode::NiPosition> v{};
+			v.reserve(a_positions.size());
+			for (size_t i = 0; i < a_positions.size(); i++) {
+				auto& it = a_positions[i];
+				auto sex = a_scene->GetNthPosition(i)->data.GetSex().get();
+				v.emplace_back(it, sex);
+			}
+			return v;
+		}()) {}
+
+	bool NiInstance::VisitPositions(std::function<bool(const NiPosition&)> a_visitor) const
 	{
-		if (!InitializeDescriptors()) {
-			logger::critical("Failed to initialize descriptors. NiNode interactions will not work.");
-			assert(false && "Failed to initialize descriptors");
-			return;
-		}
-
-		auto& trampoline = SKSE::GetTrampoline();
-		REL::Relocation<std::uintptr_t> update{ REL::RelocationID(35565, 36564), REL::VariantOffset(0x53, 0x6E, 0x68) };
-		_OnFrameUpdate = trampoline.write_call<5>(update.address(), OnFrameUpdate);
-	}
-
-	float NiUpdate::GetDeltaTime()
-	{
-		static REL::Relocation<float*> deltaTime{ REL::VariantID(523660, 410199, 0x30C3A08) };
-		return *deltaTime.get();
-	}
-
-	bool NiUpdate::InitializeDescriptors()
-	{
-		if (!fs::exists(MODELPATH)) {
-			logger::error("Descriptors: Settings file not found at {}", MODELPATH);
-			return false;
-		}
-
-		CSimpleIniA inifile{};
-		inifile.SetUnicode();
-		const auto ec = inifile.LoadFile(MODELPATH);
-		if (ec < 0) {
-			logger::error("Descriptors: Failed to read .ini file, Error: {}", ec);
-			return false;
-		}
-
-		try {
-#define NI_TYPE(name, cluster) \
-	NiDescriptor<NiType::Type::name>::Initialize(inifile);
-
-#include "NiType.def"
-
-#undef NI_TYPE
-
-			logger::info("Descriptors: Model initialization complete");
-			return true;
-		} catch (const std::exception& e) {
-			logger::error("Descriptors: Initialization failed - {}", e.what());
+		std::scoped_lock lk{ _m };
+		for (auto&& pos : positions) {
+			if (a_visitor(pos))
+				return true;
 		}
 		return false;
 	}
 
-	void NiUpdate::OnFrameUpdate(RE::PlayerCharacter* a_this)
+	void NiInstance::UpdateInteractions(float a_delta)
 	{
-		_OnFrameUpdate(a_this);
-
-		static auto calendar = RE::Calendar::GetSingleton();
-		static auto lastGameHour = 0.0f;
-		const auto currentGameHour = calendar->GetHour();
-		if (currentGameHour == lastGameHour) {
+		std::unique_lock lk{ _m, std::defer_lock };
+		if (!lk.try_lock()) {
 			return;
 		}
-		lastGameHour = currentGameHour;
-
-		std::scoped_lock mlLk{ _mlMutex };
-		const bool isMLTraining = mlTrainingState.type != NiType::Type::None;
-
-		std::scoped_lock lk{ _m };
-		time += GetDeltaTime();
-		for (auto&& [_, process] : _instances) {
-			process->Update(time);
-			if (!isMLTraining || !process->HasActor(a_this->GetFormID()))
-				continue;
-			if (++mlTrainingState.frameCount < mlTrainingState.frameInterval) {
-				continue;
+		std::vector<NiPosition::Snapshot> snapshots{};
+		snapshots.reserve(positions.size());
+		for (auto&& it : positions) {
+			snapshots.emplace_back(it);
+		}
+		for (auto&& fst : snapshots) {
+			GetInteractionsMale(snapshots, fst);
+			GetInteractionsFemale(snapshots, fst);
+			GetInteractionsNeutral(snapshots, fst);
+		}
+		for (size_t i = 0; i < positions.size(); i++) {
+			auto& pos = positions[i];
+			for (auto&& act : snapshots[i].interactions) {
+				auto where = pos.interactions.find(act);
+				if (where == pos.interactions.end()) {
+					continue;
+				}
+				const float delta_dist = act.distance - where->distance;
+				if (a_delta != 0.0f) {
+					act.velocity = (where->velocity + (delta_dist / a_delta)) / 2;
+				} else {
+					act.velocity = where->velocity;
+				}
 			}
-			mlTrainingState.frameCount = 0;
-			process->ForEachCluster([&](RE::ActorPtr a, RE::ActorPtr b, const NiInteractionCluster& cluster) {
-				if (!a->IsPlayerRef() && !b->IsPlayerRef()) {
-					return;	 // only log interactions involving the player & interaction has likelihood
-				} else if (cluster.interactions.empty()) {
-					return;	 // skip logging if no interactions detected in cluster
+			positions[i].interactions = { snapshots[i].interactions.begin(), snapshots[i].interactions.end() };
+		}
+	}
+
+	void NiInstance::GetInteractionsMale(std::vector<NiPosition::Snapshot>& list, const NiPosition::Snapshot& it)
+	{
+		if (it.position.sex.any(Registry::Sex::Female))
+			return;
+		for (auto&& schlong : it.position.nodes.schlongs) {
+			for (auto&& act : list) {
+				if (act.GetHeadPenisInteractions(it, schlong))
+					break;
+				if (act.GetHandPenisInteractions(it, schlong))
+					break;
+				if (it == act)
+					continue;
+				if (act.GetCrotchPenisInteractions(it, schlong)) {
+					break;
 				}
-				const auto& interactions = cluster.interactions;
-				std::vector<INiDescriptor*> descriptors;
-				for (const auto& interaction : interactions) {
-					descriptors.push_back(interaction.descriptor.get());
-				}
-				if (mlTrainingState.recordedData.empty()) {
-					logger::info("ML Training: Initializing new recording session for interaction type {}", magic_enum::enum_name(mlTrainingState.type));
-					const auto headerStr = INiDescriptor::CreateCsvHeader(descriptors);
-					logger::info("ML Training: CSV Header - ActorA, ActorB, {}, Label", headerStr);
-					mlTrainingState.recordedData.push_back(std::format("ActorA,ActorB,{},Label", headerStr));
-				}
-				const auto csvRow = INiDescriptor::CreateCsvRow(descriptors);
-				const auto actorAId = a->GetFormID();
-				const auto actorBId = b->GetFormID();
-				const auto labelStr = mlTrainingState.enabled ? magic_enum::enum_name(mlTrainingState.type) : "0";
-				const auto row = std::format("{:X},{:X},{},{}", actorAId, actorBId, csvRow, labelStr);
-				mlTrainingState.recordedData.push_back(row);
-			},
-			  0, 0, NiType::GetClusterForType(mlTrainingState.type));
+				act.GetFootPenisInteractions(it, schlong);
+			}
+		}
+	}
+
+	void NiInstance::GetInteractionsFemale(std::vector<NiPosition::Snapshot>& list, const NiPosition::Snapshot& it)
+	{
+		if (it.position.sex.any(Registry::Sex::Male))
+			return;
+		for (auto&& snd : list) {
+			if (it != snd) {
+				snd.GetVaginaVaginaInteractions(it);
+			}
+			snd.GetHeadVaginaInteractions(it);
+			snd.GetVaginaLimbInteractions(it);
+		}
+	}
+
+	void NiInstance::GetInteractionsNeutral(std::vector<NiPosition::Snapshot>& list, const NiPosition::Snapshot& it)
+	{
+		for (auto&& snd : list) {
+			if (it != snd) {
+				snd.GetHeadHeadInteractions(it);
+			}
+			snd.GetHeadFootInteractions(it);
+			snd.GetHeadAnimObjInteractions(it);
+		}
+	}
+
+	void NiUpdate::Install()
+	{
+		// UpdateThirdPerson
+		REL::Relocation<std::uintptr_t> addr{ RELOCATION_ID(39446, 40522), 0x94 };
+		stl::write_thunk_call<NiUpdate>(addr.address());
+		logger::info("Registered Functions");
+	}
+
+	void NiUpdate::thunk(RE::NiAVObject* a_obj, RE::NiUpdateData* updateData)
+	{
+		func(a_obj, updateData);
+		static const auto gameDaysPassed = RE::Calendar::GetSingleton()->gameDaysPassed;
+		if (!gameDaysPassed) {
+			return;
+		}
+		std::scoped_lock lk{ _m };
+		const auto ms_passed = gameDaysPassed->value * 24 * 60'000;
+		static float ms_passed_last = ms_passed;
+		const auto delta = ms_passed - ms_passed_last;
+		ms_passed_last = ms_passed;
+		for (auto&& [_, process] : processes) {
+			process->UpdateInteractions(delta);
 		}
 	}
 
 	std::shared_ptr<NiInstance> NiUpdate::Register(RE::FormID a_id, std::vector<RE::Actor*> a_positions, const Registry::Scene* a_scene) noexcept
 	{
 		try {
-			std::scoped_lock lk{ _m };
-			const auto where = std::ranges::find(_instances, a_id, [](auto& it) { return it.first; });
-			if (where != _instances.end()) {
+			const auto where = std::ranges::find(processes, a_id, [](auto& it) { return it.first; });
+			if (where != processes.end()) {
 				logger::info("Object with ID {:X} already registered. Resetting NiInstance.", a_id);
-				std::swap(*where, _instances.back());
-				_instances.pop_back();
+				std::swap(*where, processes.back());
+				processes.pop_back();
 			}
 			auto process = std::make_shared<NiInstance>(a_positions, a_scene);
-			return _instances.emplace_back(a_id, process).second;
+			return processes.emplace_back(a_id, process).second;
 		} catch (const std::exception& e) {
 			logger::error("Failed to register NiInstance: {}", e.what());
 			return nullptr;
@@ -132,82 +151,12 @@ namespace Thread::NiNode
 
 	void NiUpdate::Unregister(RE::FormID a_id) noexcept
 	{
-		std::scoped_lock lk{ _m };
-		const auto where = std::ranges::find(_instances, a_id, [](auto& it) { return it.first; });
-		if (where == _instances.end()) {
+		const auto where = std::ranges::find(processes, a_id, [](auto& it) { return it.first; });
+		if (where == processes.end()) {
 			logger::error("No object registered using ID {:X}", a_id);
 			return;
 		}
-		_instances.erase(where);
+		processes.erase(where);
 	}
 
-	void NiUpdate::UpdateMLTrainingState(NiType::Type a_type, bool enabled)
-	{
-		std::scoped_lock lk{ _mlMutex };
-		const auto oldCluster = NiType::GetClusterForType(mlTrainingState.type);
-		const auto newCluster = NiType::GetClusterForType(a_type);
-		if (oldCluster != newCluster && mlTrainingState.recordedData.size() > 0) {
-			// Clear recorded data when changing to a different interaction type
-			const auto oldStateStr = magic_enum::enum_name(oldCluster);
-			const auto newStateStr = magic_enum::enum_name(newCluster);
-			logger::info("ML Training State changing from {} to {}, clearing recorded data with {} rows", oldStateStr, newStateStr, mlTrainingState.recordedData.size());
-			const auto csvFile = std::ranges::fold_left(mlTrainingState.recordedData, "", [](std::string&& acc, const std::string& row) {
-				return acc.empty() ? row : std::move(acc) + "\n" + row;
-			});
-			const auto folderPath = std::format("{}\\{}", MODELDATAPATH, oldStateStr);
-			size_t uniqueFileId = 0;
-			if (!fs::exists(folderPath)) {
-				fs::create_directories(folderPath);
-			} else {
-				for (const auto& entry : fs::directory_iterator(folderPath)) {
-					if (entry.is_regular_file() && entry.path().extension() == ".csv") {
-						uniqueFileId++;
-					}
-				}
-			}
-			const auto finalPath = std::format("{}\\ML_TrainingData_{}.csv", folderPath, uniqueFileId);
-			std::ofstream outFile(finalPath);
-			if (outFile.is_open()) {
-				outFile << csvFile;
-				outFile.close();
-				logger::info("Saved ML training data to {}", finalPath);
-				Util::PrintConsole(std::format("Saved ML training data to {}", finalPath));
-			} else {
-				logger::error("Failed to save ML training data to {}", finalPath);
-			}
-			mlTrainingState.recordedData.clear();
-		}
-		mlTrainingState.type = a_type;
-		mlTrainingState.enabled = enabled;
-		mlTrainingState.frameCount = 0;	 // reset frame count when changing state
-		logger::info("ML Training State updated: Type={}, Enabled={}", magic_enum::enum_name(a_type), enabled);
-	}
-
-	void NiUpdate::SetMLTrainingFrameInterval(size_t interval)
-	{
-		std::scoped_lock lk{ _mlMutex };
-		mlTrainingState.frameInterval = interval;
-		logger::info("ML Training frame interval set to {} frames", interval);
-	}
-
-	void NiUpdate::ClearMLTrainingData()
-	{
-		std::scoped_lock lk{ _mlMutex };
-		const auto dataSize = mlTrainingState.recordedData.size();
-		mlTrainingState.recordedData.clear();
-		logger::info("Cleared ML training data, removed {} rows", dataSize);
-	}
-
-	bool NiUpdate::IsMLTrainingEnabled()
-	{
-		std::scoped_lock lk{ _mlMutex };
-		return mlTrainingState.type != NiType::Type::None;
-	}
-
-	NiUpdate::MLTrainingState NiUpdate::GetMLTrainingState()
-	{
-		std::scoped_lock lk{ _mlMutex };
-		return mlTrainingState;
-	}
-
-}  // namespace Thread::NiNode
+}	 // namespace Thread::NiNode

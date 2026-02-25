@@ -213,14 +213,15 @@ namespace Thread::NiNode::Node
 			}
 		default:
 			{
-				std::vector<RE::NiPoint3> argV{};
+				std::vector<Eigen::Vector3f> argV{};
 				argV.reserve(nodes.size());
 				for (auto&& node : nodes) {
 					if (!node)
 						continue;
-					argV.push_back(node->world.translate);
+					auto argT = NiMath::ToEigen(node->world.translate);
+					argV.push_back(argT);
 				}
-				return NiMath::BestFit(argV);
+				return NiMath::LeastSquares(argV, MIN_SCHLONG_LEN);
 			}
 		}
 	}
