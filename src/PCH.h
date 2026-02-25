@@ -37,8 +37,6 @@ using namespace std::literals;
 #define ESPNAME "SexLab.esm"
 constexpr auto YAMLPATH{ "Data\\SKSE\\SexLab\\Settings.yaml" };
 constexpr auto INIPATH{ "Data\\SKSE\\Plugins\\SexLab.ini" };
-constexpr auto MODELPATH{ "Data\\SKSE\\SexLab\\LinearModel.ini" };
-constexpr auto MODELDATAPATH{ "Data\\SKSE\\SexLab\\ModelData" };
 
 #define CONFIGPATH(path) "Data\\SKSE\\SexLab\\" path
 #define USER_CONFIGS(path) CONFIGPATH("UserData\\") path
@@ -183,37 +181,6 @@ struct std::formatter<YAML::Mark> : std::formatter<std::string>
 	{
 		auto str = std::format("[Ln {}, Col {}]", mark.line + 1, mark.column + 1);
 		return std::formatter<std::string>::format(str, ctx);
-	}
-};
-
-template <typename T>
-struct is_std_array : std::false_type {};
-
-template <typename T, std::size_t N>
-struct is_std_array<std::array<T, N>> : std::true_type {};
-
-template <typename T>
-struct is_std_vector : std::false_type {};
-
-template <typename T>
-struct is_std_vector<std::vector<T>> : std::true_type {};
-
-template <typename T>
-	requires (is_std_vector<T>::value || is_std_array<T>::value)
-struct std::formatter<T> : std::formatter<std::string>
-{
-	template <typename FormatContext>
-	auto format(const T& container, FormatContext& ctx) const
-	{
-		std::string result = "[";
-		bool first = true;
-		for (const auto& elem : container) {
-			if (!first) result += ", ";
-			result += std::format("{}", elem);
-			first = false;
-		}
-		result += "]";
-		return std::formatter<std::string>::format(result, ctx);
 	}
 };
 
