@@ -366,8 +366,7 @@ float _LastOrgasm
 Auto State Empty
 	bool Function SetActor(Actor ProspectRef)
 		If (ProspectRef == _PlayerRef)
-			Game.DisablePlayerControls(abMovement=false, abFighting=true, abCamSwitch=false, abLooking=false, \
-				abSneaking=false, abMenu=false, abActivate=true, abJournalTabs=false, aiDisablePOVType=0)
+			Game.SetPlayerAIDriven()
 		EndIf
 		ForceRefTo(ProspectRef)
 		_ActorRef = ProspectRef
@@ -396,7 +395,7 @@ Auto State Empty
 			_Thread.RequestStatisticUpdate(_ActorRef, _StartedAt)
 		EndIf
 		If (_ActorRef == _PlayerRef)
-			Game.EnablePlayerControls()
+			Game.SetPlayerAIDriven(false)
 		EndIf
 		Parent.Clear()
 	EndFunction
@@ -585,8 +584,6 @@ State Paused
 			If (Game.GetCameraState() == 0)
 				Game.ForceThirdPerson()
 			EndIf
-			Game.DisablePlayerControls(abMovement=true, abFighting=true, abCamSwitch=true, abLooking=false, \
-				abSneaking=true, abMenu=false, abActivate=true, abJournalTabs=false, aiDisablePOVType=0)
 			If(_Config.AutoTFC)
 				MiscUtil.SetFreeCameraState(true)
 				MiscUtil.SetFreeCameraSpeed(_Config.AutoSUCSM)
@@ -608,8 +605,6 @@ State Paused
 		_ActorRef.SetAnimationVariableBool("bHumanoidFootIKDisable", _AnimVarbHumanoidFootIKDisable)
 		If (_ActorRef == _PlayerRef)
 			MiscUtil.SetFreeCameraState(false)
-			Game.EnablePlayerControls(abMovement=true, abFighting=false, abCamSwitch=true, abLooking=true, \
-				abSneaking=true, abMenu=true, abActivate=false, abJournalTabs=true, aiDisablePOVType=0)
 		EndIf
 		UnlockActorImpl()
 		Log("Unlocked Actor: " + GetActorName())
