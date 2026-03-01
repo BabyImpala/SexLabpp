@@ -130,24 +130,23 @@ Function MoveScene()
 			StorageUtil.SetIntValue(none, "SEXLAB_REPOSITIONMSG_INFO", 1)
 		EndIf
 	EndIf
-	sslActorAlias PlayerSlot = ActorAlias(PlayerRef)
-	If (HasPlayer)
-		PlayerSlot.TryPauseAndUnlock()
-	Else
-		Game.DisablePlayerControls(false, true, false, false, true)
-	EndIf
 	int n = 0
 	While(n < Positions.Length)
 		ActorAlias[n].GoToState(ActorAlias[n].STATE_PAUSED)
+		If (ActorAlias[n] == ActorAlias(PlayerRef))
+			ActorAlias[n].TryPauseAndUnlock()
+		EndIf
 		n += 1
 	EndWhile
+	Game.SetPlayerAIDriven(false)
+	Game.EnablePlayerControls()
 	Utility.Wait(1)
 	int t = 0
 	While(t < 60 && !Input.IsKeyPressed(Config.MoveScene))
 		Utility.Wait(0.5)
 		t += 1
 	EndWhile
-	Game.DisablePlayerControls()	; make sure player isnt moving before resync
+	Game.SetPlayerAIDriven()	; make sure player isnt moving before resync
 	float x = PlayerRef.X
 	float y = PlayerRef.Y
 	float z = PlayerRef.Z
@@ -163,9 +162,6 @@ Function MoveScene()
 		ActorAlias[j].TryLockAndUnpause()
 		j += 1
 	EndWhile
-	If (!HasPlayer)
-		Game.EnablePlayerControls()
-	EndIf
 	CenterOnObject(PlayerRef)
 EndFunction
 
