@@ -100,10 +100,17 @@ bool Function IsOralComplex()
 	|| _CurrentInteractions[_Thread.aDeepthroat] || _CurrentInteractions[_Thread.pDeepthroat])
 EndFunction
 
-bool Function IsMouthBusy()
-	return (_CurrentInteractions[_Thread.aOral] || _CurrentInteractions[_Thread.aLickingShaft] \
-	|| _CurrentInteractions[_Thread.aDeepthroat] || _CurrentInteractions[_Thread.aSuckingToes] \
-	|| _CurrentInteractions[_Thread.pAnimObjFace])
+bool Function ShouldMouthOpen()
+	bool condNonCrotch = (_CurrentInteractions[_Thread.aSuckingToes] || _CurrentInteractions[_Thread.pAnimObjFace])
+	bool condCrotch = (_CurrentInteractions[_Thread.aOral] || _CurrentInteractions[_Thread.aLickingShaft] || _CurrentInteractions[_Thread.aDeepthroat])
+	If (!condNonCrotch && !condCrotch)
+		return false
+	ElseIf (condNonCrotch)
+		return true
+	EndIf
+	bool FemInNonGayScene = ((_sex==1 || _sex==4) && !_HomoTypes[2])
+	bool NonFemInGayScene = ((_sex==0 || _sex==2 || _sex==3) && (_HomoTypes[0] || _HomoTypes[4]))
+	return (FemInNonGayScene || NonFemInGayScene)
 EndFunction
 
 bool Function IsAnalPenetrated()
@@ -334,7 +341,7 @@ bool Property OpenMouth
 		If (ForceOpenMouth)
 			return true
 		EndIf
-		return IsMouthBusy()
+		return ShouldMouthOpen()
 	EndFunction
 	Function Set(bool abSet)
 		ForceOpenMouth = abSet
@@ -705,10 +712,12 @@ bool _LovenseGenital
 bool _LovenseAnal
 
 bool[] _CurrentInteractions
+bool[] _HomoTypes
 
 State Animating
 	Event OnBeginState()
 		RegisterForModEvent("SSL_ORGASM_Thread" + _Thread.tid, "OnOrgasm")
+		_HomoTypes = _Thread.CheckActiveHomoTypes()
 		UpdateBaseEnjoymentCalculations()
 		_LoopLovenseDelay = 0
 		_LovenseGenital = false
@@ -1104,6 +1113,7 @@ Function Initialize()
 	_StartedAt = 0.0
 	; Array
 	_CurrentInteractions = Utility.CreateBoolArray(_Thread.SUPPORTED_INTER_COUNT, false)
+	_HomoTypes = new bool[5]
 	ResetEnjoymentVariables()
 EndFunction
 
@@ -1227,7 +1237,7 @@ Function UpdateBaseEnjoymentCalculations()
 	_EnjGamePartner = _Thread.GameChangePartner(_ActorRef)
 	_CrtMaleHugePP = _Thread.CrtMaleHugePP()
 	_ConSubStatus = _Thread.IdentifyConsentSubStatus()
-	bool SameSexThread = _Thread.SameSexThread()
+	bool SameSexThread = (_HomoTypes[1] || _HomoTypes[2] || _HomoTypes[3])
 	bool WithLover  = _Thread.ActorIsWithLover(_ActorRef)
 	_arousalBase = PapyrusUtil.ClampFloat(SexlabStatistics.GetStatistic(_ActorRef, 17), 0.0, 100.0)
 	_PainContext = CalcContextPain()
@@ -1490,7 +1500,7 @@ EndFunction
 
 Function DebugBaseCalcVariables()
 	string BaseCalcLog = "[ENJ] EnjFactor: " + _EnjFactor + ", BaseArousal: " + _arousalBase + ", SameSexThread: " \
-	+ _Thread.SameSexThread() + ", Sexuality: " + SexlabStatistics.GetSexuality(_ActorRef) + ", ConSubStatus: " \
+	+ (_HomoTypes[2]||_HomoTypes[3]||_HomoTypes[4]) + ", Sexuality: " + SexlabStatistics.GetSexuality(_ActorRef) + ", ConSubStatus: " \
 	+ _ConSubStatus + ", IsVictim: " + _victim + ", HugePP: " + _CrtMaleHugePP + ", ContextPain: " + _PainContext as int
 	Log(BaseCalcLog)
 EndFunction

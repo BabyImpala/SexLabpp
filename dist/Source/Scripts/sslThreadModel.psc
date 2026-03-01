@@ -1943,17 +1943,18 @@ int Function IdentifyConsentSubStatus()
 	return ConSubStatus
 EndFunction
 
-bool Function SameSexThread()
-	bool SameSexThread = False
-	int MaleCount = sslActorLibrary.CountMale(_Positions)
-	int FemCount = sslActorLibrary.CountFemale(_Positions)
-	int FutaCount = sslActorLibrary.CountFuta(_Positions)
-	int CrtMaleCount = sslActorLibrary.CountCrtMale(_Positions)
-	int CrtFemaleCount = sslActorLibrary.CountCrtFemale(_Positions)
-	If (_Positions.Length != 1 && ((MaleCount + CrtMaleCount == _Positions.Length) || (FemCount + CrtFemaleCount == _Positions.Length) || (FutaCount == _Positions.Length)))
-		SameSexThread = true ; returns False for solo scenes
+bool[] Function CheckActiveHomoTypes()
+	int PosCount = _Positions.Length
+	int[] SexCount = sslActorLibrary.CountSexAll(_Positions)
+	bool[] HomoTypes = Utility.CreateBoolArray(5, False)
+	HomoTypes[0] = (PosCount == 1) ;solo
+	If (PosCount > 1)
+		HomoTypes[1] = (SexCount[0] + SexCount[3] == PosCount) ;males
+		HomoTypes[2] = (SexCount[1] + SexCount[4] == PosCount) ;females
+		HomoTypes[3] = (SexCount[2] == PosCount) ;futa
+		HomoTypes[4] = (SexCount[0] + SexCount[2] + SexCount[3] == PosCount) ;futa with males
 	EndIf
-	return SameSexThread
+	return HomoTypes
 EndFunction
 
 bool Function CrtMaleHugePP()
