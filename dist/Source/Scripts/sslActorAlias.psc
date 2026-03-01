@@ -489,10 +489,11 @@ State Ready
 				DoUndress = false
 				If (_sex == 0)
 					Debug.SendAnimationEvent(_ActorRef, "SexLab_MaleUndress")
+					Utility.Wait(5.43)
 				Else
 					Debug.SendAnimationEvent(_ActorRef, "SexLab_FemaleUndress")
+					Utility.Wait(5.16)
 				EndIf
-				Utility.Wait(0.6)
 			EndIf
 		EndIf
 		If (asStringArg != "skip")
@@ -1099,6 +1100,7 @@ Function Initialize()
 	_victim = false
 	_CanOrgasm = true
 	_hasOrgasm = false
+	_DoUndress = true
 	_AllowRedress = true
 	ForceOpenMouth = false
 	_ActorLocked = false
