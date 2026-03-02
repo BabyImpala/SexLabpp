@@ -708,7 +708,9 @@ Function SetTargetActor()
   sslThreadController TargetThread = ThreadSlots.GetActorController(TargetRef)
   If (TargetThread && !TargetThread.HasPlayer && TargetThread.GetStatus() == TargetThread.STATUS_INSCENE && \
         !ThreadSlots.GetActorController(Game.GetPlayer()) && TakeThreadControl.Show())
-    GetThreadControl(TargetThread) 
+    GetThreadControl(TargetThread)
+    ;Comeback: Revise below after UI update
+    _ActiveControl.StartStage(_ActiveControl.GetStageHistory(), _ActiveControl.GetActiveStage())
   EndIf
 EndFunction
 
