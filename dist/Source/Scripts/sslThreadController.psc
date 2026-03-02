@@ -163,6 +163,10 @@ Function MoveScene()
 		j += 1
 	EndWhile
 	CenterOnObject(PlayerRef)
+	If (!HasPlayer)
+		MoveActorsAwayFromPlayer(true)
+		Config.DisableThreadControl(self)
+	EndIf
 EndFunction
 
 Function UpdateAnnotations(string asString)
