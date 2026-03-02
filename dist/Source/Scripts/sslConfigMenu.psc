@@ -1326,7 +1326,7 @@ Event OnMenuAcceptST(int aiIndex)
 		sslSystemConfig.SetSettingInt("iAskBed", aiIndex)
 		SetMenuOptionValueST(_PlFurnOpt[aiIndex])
 	ElseIf (s[0] == "FurnitureNPC")
-		sslSystemConfig.SetSettingInt("iAskBedNPC", aiIndex)
+		sslSystemConfig.SetSettingInt("iNPCBed", aiIndex)
 		SetMenuOptionValueST(_NpcFurnOpt[aiIndex])
 	EndIf
 EndEvent
