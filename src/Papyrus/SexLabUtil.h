@@ -111,6 +111,46 @@ namespace Papyrus::SexLabUtil
 		return player->IsGodMode();
 	}
 
+	void ToggleFreeCamera(RE::StaticFunctionTag*, bool freezeTime)
+	{
+		const auto playerCamera = RE::PlayerCamera::GetSingleton();
+		const auto controlMap = RE::ControlMap::GetSingleton();
+		if (!playerCamera || !controlMap) {
+			return;
+		}
+		const bool enteringFreeCam = !playerCamera->IsInFreeCameraMode();
+		playerCamera->ToggleFreeCameraMode(freezeTime);
+		if (enteringFreeCam) {
+			controlMap->PushInputContext(RE::UserEvents::INPUT_CONTEXT_ID::kTFCMode);
+		} else {
+			controlMap->PopInputContext(RE::UserEvents::INPUT_CONTEXT_ID::kTFCMode);
+		}
+	}
+
+	void SetFreeCameraSpeed(RE::StaticFunctionTag*, float speed)
+	{
+		const auto ini = RE::INISettingCollection::GetSingleton();
+		if (!ini) return;
+		if (const auto setting = ini->GetSetting("fFreeCameraTranslationSpeed:Camera")) {
+			setting->data.f = speed;
+		}
+	}
+
+	void SetFreeCameraState(RE::StaticFunctionTag*, bool a_enable, bool freezeTime, float speed)
+	{
+		const auto playerCamera = RE::PlayerCamera::GetSingleton();
+		if (!playerCamera) {
+			return;
+		}
+		const bool isInFreeCam = playerCamera->IsInFreeCameraMode();
+		if (a_enable == isInFreeCam) {
+			if (a_enable) SetFreeCameraSpeed(nullptr, speed);
+			return;
+		}
+		if (a_enable) SetFreeCameraSpeed(nullptr, speed);
+		ToggleFreeCamera(nullptr, freezeTime);
+	}
+
 	inline bool Register(VM* a_vm)
 	{
 		REGISTERFUNC(HasKeywordSub, "SexLabUtil", true);
@@ -124,6 +164,9 @@ namespace Papyrus::SexLabUtil
 		REGISTERFUNC(GetCurrentGameRealTime, "SexLabUtil", true);
 		REGISTERFUNC(GetTranslation, "SexLabUtil", true);
 		REGISTERFUNC(IsGodModeEnabled, "SexLabUtil", true);
+		REGISTERFUNC(ToggleFreeCamera, "SexLabUtil", true);
+		REGISTERFUNC(SetFreeCameraSpeed, "SexLabUtil", true);
+		REGISTERFUNC(SetFreeCameraState, "SexLabUtil", true);
 
 		return true;
 	}

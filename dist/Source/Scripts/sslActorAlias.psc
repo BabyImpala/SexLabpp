@@ -593,8 +593,7 @@ State Paused
 				Game.ForceThirdPerson()
 			EndIf
 			If(_Config.AutoTFC)
-				MiscUtil.SetFreeCameraState(true)
-				MiscUtil.SetFreeCameraSpeed(_Config.AutoSUCSM)
+				SexLabUtil.SetFreeCameraState(true, false, _Config.AutoSUCSM)
 			EndIf
 		EndIf
 		Debug.SendAnimationEvent(_ActorRef, "IdleFurnitureExit")
@@ -612,7 +611,7 @@ State Paused
 		_ActorRef.SetAnimationVariableInt("IsNPC", _AnimVarIsNPC)
 		_ActorRef.SetAnimationVariableBool("bHumanoidFootIKDisable", _AnimVarbHumanoidFootIKDisable)
 		If (_ActorRef == _PlayerRef)
-			MiscUtil.SetFreeCameraState(false)
+			SexLabUtil.SetFreeCameraState(false)
 		EndIf
 		UnlockActorImpl()
 		Log("Unlocked Actor: " + GetActorName())
