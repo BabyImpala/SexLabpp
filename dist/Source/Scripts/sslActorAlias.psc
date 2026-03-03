@@ -372,11 +372,13 @@ float _LastOrgasm
 
 Auto State Empty
 	bool Function SetActor(Actor ProspectRef)
-		If (ProspectRef == _PlayerRef)
-			Game.SetPlayerAIDriven()
-		EndIf
 		ForceRefTo(ProspectRef)
 		_ActorRef = ProspectRef
+		If (_ActorRef == _PlayerRef)
+			Game.SetPlayerAIDriven()
+		Else
+			_ActorRef.SetDontMove(true)
+		EndIf
 		If (_ActorRef.IsDead())
 			_livestatus = LIVESTATUS_DEAD
 			_killer = _ActorRef.GetKiller()
@@ -403,6 +405,7 @@ Auto State Empty
 		EndIf
 		If (_ActorRef == _PlayerRef)
 			Game.SetPlayerAIDriven(false)
+			Game.EnablePlayerControls()
 		EndIf
 		Parent.Clear()
 	EndFunction
@@ -462,6 +465,7 @@ State Ready
 				float target_distance = 128.0
 				float distance = _ActorRef.GetDistance(target)
 				If(distance > target_distance && distance <= 6144.0)
+					_ActorRef.SetDontMove(false)
 					float fallback_timer = 15.0
 					float prev_dist = distance + 1.0
 					_ActorRef.SetFactionRank(_AnimatingFaction, 2)
@@ -481,21 +485,6 @@ State Ready
 		_AnimVarIsNPC = _ActorRef.GetAnimationVariableInt("IsNPC")
 		_AnimVarbHumanoidFootIKDisable = _ActorRef.GetAnimationVariableBool("bHumanoidFootIKDisable")
 		GoToState(STATE_PAUSED)
-		; Code below executed in STATE_PAUSED as it should be part of event, not ReadyActor() to avoid delays
-		; By compulsion, it's executed in OnDoPrepare() here due to no OnStateBegin() event in that state
-		LockActor()
-		If (_sex <= 2)
-			If (DoUndress)
-				DoUndress = false
-				If (_sex == 0)
-					Debug.SendAnimationEvent(_ActorRef, "SexLab_MaleUndress")
-					Utility.Wait(5.43)
-				Else
-					Debug.SendAnimationEvent(_ActorRef, "SexLab_FemaleUndress")
-					Utility.Wait(5.16)
-				EndIf
-			EndIf
-		EndIf
 		If (asStringArg != "skip")
 			_Thread.PrepareDone()
 		EndIf
@@ -557,7 +546,19 @@ EndFunction
 /;
 
 State Paused
-	; Only called once the first time the main thread enters animating state
+	bool Function InitiateUndressing()
+		If (_sex <= 2)
+			If (DoUndress)
+				If (_sex == 0)
+					Debug.SendAnimationEvent(_ActorRef, "SexLab_MaleUndress")
+				Else
+					Debug.SendAnimationEvent(_ActorRef, "SexLab_FemaleUndress")
+				EndIf
+				return true
+			EndIf
+		EndIf
+		return false
+	EndFunction
 	Function ReadyActor(int aiStripData, int aiPositionGenders)
 		_stripData = aiStripData
 		_useStrapon = _sex == 1 && Math.LogicalAnd(aiPositionGenders, 0x2) == 0
@@ -566,7 +567,6 @@ State Paused
 			ResolveStrapon()
 			_ActorRef.QueueNiNodeUpdate()
 		EndIf
-		;Utility.Wait(0.5)	; Wait for schlong to update
 		Debug.SendAnimationEvent(_ActorRef, "SOSBend0")
 		RegisterForModEvent("SSL_READY_Thread" + _Thread.tid, "OnStartPlaying")
 	EndFunction
@@ -576,6 +576,10 @@ State Paused
 		GoToState(STATE_PLAYING)
 		_Thread.AnimationStart()
 		TrackedEvent(TRACK_START)
+		If (_sex != 1 && _sex != 4)
+			Utility.Wait(0.5)	; extra async call to ensure erection
+			Debug.SendAnimationEvent(_ActorRef, "SOSBend0")
+		EndIf
 		_StartedAt = SexLabUtil.GetCurrentGameRealTime()
 		_LastOrgasm = _StartedAt
 	EndEvent
@@ -662,6 +666,10 @@ State Paused
 	EndFunction
 EndState
 
+bool Function InitiateUndressing()
+	Error("Cannot undress actors outside of idle state", "ReadyActor()")
+	return false
+EndFunction
 Function ReadyActor(int aiStripData, int aiPositionGenders)
 	Error("Cannot ready outside of idle state", "ReadyActor()")
 EndFunction

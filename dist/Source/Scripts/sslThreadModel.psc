@@ -892,6 +892,16 @@ State Making_M
 		LeadIn = LeadIn && _LeadInScenes.Find(activeScene) > -1
 		Log("Thread validated, playing animation: " + activeScene + ", " + SexLabRegistry.GetSceneName(activeScene), "StartThread()")
 		SendThreadEvent("AnimationStarting")
+		bool WaitForUndress = false
+		int i = 0
+		While (i < _Positions.Length)
+			ActorAlias[i].LockActor()
+			WaitForUndress = ActorAlias[i].InitiateUndressing()
+			i += 1
+		EndWhile
+		If (WaitForUndress)
+			Utility.Wait(2.5)
+		EndIf
 		If (HasPlayer)
 			If (sslSystemConfig.GetSettingInt("iUseFade") > 0)
 				Config.ApplyFade()
@@ -900,6 +910,16 @@ State Making_M
 			If (Config.ShowInMap && PlayerRef.GetDistance(CenterRef) > 750)
 				SetObjectiveDisplayed(0, True)
 			EndIf
+		EndIf
+		int[] strips_ = SexLabRegistry.GetStripDataA(activeScene, "")
+		int[] sex_ = SexLabRegistry.GetPositionSexA(activeScene)
+		int j = 0
+		While (j < _Positions.Length)
+			ActorAlias[j].ReadyActor(strips_[j], sex_[j])
+			j += 1
+		EndWhile
+		If (WaitForUndress)
+			Utility.Wait(1.5)
 		EndIf
 		GoToState(STATE_PLAYING)
 	EndFunction
@@ -1000,14 +1020,6 @@ EndProperty
 State Animating
 	Event OnBeginState()
 		SetFurnitureIgnored(true)
-		String activeScene = GetActiveScene()
-		int[] strips_ = SexLabRegistry.GetStripDataA(activeScene, "")
-		int[] sex_ = SexLabRegistry.GetPositionSexA(activeScene)
-		int i = 0
-		While (i < _Positions.Length)
-			ActorAlias[i].ReadyActor(strips_[i], sex_[i])
-			i += 1
-		EndWhile
 		_SFXTimer = Config.SFXDelay
 		_animationSyncCount = 0
 		SendModEvent("SSL_READY_Thread" + tid)
