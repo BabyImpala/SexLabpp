@@ -111,13 +111,8 @@ namespace Papyrus::SexLabUtil
 		return player->IsGodMode();
 	}
 
-	void ToggleFreeCamera(RE::StaticFunctionTag*, bool freezeTime)
+	static void ToggleFreeCameraImpl(RE::PlayerCamera* playerCamera, RE::ControlMap* controlMap, bool freezeTime)
 	{
-		const auto playerCamera = RE::PlayerCamera::GetSingleton();
-		const auto controlMap = RE::ControlMap::GetSingleton();
-		if (!playerCamera || !controlMap) {
-			return;
-		}
 		const bool enteringFreeCam = !playerCamera->IsInFreeCameraMode();
 		playerCamera->ToggleFreeCameraMode(freezeTime);
 		if (enteringFreeCam) {
@@ -125,6 +120,16 @@ namespace Papyrus::SexLabUtil
 		} else {
 			controlMap->PopInputContext(RE::UserEvents::INPUT_CONTEXT_ID::kTFCMode);
 		}
+	}
+
+	void ToggleFreeCamera(RE::StaticFunctionTag*, bool freezeTime)
+	{
+		const auto playerCamera = RE::PlayerCamera::GetSingleton();
+		const auto controlMap = RE::ControlMap::GetSingleton();
+		if (!playerCamera || !controlMap) return;
+		SKSE::GetTaskInterface()->AddTask([playerCamera, controlMap, freezeTime]() {
+			ToggleFreeCameraImpl(playerCamera, controlMap, freezeTime);
+		});
 	}
 
 	void SetFreeCameraSpeed(RE::StaticFunctionTag*, float speed)
@@ -139,16 +144,17 @@ namespace Papyrus::SexLabUtil
 	void SetFreeCameraState(RE::StaticFunctionTag*, bool a_enable, bool freezeTime, float speed)
 	{
 		const auto playerCamera = RE::PlayerCamera::GetSingleton();
-		if (!playerCamera) {
-			return;
-		}
-		const bool isInFreeCam = playerCamera->IsInFreeCameraMode();
-		if (a_enable == isInFreeCam) {
+		const auto controlMap = RE::ControlMap::GetSingleton();
+		if (!playerCamera || !controlMap) return;
+		SKSE::GetTaskInterface()->AddTask([playerCamera, controlMap, a_enable, freezeTime, speed]() {
+			const bool isInFreeCam = playerCamera->IsInFreeCameraMode();
+			if (a_enable == isInFreeCam) {
+				if (a_enable) SetFreeCameraSpeed(nullptr, speed);
+				return;
+			}
 			if (a_enable) SetFreeCameraSpeed(nullptr, speed);
-			return;
-		}
-		if (a_enable) SetFreeCameraSpeed(nullptr, speed);
-		ToggleFreeCamera(nullptr, freezeTime);
+			ToggleFreeCameraImpl(playerCamera, controlMap, freezeTime);
+		});
 	}
 
 	inline bool Register(VM* a_vm)
