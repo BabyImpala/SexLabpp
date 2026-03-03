@@ -774,6 +774,8 @@ Function GetThreadControl(sslThreadController TargetThread)
       player.SheatheWeapon()
     endIf
     Game.SetPlayerAIDriven()
+    player.SetFactionRank(AnimatingFaction, 0)
+    player.EvaluatePackage()
   EndIf
   _ActiveControl.EnableHotkeys(true)
 EndFunction
@@ -787,7 +789,10 @@ Function DisableThreadControl(sslThreadController TargetThread)
   _ActiveControl.AutoAdvance = true
   ; Unlock players movement iff they arent owned by the thread
   If (!_ActiveControl.HasPlayer)
+    Game.GetPlayer().SetFactionRank(AnimatingFaction, -1)
+    Game.GetPlayer().EvaluatePackage()
     Game.SetPlayerAIDriven(false)
+    Game.EnablePlayerControls()
   EndIf
   _ActiveControl = none
 Endfunction
