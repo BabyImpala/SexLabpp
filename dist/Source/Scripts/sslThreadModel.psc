@@ -2117,64 +2117,59 @@ EndFunction
 ; --- Enjoyment Game                         --- ;
 ; ---------------------------------------------- ;
 
-Function GameRaiseEnjoyment(Actor akActor, Actor akPartner)
+Function GameRaiseEnjoyment(Actor akTarget)
 	If (SexLabUtil.IsGodModeEnabled())
-		AdjustEnjoyment(akPartner, 1)
+		AdjustEnjoyment(akTarget, 1)
 		return
-	ElseIf (akActor.GetActorValue("Stamina") > Config.GameStaminaCost)
-		akActor.DamageActorValue("Stamina", Config.GameStaminaCost)
-		AdjustEnjoyment(akPartner, 1)
+	ElseIf (PlayerRef.GetActorValue("Stamina") > Config.GameStaminaCost)
+		PlayerRef.DamageActorValue("Stamina", Config.GameStaminaCost)
+		AdjustEnjoyment(akTarget, 1)
 	EndIf
 EndFunction
 
-Function GameHoldback(Actor akActor, Actor akPartner)
+Function GameHoldback(Actor akTarget)
 	If (SexLabUtil.IsGodModeEnabled())
-		AdjustEnjoyment(akPartner, -1)
+		AdjustEnjoyment(akTarget, -1)
 		return
-	ElseIf (akActor.GetActorValue("Magicka") > Config.GameMagickaCost)
-		akActor.DamageActorValue("Magicka", Config.GameMagickaCost)
-		AdjustEnjoyment(akPartner, -1)
+	ElseIf (PlayerRef.GetActorValue("Magicka") > Config.GameMagickaCost)
+		PlayerRef.DamageActorValue("Magicka", Config.GameMagickaCost)
+		AdjustEnjoyment(akTarget, -1)
 	EndIf
 EndFunction
 
-Function ProcessEnjGameArg(String arg, Actor akPlayer, Actor akPartner)
-	Actor targetActor = None
-	If (_Positions.Length == 1 || Input.IsKeyPressed(Config.GameUtilityKey))
-		targetActor = akPlayer ;change self/player enj
-	ElseIf (_Positions.Length > 1)
-		targetActor = akPartner ;change partner enj
+Function ProcessEnjGameArg(String arg, Actor akPartner)
+	Actor akTarget = None
+	If (Input.IsKeyPressed(Config.GameUtilityKey))
+		akTarget = akPartner ;change partner enj
+	Else
+		akTarget = PlayerRef ;change self/player enj
 	EndIf
-	If (arg == "Magicka") ;HoldbackKey
-		GameHoldback(akPlayer, targetActor)
-	ElseIf (arg == "Stamina") ;RaiseEnjKey
-		If ((Config.GameRequiredOnHighEnj) && (GetEnjoyment(targetActor) > 80) && (targetActor == akPlayer))
-			ActorAlias[GetPositionIdx(targetActor)].RegisterRaiseEnjAttempt()
+	If (arg == "Magicka")
+		GameHoldback(akTarget)
+	ElseIf (arg == "Stamina")
+		If ((Config.GameRequiredOnHighEnj) && (GetEnjoyment(PlayerRef) > 80))
+			ActorAlias[GetPositionIdx(PlayerRef)].RegisterRaiseEnjAttempt()
 		Else
-			GameRaiseEnjoyment(akPlayer, targetActor)
+			GameRaiseEnjoyment(akTarget)
 		EndIf
 	EndIf
 EndFunction
 
 Actor Function GameChangePartner(Actor akActor, int idx = -1)
-	Actor akPartner = None
-	Actor tempRef = None
+	Actor akPartner = akActor
 	If (_Positions.Length > 1)
 		If (idx < 0)
 			int idxPartner = sslUtility.IndexTravel(GetPositionIdx(akActor), _Positions.Length)
 			akPartner = ActorAlias[idxPartner].GetActorRef()
 			If (akActor == PlayerRef)
-				Log("[EnjGame] " + akActor.GetDisplayName() + "'s current partner is " + akPartner.GetDisplayName())
+				Log("[EnjGame] Player's current partner is " + akPartner.GetDisplayName())
 			EndIf
 		Else
-			tempRef = ActorAlias[idx].GetActorRef()
-			If (tempRef == None || tempRef == akPartner || tempRef == akActor || tempRef == PlayerRef)
-				return akPartner
+			akPartner = ActorAlias[idx].GetActorRef()
+			If ((akPartner != akActor) && (akActor == PlayerRef))
+				Config.SelectedSpell.Cast(akPartner, akPartner)
+				Log("[EnjGame] Player changed focus to " + akPartner.GetDisplayName())
 			EndIf
-			akPartner = tempRef
-			If (akActor == PlayerRef)
-				Log("[EnjGame] " + akActor.GetDisplayName() + " changed focus to " + akPartner.GetDisplayName())
-			EndIf
-			Config.SelectedSpell.Cast(akPartner, akPartner)
 		EndIf
 	EndIf
 	return akPartner
