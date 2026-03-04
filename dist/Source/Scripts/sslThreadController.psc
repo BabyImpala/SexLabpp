@@ -53,7 +53,7 @@ Function DisableHotkeys()
 		i += 1
 	EndWhile
 	; If free cam is active here will glitch out controls?
-	SexLabUtil.SetFreeCameraState(false)
+	MiscUtil.SetFreeCameraState(false)
 	TryCloseSceneMenu()
 	DisableTraditionalHotkeys()
 EndFunction
