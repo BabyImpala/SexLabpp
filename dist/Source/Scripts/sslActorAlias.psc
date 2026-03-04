@@ -648,7 +648,6 @@ State Paused
 		_Thread.SetAnimationPlaybackSpeed(1.0)
 		UnregisterForModEvent("SSL_ORGASM_Thread" + _Thread.tid)
 		StoreExcitementState("Backup")
-		UnregisterEnjGameKeys()
 		sslBaseExpression.CloseMouth(_ActorRef)
 		_ActorRef.ClearExpressionOverride()
 		_ActorRef.ResetExpressionOverrides()
@@ -919,28 +918,6 @@ State Animating
 		_ActorRef.QueueNiNodeUpdate()
 	EndFunction
 
-	Event OnKeyDown(int KeyCode)
-		If (Utility.IsInMenuMode() || !_Config.GameEnabled)
-			return
-		EndIf
-		If (KeyCode == _Config.GamePauseKey) && Input.IsKeyPressed(_Config.GameUtilityKey)
-			_bGamePaused = !_bGamePaused
-			Log("[EnjGame] Game paused: " + _bGamePaused)
-		EndIf
-		If !_bGamePaused
-			If (KeyCode == _Config.GameRaiseEnjKey)
-				_Thread.ProcessEnjGameArg("Stamina", _ActorRef, _EnjGamePartner)
-			ElseIf (KeyCode == _Config.GameHoldbackKey)
-				_Thread.ProcessEnjGameArg("Magicka", _ActorRef, _EnjGamePartner)
-			ElseIf (KeyCode == _Config.GameSelectNextPos)
-				If _EnjGamePartner
-					int newIdx = _Thread.GameNextPartnerIdx(_ActorRef, _EnjGamePartner, Input.IsKeyPressed(_Config.GameUtilityKey))
-					_EnjGamePartner = _Thread.GameChangePartner(_ActorRef, newIdx)
-				EndIf
-			EndIf
-		EndIf
-	EndEvent
-
 	Function TryPauseAndUnlock()
 		GoToState(STATE_PAUSED)
 		UnlockActor()
@@ -1201,8 +1178,6 @@ float _PainInterDecayBackup
 float _PainInterCur
 int _FullEnjoyment
 ; Game
-bool _bGamePaused
-Actor _EnjGamePartner
 float _lastHoldBack
 
 Function ResetEnjoymentVariables()
@@ -1228,8 +1203,6 @@ Function ResetEnjoymentVariables()
 	_PainInterCur = 0
 	_FullEnjoyment = 0
 	; Game
-	_bGamePaused = False
-	_EnjGamePartner = None
 	_lastHoldBack = 0.0
 EndFunction
 
@@ -1240,8 +1213,6 @@ Function UpdateBaseEnjoymentCalculations()
 	ResetEnjoymentVariables()
 	_bEnjEnabled = True
 	StoreExcitementState("Restore")
-	RegisterEnjGameKeys()
-	_EnjGamePartner = _Thread.GameChangePartner(_ActorRef)
 	_CrtMaleHugePP = _Thread.CrtMaleHugePP()
 	_ConSubStatus = _Thread.IdentifyConsentSubStatus()
 	bool SameSexThread = (_HomoTypes[1] || _HomoTypes[2] || _HomoTypes[3])
@@ -1453,10 +1424,12 @@ Function StoreExcitementState(String arg = "")
 EndFunction
 
 Function RegisterRaiseEnjAttempt()
-	; IDEA: expose timeCycle as a UI bar with a to and fro moving needle
+	If  (_ActorRef != _PlayerRef)
+		return
+	EndIf
 	If (_lastHoldBack > 0.0)
+		; IDEA: expose timeCycle as a UI bar with a to and fro moving needle
 		float timePassed = SexLabUtil.GetCurrentGameRealTime() - _lastHoldBack
-
 		; As enjoyment gets higher, the "green zone" gets narrower
 		; At 80 Enj (2.0s timeCycle): Window is 25% of the bar (0.375 to 0.625)
 		; At 100 Enj (0.8s timeCycle): Window is 15% of the bar (0.425 to 0.575)
@@ -1464,7 +1437,6 @@ Function RegisterRaiseEnjAttempt()
 		float difficultyOffset = 0.125 - ((_FullEnjoyment - 80.0) * 0.00375)
 		float windowStart = timeCycle * (0.5 - difficultyOffset)
 		float windowEnd = timeCycle * (0.5 + difficultyOffset)
-
 		If (timePassed >= windowStart) && (timePassed <= windowEnd)
 			_FullEnjoyment += 2
 			_ActorRef.RestoreActorValue("Stamina", _Config.GameStaminaCost)
@@ -1484,25 +1456,6 @@ Function RegisterRaiseEnjAttempt()
 		EndIf
 	EndIf
 	_lastHoldBack = SexLabUtil.GetCurrentGameRealTime()
-EndFunction
-
-Function RegisterEnjGameKeys()
-	If (!_Config.GameEnabled || (_ActorRef != _PlayerRef))
-		return
-	EndIf
-	RegisterForKey(_Config.GameUtilityKey)
-	RegisterForKey(_Config.GamePauseKey)
-	RegisterForKey(_Config.GameRaiseEnjKey)
-	RegisterForKey(_Config.GameHoldbackKey)
-	RegisterForKey(_Config.GameSelectNextPos)
-EndFunction
-
-Function UnregisterEnjGameKeys()
-	UnregisterForKey(_Config.GameUtilityKey)
-	UnregisterForKey(_Config.GamePauseKey)
-	UnregisterForKey(_Config.GameRaiseEnjKey)
-	UnregisterForKey(_Config.GameHoldbackKey)
-	UnregisterForKey(_Config.GameSelectNextPos)
 EndFunction
 
 Function DebugBaseCalcVariables()

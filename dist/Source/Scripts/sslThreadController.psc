@@ -17,11 +17,12 @@ scriptname sslThreadController extends sslThreadModel
 Message Property RepositionInfoMsg Auto
 {[Ok, Cancel, Don't show again]}
 
-
+String[] _MenuEvents
 bool _SkipHotkeyEvents
 int _AutoAdvanceCache
 
-String[] _MenuEvents
+bool _EnjGamePaused = false
+Actor _EnjGamePartner = none
 
 Function EnableHotkeys(bool forced = false)
 	If(!HasPlayer && !forced || !TryOpenSceneMenu())
@@ -210,12 +211,28 @@ EndFunction
 Function EnableTraditionalHotkeys()
 	RegisterForKey(Config.ChangeAnimation)
 	RegisterForKey(Config.MoveScene)
+	; Enjoyment Game
+	RegisterForKey(Config.GameUtilityKey)
+	If (!Config.GameEnabled || !HasPlayer)
+		return
+	EndIf
+	RegisterForKey(Config.GamePauseKey)
+	RegisterForKey(Config.GameRaiseEnjKey)
+	RegisterForKey(Config.GameHoldbackKey)
+	RegisterForKey(Config.GameSelectNextPos)
+	_EnjGamePartner = GameChangePartner(PlayerRef)
 EndFunction
 
 Function DisableTraditionalHotkeys()
 	UnregisterForKey(Config.ChangeAnimation)
 	UnregisterForKey(Config.MoveScene)
-EndFunction
+	; Enjoyment Game
+	UnregisterForKey(Config.GameUtilityKey)
+	UnregisterForKey(Config.GamePauseKey)
+	UnregisterForKey(Config.GameRaiseEnjKey)
+	UnregisterForKey(Config.GameHoldbackKey)
+	UnregisterForKey(Config.GameSelectNextPos)
+EndFunction	
 
 Event OnKeyDown(int KeyCode)
 	If(Utility.IsInMenuMode() || _SkipHotkeyEvents)
@@ -224,10 +241,32 @@ Event OnKeyDown(int KeyCode)
 	_SkipHotkeyEvents = true
 	If(KeyCode == Config.ChangeAnimation)
 		ChangeAnimation(Input.IsKeyPressed(Config.GameUtilityKey))
+		_SkipHotkeyEvents = false
+		return
 	ElseIf(KeyCode == Config.MoveScene)
 		MoveScene()
+		_SkipHotkeyEvents = false
+		return
 	EndIf
 	_SkipHotkeyEvents = false
+	; Enjoyment Game
+	If(!HasPlayer || !Config.GameEnabled)
+		return
+	EndIf
+	If((KeyCode == Config.GamePauseKey) && (Input.IsKeyPressed(Config.GameUtilityKey)))
+		_EnjGamePaused = !_EnjGamePaused
+		Log("[EnjGame] Game paused: " + _EnjGamePaused)
+	EndIf
+	If(!_EnjGamePaused)
+		If(KeyCode == Config.GameRaiseEnjKey)
+			ProcessEnjGameArg("Stamina", _EnjGamePartner)
+		ElseIf(KeyCode == Config.GameHoldbackKey)
+			ProcessEnjGameArg("Magicka", _EnjGamePartner)
+		ElseIf(KeyCode == Config.GameSelectNextPos)
+			int newIdx = GameNextPartnerIdx(PlayerRef, _EnjGamePartner, Input.IsKeyPressed(Config.GameUtilityKey))
+			_EnjGamePartner = GameChangePartner(PlayerRef, newIdx)
+		EndIf
+	EndIf
 EndEvent
 
 Function ChangeAnimation(bool backwards = false)
