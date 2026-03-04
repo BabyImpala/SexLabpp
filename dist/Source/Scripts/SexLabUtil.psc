@@ -84,9 +84,6 @@ function PrintConsole(string output) global native
 Actor[] function MakeActorArray(Actor Actor1 = none, Actor Actor2 = none, Actor Actor3 = none, Actor Actor4 = none, Actor Actor5 = none) global native
 float function GetCurrentGameRealTime() global native
 bool Function IsGodModeEnabled() global native
-Function ToggleFreeCamera(bool freezeTime = false) global native
-Function SetFreeCameraSpeed(float speed = 10.0) global native
-Function SetFreeCameraState(bool enable, bool freezeTime = false, float speed = 10.0) global native
 
 String[] Function MergeSplitTags(String asTags, String asTagsSuppress, bool abRequireAll) global
   String[] ret1 = PapyrusUtil.ClearEmpty(PapyrusUtil.StringSplit(asTags, ","))
@@ -371,5 +368,5 @@ bool function IsActor(Form FormRef) global
 endFunction
 
 function EnableFreeCamera(bool Enabling = true, float sucsm = 5.0) global
-	return SetFreeCameraState(Enabling, false, sucsm)
+	return MiscUtil.SetFreeCameraState(Enabling, sucsm)
 endFunction

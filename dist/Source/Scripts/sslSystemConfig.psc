@@ -716,9 +716,9 @@ EndFunction
 
 Function ToggleFreeCamera()
   If (Game.GetCameraState() != 3)
-    SexLabUtil.SetFreeCameraSpeed(AutoSUCSM)
+    MiscUtil.SetFreeCameraSpeed(AutoSUCSM)
   EndIf
-  SexLabUtil.ToggleFreeCamera()
+  MiscUtil.ToggleFreeCamera()
 EndFunction
 
 bool function BackwardsPressed()
