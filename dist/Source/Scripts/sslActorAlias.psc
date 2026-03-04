@@ -546,6 +546,30 @@ EndFunction
 /;
 
 State Paused
+	Function LockActor()
+		If (_ActorRef == _PlayerRef)
+			If (Game.GetCameraState() == 0)
+				Game.ForceThirdPerson()
+			EndIf
+			If(_Config.AutoTFC)
+				SexLabUtil.SetFreeCameraState(true, false, _Config.AutoSUCSM)
+			EndIf
+		EndIf
+		Debug.SendAnimationEvent(_ActorRef, "IdleFurnitureExit")
+		Debug.SendAnimationEvent(_ActorRef, "AnimObjectUnequip")
+		Debug.SendAnimationEvent(_ActorRef, "IdleStop")
+		LockActorImpl()
+		_ActorRef.SetAnimationVariableInt("IsNPC", 0)
+		_ActorRef.SetAnimationVariableBool("bHumanoidFootIKDisable", 1)
+		SendDefaultAnimEvent()
+		Log("Locked Actor: " + GetActorName())
+		_ActorLocked = True
+	EndFunction
+	Function TryLockAndUnpause()
+		LockActor()
+		GoToState(STATE_PLAYING)
+	EndFunction
+
 	bool Function InitiateUndressing()
 		If (_sex <= 2)
 			If (DoUndress)
@@ -576,12 +600,12 @@ State Paused
 		GoToState(STATE_PLAYING)
 		_Thread.AnimationStart()
 		TrackedEvent(TRACK_START)
+		_StartedAt = SexLabUtil.GetCurrentGameRealTime()
+		_LastOrgasm = _StartedAt
 		If (_sex != 1 && _sex != 4)
 			Utility.Wait(0.5)	; extra async call to ensure erection
 			Debug.SendAnimationEvent(_ActorRef, "SOSBend0")
 		EndIf
-		_StartedAt = SexLabUtil.GetCurrentGameRealTime()
-		_LastOrgasm = _StartedAt
 	EndEvent
 
 	Function SetStrapon(Form ToStrapon)
@@ -590,25 +614,10 @@ State Paused
 	Function ResolveStrapon(bool force = false)
 		ResolveStraponImpl()
 	EndFunction
-
-	Function LockActor()
-		If (_ActorRef == _PlayerRef)
-			If (Game.GetCameraState() == 0)
-				Game.ForceThirdPerson()
-			EndIf
-			If(_Config.AutoTFC)
-				SexLabUtil.SetFreeCameraState(true, false, _Config.AutoSUCSM)
-			EndIf
+	Function RemoveStrapon()
+		If(_Strapon && !_HadStrapon)
+			_ActorRef.RemoveItem(_Strapon, 1, true)
 		EndIf
-		Debug.SendAnimationEvent(_ActorRef, "IdleFurnitureExit")
-		Debug.SendAnimationEvent(_ActorRef, "AnimObjectUnequip")
-		Debug.SendAnimationEvent(_ActorRef, "IdleStop")
-		LockActorImpl()
-		_ActorRef.SetAnimationVariableInt("IsNPC", 0)
-		_ActorRef.SetAnimationVariableBool("bHumanoidFootIKDisable", 1)
-		SendDefaultAnimEvent()
-		Log("Locked Actor: " + GetActorName())
-		_ActorLocked = True
 	EndFunction
 
 	Function UnlockActor()
@@ -621,19 +630,8 @@ State Paused
 		Log("Unlocked Actor: " + GetActorName())
 		_ActorLocked = False
 	EndFunction
-
-	Function TryLockAndUnpause()
-		LockActor()
-		GoToState(STATE_PLAYING)
-	EndFunction
 	Function TryPauseAndUnlock()
 		UnlockActor()
-	EndFunction
-
-	Function RemoveStrapon()
-		If(_Strapon && !_HadStrapon)
-			_ActorRef.RemoveItem(_Strapon, 1, true)
-		EndIf
 	EndFunction
 
 	Function Clear()
@@ -667,7 +665,7 @@ State Paused
 EndState
 
 bool Function InitiateUndressing()
-	Error("Cannot undress actors outside of idle state", "ReadyActor()")
+	Error("Cannot undress actors outside of idle state", "InitiateUndressing()")
 	return false
 EndFunction
 Function ReadyActor(int aiStripData, int aiPositionGenders)
