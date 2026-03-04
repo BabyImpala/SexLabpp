@@ -926,7 +926,7 @@ State Making_M
 	
 	Function EndAnimation(bool Quickly = false)
 		_prepareAsyncCount = -2147483648
-		Initialize()
+		GoToState(STATE_END)
 	EndFunction
 
 	int Function GetStatus()
@@ -1333,8 +1333,6 @@ State Animating
 
 	Event OnEndState()
 		UnregisterForUpdate()
-		UnregisterCollision()
-		MoveActorsAwayFromPlayer()
 		SetFurnitureIgnored(false)
 	EndEvent
 EndState
@@ -1428,6 +1426,8 @@ State Ending
 	Event OnBeginState()
 		Config.DisableThreadControl(self as sslThreadController)
 		SendModEvent("SSL_CLEAR_Thread" + tid, "", 1.0)
+		MoveActorsAwayFromPlayer()
+		UnregisterCollision()
 		If(IsObjectiveDisplayed(0))
 			SetObjectiveDisplayed(0, False)
 		EndIf
