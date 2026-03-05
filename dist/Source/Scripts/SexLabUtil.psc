@@ -112,6 +112,31 @@ String[] Function MergeSplitTags(String asTags, String asTagsSuppress, bool abRe
   EndIf
 EndFunction
 
+string function ActorName(Actor ActorRef) global
+	return ActorRef.GetLeveledActorBase().GetName()
+endFunction
+
+string[] function ActorNames(Actor[] ActorRefs) global
+    string[] ret = PapyrusUtil.StringArray(ActorRefs.Length)
+    int i = 0
+    while (i < ActorRefs.Length)
+        ret[i] = ActorName(ActorRefs[i])
+        i += 1
+    endwhile
+    return ret
+EndFunction
+
+float Function CalcPathingTargetDistance(int k) global
+    If (k==2||k==3||k==9||k==11||k==12||k==32||k==31||k==34||k==35||k==40||k==41||k==47)
+        return 300.0
+    ElseIf (k==18||k==24||k==27||k==38||k==46)
+        return 400.0
+    ElseIf (k==14||k==26||k==36)
+        return 800.0
+    EndIf
+    return 128.0
+EndFunction
+
 String Function GetTranslation(String asStr) global native
 
 ; *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-* ;
@@ -148,20 +173,6 @@ sslThreadController function QuickStart(actor a1, actor a2 = none, actor a3 = no
 	endIf
 	return SexLab.QuickStart(a1, a2, a3, a4, a5, victim, hook, animationTags)
 endFunction
-
-string function ActorName(Actor ActorRef) global
-	return ActorRef.GetLeveledActorBase().GetName()
-endFunction
-
-string[] function ActorNames(Actor[] ActorRefs) global
-    string[] ret = PapyrusUtil.StringArray(ActorRefs.Length)
-    int i = 0
-    while (i < ActorRefs.Length)
-        ret[i] = ActorName(ActorRefs[i])
-        i += 1
-    endwhile
-    return ret
-EndFunction
 
 int Function GetSex(Actor akActor) global
 	return SexLabRegistry.GetSex(akActor, false)
