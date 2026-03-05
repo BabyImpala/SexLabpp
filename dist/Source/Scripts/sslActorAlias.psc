@@ -588,7 +588,7 @@ State Paused
 		EndIf
 		return false
 	EndFunction
-	Function ReadyActor(int aiStripData, int aiPositionGenders)
+	bool Function ReadyActor(int aiStripData, int aiPositionGenders)
 		_stripData = aiStripData
 		_useStrapon = _sex == 1 && Math.LogicalAnd(aiPositionGenders, 0x2) == 0
 		If (_sex <= 2)
@@ -598,6 +598,7 @@ State Paused
 		EndIf
 		Debug.SendAnimationEvent(_ActorRef, "SOSBend0")
 		RegisterForModEvent("SSL_READY_Thread" + _Thread.tid, "OnStartPlaying")
+		return true
 	EndFunction
 
 	Event OnStartPlaying(string asEventName, string asStringArg, float afNumArg, form akSender)
@@ -672,8 +673,9 @@ bool Function InitiateUndressing()
 	Error("Cannot undress actors outside of idle state", "InitiateUndressing()")
 	return false
 EndFunction
-Function ReadyActor(int aiStripData, int aiPositionGenders)
+bool Function ReadyActor(int aiStripData, int aiPositionGenders)
 	Error("Cannot ready outside of idle state", "ReadyActor()")
+	return false
 EndFunction
 Event OnStartPlaying(string asEventName, string asStringArg, float afNumArg, form akSender)
 	Error("Playing request outside of idle state", "OnStartPlaying()")
