@@ -137,6 +137,22 @@ float Function CalcPathingTargetDistance(int k) global
     return 128.0
 EndFunction
 
+Function ToggleFreeCamera(bool KeepEnabled = false) global
+	If (Game.GetCameraState() == 3)
+		If (!KeepEnabled)
+			MiscUtil.ToggleFreeCamera()
+		EndIf
+		return
+	Else
+		While (Game.GetCameraState() == 0)
+			Game.ForceThirdPerson()
+			Utility.Wait(0.2)
+		EndWhile
+		MiscUtil.SetFreeCameraSpeed(GetConfig().AutoSUCSM)
+		MiscUtil.ToggleFreeCamera()
+	EndIf
+EndFunction
+
 String Function GetTranslation(String asStr) global native
 
 ; *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-* ;

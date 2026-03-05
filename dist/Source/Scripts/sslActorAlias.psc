@@ -463,6 +463,9 @@ State Ready
 					Utility.Wait(interval)
 				EndWhile
 			EndIf
+			If(_Config.AutoTFC)
+				SexLabUtil.ToggleFreeCamera(true)
+			EndIf
 		Else
 			_Config.CheckBardAudience(_ActorRef, true)
 			If(akPathTo && DoPathToCenter)
@@ -552,14 +555,6 @@ EndFunction
 
 State Paused
 	Function LockActor()
-		If (_ActorRef == _PlayerRef)
-			If (Game.GetCameraState() == 0)
-				Game.ForceThirdPerson()
-			EndIf
-			If(_Config.AutoTFC)
-				MiscUtil.SetFreeCameraState(true, _Config.AutoSUCSM)
-			EndIf
-		EndIf
 		Debug.SendAnimationEvent(_ActorRef, "IdleFurnitureExit")
 		Debug.SendAnimationEvent(_ActorRef, "AnimObjectUnequip")
 		Debug.SendAnimationEvent(_ActorRef, "IdleStop")
