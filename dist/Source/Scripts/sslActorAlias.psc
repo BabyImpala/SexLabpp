@@ -24,6 +24,10 @@ int Function GetSex()
 	return _sex
 EndFunction
 
+int Function GetRaceID()
+	return _raceID
+EndFunction
+
 bool Function GetIsDead()
 	return _livestatus == LIVESTATUS_DEAD
 EndFunction
@@ -277,6 +281,7 @@ Actor Property ActorRef
 EndProperty
 
 int _sex
+int _raceID
 bool _victim
 
 int _livestatus
@@ -387,8 +392,8 @@ Auto State Empty
 		Else
 			_livestatus = LIVESTATUS_ALIVE
 		EndIf
-		_sex = SexLabRegistry.GetSex(ProspectRef, true)
-
+		_sex = SexLabRegistry.GetSex(_ActorRef, true)
+		_raceID = SexLabRegistry.GetRaceID(_ActorRef)
 		TrackedEvent(TRACK_ADDED)
 		GoToState(STATE_SETUP)
 		return true
@@ -462,7 +467,7 @@ State Ready
 			_Config.CheckBardAudience(_ActorRef, true)
 			If(akPathTo && DoPathToCenter)
 				ObjectReference target = akPathTo as ObjectReference
-				float target_distance = 128.0
+				float target_distance = SexLabUtil.CalcPathingTargetDistance(_raceID)
 				float distance = _ActorRef.GetDistance(target)
 				If(distance > target_distance && distance <= 6144.0)
 					_ActorRef.SetDontMove(false)
@@ -1088,6 +1093,7 @@ Function Initialize()
 	_ActorLocked = false
 	; Integers
 	_sex = -1
+	_raceID = -1
 	_livestatus = 0
 	_PathingFlag = 0
 	_OrgasmCount = 0
@@ -1097,7 +1103,7 @@ Function Initialize()
 	_StartedAt = 0.0
 	; Array
 	_CurrentInteractions = Utility.CreateBoolArray(_Thread.SUPPORTED_INTER_COUNT, false)
-	_HomoTypes = new bool[5]
+	_HomoTypes = Utility.CreateBoolArray(5, false)
 	ResetEnjoymentVariables()
 EndFunction
 
@@ -1278,7 +1284,7 @@ float Function CalcContextEnjFactor(bool SameSexThread, bool WithLover)
 	;arousal
 	EnjMult += (_arousalBase / 50)
 	;creature
-	if (SexLabRegistry.GetRaceID(_ActorRef) > 0)
+	if (_raceID > 0)
 		return (EnjMult + 0.5)
 	EndIf
 	;relation
