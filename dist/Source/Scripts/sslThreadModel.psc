@@ -892,11 +892,19 @@ State Making_M
 		LeadIn = LeadIn && _LeadInScenes.Find(activeScene) > -1
 		Log("Thread validated, playing animation: " + activeScene + ", " + SexLabRegistry.GetSceneName(activeScene), "StartThread()")
 		SendThreadEvent("AnimationStarting")
+		If (!UndressAndStripActors(activeScene))
+			EndAnimation()
+			return
+		EndIf
+		GoToState(STATE_PLAYING)
+	EndFunction
+
+	bool Function UndressAndStripActors(string activeScene)
 		bool WaitForUndress = false
 		int i = 0
 		While (i < _Positions.Length)
 			ActorAlias[i].LockActor()
-			WaitForUndress = ActorAlias[i].InitiateUndressing()
+			WaitForUndress= (ActorAlias[i].InitiateUndressing() || WaitForUndress)
 			i += 1
 		EndWhile
 		If (WaitForUndress)
@@ -908,20 +916,22 @@ State Making_M
 			EndIf
 		Else
 			If (Config.ShowInMap && PlayerRef.GetDistance(CenterRef) > 750)
-				SetObjectiveDisplayed(0, True)
+				SetObjectiveDisplayed(0, true)
 			EndIf
 		EndIf
 		int[] strips_ = SexLabRegistry.GetStripDataA(activeScene, "")
 		int[] sex_ = SexLabRegistry.GetPositionSexA(activeScene)
 		int j = 0
 		While (j < _Positions.Length)
-			ActorAlias[j].ReadyActor(strips_[j], sex_[j])
+			If (!ActorAlias[j].ReadyActor(strips_[j], sex_[j]))
+				return false
+			EndIf
 			j += 1
 		EndWhile
 		If (WaitForUndress)
 			Utility.Wait(1.5)
 		EndIf
-		GoToState(STATE_PLAYING)
+		return true
 	EndFunction
 	
 	Function EndAnimation(bool Quickly = false)
@@ -982,6 +992,10 @@ Function SetFurnitureStatus(int aiStatus)
 EndFunction
 Function ContinueSetup(bool abContinue)
 	Log("ContinueSetup() can only be called during setup", "ContinueSetup()")
+EndFunction
+bool Function UndressAndStripActors(string activeScene)
+	Log("Actors can be undressed only during setup", "UndressAndStripActors()")
+	return false
 EndFunction
 
 Function CreateInstance(Actor[] akSubmissives, String[] asPrimaryScenes, String[] asLeadInScenes, String[] asCustomScenes, int aiFurnitureStatus) native
