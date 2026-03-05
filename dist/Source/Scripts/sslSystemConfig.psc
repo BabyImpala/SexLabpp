@@ -687,7 +687,7 @@ Event OnKeyDown(int keyCode)
   If (Utility.IsInMenuMode())
     return
   ElseIf (keyCode == ToggleFreeCamera)
-    ToggleFreeCamera()
+    SexLabUtil.ToggleFreeCamera()
   ElseIf (keyCode == TargetActor)
     If (_ActiveControl && !_ActiveControl.HasPlayer)
       DisableThreadControl(_ActiveControl)
@@ -712,13 +712,6 @@ Function SetTargetActor()
     ;Comeback: Revise below after UI update
     _ActiveControl.StartStage(_ActiveControl.GetStageHistory(), _ActiveControl.GetActiveStage())
   EndIf
-EndFunction
-
-Function ToggleFreeCamera()
-  If (Game.GetCameraState() != 3)
-    MiscUtil.SetFreeCameraSpeed(AutoSUCSM)
-  EndIf
-  MiscUtil.ToggleFreeCamera()
 EndFunction
 
 bool function BackwardsPressed()
