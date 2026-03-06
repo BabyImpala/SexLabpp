@@ -380,7 +380,11 @@ Auto State Empty
 		ForceRefTo(ProspectRef)
 		_ActorRef = ProspectRef
 		If (_ActorRef == _PlayerRef)
-			Game.SetPlayerAIDriven()
+			If (Game.GetCameraState() == 0)
+				Game.ForceThirdPerson()
+			EndIf
+			Game.DisablePlayerControls(abMovement=true, abFighting=true, abCamSwitch=true, abLooking=false, \
+				abSneaking=true, abMenu=false, abActivate=true, abJournalTabs=false, aiDisablePOVType=0)
 		Else
 			_ActorRef.SetDontMove(true)
 		EndIf
@@ -409,7 +413,7 @@ Auto State Empty
 			_Thread.RequestStatisticUpdate(_ActorRef, _StartedAt)
 		EndIf
 		If (_ActorRef == _PlayerRef)
-			Game.SetPlayerAIDriven(false)
+			Game.ForceThirdPerson()
 			Game.EnablePlayerControls()
 		EndIf
 		Parent.Clear()
