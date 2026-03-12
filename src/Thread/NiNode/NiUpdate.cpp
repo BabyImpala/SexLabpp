@@ -107,8 +107,12 @@ namespace Thread::NiNode
 	void NiUpdate::Install()
 	{
 		// UpdateThirdPerson
-		REL::Relocation<std::uintptr_t> addr{ RELOCATION_ID(39446, 40522), 0x94 };
-		stl::write_thunk_call<NiUpdate>(addr.address());
+		if (REL::Module::IsVR()) {
+			stl::write_thunk_call<NiUpdate>(REL::Offset(0x6c6a7d).address());
+		} else {
+			REL::Relocation<std::uintptr_t> addr{ RELOCATION_ID(39446, 40522), 0x94 };
+			stl::write_thunk_call<NiUpdate>(addr.address());
+		}
 		logger::info("Registered Functions");
 	}
 
