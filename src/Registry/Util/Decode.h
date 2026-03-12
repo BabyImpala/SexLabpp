@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstddef>
 #include <fstream>
 #include <string>
 #include <type_traits>
@@ -17,7 +18,7 @@ namespace Decode
 		uint8_t buffer[n];
 		a_stream.read(reinterpret_cast<char*>(buffer), n);
 		a_out = 0;
-		for (int32_t i = 0; i < n; i++) {
+		for (size_t i = 0; i < n; i++) {
 			a_out = (a_out << 8) | buffer[i];
 		}
 	}
@@ -49,4 +50,4 @@ namespace Decode
 		return ret;
 	}
 
-}	 // namespace Decode
+}  // namespace Decode

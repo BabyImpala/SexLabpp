@@ -71,7 +71,7 @@ namespace Registry
 		for (auto&& [key, scene] : sceneMap) {
 			if (!scene->IsEnabled() || scene->IsPrivate())
 				continue;
-			if (scene->positions.size() != a_positions)
+			if (scene->positions.size() != static_cast<size_t>(a_positions))
 				continue;
 			if (!scene->IsCompatibleTags(tags))
 				continue;
@@ -190,7 +190,7 @@ namespace Registry
 		const auto sex = base ? base->GetSex() : RE::SEXES::kMale;
 		std::vector<const Voice*> ret{};
 		for (auto&& [name, voice] : voices) {
-			if (!voice.enabled || voice.sex != RE::SEXES::kNone && voice.sex != sex)
+			if (!voice.enabled || (voice.sex != RE::SEXES::kNone && voice.sex != sex))
 				continue;
 			if (!voice.HasRace(actRace) || !a_tags.MatchTags(voice.tags))
 				continue;
