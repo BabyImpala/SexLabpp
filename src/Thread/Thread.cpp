@@ -2,8 +2,10 @@
 
 #include "Registry/Library.h"
 #include "Registry/Util/Scale.h"
+#include "SexLabPPlusAPI_Impl.h"
 #include "Thread/Interface/SceneMenu.h"
 #include "Util/Script.h"
+
 
 namespace Thread
 {
@@ -29,7 +31,12 @@ namespace Thread
 	void Instance::DestroyInstance(RE::TESQuest* a_linkedQst)
 	{
 		std::unique_lock lock{ _mInstances };
-		std::erase_if(instances, [&](const auto& instance) { return instance->linkedQst == a_linkedQst; });
+		std::erase_if(instances, [&](const auto& instance) {
+			if (instance->linkedQst == a_linkedQst) {
+				return true;
+			}
+			return false;
+		});
 	}
 
 	Instance* Instance::GetInstance(RE::TESQuest* a_linkedQst)
@@ -100,6 +107,9 @@ namespace Thread
 		if (ControlsMenu()) {
 			Interface::SceneMenu::UpdateStageInfo();
 		}
+		auto _ = std::async(std::launch::async, [this]() {
+			SLPP::DispatchSceneEvent(SLPP::SceneEvent::StageAdvanced, this->linkedQst);
+		});
 	}
 
 	bool Instance::SetActiveScene(const Registry::Scene* a_scene)
