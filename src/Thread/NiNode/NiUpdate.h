@@ -10,13 +10,13 @@ namespace Thread::NiNode
 	{
 		friend class NiUpdate;
 
-	public:
+	  public:
 		NiInstance(const std::vector<RE::Actor*>& a_positions, const Registry::Scene* a_scene);
 		~NiInstance() = default;
 
 		bool VisitPositions(std::function<bool(const NiPosition&)> a_visitor) const;
 
-	private:
+	  private:
 		void UpdateInteractions(float a_delta);
 		void GetInteractionsMale(std::vector<NiPosition::Snapshot>& list, const NiPosition::Snapshot& it);
 		void GetInteractionsFemale(std::vector<NiPosition::Snapshot>& list, const NiPosition::Snapshot& it);
@@ -28,13 +28,13 @@ namespace Thread::NiNode
 
 	class NiUpdate
 	{
-	public:
+	  public:
 		static void Install();
 
 		static std::shared_ptr<NiInstance> Register(RE::FormID a_id, std::vector<RE::Actor*> a_positions, const Registry::Scene* a_scene) noexcept;
 		static void Unregister(RE::FormID a_id) noexcept;
 
-	private:
+	  private:
 		friend void stl::write_thunk_call<NiUpdate>(std::uintptr_t);
 		static void thunk(RE::NiAVObject* a_obj, RE::NiUpdateData* updateData);
 		static inline REL::Relocation<decltype(thunk)> func;
@@ -44,4 +44,4 @@ namespace Thread::NiNode
 		static inline std::vector<std::pair<RE::FormID, std::shared_ptr<NiInstance>>> processes;
 	};
 
-}	 // namespace Thread::Collision
+}  // namespace Thread::Collision

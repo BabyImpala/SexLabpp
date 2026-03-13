@@ -888,6 +888,7 @@ State Animating
 		TrackedEvent(TRACK_ORGASM)
 		_LastOrgasm = SexLabUtil.GetCurrentGameRealTime()
 		_OrgasmCount += 1
+		_Thread.DispatchSceneEventNative(_Thread.SCENEEVENT_ActorOrgasm, _ActorRef)
 		; Enjoyment
 		If (_bEnjEnabled)
 			_FullEnjoyment = 0

@@ -27,7 +27,7 @@ namespace Thread
 	{
 		auto _ = std::async(std::launch::async, [this]() {
 			SLPP::instanceMap[this->linkedQst] = new SLPP::ISceneInstance_Impl(this->linkedQst);
-			SLPP::DispatchSceneEvent(SLPP::SceneEvent::SceneStart, this->linkedQst);
+			SLPP::DispatchSceneEvent(SLPP::SceneEvent::SceneStart, this->linkedQst, nullptr);
 		});
 		const auto centerAct = InitializeReferences(a_submissives);
 		const auto fragments = InitializeScenes(a_scenes, a_furniturepref);
@@ -54,7 +54,7 @@ namespace Thread
 	Instance::~Instance()
 	{
 		// ensure proper cleanup on main thread
-		SLPP::DispatchSceneEvent(SLPP::SceneEvent::SceneEnd, this->linkedQst);
+		SLPP::DispatchSceneEvent(SLPP::SceneEvent::SceneEnd, this->linkedQst, nullptr);
 		auto instance = SLPP::instanceMap[this->linkedQst];
 		SLPP::instanceMap.erase(this->linkedQst);
 		delete instance;

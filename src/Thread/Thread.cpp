@@ -108,7 +108,7 @@ namespace Thread
 			Interface::SceneMenu::UpdateStageInfo();
 		}
 		auto _ = std::async(std::launch::async, [this]() {
-			SLPP::DispatchSceneEvent(SLPP::SceneEvent::StageAdvanced, this->linkedQst);
+			SLPP::DispatchSceneEvent(SLPP::SceneEvent::StageAdvanced, this->linkedQst, nullptr);
 		});
 	}
 
@@ -433,6 +433,9 @@ namespace Thread
 				if (seenPermutations.size() == static_cast<size_t>(targetPermutation)) {
 					activeAssignment = it;
 					AdvanceScene(activeStage);
+					auto _ = std::async(std::launch::async, [this, a_actor]() {
+						SLPP::DispatchSceneEvent(SLPP::SceneEvent::PositionChange, this->linkedQst, a_actor);
+					});
 					logger::info("Actor {} changed to permutation {}.", a_actor->GetFormID(), targetPermutation);
 					return;
 				}

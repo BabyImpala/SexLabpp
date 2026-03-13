@@ -190,7 +190,8 @@ namespace SLPP
 		InstanceID id;
 	};
 
-	inline std::unordered_map<std::string, ISexLabPPlusAPI::Callback> sceneEventListeners;
+	inline std::unordered_map<std::string, ISexLabPPlusAPI::SceneEventCallback> sceneEventListeners;
+	inline std::unordered_map<std::string, ISexLabPPlusAPI::InteractioneEventCallback> interactionEventListeners;
 	inline std::unordered_map<InstanceID, ISceneInstance_Impl*> instanceMap;
 
 	class SexLabPPlusAPI_Impl : public ISexLabPPlusAPI
@@ -201,7 +202,7 @@ namespace SLPP
 
 		std::uint32_t GetVersion() const override { return kAPIVersion; }
 
-		void RegisterSceneEventListener(Callback a_callback, std::string a_source) override
+		void RegisterSceneEventListener(SceneEventCallback a_callback, std::string a_source) override
 		{
 			sceneEventListeners.emplace(std::move(a_source), std::move(a_callback));
 		}
@@ -209,6 +210,16 @@ namespace SLPP
 		void UnregisterSceneEventListener(std::string a_source) override
 		{
 			sceneEventListeners.erase(a_source);
+		}
+
+		void RegisterInteractionEventListener(InteractioneEventCallback a_callback, std::string a_source) override
+		{
+			interactionEventListeners.emplace(std::move(a_source), std::move(a_callback));
+		}
+
+		void UnregisterInteractionEventListener(std::string a_source) override
+		{
+			interactionEventListeners.erase(a_source);
 		}
 
 		std::int32_t ValidateActor(RE::Actor* actor) override
@@ -245,11 +256,21 @@ namespace SLPP
 		}
 	};
 
-	inline void DispatchSceneEvent(SceneEvent a_event, InstanceID id)
+	inline void DispatchSceneEvent(SceneEvent a_event, InstanceID id, RE::Actor* a_actor = nullptr)
 	{
 		ISceneInstance* instance = instanceMap[id];
 		for (const auto& [_, callback] : sceneEventListeners) {
-			callback(a_event, instance);
+			callback(a_event, instance, a_actor);
+		}
+	}
+
+	inline void DispatchInteractionEvent(InteractioneEvent a_event, RE::Actor* a_actor, RE::Actor* a_partner)
+	{
+		if (a_event == InteractioneEvent::None || !a_actor || !a_partner) {
+			return;
+		}
+		for (const auto& [_, callback] : interactionEventListeners) {
+			callback(a_event, a_actor, a_partner);
 		}
 	}
 }

@@ -1,20 +1,64 @@
 #include "NiUpdate.h"
 
 #include "NiMath.h"
+#include "SexLabPPlusAPI_Impl.h"
+
+namespace
+{
+	std::optional<SLPP::InteractioneEvent> ToInteractionEvent(Thread::NiNode::Interaction::Action a_action)
+	{
+		using Action = Thread::NiNode::Interaction::Action;
+		using Event = SLPP::InteractioneEvent;
+
+		switch (a_action) {
+		case Action::Vaginal:
+			return Event::Vaginal;
+		case Action::Anal:
+			return Event::Anal;
+		case Action::Oral:
+			return Event::Oral;
+		case Action::Grinding:
+			return Event::Grinding;
+		case Action::Deepthroat:
+			return Event::Deepthroat;
+		case Action::Skullfuck:
+			return Event::Skullfuck;
+		case Action::LickingShaft:
+			return Event::LickingShaft;
+		case Action::FootJob:
+			return Event::FootJob;
+		case Action::HandJob:
+			return Event::HandJob;
+		case Action::Kissing:
+			return Event::Kissing;
+		case Action::Facial:
+			return Event::Facial;
+		case Action::AnimObjFace:
+			return Event::AnimObjFace;
+		case Action::ToeSucking:
+			return Event::SuckingToes;
+		case Action::None:
+		case Action::Total:
+			return std::nullopt;
+		}
+
+		return std::nullopt;
+	}
+}
 
 namespace Thread::NiNode
 {
 	NiInstance::NiInstance(const std::vector<RE::Actor*>& a_positions, const Registry::Scene* a_scene) :
-		positions([&]() {
-			std::vector<NiNode::NiPosition> v{};
-			v.reserve(a_positions.size());
-			for (size_t i = 0; i < a_positions.size(); i++) {
-				auto& it = a_positions[i];
-				auto sex = a_scene->GetNthPosition(i)->data.GetSex().get();
-				v.emplace_back(it, sex);
-			}
-			return v;
-		}()) {}
+	  positions([&]() {
+		  std::vector<NiNode::NiPosition> v{};
+		  v.reserve(a_positions.size());
+		  for (size_t i = 0; i < a_positions.size(); i++) {
+			  auto& it = a_positions[i];
+			  auto sex = a_scene->GetNthPosition(i)->data.GetSex().get();
+			  v.emplace_back(it, sex);
+		  }
+		  return v;
+	  }()) {}
 
 	bool NiInstance::VisitPositions(std::function<bool(const NiPosition&)> a_visitor) const
 	{
@@ -28,12 +72,14 @@ namespace Thread::NiNode
 
 	void NiInstance::UpdateInteractions(float a_delta)
 	{
+		std::vector<std::tuple<SLPP::InteractioneEvent, RE::Actor*, RE::Actor*>> pendingEvents{};
 		std::unique_lock lk{ _m, std::defer_lock };
 		if (!lk.try_lock()) {
 			return;
 		}
 		std::vector<NiPosition::Snapshot> snapshots{};
 		snapshots.reserve(positions.size());
+		pendingEvents.reserve(positions.size());
 		for (auto&& it : positions) {
 			snapshots.emplace_back(it);
 		}
@@ -56,7 +102,27 @@ namespace Thread::NiNode
 					act.velocity = where->velocity;
 				}
 			}
-			positions[i].interactions = { snapshots[i].interactions.begin(), snapshots[i].interactions.end() };
+			auto nextInteractions = std::set<Interaction>{ snapshots[i].interactions.begin(), snapshots[i].interactions.end() };
+			for (const auto& act : nextInteractions) {
+				if (pos.interactions.find(act) != pos.interactions.end()) {
+					continue;
+				}
+				auto event = ToInteractionEvent(act.action);
+				if (!event) {
+					continue;
+				}
+				auto* actor = pos.actor.get();
+				auto* partner = act.partner.get();
+				if (!actor || !partner) {
+					continue;
+				}
+				pendingEvents.emplace_back(*event, actor, partner);
+			}
+			positions[i].interactions = std::move(nextInteractions);
+		}
+		lk.unlock();
+		for (const auto& [event, actor, partner] : pendingEvents) {
+			SLPP::DispatchInteractionEvent(event, actor, partner);
 		}
 	}
 
@@ -159,4 +225,4 @@ namespace Thread::NiNode
 		processes.erase(where);
 	}
 
-}	 // namespace Thread::NiNode
+}  // namespace Thread::NiNode

@@ -62,9 +62,9 @@ namespace SLPP
 		Force = 1,
 	};
 
-	enum class InteractionType : std::int32_t
+	enum class InteractioneEvent : std::int32_t
 	{
-		Any = -1,
+		None = 0,
 		Vaginal = 1,
 		Anal = 2,
 		Oral = 3,
@@ -87,34 +87,6 @@ namespace SLPP
 		Anal = 1,
 		Oral = 2,
 	};
-
-	inline constexpr std::int32_t FURNITURE_DISABLE = static_cast<std::int32_t>(FurniturePreference::Disallow);
-	inline constexpr std::int32_t FURNITURE_ALLOW = static_cast<std::int32_t>(FurniturePreference::Allow);
-	inline constexpr std::int32_t FURNITURE_PREFER = static_cast<std::int32_t>(FurniturePreference::Prefer);
-
-	inline constexpr std::int32_t PATHING_DISABLE = static_cast<std::int32_t>(PathingFlag::Disable);
-	inline constexpr std::int32_t PATHING_ENABLE = static_cast<std::int32_t>(PathingFlag::Default);
-	inline constexpr std::int32_t PATHING_FORCE = static_cast<std::int32_t>(PathingFlag::Force);
-
-	inline constexpr std::int32_t ITYPE_ANY = static_cast<std::int32_t>(InteractionType::Any);
-	inline constexpr std::int32_t ITYPE_Vaginal = static_cast<std::int32_t>(InteractionType::Vaginal);
-	inline constexpr std::int32_t ITYPE_Anal = static_cast<std::int32_t>(InteractionType::Anal);
-	inline constexpr std::int32_t ITYPE_Oral = static_cast<std::int32_t>(InteractionType::Oral);
-	inline constexpr std::int32_t ITYPE_Grinding = static_cast<std::int32_t>(InteractionType::Grinding);
-	inline constexpr std::int32_t ITYPE_Deepthroat = static_cast<std::int32_t>(InteractionType::Deepthroat);
-	inline constexpr std::int32_t ITYPE_Skullfuck = static_cast<std::int32_t>(InteractionType::Skullfuck);
-	inline constexpr std::int32_t ITYPE_LickingShaft = static_cast<std::int32_t>(InteractionType::LickingShaft);
-	inline constexpr std::int32_t ITYPE_FootJob = static_cast<std::int32_t>(InteractionType::FootJob);
-	inline constexpr std::int32_t ITYPE_HandJob = static_cast<std::int32_t>(InteractionType::HandJob);
-	inline constexpr std::int32_t ITYPE_Kissing = static_cast<std::int32_t>(InteractionType::Kissing);
-	inline constexpr std::int32_t ITYPE_Facial = static_cast<std::int32_t>(InteractionType::Facial);
-	inline constexpr std::int32_t ITYPE_AnimObjFace = static_cast<std::int32_t>(InteractionType::AnimObjFace);
-	inline constexpr std::int32_t ITYPE_SuckingToes = static_cast<std::int32_t>(InteractionType::SuckingToes);
-
-	inline constexpr std::int32_t FX_ALL = static_cast<std::int32_t>(CumEffectType::All);
-	inline constexpr std::int32_t FX_VAGINAL = static_cast<std::int32_t>(CumEffectType::Vaginal);
-	inline constexpr std::int32_t FX_ANAL = static_cast<std::int32_t>(CumEffectType::Anal);
-	inline constexpr std::int32_t FX_ORAL = static_cast<std::int32_t>(CumEffectType::Oral);
 
 	struct SceneData
 	{
@@ -171,7 +143,8 @@ namespace SLPP
 	class ISexLabPPlusAPI
 	{
 	  public:
-		using Callback = std::function<void(SceneEvent, ISceneInstance*)>;
+		using SceneEventCallback = std::function<void(SceneEvent, ISceneInstance*, RE::Actor* actor)>;
+		using InteractioneEventCallback = std::function<void(InteractioneEvent, RE::Actor* actor, RE::Actor* partner)>;
 
 		virtual ~ISexLabPPlusAPI() = default;
 
@@ -179,8 +152,11 @@ namespace SLPP
 
 		virtual std::int32_t ActiveAnimations() const { return 0; }
 
-		virtual void RegisterSceneEventListener(Callback a_callback, std::string a_source) = 0;
+		virtual void RegisterSceneEventListener(SceneEventCallback a_callback, std::string a_source) = 0;
 		virtual void UnregisterSceneEventListener(std::string a_source) = 0;
+
+		virtual void RegisterInteractionEventListener(InteractioneEventCallback a_callback, std::string a_source) = 0;
+		virtual void UnregisterInteractionEventListener(std::string a_source) = 0;
 
 		virtual std::int32_t ValidateActor(RE::Actor*) = 0;
 		virtual ISceneInstance* StartScene(const std::vector<RE::Actor*> a_actors, FurniturePreference a_furniturePreference) = 0;
