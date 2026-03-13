@@ -437,10 +437,10 @@ int property RotateScene hidden
 EndProperty
 int property EndAnimation hidden
   int Function Get()
-    return GetSettingInt("iEndAnimation")
+    return GetSettingInt("iKeyEnd")
   EndFunction
   Function Set(int aiSet)
-    SetSettingInt("iEndAnimation", aiSet)
+    SetSettingInt("iKeyEnd", aiSet)
   EndFunction
 EndProperty
 int property AdjustSchlong hidden
@@ -1010,7 +1010,6 @@ Function Reload()
   UnregisterForAllKeys()
   RegisterForKey(ToggleFreeCamera)
   RegisterForKey(TargetActor)
-  RegisterForKey(EndAnimation)
 
   AddRemoveMatchmakerSpells()
   DisableThreadControl(_ActiveControl)
