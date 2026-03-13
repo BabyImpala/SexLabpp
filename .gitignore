@@ -6,6 +6,8 @@ build/
 /vcpkg_installed
 scripts/**/out/
 .xmake
+.cache
+spriggit
 vsxmake2022
 CppProperties.json
 meta.ini

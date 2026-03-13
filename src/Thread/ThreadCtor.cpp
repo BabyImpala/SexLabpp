@@ -2,14 +2,15 @@
 
 #include "Registry/Util/RayCast.h"
 #include "Registry/Util/RayCast/ObjectBound.h"
+#include "SexLabPPlusAPI_Impl.h"
 #include "Thread/Interface/SelectionMenu.h"
 #include "Util/World.h"
-#include <future>
+
 
 namespace Thread
 {
 	Instance::Position::Position(RE::BGSRefAlias* alias, RE::Actor* actor, bool submissive, bool dominant) :
-		alias(alias), data(actor, submissive)
+	  alias(alias), data(actor, submissive)
 	{
 		const auto library = Registry::Library::GetSingleton();
 		voice = library->GetVoice(actor, { "" });
@@ -22,8 +23,12 @@ namespace Thread
 	}
 
 	Instance::Instance(RE::TESQuest* a_linkedQst, const std::vector<RE::Actor*>& a_submissives, const SceneMapping& a_scenes, FurniturePreference a_furniturepref) :
-		linkedQst(a_linkedQst), center(nullptr), scenes({})
+	  linkedQst(a_linkedQst), center(nullptr), scenes({})
 	{
+		auto _ = std::async(std::launch::async, [this]() {
+			SLPP::instanceMap[this->linkedQst] = new SLPP::ISceneInstance_Impl(this->linkedQst);
+			SLPP::DispatchSceneEvent(SLPP::SceneEvent::SceneStart, this->linkedQst, nullptr);
+		});
 		const auto centerAct = InitializeReferences(a_submissives);
 		const auto fragments = InitializeScenes(a_scenes, a_furniturepref);
 		auto& priorityScenes = InitializeCenter(centerAct, a_furniturepref);
@@ -44,6 +49,15 @@ namespace Thread
 		const auto firstScene = Random::draw(scenes[SceneType::LeadIn].empty() ? priorityScenes : scenes[SceneType::LeadIn]);
 		[[maybe_unused]] const auto success = SetActiveScene(firstScene);
 		assert(success && "Failed to set active scene.");
+	}
+
+	Instance::~Instance()
+	{
+		// ensure proper cleanup on main thread
+		SLPP::DispatchSceneEvent(SLPP::SceneEvent::SceneEnd, this->linkedQst, nullptr);
+		auto instance = SLPP::instanceMap[this->linkedQst];
+		SLPP::instanceMap.erase(this->linkedQst);
+		delete instance;
 	}
 
 	RE::Actor* Instance::InitializeReferences(const std::vector<RE::Actor*>& a_submissives)
@@ -323,4 +337,4 @@ namespace Thread
 		return retVal;
 	}
 
-}	 // namespace Thread
+}  // namespace Thread

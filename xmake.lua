@@ -16,6 +16,7 @@ set_project(PROJECT_NAME)
 set_version(PROJECT_VERSION)
 set_languages("cxx23")
 set_license("apache-2.0")
+set_toolchains("clang-cl")
 set_warnings("allextra", "error")
 
 -- Options

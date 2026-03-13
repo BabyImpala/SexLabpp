@@ -3,11 +3,14 @@
 #include "Registry/Library.h"
 #include "Registry/Stats.h"
 #include "Serialization.h"
+#include "SexLabPPlusAPI.h"
+#include "SexLabPPlusAPI_Impl.h"
+#include "Thread/Collision/CollisionHandler.h"
 #include "Thread/Interface/SceneMenu.h"
 #include "Thread/Interface/SelectionMenu.h"
 #include "Thread/NiNode/NiUpdate.h"
 #include "UserData/StripData.h"
-#include "Thread/Collision/CollisionHandler.h"
+
 
 // class EventHandler :
 // 	public Singleton<EventHandler>,
@@ -34,20 +37,37 @@
 // 	}
 // };
 
+void APIMessageHandler(SKSE::MessagingInterface::Message* a_msg)
+{
+	if (a_msg->type == SLPP::InterfaceExchangeMessage::kExchangeInterface) {
+		auto* msg = static_cast<SLPP::InterfaceExchangeMessage*>(a_msg->data);
+		if (msg) {
+			static SLPP::SexLabPPlusAPI_Impl singleton;
+			msg->interfacePtr = &singleton;
+			logger::info("[SexLab P+] API interface dispatched to {}", a_msg->sender ? a_msg->sender : "unknown");
+		}
+	}
+}
+
 static void SKSEMessageHandler(SKSE::MessagingInterface::Message* message)
 {
 	switch (message->type) {
 	case SKSE::MessagingInterface::kPostLoad:
-		Settings::Initialize();
-		Registry::CumFx::GetSingleton()->Initialize();
-		break;
+		{
+			Settings::Initialize();
+			Registry::CumFx::GetSingleton()->Initialize();
+			auto* messaging = SKSE::GetMessagingInterface();
+			if (messaging)
+				messaging->RegisterListener(SLPP::kPluginName.data(), APIMessageHandler);
+			break;
+		}
 	case SKSE::MessagingInterface::kDataLoaded:
 		if (!GameForms::LoadData()) {
 			logger::critical("Unable to load esp objects");
 			const auto err =
-				"Some game objects could not be loaded. This is usually due to a required game plugin not being loaded in your game."
-				"See the SexLabUtil.log for more information about which form failed to load."
-				"\n\nExit Game now? (Recommended yes)";
+			  "Some game objects could not be loaded. This is usually due to a required game plugin not being loaded in your game."
+			  "See the SexLabUtil.log for more information about which form failed to load."
+			  "\n\nExit Game now? (Recommended yes)";
 			if (REX::W32::MessageBoxA(nullptr, err, "SexLab p+ Load Data", 0x00000004) == 6)
 				std::_Exit(EXIT_FAILURE);
 			return;
@@ -72,41 +92,19 @@ static void SKSEMessageHandler(SKSE::MessagingInterface::Message* message)
 	}
 }
 
-extern "C" DLLEXPORT bool SKSEAPI SKSEPlugin_Load(const SKSE::LoadInterface* a_skse)
+SKSEPluginLoad(const SKSE::LoadInterface* a_skse)
 {
-	constexpr auto PLUGIN_NAME = "SexLabUtil"sv;
-	const auto InitLogger = [&]() -> bool {
-#ifndef NDEBUG
-		auto sink = std::make_shared<spdlog::sinks::msvc_sink_mt>();
-#else
-		auto path = logger::log_directory();
-		if (!path)
-			return false;
-		*path /= std::format("{}.log", PLUGIN_NAME);
-		auto sink = std::make_shared<spdlog::sinks::basic_file_sink_mt>(path->string(), true);
-#endif
-		auto log = std::make_shared<spdlog::logger>("global log"s, std::move(sink));
-		log->set_level(spdlog::level::info);
-		log->flush_on(spdlog::level::info);
-		spdlog::set_default_logger(std::move(log));
-#ifndef NDEBUG
-		spdlog::set_pattern("%s(%#): [%T] [%^%l%$] %v"s);
-#else
-		spdlog::set_pattern("[%T] [%^%l%$] %v"s);
-#endif
-		return true;
-	};
-
 	if (a_skse->IsEditor()) {
 		logger::critical("Loaded in editor, marking as incompatible");
 		return false;
-	} else if (!InitLogger()) {
-		logger::critical("Failed to initialize logger");
-		return false;
 	}
 
-	SKSE::Init(a_skse);
-	logger::info("{} loaded", PLUGIN_NAME);
+	SKSE::Init(a_skse, true);
+#ifndef NDEBUG
+	spdlog::set_pattern("%s(%#): [%T] [%^%l%$] %v"s);
+#else
+	spdlog::set_pattern("[%T] [%^%l%$] %v"s);
+#endif
 
 	const auto msging = SKSE::GetMessagingInterface();
 	if (!msging->RegisterListener("SKSE", SKSEMessageHandler)) {

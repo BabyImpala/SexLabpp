@@ -5,6 +5,7 @@
 #include "Registry/Util/RayCast.h"
 #include "Registry/Util/RayCast/ObjectBound.h"
 #include "Registry/Util/Scale.h"
+#include "SexLabPPlusAPI_Impl.h"
 #include "Thread/Collision/CollisionHandler.h"
 #include "Thread/NiNode/Node.h"
 #include "Thread/Thread.h"
@@ -231,7 +232,7 @@ namespace Papyrus::ThreadModel
 					if (form->IsWeapon() && !weapon) {
 						continue;
 					} else if (const auto biped = form->As<RE::BGSBipedObjectForm>()) {
-						const auto biped_slots = static_cast<uint32_t>(biped->GetSlotMask());
+						const auto biped_slots = static_cast<uint32_t>(biped->GetSlotMask().underlying());
 						if ((biped_slots & slots) == 0) {
 							continue;
 						}
@@ -448,6 +449,19 @@ namespace Papyrus::ThreadModel
 		instance->UpdatePlacement(a_position);
 	}
 
+	void DispatchSceneEventNative(QUESTARGS, int a_event, RE::Actor* a_actor)
+	{
+		if (a_event < 0 || a_event >= static_cast<int>(SLPP::SceneEvent::Total)) {
+			a_vm->TraceStack("Invalid scene event", a_stackID);
+			return;
+		}
+		if (!Thread::Instance::GetInstance(a_qst)) {
+			a_vm->TraceStack("Thread instance not found", a_stackID);
+			return;
+		}
+		SLPP::DispatchSceneEvent(static_cast<SLPP::SceneEvent>(a_event), a_qst, a_actor);
+	}
+
 	bool GetIsCompatiblecenter(QUESTARGS, RE::BSFixedString a_sceneid, RE::TESObjectREFR* a_center)
 	{
 		if (!a_center) {
@@ -483,13 +497,14 @@ namespace Papyrus::ThreadModel
 			return {};
 		}
 		std::vector<int> ret{};
+		ret.resize(static_cast<size_t>(Thread::NiNode::Interaction::Action::Total), 0);
 		process->VisitPositions([&](auto& p) {
 			if (a_position && p.actor->formID != a_position->formID)
 				return false;
 			for (auto&& type : p.interactions) {
 				if (a_partner && type.partner->formID != a_partner->formID)
 					continue;
-				ret.push_back(static_cast<int>(type.action));
+				ret[static_cast<size_t>(type.action)] = true;
 			}
 			return false;
 		});
@@ -571,13 +586,13 @@ namespace Papyrus::ThreadModel
 	{
 		if (!a_position) {
 			a_vm->TraceStack("Actor is none", a_stackID);
-			return {};
+			return nullptr;
 		}
 		GET_INSTANCE({});
 		auto process = instance->GetNiInstance();
 		if (!process) {
 			a_vm->TraceStack("Not registered", a_stackID);
-			return {};
+			return nullptr;
 		}
 		RE::Actor* ret = nullptr;
 		process->VisitPositions([&](auto& p) {

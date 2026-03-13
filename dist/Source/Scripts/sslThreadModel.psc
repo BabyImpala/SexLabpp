@@ -1059,8 +1059,10 @@ State Animating
 		StartedAt = SexLabUtil.GetCurrentGameRealTime()
 		StartStage(Utility.CreateStringArray(0), "")
 		SendThreadEvent("AnimationStart")
+		DispatchSceneEventNative(SCENEEVENT_AnimationStart)
 		If(LeadIn)
 			SendThreadEvent("LeadInStart")
+			DispatchSceneEventNative(SCENEEVENT_LeadInStart)
 		EndIf
 	EndFunction
 
@@ -1074,6 +1076,7 @@ State Animating
 				return false
 			EndIf
 			SortAliasesToPositions()
+			DispatchSceneEventNative(SCENEEVENT_AnimationChange)
 		EndIf
 		int[] strips_ = SexLabRegistry.GetStripDataA(currentScene, "")
 		int[] sex_ = SexLabRegistry.GetPositionSexA(currentScene)
@@ -1090,6 +1093,7 @@ State Animating
 	Function PlayNext(int aiNextBranch)
 		UnregisterForUpdate()
 		SendThreadEvent("StageEnd")
+		DispatchSceneEventNative(SCENEEVENT_StageEnd)
 		RunHook(Config.HOOKID_STAGEEND)
 		PlayNextImpl(SexLabRegistry.BranchTo(GetActiveScene(), GetActiveStage(), aiNextBranch))
 	EndFunction
@@ -1141,6 +1145,10 @@ State Animating
 	Function StartStage(String[] asHistory, String asNextStageId)
 		Log("Starting stage " + asNextStageId + " with history: " + asHistory, "StartStage()")
 		SendThreadEvent("StageStart")
+		DispatchSceneEventNative(SCENEEVENT_StageStart)
+		If (SexLabRegistry.GetNodeType(GetActiveScene(), asNextStageId) == 2)
+			DispatchSceneEventNative(SCENEEVENT_LastedStageStart)
+		EndIf
 		RunHook(Config.HOOKID_STAGESTART)
 		_StageHistory = AdvanceScene(asHistory, asNextStageId)
 		ReStartTimer()
@@ -1279,6 +1287,7 @@ State Animating
 			EndIf
 		Else
 			SendThreadEvent("ActorsRelocated")
+			DispatchSceneEventNative(SCENEEVENT_ActorsRelocated)
 		EndIf
 		SetFurnitureIgnored(true)
 	EndFunction
@@ -1289,6 +1298,7 @@ State Animating
 	
 	Function ChangeActors(Actor[] NewPositions)
 		SendThreadEvent("ActorChangeStart")
+		DispatchSceneEventNative(SCENEEVENT_ActorChangeStart)
 		Actor[] submissives = GetSubmissives()
 		Actor[] argSub = PapyrusUtil.ActorArray(NewPositions.Length)
 		int i = 0
@@ -1302,6 +1312,7 @@ State Animating
 		EndWhile
 		If (ResetAnimation(NewPositions, argSub, none))
 			SendThreadEvent("ActorChangeEnd")
+			DispatchSceneEventNative(SCENEEVENT_ActorChangeEnd)
 		Else
 			Log("Unable to change actors", "ChangeActorsEx()")
 		EndIf
@@ -1314,6 +1325,7 @@ State Animating
 		LeadIn = false
 		UnregisterForUpdate()
 		SendThreadEvent("LeadInEnd")
+		DispatchSceneEventNative(SCENEEVENT_LeadInEnd)
 		String[] nextSceneSet = GetCustomScenes()
 		If (!nextSceneSet.Length)
 			nextSceneSet = GetPrimaryScenes()
@@ -1332,6 +1344,9 @@ State Animating
 			If (SexLabRegistry.GetNodeType(GetActiveScene(), GetActiveStage()) == 2)
 				SendThreadEvent("OrgasmEnd")
 			EndIf
+		EndIf
+		If (SexLabRegistry.GetNodeType(GetActiveScene(), GetActiveStage()) == 2)
+			DispatchSceneEventNative(SCENEEVENT_LastedStageEnd)
 		EndIf
 		GoToState(STATE_END)
 	EndFunction
@@ -1410,12 +1425,27 @@ Function PlayStageAnimations()
 	RealignActors()
 EndFunction
 
+Int Property SCENEEVENT_ActorOrgasm		= 3	AutoReadOnly Hidden
+Int Property SCENEEVENT_LeadInStart		= 4	AutoReadOnly Hidden
+Int Property SCENEEVENT_LeadInEnd		= 5	AutoReadOnly Hidden
+Int Property SCENEEVENT_StageStart		= 6	AutoReadOnly Hidden
+Int Property SCENEEVENT_StageEnd			= 7	AutoReadOnly Hidden
+Int Property SCENEEVENT_LastedStageStart	= 8	AutoReadOnly Hidden
+Int Property SCENEEVENT_LastedStageEnd	= 9	AutoReadOnly Hidden
+Int Property SCENEEVENT_AnimationChange	= 10	AutoReadOnly Hidden
+Int Property SCENEEVENT_ActorsRelocated	= 12	AutoReadOnly Hidden
+Int Property SCENEEVENT_ActorChangeStart	= 13	AutoReadOnly Hidden
+Int Property SCENEEVENT_ActorChangeEnd		= 14	AutoReadOnly Hidden
+Int Property SCENEEVENT_AnimationStart	= 15	AutoReadOnly Hidden
+Int Property SCENEEVENT_AnimationEnd		= 16	AutoReadOnly Hidden
+
 ; Set location for all _Positions on CenterAlias, incl offset, and play their respected animation. _Positions are assumed to be sorted by scene
 String[] Function AdvanceScene(String[] asHistory, String asNextStageId) native
 int Function SelectNextStage(String[] asThreadTags) native
 bool Function SetActiveScene(String asScene) native
 bool Function ReassignCenter(ObjectReference CenterOn) native
 Function UpdatePlacement(Actor akActor) native
+Function DispatchSceneEventNative(Int aiEvent, Actor akActor = None) native
 ; Physics/SFX Related
 bool Function IsCollisionRegistered() native
 Function UnregisterCollision() native
@@ -1456,6 +1486,7 @@ State Ending
 		EndWhile
 		SendThreadEvent("AnimationEnding")
 		SendThreadEvent("AnimationEnd")
+		DispatchSceneEventNative(SCENEEVENT_AnimationEnd)
 		RunHook(Config.HOOKID_END)
 		; Cant use default OnUpdate() event as the previous state could leak a registration into this one here
 		; any attempt to prevent this leak without artificially slowing down the code have failed
@@ -1703,33 +1734,35 @@ EndFunction
 
 bool[] Function ListDetectedPhysicsInteractionsInternal(Actor akPosition, Actor akPartner)
 	bool[] phyActive = Utility.CreateBoolArray(SUPPORTED_INTER_COUNT, False)
-	phyActive[aAnimObjFace] = HasCollisionAction(CTYPE_AnimObjFace, akPartner, akPosition)
-	phyActive[pAnimObjFace] = HasCollisionAction(CTYPE_AnimObjFace, akPosition, akPartner)
-	phyActive[bKissing] = HasCollisionAction(CTYPE_Kissing, akPosition, akPartner)
-	phyActive[aSuckingToes] = HasCollisionAction(CTYPE_SuckingToes, akPosition, akPartner)
-	phyActive[pSuckingToes] = HasCollisionAction(CTYPE_SuckingToes, akPartner, akPosition)
-	phyActive[aFacial] = HasCollisionAction(CTYPE_Facial, akPartner, akPosition)
-	phyActive[pFacial] = HasCollisionAction(CTYPE_Facial, akPosition, akPartner)
-	phyActive[aGrinding] = HasCollisionAction(CTYPE_Grinding, akPartner, akPosition)
-	phyActive[pGrinding] = HasCollisionAction(CTYPE_Grinding, akPosition, akPartner)
-	phyActive[aHandJob] = HasCollisionAction(CTYPE_HandJob, akPosition, akPartner)
-	phyActive[pHandJob] = HasCollisionAction(CTYPE_HandJob, akPartner, akPosition)
-	phyActive[aFootJob] = HasCollisionAction(CTYPE_FootJob, akPosition, akPartner)
-	phyActive[pFootJob] = HasCollisionAction(CTYPE_FootJob, akPartner, akPosition)
+	int[] active = GetCollisionActions(akPosition, akPartner)
+	int[] passive = GetCollisionActions(akPartner, akPosition)
+	phyActive[aAnimObjFace] = passive[CTYPE_AnimObjFace] > 0
+	phyActive[pAnimObjFace] = active[CTYPE_AnimObjFace] > 0
+	phyActive[bKissing] = active[CTYPE_Kissing] > 0
+	phyActive[aSuckingToes] = active[CTYPE_SuckingToes] > 0
+	phyActive[pSuckingToes] = passive[CTYPE_SuckingToes] > 0
+	phyActive[aFacial] = passive[CTYPE_Facial] > 0
+	phyActive[pFacial] = active[CTYPE_Facial] > 0
+	phyActive[aGrinding] = passive[CTYPE_Grinding] > 0
+	phyActive[pGrinding] = active[CTYPE_Grinding] > 0
+	phyActive[aHandJob] = active[CTYPE_HandJob] > 0
+	phyActive[pHandJob] = passive[CTYPE_HandJob] > 0
+	phyActive[aFootJob] = active[CTYPE_FootJob] > 0
+	phyActive[pFootJob] = passive[CTYPE_FootJob] > 0
 	;phyActive[aBoobJob] = False 	; awaiting support
 	;phyActive[pBoobJob] = False	; awaiting support
-	phyActive[aLickingShaft] = HasCollisionAction(CTYPE_LickingShaft, akPosition, akPartner)
-	phyActive[pLickingShaft] = HasCollisionAction(CTYPE_LickingShaft, akPartner, akPosition)
-	phyActive[aOral] = HasCollisionAction(CTYPE_Oral, akPosition, akPartner)
-	phyActive[pOral] = HasCollisionAction(CTYPE_Oral, akPartner, akPosition)
-	phyActive[aDeepthroat] = HasCollisionAction(CTYPE_Deepthroat, akPosition, akPartner)
-	phyActive[pDeepthroat] = HasCollisionAction(CTYPE_Deepthroat, akPartner, akPosition)
-	phyActive[aSkullfuck] = HasCollisionAction(CTYPE_Skullfuck, akPartner, akPosition)
-	phyActive[pSkullfuck] = HasCollisionAction(CTYPE_Skullfuck, akPosition, akPartner)
-	phyActive[aVaginal] = HasCollisionAction(CTYPE_Vaginal, akPartner, akPosition)
-	phyActive[pVaginal] = HasCollisionAction(CTYPE_Vaginal, akPosition, akPartner)
-	phyActive[aAnal] = HasCollisionAction(CTYPE_Anal, akPartner, akPosition)
-	phyActive[pAnal] = HasCollisionAction(CTYPE_Anal, akPosition, akPartner)
+	phyActive[aLickingShaft] = active[CTYPE_LickingShaft] > 0
+	phyActive[pLickingShaft] = passive[CTYPE_LickingShaft] > 0
+	phyActive[aOral] = active[CTYPE_Oral] > 0
+	phyActive[pOral] = passive[CTYPE_Oral] > 0
+	phyActive[aDeepthroat] = active[CTYPE_Deepthroat] > 0
+	phyActive[pDeepthroat] = passive[CTYPE_Deepthroat] > 0
+	phyActive[aSkullfuck] = passive[CTYPE_Skullfuck] > 0
+	phyActive[pSkullfuck] = active[CTYPE_Skullfuck] > 0
+	phyActive[aVaginal] = passive[CTYPE_Vaginal] > 0
+	phyActive[pVaginal] = active[CTYPE_Vaginal] > 0
+	phyActive[aAnal] = passive[CTYPE_Anal] > 0
+	phyActive[pAnal] = active[CTYPE_Anal] > 0
 	return phyActive
 EndFunction
 

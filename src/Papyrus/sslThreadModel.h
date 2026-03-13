@@ -49,7 +49,7 @@ namespace Papyrus::ThreadModel
 
 			return true;
 		}
-	}	 // namespace ActorAlias
+	}  // namespace ActorAlias
 
 	RE::BSFixedString GetActiveScene(QUESTARGS);
 	RE::BSFixedString GetActiveStage(QUESTARGS);
@@ -67,6 +67,7 @@ namespace Papyrus::ThreadModel
 	bool SetActiveScene(QUESTARGS, RE::BSFixedString a_sceneid);
 	bool ReassignCenter(QUESTARGS, RE::TESObjectREFR* a_centeron);
 	void UpdatePlacement(QUESTARGS, RE::Actor* a_position);
+	void DispatchSceneEventNative(QUESTARGS, int a_event, RE::Actor* a_actor);
 
 	bool IsCollisionRegistered(QUESTARGS);
 	void UnregisterCollision(QUESTARGS);
@@ -106,6 +107,7 @@ namespace Papyrus::ThreadModel
 		REGISTERFUNC(SetActiveScene, "sslThreadModel", false);
 		REGISTERFUNC(ReassignCenter, "sslThreadModel", false);
 		REGISTERFUNC(UpdatePlacement, "sslThreadModel", false);
+		REGISTERFUNC(DispatchSceneEventNative, "sslThreadModel", false);
 
 		REGISTERFUNC(IsCollisionRegistered, "sslThreadModel", true);
 		REGISTERFUNC(UnregisterCollision, "sslThreadModel", true);
@@ -130,4 +132,4 @@ namespace Papyrus::ThreadModel
 		return ActorAlias::Register(a_vm);
 	}
 
-}	 // namespace Papyrus::ThreadModel
+}  // namespace Papyrus::ThreadModel
