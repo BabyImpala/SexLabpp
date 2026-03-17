@@ -57,6 +57,9 @@ EndFunction
 int Function GetPositionIdx(Actor akActor)
 	return _Positions.Find(akActor)
 EndFunction
+Actor Function GetIdxPosition(int n)
+	return _Positions[n]
+EndFunction
 
 int Function GetActorSex(Actor akActor)
 	return GetNthPositionSex(GetPositionIdx(akActor))
@@ -1532,6 +1535,31 @@ Function SetFurnitureIgnored(bool disabling = true)
 	CenterRef.SetNoFavorAllowed(disabling)
 EndFunction
 
+int Function IndexTravelComplex(int curIdx, bool abReverse = false, Actor akSkip = None)
+	int posLen = _Positions.Length
+	If (posLen > 1)
+		int step = 1
+		If (abReverse)
+			step = -1
+		EndIf
+		int newIdx = (curIdx + step)
+		int i = 0
+		While (i < posLen)
+			If (newIdx >= posLen)
+				newIdx = 0
+			ElseIf (newIdx < 0)
+				newIdx = (posLen - 1)
+			EndIf
+			If (newIdx != curIdx) && (akSkip == None || _Positions[newIdx] != akSkip)
+				return newIdx
+			EndIf
+			newIdx += step
+			i += 1
+		EndWhile
+	EndIf
+	return curIdx
+EndFunction
+
 Function MoveActorsAwayFromPlayer(bool MovePlayer = false)
 	float adjOffset = 35.0
 	int moveDir = -1
@@ -2153,7 +2181,7 @@ EndFunction
 
 Function ProcessEnjGameArg(String arg, Actor akPartner)
 	Actor akTarget = None
-	If (Input.IsKeyPressed(Config.GameUtilityKey))
+	If (Input.IsKeyPressed(Config.ModifierKey))
 		akTarget = akPartner ;change partner enj
 	Else
 		akTarget = PlayerRef ;change self/player enj
@@ -2167,54 +2195,6 @@ Function ProcessEnjGameArg(String arg, Actor akPartner)
 			GameRaiseEnjoyment(akTarget)
 		EndIf
 	EndIf
-EndFunction
-
-Actor Function GameChangePartner(Actor akActor, int idx = -1)
-	Actor akPartner = akActor
-	If (_Positions.Length > 1)
-		If (idx < 0)
-			int idxPartner = sslUtility.IndexTravel(GetPositionIdx(akActor), _Positions.Length)
-			akPartner = ActorAlias[idxPartner].GetActorRef()
-			If (akActor == PlayerRef)
-				Log("[EnjGame] Player's current partner is " + akPartner.GetDisplayName())
-			EndIf
-		Else
-			akPartner = ActorAlias[idx].GetActorRef()
-			If ((akPartner != akActor) && (akActor == PlayerRef))
-				Config.SelectedSpell.Cast(akPartner, akPartner)
-				Log("[EnjGame] Player changed focus to " + akPartner.GetDisplayName())
-			EndIf
-		EndIf
-	EndIf
-	return akPartner
-EndFunction
-
-int Function GameNextPartnerIdx(Actor akActor, Actor akPartner, bool abReverse)
-	int PartnerIdx = GetPositionIdx(akPartner)
-    If (Positions.Length <= 2)
-        return PartnerIdx
-    EndIf
-	int ActorIdx = GetPositionIdx(akActor)
-    int step = 1
-    If (abReverse)
-        step = -1
-    EndIf
-    int NewIdx = (PartnerIdx + step)
-	int PosLen = Positions.Length
-    int i = 0
-    While (i < PosLen)
-        If (NewIdx >= PosLen)
-            NewIdx = 0
-        ElseIf (NewIdx < 0)
-            NewIdx = PosLen - 1
-        EndIf
-        If (NewIdx != ActorIdx) && (NewIdx != PartnerIdx)
-            return NewIdx
-        EndIf
-        NewIdx += step
-        i += 1
-    EndWhile
-    return PartnerIdx
 EndFunction
 
 Function EnjBasedSkipToLastStage(bool abSkip)
