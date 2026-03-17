@@ -142,8 +142,8 @@ Settings::KeyType Settings::GetKeyType(uint32_t a_keyCode)
 		return KeyType::Select;
 	if (a_keyCode == get(Settings::iKeyEnd))
 		return KeyType::End;
-	if (a_keyCode == get(Settings::iKeyExtra2))
-		return KeyType::Extra2;
+	if (a_keyCode == get(Settings::iKeyMenu))
+		return KeyType::Menu;
 	if (a_keyCode == get(Settings::iKeyMod))
 		return KeyType::Modes;
 	if (a_keyCode == get(Settings::iKeyReset))
@@ -169,8 +169,8 @@ uint32_t Settings::GetKeyCode(KeyType a_keyType)
 		return get(Settings::iKeyAdvance);
 	case KeyType::End:
 		return get(Settings::iKeyEnd);
-	case KeyType::Extra2:
-		return get(Settings::iKeyExtra2);
+	case KeyType::Menu:
+		return get(Settings::iKeyMenu);
 	case KeyType::Modes:
 		return get(Settings::iKeyMod);
 	case KeyType::Reset:
