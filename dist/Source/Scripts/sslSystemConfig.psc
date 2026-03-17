@@ -755,29 +755,47 @@ Event OnKeyDown(int keyCode)
     return
   ElseIf (keyCode == ToggleFreeCamera)
     SexLabUtil.ToggleFreeCamera()
-  ElseIf (keyCode == TargetActor)
-    If (_ActiveControl && !_ActiveControl.HasPlayer)
-      DisableThreadControl(_ActiveControl)
-    Else
-      SetTargetActor()
-    EndIf
+  ElseIf (keyCode == TargetActor && !_ActiveControl)
+    SetTargetActor(_CrosshairRef, true)
+  ElseIf (keyCode == ToggleThreadControl)
+    ToggleThreadControl()
   EndIf
 EndEvent
 
-Function SetTargetActor()
-  If (!_CrosshairRef)
+Function SetTargetActor(Actor akActor = None, bool abThreadControl = false)
+  If (!akActor || akActor == Game.GetPlayer())
     return
   EndIf
-  TargetRef = _CrosshairRef
-  SelectedSpell.Cast(TargetRef, TargetRef)
-  Debug.Notification("SexLab Target Selected: " + TargetRef.GetLeveledActorBase().GetName())
-  ; Attempt to grab control of their animation?
-  sslThreadController TargetThread = ThreadSlots.GetActorController(TargetRef)
-  If (TargetThread && !TargetThread.HasPlayer && TargetThread.GetStatus() == TargetThread.STATUS_INSCENE && \
-        !ThreadSlots.GetActorController(Game.GetPlayer()) && TakeThreadControl.Show())
-    GetThreadControl(TargetThread)
-    ;Comeback: Revise below after UI update
-    _ActiveControl.StartStage(_ActiveControl.GetStageHistory(), _ActiveControl.GetActiveStage())
+  TargetRef = akActor
+  If (abThreadControl)
+    ToggleThreadControl()
+  EndIf
+EndFunction
+
+Function ToggleThreadControl()
+  If (_ActiveControl)
+    DisableThreadControl(_ActiveControl)
+    return
+  EndIf
+  Actor akTarget = None
+  If (Game.GetPlayer().IsInFaction(AnimatingFaction))
+    akTarget = Game.GetPlayer()
+  ElseIf (TargetRef)
+    akTarget = TargetRef
+  Else
+    return
+  EndIf
+  Debug.Notification("SexLab target selected: " + SexLabUtil.ActorName(akTarget))
+  SelectedSpell.Cast(akTarget)
+  SexLabThread TargetThread = ThreadSlots.GetThreadByActor(akTarget)
+  If (TargetThread && TargetThread.GetStatus() == TargetThread.STATUS_INSCENE)
+    Log("AttemptThreadControl(), Attempting thread control for actor: " + SexLabUtil.ActorName(akTarget))
+    If (TakeThreadControl.Show())
+      GetThreadControl(TargetThread as sslThreadController)
+      If (UseSceneMenu) ;Comeback: Reasses need after UI update
+        _ActiveControl.RealignActors()
+      EndIf
+    EndIf
   EndIf
 EndFunction
 
@@ -848,6 +866,7 @@ Function DisableThreadControl(sslThreadController TargetThread)
   If (!_ActiveControl || _ActiveControl != TargetThread)
     return
   EndIf
+  TargetRef = None
   ; Release players thread control
   _ActiveControl.DisableHotkeys()
   _ActiveControl.AutoAdvance = true
@@ -1081,6 +1100,7 @@ Function Reload()
   UnregisterForAllKeys()
   RegisterForKey(ToggleFreeCamera)
   RegisterForKey(TargetActor)
+  RegisterForKey(ToggleThreadControl)
 
   AddRemoveMatchmakerSpells()
   DisableThreadControl(_ActiveControl)
