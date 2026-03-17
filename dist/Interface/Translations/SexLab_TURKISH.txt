@@ -239,6 +239,10 @@ $SSL_bShowInMap	Show Scenes on Map
 $SSL_bShowInMapHighlight	Get a miscellaneous quest marker for each scene playing nearby (except the ones you are participating in yourself).
 $SSL_bSetAnimSpeedByEnjoyment	Enjoyment affected Animation Speed
 $SSL_bSetAnimSpeedByEnjoymentHighlight	Base animation speed changes depending on actor enjoyment (+/-20%).
+$SSL_AdjustStage    Adjust Stage Only
+$SSL_AdjustStageHighlight    Toggles whether all edits to position/stage offsets will apply for currently playing stage only.
+$SSL_fAdjustStepSize    Offset Step Size
+$SSL_fAdjustStepSizeHighlight   Determines the step size for offset adjustments.
 $SSL_FurnitureNPC	Furniture Use: NPC
 $SSL_FurnitureNPCHighlight	Decide how NPC use Furniture. Specifically, decide if NPC use the furniture scenes over regular ones, when available.
 $SSL_AskNotSub	Ask (Unless Submissive)
@@ -310,6 +314,9 @@ $SSL_WolfVoice01	[SL] Wolf Default
 # ------------------Player Hotkeys--------------------------------------------------
 $SSL_PlayerHotkeys	Player Hotkeys
 
+$SSL_bUseSceneMenu  Use Scene Menu
+SSL_bUseSceneMenuHighlight  Toggles the use of the native in-scene menu and enjoyment bars.\nDisable this only if the scene menu causes crashes or you prefer legacy SL's hotkey approach.
+
 # ------ Global SexLab Hotkeys
 $SSL_GlobalHotkeys	Global SexLab Hotkeys
 
@@ -328,12 +335,18 @@ $SSL_iKeyLeft	Decrease Speed / Left
 $SSL_iKeyRight	Increase Speed / Right
 $SSL_iKeyAdvance	Advance Scene / Select
 $SSL_iKeyEnd	End Scene / Close Menu / Back
-$SSL_iKeyExtra1	Open Menu / Swap Menu Tab
-$SSL_iKeyExtra2	Open Menu / Swap Menu Tab
+$SSL_iKeyMenu   Open Menu / Swap Menu Tab
 $SSL_iKeyMod	Modifier
 $SSL_iKeyReset	Inverse Action
+
+$SSL_LegacyHotkeys  Legacy Hotkeys
 $SSL_iChangeAnimation	Change Animation
 $SSL_iMoveScene	Move Scene
+$SSL_iChangePositions   Change Positions
+$SSL_iOffsetAdjustMode  Cycle Offset Adjust Modes
+$SSL_iOffsetAdjustModeHighlight Hotkey to switch between the 5 offset adjust modes when in scene.\nNone: Offset adjustments are disabled (default).\nPOS-XY: L/R keys adjust position's X, U/D adjust Y.\nPOS-RZ: L/R adjust pos's Rotation, U/D adjust Z.\nSCENE-XY: L/R adjust scene's X, U/D adjust Y (furniture scene only).\nSCENE-RZ: L/R adjust scene's Rotation, U/D adjust Z (furniture only).
+$SSL_iToggleAdjustStage Toggle Adjust Stage
+$SSL_iRestoreOffsets    Reset Offset Adjustments
 
 # ------------------- Timers & Stripping -------------------------------------------------
 $SSL_TimersStripping	Timers & Stripping
