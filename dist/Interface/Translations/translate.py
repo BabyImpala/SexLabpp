@@ -1,6 +1,6 @@
 import shutil
-from os import listdir
-from os.path import isfile, join
+from pathlib import Path
+import sys
 
 languages = [
   "CHINESE",
@@ -24,15 +24,23 @@ translated_languages = [
   "RUSSIAN",
 ]
 
-path = "Interface\\Translations"
-f_english = [f for f in listdir(path) if isfile(join(path, f)) and f.endswith("ENGLISH.txt")]
+script_dir = Path(__file__).parent.resolve()
+if script_dir.name == "Translations":
+  translations_dir = script_dir
+else:
+  translations_dir = script_dir / "Interface" / "Translations"
 
-if len(f_english) < 1:
-  print("Missing Translation_ENGLISH.txt in directory")
-  exit()
+if not translations_dir.exists():
+  print(f"Error: Could not find Translations directory at {translations_dir}")
+  sys.exit(1)
 
-f_raw = f_english[0].replace("ENGLISH.txt", "")
-en_path = join(path, f_english[0])
+f_english = list(translations_dir.glob("*ENGLISH.txt"))
+if not f_english:
+  print(f"Missing ENGLISH.txt in {translations_dir}")
+  sys.exit(1)
+
+en_path = f_english[0]
+f_raw = en_path.name.replace("ENGLISH.txt", "")
 
 def parse_file(file_path):
   with open(file_path, 'r', encoding='utf-16le') as file:
@@ -58,7 +66,7 @@ def copy_new_keys(file_path):
         l_file.write(line)
 
 for l in languages:
-  new_path = join(path, f_raw + l + ".txt")
+  new_path = translations_dir / (f_raw + l + ".txt")
   print(f"Processing {new_path}")
   if l in translated_languages:
     print(f"Copying new keys to {l}")
