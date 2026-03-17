@@ -370,6 +370,8 @@ Function AnimationSettings()
 	AddStateOptionBool("bShowInMap", "$SSL_bShowInMap")
 	AddStateOptionBool("bHideHUD", "$SSL_bHideHUD")
 	AddStateOptionBool("bSetAnimSpeedByEnjoyment", "$SSL_bSetAnimSpeedByEnjoyment")
+	AddStateOptionBool("bAdjustStage", "$SSL_AdjustStage")
+	AddStateOptionSlider("fAdjustStepSize", "$SSL_fAdjustStepSize", 0.5, 0, 5, 0.1, "{1}")
 	AddMenuOptionST("FurnitureNPC", "$SSL_FurnitureNPC", _NPCFurnOpt[sslSystemConfig.GetSettingInt("iNPCBed")])
 	AddMenuOptionST("FurniturePlayer", "$SSL_FurniturePlayer", _PlFurnOpt[sslSystemConfig.GetSettingInt("iAskBed")])
 EndFunction
@@ -837,11 +839,11 @@ Function EnjoymentSettings()
 	AddStateOptionBool("bGameSpamDelayPenalty", "$SSL_bGameSpamDelayPenalty", game_flag)
 
 	AddHeaderOption("Game Hotkeys", game_header)
-	AddStateOptionKey("iGameUtilityKey", "$SSL_iGameUtilityKey", true, true, abDisable=game_flag)
+	AddStateOptionKey("iKeyMod", "$SSL_iGameUtilityKey", true, true, abDisable=game_flag)
 	AddStateOptionKey("iGamePauseKey", "$SSL_iGamePauseKey", true, true, abDisable=game_flag)
 	AddStateOptionKey("iGameRaiseEnjKey", "$SSL_iGameRaiseEnjKey", true, true, abDisable=game_flag)
 	AddStateOptionKey("iGameHoldbackKey", "$SSL_iGameHoldbackKey", true, true, abDisable=game_flag)
-	AddStateOptionKey("iGameSelectNextPos", "$SSL_iGameSelectNextPos", true, true, abDisable=game_flag)
+	AddStateOptionKey("iTargetActor", "$SSL_iGameSelectNextPos", true, true, abDisable=game_flag)
 
 	AddEmptyOption()
 	AddStateOptionSlider("fPainHugePPMult", "$SSL_fPainHugePPMult", 0.5, 0, 2, 0.1, "{1}", enj_flag)
@@ -1469,27 +1471,55 @@ EndEvent
 ; ------------------------------------------------------- ;
 
 function PlayerHotkeys()
-	SetCursorFillMode(LEFT_TO_RIGHT)
+	SetCursorFillMode(TOP_TO_BOTTOM)
 
 	AddHeaderOption("$SSL_GlobalHotkeys")
-	AddEmptyOption()
 	AddStateOptionKey("iTargetActor", "$SSL_iTargetActor", needsRegister = true)
-	AddStateOptionKey("iToggleFreeCamera", "$SSL_iToggleFreeCamera", needsRegister = true)
+	AddStateOptionKey("iToggleThreadControl", "$SSL_iToggleThreadControl", needsRegister = true)
 
 	AddHeaderOption("$SSL_SceneManipulation")
-	AddEmptyOption()
 	AddStateOptionKey("iKeyUp", "$SSL_iKeyUp", true, true)
-	AddStateOptionKey("iKeyExtra2", "$SSL_iKeyExtra2", true, true) ;open SL menu
 	AddStateOptionKey("iKeyDown", "$SSL_iKeyDown", true, true)
-	AddStateOptionKey("iKeyMod", "$SSL_iKeyMod", true, true) ;modifier
 	AddStateOptionKey("iKeyLeft", "$SSL_iKeyLeft", true, true)
-	AddStateOptionKey("iKeyReset", "$SSL_iKeyReset", true, true) ;inverse action
 	AddStateOptionKey("iKeyRight", "$SSL_iKeyRight", true, true)
-	AddStateOptionKey("iMoveScene", "$SSL_iMoveScene", true, true)
 	AddStateOptionKey("iKeyAdvance", "$SSL_iKeyAdvance", true, true)
-	AddStateOptionKey("iChangeAnimation", "$SSL_iChangeAnimation", true, true)
 	AddStateOptionKey("iKeyEnd", "$SSL_iKeyEnd", true, true)
-endFunction
+	AddStateOptionKey("iKeyMenu", "$SSL_iKeyMenu", true, true) ;open SL menu
+	AddStateOptionKey("iKeyMod", "$SSL_iKeyMod", true, true) ;modifier
+	AddStateOptionKey("iKeyReset", "$SSL_iKeyReset", true, true) ;inverse action
+
+	SetCursorPosition(1)
+
+	AddEmptyOption()
+	AddStateOptionKey("iToggleFreeCamera", "$SSL_iToggleFreeCamera", needsRegister = true)
+	AddToggleOptionST("UseSceneMenu", "$SSL_bUseSceneMenu", Config.UseSceneMenu)
+	bool menu_flag = !Config.UseSceneMenu
+	AddEmptyOption()
+	
+	AddHeaderOption("$SSL_LegacyHotkeys")
+	AddStateOptionKey("iChangeAnimation", "$SSL_iChangeAnimation", true, true)
+	AddStateOptionKey("iMoveScene", "$SSL_iMoveScene", true, true)
+	AddStateOptionKey("iChangePositions", "$SSL_iChangePositions", true, true, abDisable=menu_flag)
+	AddStateOptionKey("iOffsetAdjustMode", "$SSL_iOffsetAdjustMode", true, true, abDisable=menu_flag)
+	AddStateOptionKey("iToggleAdjustStage", "$SSL_iToggleAdjustStage", true, true, abDisable=menu_flag)
+	AddStateOptionKey("iRestoreOffsets", "$SSL_iRestoreOffsets", true, true, abDisable=menu_flag)
+EndFunction
+
+State UseSceneMenu
+	Event OnSelectST()
+		Config.UseSceneMenu = !Config.UseSceneMenu
+		SetToggleOptionValueST(Config.UseSceneMenu)
+		ForcePageReset()
+	EndEvent
+	Event OnDefaultST()
+		Config.UseSceneMenu = True
+		SetToggleOptionValueST(Config.UseSceneMenu)
+		ForcePageReset()
+	EndEvent
+	Event OnHighlightST()
+		SetInfoText("$SSL_bUseSceneMenuHighlight")
+	EndEvent
+EndState
 
 State ForceRegisterVoices
   Event OnSelectST()

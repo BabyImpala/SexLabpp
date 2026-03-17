@@ -31,37 +31,44 @@ MCM_SETTING(iLovenseStrengthOrgasm, 20)
 MCM_SETTING(fLovenseDurationOrgasm, 8)
 
 // KeyBinds/Scene Control Related
-MCM_SETTING(iKeyUp, 0xC8)		// Up Arrow
-MCM_SETTING(iKeyDown, 0xD0)		// Down Arrow
-MCM_SETTING(iKeyLeft, 0xCB)		// Left Arrow
-MCM_SETTING(iKeyRight, 0xCD)	// Right Arrow
-MCM_SETTING(iKeyAdvance, 0x39)	// Space
-MCM_SETTING(iKeyEnd, 0xCF)		// End
-MCM_SETTING(iKeyExtra2, 0x12)	// E
-MCM_SETTING(iKeyMod, 0x2A)		// Shift
-MCM_SETTING(iKeyReset, 0x1D)	// Ctrl
+MCM_SETTING(iKeyUp, 0xC8)                  // Up Arrow
+MCM_SETTING(iKeyDown, 0xD0)                // Down Arrow
+MCM_SETTING(iKeyLeft, 0xCB)                // Left Arrow
+MCM_SETTING(iKeyRight, 0xCD)               // Right Arrow
+MCM_SETTING(iKeyAdvance, 0x39)             // Space
+MCM_SETTING(iKeyEnd, 0xCF)                 // End
+MCM_SETTING(iKeyMenu, 0x12)                // E
+MCM_SETTING(iKeyMod, 0x2A)                 // Shift
+MCM_SETTING(iKeyReset, 0x1D)               // Ctrl
 
-MCM_SETTING(iToggleFreeCamera, 81)
-MCM_SETTING(iTargetActor, 49)
+MCM_SETTING(iToggleFreeCamera, 0x51)       // Numpad 3
+MCM_SETTING(iTargetActor, 0x31)            // N
+MCM_SETTING(iToggleThreadControl, 0x14)    // T
+
+MCM_SETTING(iMoveScene, 0x25)              // K
+MCM_SETTING(iChangeAnimation, 0x18)        // O
+MCM_SETTING(iChangePositions, 0x0D)        // Numpad Enter
+MCM_SETTING(iOffsetAdjustMode, 0x4E)       // Numpad +
+MCM_SETTING(iToggleAdjustStage, 0x52)      // Numpad 0
+MCM_SETTING(iRestoreOffsets, 0x4A)         // Numpad -
 
 // TODO: Add these to MCM
-MCM_SETTING(bAdjustTargetStage, false)
 MCM_SETTING(fAdjustStepSize, 0.5f)
 MCM_SETTING(bAdjustStage, true)
 
 MCM_SETTING(bHideHUD, false)
-MCM_SETTING(bHideUI, false)
+MCM_SETTING(bUseSceneMenu, true)
 
 // MCM_SETTING(iAdjustStage, 157)
 // MCM_SETTING(iBackwards, 54)
-MCM_SETTING(iChangeAnimation, 24)
+// MCM_SETTING(iChangeAnimation, 24)
 // MCM_SETTING(iChangePositions, 13)
 // MCM_SETTING(iAdjustChange, 37)
 // MCM_SETTING(iAdjustForward, 38)
 // MCM_SETTING(iAdjustSideways, 40)
 // MCM_SETTING(iAdjustUpward, 39)
 // MCM_SETTING(iRealignActors, 26)
-MCM_SETTING(iMoveScene, 27)
+// MCM_SETTING(iMoveScene, 27)
 // MCM_SETTING(iRestoreOffsets, 12)
 // MCM_SETTING(iRotateScene, 22)
 // MCM_SETTING(iAdjustSchlong, 46)
@@ -109,11 +116,9 @@ MCM_SETTING(fEnjMultSub, 0.8f)
 MCM_SETTING(fEnjMultDom, 1.2f)
 MCM_SETTING(fPainHugePPMult, 0.5f)
 
-MCM_SETTING(iGameUtilityKey, 42)
-MCM_SETTING(iGamePauseKey, 48)
-MCM_SETTING(iGameRaiseEnjKey, 256)
-MCM_SETTING(iGameHoldbackKey, 257)
-MCM_SETTING(iGameSelectNextPos, 34)
+MCM_SETTING(iGamePauseKey, 0x19)           // P
+MCM_SETTING(iGameRaiseEnjKey, 0x100)       // RMB
+MCM_SETTING(iGameHoldbackKey, 0x101)       // LMB
 
 MCM_SETTING(iEnjGameStaminaCost, 10)
 MCM_SETTING(iEnjGameMagickaCost, 10)
