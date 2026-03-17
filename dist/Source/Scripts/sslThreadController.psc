@@ -208,20 +208,26 @@ int Function GetOffsetIdx(String asOffsetType)
 	return types.Find(asOffsetType)
 EndFunction
 
-Function SetSceneOffset(float afOffsetValue, String asOffsetType)
+Function SetSceneOffset(float afOffsetValue, String asOffsetType, bool abIncrement = false)
 	String activeScene = GetActiveScene()
 	int idx = GetOffsetIdx(asOffsetType)
+	If (abIncrement)
+		afOffsetValue += SexLabRegistry.GetSceneOffset(activeScene)[idx]
+	EndIf
 	SexLabRegistry.SetSceneOffset(activeScene, afOffsetValue, idx)
 	ResetStage()
 EndFunction
 
-Function SetStageOffset(Actor akAffectedActor, float afOffsetValue, String asOffsetType)
+Function SetStageOffset(Actor akAffectedActor, float afOffsetValue, String asOffsetType, bool abIncrement = false)
 	int idx = GetOffsetIdx(asOffsetType)
 	int n = GetPositions().Find(akAffectedActor)
 	String activeScene = GetActiveScene()
 	String activeStage = ""
 	If (Config.AdjustStage)
 		activeStage = GetActiveStage()
+	EndIf
+	If (abIncrement)
+		afOffsetValue += SexLabRegistry.GetStageOffset(activeScene, activeStage, n)[idx]
 	EndIf
 	SexLabRegistry.SetStageOffset(activeScene, activeStage, n, afOffsetValue, idx)
 	UpdatePlacement(akAffectedActor)
@@ -263,27 +269,27 @@ bool _EnjGamePaused = False
 
 Function EnableTraditionalHotkeys()
 	InitLegacyHotkeys()
-	RegisterForKey(kChangeAnimation)
-	RegisterForKey(kMoveScene)
-	RegisterForKey(kModifierKey)
-	RegisterForKey(kChangeTargetActor)
+	RegisterForKey(Hotkeys[kChangeAnimation])
+	RegisterForKey(Hotkeys[kMoveScene])
+	RegisterForKey(Hotkeys[kModifierKey])
+	RegisterForKey(Hotkeys[kChangeTargetActor])
 	If (Config.GameEnabled && HasPlayer)
-		RegisterForKey(kGamePause)
-		RegisterForKey(kGameRaiseEnj)
-		RegisterForKey(kGameHoldback)
-		GetAdjustPos()	; initialize game partner
+		RegisterForKey(Hotkeys[kGamePause])
+		RegisterForKey(Hotkeys[kGameRaiseEnj])
+		RegisterForKey(Hotkeys[kGameHoldback])
+		GetAdjustPos()
 	EndIf
 	If (!Config.UseSceneMenu)
-		RegisterForKey(kAdvanceAnimation)
-		RegisterForKey(kEndAnimation)
-		RegisterForKey(kChangePositions)
-		RegisterForKey(kOffsetAdjustMode)
-		RegisterForKey(kToggleAdjustStage)
-		RegisterForKey(kRestoreOffsets)
-		RegisterForKey(kDirectionUp)
-		RegisterForKey(kDirectionDown)
-		RegisterForKey(kDirectionLeft)
-		RegisterForKey(kDirectionRight)
+		RegisterForKey(Hotkeys[kAdvanceAnimation])
+		RegisterForKey(Hotkeys[kEndAnimation])
+		RegisterForKey(Hotkeys[kChangePositions])
+		RegisterForKey(Hotkeys[kOffsetAdjustMode])
+		RegisterForKey(Hotkeys[kToggleAdjustStage])
+		RegisterForKey(Hotkeys[kRestoreOffsets])
+		RegisterForKey(Hotkeys[kDirectionUp])
+		RegisterForKey(Hotkeys[kDirectionDown])
+		RegisterForKey(Hotkeys[kDirectionLeft])
+		RegisterForKey(Hotkeys[kDirectionRight])
 	EndIf
 EndFunction
 
@@ -296,48 +302,49 @@ Function DisableTraditionalHotkeys()
 EndFunction
 
 Event OnKeyDown(int aiKey)
-	If (Utility.IsInMenuMode() || _SkipHotkeyEvents || (aiKey == kModifierKey))
+	If (Utility.IsInMenuMode() || _SkipHotkeyEvents || (aiKey == Hotkeys[kModifierKey]))
 		return
 	EndIf
 	_SkipHotkeyEvents = true
 	; QoL+Shared
 	bool abModifier = Config.ModifierPressed()
-	If (aiKey == kChangeAnimation)
+	If (aiKey == Hotkeys[kChangeAnimation])
 		PickRandomScene("")
-	ElseIf (aiKey == kMoveScene)
+	ElseIf (aiKey == Hotkeys[kMoveScene])
 		MoveScene()
-	ElseIf (aiKey == kChangeTargetActor)
+	ElseIf (aiKey == Hotkeys[kChangeTargetActor])
 		ChangeTargetActor(abModifier)
 	EndIf
 	; EnjGame
 	If (Config.GameEnabled && HasPlayer)
-		If ((aiKey == Config.GamePauseKey) && (abModifier))
+		If ((aiKey == Hotkeys[kGamePause]) && abModifier)
 			_EnjGamePaused = !_EnjGamePaused
 			Log("[EnjGame] Game paused: " + _EnjGamePaused)
 		EndIf
 		If (!_EnjGamePaused)
-			If (aiKey == Config.GameRaiseEnjKey)
+			If (aiKey == Hotkeys[kGameRaiseEnj])
 				ProcessEnjGameArg("Stamina", _AdjustActor)
-			ElseIf (aiKey == Config.GameHoldbackKey)
+			ElseIf (aiKey == Hotkeys[kGameHoldback])
 				ProcessEnjGameArg("Magicka", _AdjustActor)
 			EndIf
 		EndIf
 	EndIf
 	; Legacy
 	If (Config.UseSceneMenu)
+		_SkipHotkeyEvents = false
 		return
 	EndIf
-	If (aiKey == kAdvanceAnimation)
+	If (aiKey == Hotkeys[kAdvanceAnimation])
 		AdvanceStage(abModifier)
-	ElseIf (aiKey == kEndAnimation)
+	ElseIf (aiKey == Hotkeys[kEndAnimation])
 		EndAnimation()
-	ElseIf (aiKey == kChangePositions)
+	ElseIf (aiKey == Hotkeys[kChangePositions])
 		ChangePositions(abModifier)
-	ElseIf (aiKey == kOffsetAdjustMode)
+	ElseIf (aiKey == Hotkeys[kOffsetAdjustMode])
 		CycleOffsetAdjustModes(abModifier)
-	ElseIf (aiKey == kToggleAdjustStage)
+	ElseIf (aiKey == Hotkeys[kToggleAdjustStage])
 		Config.AdjustStage = !Config.AdjustStage
-	ElseIf (aiKey == kRestoreOffsets)
+	ElseIf (aiKey == Hotkeys[kRestoreOffsets])
 		RestoreOffsets()
 	EndIf
 	If (_AdjustMode > AdjMode_None)
@@ -452,34 +459,31 @@ EndFunction
 
 string[] Function DetermineOffsetAdjustInputType(int aiKey)
 	string[] ret = Utility.CreateStringArray(2, "")
-	If ((aiKey != kDirectionUp) && (aiKey != kDirectionDown) && (aiKey != kDirectionLeft) && (aiKey != kDirectionRight))
+	If ((aiKey != Hotkeys[kDirectionUp]) && (aiKey != Hotkeys[kDirectionDown]) && \
+		(aiKey != Hotkeys[kDirectionLeft]) && (aiKey != Hotkeys[kDirectionRight]))
 		return ret
 	EndIf
-	bool abAdjustingRZ = (_AdjustMode == AdjMode_PosRZ)  || (_AdjustMode == AdjMode_SceneRZ)
-	If (aiKey == kDirectionLeft)
+	bool abAdjustingRZ = (_AdjustMode == AdjMode_PosRZ) || (_AdjustMode == AdjMode_SceneRZ)
+	If (aiKey == Hotkeys[kDirectionLeft])
 		ret[0] = "-"
-		If (abAdjustingRZ)
-			ret[1] = "R"
-		Else
+		ret[1] = "R"
+		If (!abAdjustingRZ)
 			ret[1] = "X"
 		EndIf
-	ElseIf (aiKey == kDirectionRight)
-		If (abAdjustingRZ)
-			ret[1] = "R"
-		Else
+	ElseIf (aiKey == Hotkeys[kDirectionRight])
+		ret[1] = "R"
+		If (!abAdjustingRZ)
 			ret[1] = "X"
 		EndIf
-	ElseIf (aiKey == kDirectionUp)
-		If (abAdjustingRZ)
-			ret[1] = "Z"
-		Else
+	ElseIf (aiKey == Hotkeys[kDirectionUp])
+		ret[1] = "Z"
+		If (!abAdjustingRZ)
 			ret[1] = "Y"
 		EndIf
-	ElseIf (aiKey == kDirectionDown)
+	ElseIf (aiKey == Hotkeys[kDirectionDown])
 		ret[0] = "-"
-		If (abAdjustingRZ)
-			ret[1] = "Z"
-		Else
+		ret[1] = "Z"
+		If (!abAdjustingRZ)
 			ret[1] = "Y"
 		EndIf
 	EndIf
@@ -496,9 +500,9 @@ Function HandleOffsetAdjustment(String[] asOffsetType)
 	EndIf
 	bool abAdjustingPos = (_AdjustMode == AdjMode_PosXY)  || (_AdjustMode == AdjMode_PosRZ)
 	If (abAdjustingPos)
-		SetStageOffset(_AdjustActor, afValue, asOffsetType[1])
+		SetStageOffset(_AdjustActor, afValue, asOffsetType[1], true)
 	Else
-		SetSceneOffset(afValue, asOffsetType[1])
+		SetSceneOffset(afValue, asOffsetType[1], true)
 	EndIf
 EndFunction
 

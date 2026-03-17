@@ -1504,8 +1504,7 @@ function PlayerHotkeys()
 	AddEmptyOption()
 	AddStateOptionKey("iToggleFreeCamera", "$SSL_iToggleFreeCamera", needsRegister = true)
 	AddToggleOptionST("UseSceneMenu", "$SSL_bUseSceneMenu", Config.UseSceneMenu)
-	bool menu_flag = !Config.UseSceneMenu
-	AddEmptyOption()
+	bool menu_flag = Config.UseSceneMenu
 	
 	AddHeaderOption("$SSL_LegacyHotkeys")
 	AddStateOptionKey("iChangeAnimation", "$SSL_iChangeAnimation", true, true)
