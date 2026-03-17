@@ -258,6 +258,14 @@ bool property SubmissiveTarget hidden
 	  SetSettingBool("bSubmissiveTarget", aSet)
 	EndFunction
 EndProperty
+bool property AdjustStage Hidden
+  bool Function Get()
+    return GetSettingBool("bAdjustStage")
+  EndFunction
+  Function Set(bool abSet)
+    SetSettingBool("bAdjustStage", abSet)
+  EndFunction
+EndProperty
 float property AdjustStepSize hidden
   float Function Get()
     return GetSettingFlt("fAdjustStepSize")
@@ -265,6 +273,22 @@ float property AdjustStepSize hidden
   Function Set(float afSet)
     SetSettingFlt("fAdjustStepSize", afSet)
   EndFunction
+EndProperty
+bool property UseSceneMenu hidden
+  bool Function Get()
+    return GetSettingBool("bUseSceneMenu")
+  EndFunction
+  Function Set(bool aSet)
+    SetSettingBool("bUseSceneMenu", aSet)
+  EndFunction
+EndProperty
+bool property HideHUD hidden
+	bool Function Get()
+	  return GetSettingBool("bHideHUD")
+	EndFunction
+	Function Set(bool aSet)
+	  SetSettingBool("bHideHUD", aSet)
+	EndFunction
 EndProperty
 
 ; Integers
@@ -338,15 +362,6 @@ int property LipsSoundTime hidden
 EndProperty
 
 ; Scene Control Keys
-; TODO: Add support for legacy keybinds where possible
-bool property AdjustStage Hidden
-  bool Function Get()
-    return GetSettingBool("bAdjustStage")
-  EndFunction
-  Function Set(bool abSet)
-    SetSettingBool("bAdjustStage", abSet)
-  EndFunction
-EndProperty
 int property ModifierKey hidden
   int Function Get()
     return GetSettingInt("iKeyMod")
@@ -379,6 +394,22 @@ int property ChangePositions hidden
     SetSettingInt("iChangePositions", aiSet)
   EndFunction
 EndProperty
+int property MoveScene hidden
+  int Function Get()
+    return GetSettingInt("iMoveScene")
+  EndFunction
+  Function Set(int aiSet)
+    SetSettingInt("iMoveScene", aiSet)
+  EndFunction
+EndProperty
+int property EndAnimation hidden
+  int Function Get()
+    return GetSettingInt("iKeyEnd")
+  EndFunction
+  Function Set(int aiSet)
+    SetSettingInt("iKeyEnd", aiSet)
+  EndFunction
+EndProperty
 
 ; Offset Adjustment Keys
 int property OffsetAdjustMode hidden
@@ -395,6 +426,14 @@ int property ToggleAdjustStage hidden
   EndFunction
   Function Set(int aiSet)
     SetSettingInt("iToggleAdjustStage", aiSet)
+  EndFunction
+EndProperty
+int property RestoreOffsets hidden
+  int Function Get()
+    return GetSettingInt("iRestoreOffsets")
+  EndFunction
+  Function Set(int aiSet)
+    SetSettingInt("iRestoreOffsets", aiSet)
   EndFunction
 EndProperty
 int property DirectionUp hidden
@@ -429,96 +468,8 @@ int property DirectionRight hidden
     SetSettingInt("iKeyRight", aiSet)
   EndFunction
 EndProperty
-int property AdjustChange hidden
-  int Function Get()
-    return GetSettingInt("iAdjustChange")
-  EndFunction
-  Function Set(int aiSet)
-    SetSettingInt("iAdjustChange", aiSet)
-  EndFunction
-EndProperty
-int property AdjustForward hidden
-  int Function Get()
-    return GetSettingInt("iAdjustForward")
-  EndFunction
-  Function Set(int aiSet)
-    SetSettingInt("iAdjustForward", aiSet)
-  EndFunction
-EndProperty
-int property AdjustSideways hidden
-  int Function Get()
-    return GetSettingInt("iAdjustSideways")
-  EndFunction
-  Function Set(int aiSet)
-    SetSettingInt("iAdjustSideways", aiSet)
-  EndFunction
-EndProperty
-int property AdjustUpward hidden
-  int Function Get()
-    return GetSettingInt("iAdjustUpward")
-  EndFunction
-  Function Set(int aiSet)
-    SetSettingInt("iAdjustUpward", aiSet)
-  EndFunction
-EndProperty
-int property RealignActors hidden
-  int Function Get()
-    return GetSettingInt("iRealignActors")
-  EndFunction
-  Function Set(int aiSet)
-    SetSettingInt("iRealignActors", aiSet)
-  EndFunction
-EndProperty
-int property MoveScene hidden
-  int Function Get()
-    return GetSettingInt("iMoveScene")
-  EndFunction
-  Function Set(int aiSet)
-    SetSettingInt("iMoveScene", aiSet)
-  EndFunction
-EndProperty
-int property RestoreOffsets hidden
-  int Function Get()
-    return GetSettingInt("iRestoreOffsets")
-  EndFunction
-  Function Set(int aiSet)
-    SetSettingInt("iRestoreOffsets", aiSet)
-  EndFunction
-EndProperty
-int property RotateScene hidden
-  int Function Get()
-    return GetSettingInt("iRotateScene")
-  EndFunction
-  Function Set(int aiSet)
-    SetSettingInt("iRotateScene", aiSet)
-  EndFunction
-EndProperty
-int property EndAnimation hidden
-  int Function Get()
-    return GetSettingInt("iKeyEnd")
-  EndFunction
-  Function Set(int aiSet)
-    SetSettingInt("iKeyEnd", aiSet)
-  EndFunction
-EndProperty
-int property AdjustSchlong hidden
-  int Function Get()
-    return GetSettingInt("iAdjustSchlong")
-  EndFunction
-  Function Set(int aiSet)
-    SetSettingInt("iAdjustSchlong", aiSet)
-  EndFunction
-EndProperty
-int property Backwards hidden
-  int Function Get()
-    return GetSettingInt("iBackwards")
-  EndFunction
-  Function Set(int aiSet)
-    SetSettingInt("iBackwards", aiSet)
-  EndFunction
-EndProperty
 
-; Misc Keys
+; Global Keys
 int property ToggleFreeCamera hidden
   int Function Get()
     return GetSettingInt("iToggleFreeCamera")
@@ -527,37 +478,20 @@ int property ToggleFreeCamera hidden
     SetSettingInt("iToggleFreeCamera", aiSet)
   EndFunction
 EndProperty
-int property TargetActor hidden
-  int Function Get()
-    return GetSettingInt("iTargetActor")
-  EndFunction
-  Function Set(int aiSet)
-    SetSettingInt("iTargetActor", aiSet)
-  EndFunction
-EndProperty
-bool property HideHUD hidden
-	bool Function Get()
-	  return GetSettingBool("bHideHUD")
-	EndFunction
-	Function Set(bool aSet)
-	  SetSettingBool("bHideHUD", aSet)
-	EndFunction
-EndProperty
-
-bool property UseSceneMenu hidden
-  bool Function Get()
-    return GetSettingBool("bUseSceneMenu")
-  EndFunction
-  Function Set(bool aSet)
-    SetSettingBool("bUseSceneMenu", aSet)
-  EndFunction
-EndProperty
 int property ToggleThreadControl hidden
   int Function Get()
     return GetSettingInt("iToggleThreadControl")
   EndFunction
   Function Set(int aiSet)
     SetSettingInt("iToggleThreadControl", aiSet)
+  EndFunction
+EndProperty
+int property TargetActor hidden
+  int Function Get()
+    return GetSettingInt("iTargetActor")
+  EndFunction
+  Function Set(int aiSet)
+    SetSettingInt("iTargetActor", aiSet)
   EndFunction
 EndProperty
 
@@ -801,31 +735,6 @@ EndFunction
 
 bool function ModifierPressed()
   return Input.GetNumKeysPressed() > 1 && Input.IsKeyPressed(ModifierKey)
-endFunction
-
-bool function BackwardsPressed()
-  return Input.GetNumKeysPressed() > 1 && MirrorPress(Backwards)
-endFunction
-
-bool function AdjustStagePressed()
-  return (!AdjustStage && Input.GetNumKeysPressed() > 1 && MirrorPress(ToggleAdjustStage)) \
-    || (AdjustStage && !(Input.GetNumKeysPressed() > 1 && MirrorPress(ToggleAdjustStage)))
-endFunction
-
-bool function IsAdjustStagePressed()
-  return Input.GetNumKeysPressed() > 1 && MirrorPress(ToggleAdjustStage)
-endFunction
-
-bool function MirrorPress(int mirrorkey)
-  if mirrorkey == 42 || mirrorkey == 54  ; Shift
-    return Input.IsKeyPressed(42) || Input.IsKeyPressed(54)
-  elseif mirrorkey == 29 || mirrorkey == 157 ; Ctrl
-    return Input.IsKeyPressed(29) || Input.IsKeyPressed(157)
-  elseif mirrorkey == 56 || mirrorkey == 184 ; Alt
-    return Input.IsKeyPressed(56) || Input.IsKeyPressed(184)
-  else
-    return Input.IsKeyPressed(mirrorkey)
-  endIf
 endFunction
 
 ; ------------------------------------------------------- ;
@@ -1447,7 +1356,6 @@ Message property CheckSexLabUtil Hidden
   EndFunction
 EndProperty
 
-
 Faction property AnimatingFaction Hidden
   Faction Function Get()
     return Game.GetFormFromFile(0xE50F, "SexLab.esm") as Faction
@@ -1986,6 +1894,96 @@ int function GetOpenMouthExpression(bool isFemale)
 endFunction
 bool function SetOpenMouthExpression(bool isFemale, int value)
   return true
+endFunction
+
+int property AdjustChange hidden
+  int Function Get()
+    return GetSettingInt("iAdjustChange")
+  EndFunction
+  Function Set(int aiSet)
+    SetSettingInt("iAdjustChange", aiSet)
+  EndFunction
+EndProperty
+int property AdjustForward hidden
+  int Function Get()
+    return GetSettingInt("iAdjustForward")
+  EndFunction
+  Function Set(int aiSet)
+    SetSettingInt("iAdjustForward", aiSet)
+  EndFunction
+EndProperty
+int property AdjustSideways hidden
+  int Function Get()
+    return GetSettingInt("iAdjustSideways")
+  EndFunction
+  Function Set(int aiSet)
+    SetSettingInt("iAdjustSideways", aiSet)
+  EndFunction
+EndProperty
+int property AdjustUpward hidden
+  int Function Get()
+    return GetSettingInt("iAdjustUpward")
+  EndFunction
+  Function Set(int aiSet)
+    SetSettingInt("iAdjustUpward", aiSet)
+  EndFunction
+EndProperty
+int property RealignActors hidden
+  int Function Get()
+    return GetSettingInt("iRealignActors")
+  EndFunction
+  Function Set(int aiSet)
+    SetSettingInt("iRealignActors", aiSet)
+  EndFunction
+EndProperty
+int property RotateScene hidden
+  int Function Get()
+    return GetSettingInt("iRotateScene")
+  EndFunction
+  Function Set(int aiSet)
+    SetSettingInt("iRotateScene", aiSet)
+  EndFunction
+EndProperty
+int property AdjustSchlong hidden
+  int Function Get()
+    return GetSettingInt("iAdjustSchlong")
+  EndFunction
+  Function Set(int aiSet)
+    SetSettingInt("iAdjustSchlong", aiSet)
+  EndFunction
+EndProperty
+int property Backwards hidden
+  int Function Get()
+    return GetSettingInt("iBackwards")
+  EndFunction
+  Function Set(int aiSet)
+    SetSettingInt("iBackwards", aiSet)
+  EndFunction
+EndProperty
+
+bool function BackwardsPressed()
+  return Input.GetNumKeysPressed() > 1 && MirrorPress(Backwards)
+endFunction
+
+bool function AdjustStagePressed()
+  return (!AdjustStage && Input.GetNumKeysPressed() > 1 && MirrorPress(ToggleAdjustStage)) \
+    || (AdjustStage && !(Input.GetNumKeysPressed() > 1 && MirrorPress(ToggleAdjustStage)))
+endFunction
+
+bool function IsAdjustStagePressed()
+  return Input.GetNumKeysPressed() > 1 && MirrorPress(ToggleAdjustStage)
+endFunction
+
+bool function MirrorPress(int mirrorkey)
+  if mirrorkey == 42 || mirrorkey == 54  ; Shift
+    return Input.IsKeyPressed(42) || Input.IsKeyPressed(54)
+  elseif mirrorkey == 29 || mirrorkey == 157 ; Ctrl
+    return Input.IsKeyPressed(29) || Input.IsKeyPressed(157)
+  elseif mirrorkey == 56 || mirrorkey == 184 ; Alt
+    return Input.IsKeyPressed(56) || Input.IsKeyPressed(184)
+  else
+    return Input.IsKeyPressed(mirrorkey)
+  endIf
 endFunction
 
 ; ------------------------------------------------------- ;

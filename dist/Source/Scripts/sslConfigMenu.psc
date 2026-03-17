@@ -963,6 +963,17 @@ State CleanSystem
 	EndEvent
 EndState
 
+State ForceRegisterVoices
+  Event OnSelectST()
+    ModEvent.Send(ModEvent.Create("SexLabSlotVoices"))
+		ModEvent.Send(ModEvent.Create("SexLabSlotExpressions"))
+		SetOptionFlagsST(OPTION_FLAG_DISABLED)
+  EndEvent
+	Event OnHighlightST()
+		SetInfoText("$SSL_ForceRegisterVoicesHighlight")
+	EndEvent
+EndState
+
 State RebuildStraponList
 	Event OnSelectST()
 		Config.LoadStrapons()
@@ -1518,17 +1529,6 @@ State UseSceneMenu
 	EndEvent
 	Event OnHighlightST()
 		SetInfoText("$SSL_bUseSceneMenuHighlight")
-	EndEvent
-EndState
-
-State ForceRegisterVoices
-  Event OnSelectST()
-    ModEvent.Send(ModEvent.Create("SexLabSlotVoices"))
-		ModEvent.Send(ModEvent.Create("SexLabSlotExpressions"))
-		SetOptionFlagsST(OPTION_FLAG_DISABLED)
-  EndEvent
-	Event OnHighlightST()
-		SetInfoText("$SSL_ForceRegisterVoicesHighlight")
 	EndEvent
 EndState
 

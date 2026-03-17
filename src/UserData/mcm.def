@@ -19,6 +19,9 @@ MCM_SETTING(bSubmissivePlayer, false)
 MCM_SETTING(bSubmissiveTarget, false)
 MCM_SETTING(bMatchMakerActive, false)
 MCM_SETTING(bLipsFixedValue, true)
+MCM_SETTING(bAdjustStage, true)
+MCM_SETTING(bHideHUD, false)
+MCM_SETTING(bUseSceneMenu, true)
 
 MCM_SETTING(iAskBed, 1)
 MCM_SETTING(iNPCBed, 1)
@@ -30,49 +33,7 @@ MCM_SETTING(iLovenseStrength, 10)
 MCM_SETTING(iLovenseStrengthOrgasm, 20)
 MCM_SETTING(fLovenseDurationOrgasm, 8)
 
-// KeyBinds/Scene Control Related
-MCM_SETTING(iKeyUp, 0xC8)                  // Up Arrow
-MCM_SETTING(iKeyDown, 0xD0)                // Down Arrow
-MCM_SETTING(iKeyLeft, 0xCB)                // Left Arrow
-MCM_SETTING(iKeyRight, 0xCD)               // Right Arrow
-MCM_SETTING(iKeyAdvance, 0x39)             // Space
-MCM_SETTING(iKeyEnd, 0xCF)                 // End
-MCM_SETTING(iKeyMenu, 0x12)                // E
-MCM_SETTING(iKeyMod, 0x2A)                 // Shift
-MCM_SETTING(iKeyReset, 0x1D)               // Ctrl
-
-MCM_SETTING(iToggleFreeCamera, 0x51)       // Numpad 3
-MCM_SETTING(iTargetActor, 0x31)            // N
-MCM_SETTING(iToggleThreadControl, 0x14)    // T
-
-MCM_SETTING(iMoveScene, 0x25)              // K
-MCM_SETTING(iChangeAnimation, 0x18)        // O
-MCM_SETTING(iChangePositions, 0x0D)        // Numpad Enter
-MCM_SETTING(iOffsetAdjustMode, 0x4E)       // Numpad +
-MCM_SETTING(iToggleAdjustStage, 0x52)      // Numpad 0
-MCM_SETTING(iRestoreOffsets, 0x4A)         // Numpad -
-
-// TODO: Add these to MCM
 MCM_SETTING(fAdjustStepSize, 0.5f)
-MCM_SETTING(bAdjustStage, true)
-
-MCM_SETTING(bHideHUD, false)
-MCM_SETTING(bUseSceneMenu, true)
-
-// MCM_SETTING(iAdjustStage, 157)
-// MCM_SETTING(iBackwards, 54)
-// MCM_SETTING(iChangeAnimation, 24)
-// MCM_SETTING(iChangePositions, 13)
-// MCM_SETTING(iAdjustChange, 37)
-// MCM_SETTING(iAdjustForward, 38)
-// MCM_SETTING(iAdjustSideways, 40)
-// MCM_SETTING(iAdjustUpward, 39)
-// MCM_SETTING(iRealignActors, 26)
-// MCM_SETTING(iMoveScene, 27)
-// MCM_SETTING(iRestoreOffsets, 12)
-// MCM_SETTING(iRotateScene, 22)
-// MCM_SETTING(iAdjustSchlong, 46)
-
 MCM_SETTING(fShakeStrength, 0.7f)
 MCM_SETTING(fAutoSUCSM, 5.0f)
 MCM_SETTING(fMaleVoiceDelay, 5.0f)
@@ -92,6 +53,44 @@ MCM_SETTING(sOptionalTags, ""s)
 
 MCM_SETTING(iStripForms, std::vector<int>({ 1032555423, 1, 1032555423, 1, 806420, 0, 352928413, 1 }))
 MCM_SETTING(fTimers, std::vector<float>({ 10.0f, 15.0f, 25.0f, 7.0f }))
+
+// KeyBinds/Global Hotkeys
+MCM_SETTING(iToggleFreeCamera, 0x51)       // Numpad 3
+MCM_SETTING(iTargetActor, 0x31)            // N
+MCM_SETTING(iToggleThreadControl, 0x14)    // T
+
+// KeyBinds/Scene Control Related
+MCM_SETTING(iKeyUp, 0xC8)                  // Up Arrow
+MCM_SETTING(iKeyDown, 0xD0)                // Down Arrow
+MCM_SETTING(iKeyLeft, 0xCB)                // Left Arrow
+MCM_SETTING(iKeyRight, 0xCD)               // Right Arrow
+MCM_SETTING(iKeyAdvance, 0x39)             // Space
+MCM_SETTING(iKeyEnd, 0xCF)                 // End
+MCM_SETTING(iKeyMenu, 0x12)                // E
+MCM_SETTING(iKeyMod, 0x2A)                 // Shift
+MCM_SETTING(iKeyReset, 0x1D)               // Ctrl
+
+// KeyBinds/Legacy Hotkeys
+MCM_SETTING(iMoveScene, 0x25)              // K
+MCM_SETTING(iChangeAnimation, 0x18)        // O
+MCM_SETTING(iChangePositions, 0x0D)        // Numpad Enter
+MCM_SETTING(iOffsetAdjustMode, 0x4E)       // Numpad +
+MCM_SETTING(iToggleAdjustStage, 0x52)      // Numpad 0
+MCM_SETTING(iRestoreOffsets, 0x4A)         // Numpad -
+
+// MCM_SETTING(iAdjustStage, 157)
+// MCM_SETTING(iBackwards, 54)
+// MCM_SETTING(iChangeAnimation, 24)
+// MCM_SETTING(iChangePositions, 13)
+// MCM_SETTING(iAdjustChange, 37)
+// MCM_SETTING(iAdjustForward, 38)
+// MCM_SETTING(iAdjustSideways, 40)
+// MCM_SETTING(iAdjustUpward, 39)
+// MCM_SETTING(iRealignActors, 26)
+// MCM_SETTING(iMoveScene, 27)
+// MCM_SETTING(iRestoreOffsets, 12)
+// MCM_SETTING(iRotateScene, 22)
+// MCM_SETTING(iAdjustSchlong, 46)
 
 // Enjoyment Related
 

@@ -239,6 +239,14 @@ $SSL_bShowInMap	Показать сцены на карте
 $SSL_bShowInMapHighlight	Если включено и Игрок не являющейся частью анимации, но анимация рядом с Игроком, сцены SexLab будут показаны на карте как квест дополнительного типа
 $SSL_bSetAnimSpeedByEnjoyment	Изменять скорость анимации
 $SSL_bSetAnimSpeedByEnjoymentHighlight	Изменять скорость анимации в зависимости от степени возбуждения. На данный момент 0.8~1.2
+# TODO: $SSL_AdjustStage
+$SSL_AdjustStage    Adjust Stage Only
+# TODO: $SSL_AdjustStageHighlight
+$SSL_AdjustStageHighlight    Toggles whether all edits to position/stage offsets will apply for currently playing stage only.
+# TODO: $SSL_fAdjustStepSize
+$SSL_fAdjustStepSize    Offset Step Size
+# TODO: $SSL_fAdjustStepSizeHighlight
+$SSL_fAdjustStepSizeHighlight   Determines the step size for offset adjustments.
 $SSL_FurnitureNPC	Использование мебели: NPC
 $SSL_FurnitureNPCHighlight	Как NPC используют мебель. Если быть более точным, будут ли NPC использовать мебель, если она доступна и при каких условиях.
 $SSL_AskNotSub	Спрашивать (если игрок не покорный)
@@ -310,6 +318,10 @@ $SSL_WolfVoice01	[SL] Волк Обычный
 # ------------------Player Hotkeys--------------------------------------------------
 $SSL_PlayerHotkeys	Горячие клавиши
 
+# TODO: $SSL_bUseSceneMenu
+$SSL_bUseSceneMenu  Use Scene Menu
+SSL_bUseSceneMenuHighlight  Toggles the use of the native in-scene menu and enjoyment bars.\nDisable this only if the scene menu causes crashes or you prefer legacy SL's hotkey approach.
+
 # ------ Global SexLab Hotkeys
 $SSL_GlobalHotkeys	Глобальные горячие клавиши
 
@@ -328,12 +340,25 @@ $SSL_iKeyLeft	Уменьшить скорость / Влево
 $SSL_iKeyRight	Увеличить скорость / Вправо
 $SSL_iKeyAdvance	Продолжить сцену / Выбрать
 $SSL_iKeyEnd	Закончить сцену
-$SSL_iKeyExtra1	Открыть меню / Переключить цель для смещения
-$SSL_iKeyExtra2	Экстра / Повернуть сцену
+# TODO: $SSL_iKeyMenu
+$SSL_iKeyMenu   Open Menu / Swap Menu Tab
 $SSL_iKeyMod	Модификатор
 $SSL_iKeyReset	Инвертирование действия
+
+# TODO: $SSL_LegacyHotkeys
+$SSL_LegacyHotkeys  Legacy Hotkeys
 $SSL_iChangeAnimation	Change Animation
 $SSL_iMoveScene Move Scene
+# TODO: $SSL_iChangePositions
+$SSL_iChangePositions   Change Positions
+# TODO: $SSL_iOffsetAdjustMode
+$SSL_iOffsetAdjustMode  Cycle Offset Adjust Modes
+# TODO: $SSL_iOffsetAdjustModeHighlight
+$SSL_iOffsetAdjustModeHighlight Hotkey to switch between the 5 offset adjust modes when in scene.\nNone: Offset adjustments are disabled (default).\nPOS-XY: L/R keys adjust position's X, U/D adjust Y.\nPOS-RZ: L/R adjust pos's Rotation, U/D adjust Z.\nSCENE-XY: L/R adjust scene's X, U/D adjust Y (furniture scene only).\nSCENE-RZ: L/R adjust scene's Rotation, U/D adjust Z (furniture only).
+# TODO: $SSL_iToggleAdjustStage
+$SSL_iToggleAdjustStage Toggle Adjust Stage
+# TODO: $SSL_iRestoreOffsets
+$SSL_iRestoreOffsets    Reset Offset Adjustments
 
 # ------------------- Timers & Stripping -------------------------------------------------
 $SSL_TimersStripping	Таймеры/Раздевание
@@ -444,9 +469,7 @@ $SSL_bGameEnabled	Enable Enjoyment Game
 $SSL_bGameEnabledHighlight	Toggles the enjoyment minigame inspired from SLSO's implementation.
 
 # ------ General Configs
-# TODO: $SSL_bFallbackToTagsForDetection
 $SSL_bFallbackToTagsForDetection	Allow Fallback to Position Tags
-# TODO: $SSL_bFallbackToTagsForDetectionHighlight
 $SSL_bFallbackToTagsForDetectionHighlight	Toggles fallback to position tags for interactions detection when the internal physics-based real-time collision type guessing is not available.
 $SSL_bNoStaminaEndsScene	No Stamina Ends Scene
 $SSL_bNoStaminaEndsSceneHighlight	Ends the scene automatically when the actor's stamina is depleted.
