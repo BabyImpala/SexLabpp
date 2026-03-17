@@ -14,18 +14,34 @@ scriptname sslThreadController extends sslThreadModel
 ; ----------------------------------------------------------------------------- ;
 ; *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-* ;
 
-Message Property RepositionInfoMsg Auto
-{[Ok, Cancel, Don't show again]}
+Function EnableHotkeys(bool forced = false)
+	If(!HasPlayer && !forced)
+		return
+	EndIf
+	If (Config.UseSceneMenu)
+		EnableMenuEvents()
+	EndIf
+	EnableTraditionalHotkeys()
+EndFunction
+
+Function DisableHotkeys()
+	; If free cam is active here will glitch out controls?
+	MiscUtil.SetFreeCameraState(false)
+	If (Config.UseSceneMenu)
+		DisableMenuEvents()
+	EndIf
+	DisableTraditionalHotkeys()
+EndFunction
+
+; ------------------------------------------------------- ;
+; --- Menu Events                                     --- ;
+; ------------------------------------------------------- ;
 
 String[] _MenuEvents
-bool _SkipHotkeyEvents
 int _AutoAdvanceCache
 
-bool _EnjGamePaused = false
-Actor _EnjGamePartner = none
-
-Function EnableHotkeys(bool forced = false)
-	If(!HasPlayer && !forced || !TryOpenSceneMenu())
+Function EnableMenuEvents()
+	If (!TryOpenSceneMenu())
 		return
 	EndIf
 	_AutoAdvanceCache = -1
@@ -43,19 +59,15 @@ Function EnableHotkeys(bool forced = false)
 		RegisterForModEvent(_MenuEvents[i], "MenuEvent")
 		i += 1
 	EndWhile
-	EnableTraditionalHotkeys()
 EndFunction
 
-Function DisableHotkeys()
+Function DisableMenuEvents()
 	int i = 0
 	While (i < _MenuEvents.Length)
 		UnregisterForModEvent(_MenuEvents[i])
 		i += 1
 	EndWhile
-	; If free cam is active here will glitch out controls?
-	MiscUtil.SetFreeCameraState(false)
 	TryCloseSceneMenu()
-	DisableTraditionalHotkeys()
 EndFunction
 
 Event MenuEvent(string asEventName, string asStringArg, float afNumArg, form akSender)
@@ -95,6 +107,13 @@ Event MenuEvent(string asEventName, string asStringArg, float afNumArg, form akS
 		; TODO: impl
 	EndIf
 EndEvent
+
+; ------------------------------------------------------- ;
+; --- Executed Functions [Menu Events]                --- ;
+; ------------------------------------------------------- ;
+
+Message Property RepositionInfoMsg Auto
+{[Ok, Cancel, Don't show again]}
 
 Function PickRandomScene(String asNewScene)
 	String[] sceneSet = GetPlayingScenes()
@@ -201,94 +220,332 @@ Function SetStageOffset(Actor akAffectedActor, float afOffsetValue, String asOff
 	int n = GetPositions().Find(akAffectedActor)
 	String activeScene = GetActiveScene()
 	String activeStage = ""
-	If (sslSystemConfig.GetSettingBool("bAdjustTargetStage"))
+	If (Config.AdjustStage)
 		activeStage = GetActiveStage()
 	EndIf
 	SexLabRegistry.SetStageOffset(activeScene, activeStage, n, afOffsetValue, idx)
 	UpdatePlacement(akAffectedActor)
 EndFunction
 
+; ------------------------------------------------------- ;
+; --- Traditional Hotkeys                             --- ;
+; ------------------------------------------------------- ;
+
+int[] Hotkeys
+int Property kChangeAnimation   = 0  AutoReadOnly
+int Property kMoveScene         = 1  AutoReadOnly
+int Property kModifierKey       = 2  AutoReadOnly
+int Property kChangeTargetActor = 3  AutoReadOnly
+int Property kGamePause         = 4  AutoReadOnly
+int Property kGameRaiseEnj      = 5  AutoReadOnly
+int Property kGameHoldback      = 6  AutoReadOnly
+int Property kAdvanceAnimation  = 7  AutoReadOnly
+int Property kEndAnimation      = 8  AutoReadOnly
+int Property kChangePositions   = 9  AutoReadOnly
+int Property kOffsetAdjustMode  = 10 AutoReadOnly
+int Property kToggleAdjustStage = 11 AutoReadOnly
+int Property kRestoreOffsets    = 12 AutoReadOnly
+int Property kDirectionUp       = 13 AutoReadOnly
+int Property kDirectionDown     = 14 AutoReadOnly
+int Property kDirectionLeft     = 15 AutoReadOnly
+int Property kDirectionRight    = 16 AutoReadOnly
+
+int Property AdjMode_None     = 0 AutoReadOnly
+int Property AdjMode_PosXY    = 1 AutoReadOnly
+int Property AdjMode_PosRZ    = 2 AutoReadOnly
+int Property AdjMode_SceneXY  = 3 AutoReadOnly
+int Property AdjMode_SceneRZ  = 4 AutoReadOnly
+
+Actor _AdjustActor = None     ; The actor currently selected for adjustments
+int _AdjustMode = 0           ; Determines offsets adjustment mode
+bool _SkipHotkeyEvents = False
+bool _EnjGamePaused = False
+
 Function EnableTraditionalHotkeys()
-	RegisterForKey(Config.ChangeAnimation)
-	RegisterForKey(Config.MoveScene)
-	; Enjoyment Game
-	RegisterForKey(Config.GameUtilityKey)
-	If (!Config.GameEnabled || !HasPlayer)
-		return
+	InitLegacyHotkeys()
+	RegisterForKey(kChangeAnimation)
+	RegisterForKey(kMoveScene)
+	RegisterForKey(kModifierKey)
+	RegisterForKey(kChangeTargetActor)
+	If (Config.GameEnabled && HasPlayer)
+		RegisterForKey(kGamePause)
+		RegisterForKey(kGameRaiseEnj)
+		RegisterForKey(kGameHoldback)
+		GetAdjustPos()	; initialize game partner
 	EndIf
-	RegisterForKey(Config.GamePauseKey)
-	RegisterForKey(Config.GameRaiseEnjKey)
-	RegisterForKey(Config.GameHoldbackKey)
-	RegisterForKey(Config.GameSelectNextPos)
-	_EnjGamePartner = GameChangePartner(PlayerRef)
+	If (!Config.UseSceneMenu)
+		RegisterForKey(kAdvanceAnimation)
+		RegisterForKey(kEndAnimation)
+		RegisterForKey(kChangePositions)
+		RegisterForKey(kOffsetAdjustMode)
+		RegisterForKey(kToggleAdjustStage)
+		RegisterForKey(kRestoreOffsets)
+		RegisterForKey(kDirectionUp)
+		RegisterForKey(kDirectionDown)
+		RegisterForKey(kDirectionLeft)
+		RegisterForKey(kDirectionRight)
+	EndIf
 EndFunction
 
 Function DisableTraditionalHotkeys()
-	UnregisterForKey(Config.ChangeAnimation)
-	UnregisterForKey(Config.MoveScene)
-	; Enjoyment Game
-	UnregisterForKey(Config.GameUtilityKey)
-	UnregisterForKey(Config.GamePauseKey)
-	UnregisterForKey(Config.GameRaiseEnjKey)
-	UnregisterForKey(Config.GameHoldbackKey)
-	UnregisterForKey(Config.GameSelectNextPos)
-EndFunction	
+    int i = 0
+    While (i < Hotkeys.Length)
+        UnregisterForKey(Hotkeys[i])
+        i += 1
+    EndWhile
+EndFunction
 
-Event OnKeyDown(int KeyCode)
-	If(Utility.IsInMenuMode() || _SkipHotkeyEvents)
+Event OnKeyDown(int aiKey)
+	If (Utility.IsInMenuMode() || _SkipHotkeyEvents || (aiKey == kModifierKey))
 		return
 	EndIf
 	_SkipHotkeyEvents = true
-	If(KeyCode == Config.ChangeAnimation)
-		ChangeAnimation(Input.IsKeyPressed(Config.GameUtilityKey))
-		_SkipHotkeyEvents = false
-		return
-	ElseIf(KeyCode == Config.MoveScene)
+	; QoL+Shared
+	bool abModifier = Config.ModifierPressed()
+	If (aiKey == kChangeAnimation)
+		PickRandomScene("")
+	ElseIf (aiKey == kMoveScene)
 		MoveScene()
-		_SkipHotkeyEvents = false
-		return
+	ElseIf (aiKey == kChangeTargetActor)
+		ChangeTargetActor(abModifier)
 	EndIf
-	_SkipHotkeyEvents = false
-	; Enjoyment Game
-	If(!HasPlayer || !Config.GameEnabled)
-		return
-	EndIf
-	If((KeyCode == Config.GamePauseKey) && (Input.IsKeyPressed(Config.GameUtilityKey)))
-		_EnjGamePaused = !_EnjGamePaused
-		Log("[EnjGame] Game paused: " + _EnjGamePaused)
-	EndIf
-	If(!_EnjGamePaused)
-		If(KeyCode == Config.GameRaiseEnjKey)
-			ProcessEnjGameArg("Stamina", _EnjGamePartner)
-		ElseIf(KeyCode == Config.GameHoldbackKey)
-			ProcessEnjGameArg("Magicka", _EnjGamePartner)
-		ElseIf(KeyCode == Config.GameSelectNextPos)
-			int newIdx = GameNextPartnerIdx(PlayerRef, _EnjGamePartner, Input.IsKeyPressed(Config.GameUtilityKey))
-			_EnjGamePartner = GameChangePartner(PlayerRef, newIdx)
+	; EnjGame
+	If (Config.GameEnabled && HasPlayer)
+		If ((aiKey == Config.GamePauseKey) && (abModifier))
+			_EnjGamePaused = !_EnjGamePaused
+			Log("[EnjGame] Game paused: " + _EnjGamePaused)
+		EndIf
+		If (!_EnjGamePaused)
+			If (aiKey == Config.GameRaiseEnjKey)
+				ProcessEnjGameArg("Stamina", _AdjustActor)
+			ElseIf (aiKey == Config.GameHoldbackKey)
+				ProcessEnjGameArg("Magicka", _AdjustActor)
+			EndIf
 		EndIf
 	EndIf
-EndEvent
-
-Function ChangeAnimation(bool backwards = false)
-	string[] Scenes = GetPlayingScenes()
-	If(Scenes.Length < 2)
+	; Legacy
+	If (Config.UseSceneMenu)
 		return
 	EndIf
-	UnregisterForUpdate()
-	int current = Scenes.Find(GetActiveScene())
-	String newScene
-	If (!Config.AdjustStagePressed())
-		newScene = Scenes[sslUtility.IndexTravel(current, Scenes.Length, backwards)]
-	Else
-		int r = Utility.RandomInt(0, Scenes.Length - 1)
-		While(r == current)
-			r = Utility.RandomInt(0, Scenes.Length - 1)
-		EndWhile
-		newScene = Scenes[r]
+	If (aiKey == kAdvanceAnimation)
+		AdvanceStage(abModifier)
+	ElseIf (aiKey == kEndAnimation)
+		EndAnimation()
+	ElseIf (aiKey == kChangePositions)
+		ChangePositions(abModifier)
+	ElseIf (aiKey == kOffsetAdjustMode)
+		CycleOffsetAdjustModes(abModifier)
+	ElseIf (aiKey == kToggleAdjustStage)
+		Config.AdjustStage = !Config.AdjustStage
+	ElseIf (aiKey == kRestoreOffsets)
+		RestoreOffsets()
 	EndIf
-	Log("Changing running scene from " + GetActiveScene() + " to " + newScene)
-	SendThreadEvent("AnimationChange")
-	ResetScene(newScene)
+	If (_AdjustMode > AdjMode_None)
+		string[] asOffsetType = DetermineOffsetAdjustInputType(aiKey)
+		HandleOffsetAdjustment(asOffsetType)
+	EndIf
+	_SkipHotkeyEvents = false
+EndEvent
+
+Function InitLegacyHotkeys()
+    Hotkeys = new int[17]
+	;QoL
+    Hotkeys[kChangeAnimation]   = Config.ChangeAnimation
+    Hotkeys[kMoveScene]         = Config.MoveScene
+	;Shared (EnjGame + Legacy)
+    Hotkeys[kModifierKey]       = Config.ModifierKey
+    Hotkeys[kChangeTargetActor] = Config.TargetActor
+	;EnjGame
+    Hotkeys[kGamePause]         = Config.GamePauseKey
+    Hotkeys[kGameRaiseEnj]      = Config.GameRaiseEnjKey
+    Hotkeys[kGameHoldback]      = Config.GameHoldbackKey
+	;Legacy
+    Hotkeys[kAdvanceAnimation]  = Config.AdvanceAnimation
+    Hotkeys[kEndAnimation]      = Config.EndAnimation
+    Hotkeys[kChangePositions]   = Config.ChangePositions
+    Hotkeys[kOffsetAdjustMode]  = Config.OffsetAdjustMode
+    Hotkeys[kToggleAdjustStage] = Config.ToggleAdjustStage
+    Hotkeys[kRestoreOffsets]    = Config.RestoreOffsets
+    Hotkeys[kDirectionUp]       = Config.DirectionUp
+    Hotkeys[kDirectionDown]     = Config.DirectionDown
+    Hotkeys[kDirectionLeft]     = Config.DirectionLeft
+    Hotkeys[kDirectionRight]    = Config.DirectionRight
+EndFunction
+
+; ------------------------------------------------------- ;
+; --- Executed Functions [Legacy Hotkeys]             --- ;
+; ------------------------------------------------------- ;
+
+Function AdvanceStage(bool abBackwards = false)
+	If (!abBackwards)
+		GoToStage(Stage + 1)
+	ElseIf (Stage > 1)
+		GoToStage(Stage - 1)
+	EndIf
+EndFunction
+
+Function ChangePositions(bool abBackwards = false)
+	int posLen = Positions.Length
+    If (posLen < 2)
+        return
+    EndIf
+    String activeScene = GetActiveScene()
+    int curIdx = GetAdjustPos()
+    Actor curPos = GetIdxPosition(curIdx)
+    int step = 1
+    If (abBackwards)
+        step = -1
+    EndIf
+    int newIdx = (curIdx + step)
+    int i = 0
+    While (i < posLen - 1)
+        If (newIdx >= posLen)
+            newIdx = 0
+        ElseIf (newIdx < 0)
+            newIdx = posLen - 1
+        EndIf
+        If (SexLabRegistry.CanFillPosition(activeScene, curIdx, GetIdxPosition(newIdx)) && \
+            SexLabRegistry.CanFillPosition(activeScene, newIdx, curPos))
+            Actor tmpActor = Positions[curIdx]
+            Positions[curIdx] = Positions[newIdx]
+            Positions[newIdx] = tmpActor
+            sslActorAlias tmpAlias = ActorAlias[curIdx]
+            ActorAlias[curIdx] = ActorAlias[newIdx]
+            ActorAlias[newIdx] = tmpAlias
+            SendThreadEvent("PositionChange")
+            ResetStage()
+            return
+        EndIf
+        newIdx += step
+        i += 1
+    EndWhile
+    Debug.Notification("Selected actor cannot switch positions")
+EndFunction
+
+Function CycleOffsetAdjustModes(bool abBackwards = false)
+	int modesCount = 5
+	int step = 1
+	If (abBackwards)
+		step = -1
+	EndIf
+	_AdjustMode += step
+	If (_AdjustMode >= modesCount)
+		_AdjustMode = 0
+	ElseIf (_AdjustMode < 0)
+		_AdjustMode = (modesCount - 1)
+	EndIf
+	If (_AdjustMode == AdjMode_None)
+		Debug.Notification("SexLab: Disabled offset adjustments")
+		return
+	EndIf
+	;TODO: allign/recenter camera along with world coordinates directions
+	If (_AdjustMode == AdjMode_PosXY)
+		Debug.Notification("SexLab: Adjusting Position X-Y")
+	ElseIf (_AdjustMode == AdjMode_PosRZ)
+		Debug.Notification("SexLab: Adjusting Position R-Z")
+	ElseIf (_AdjustMode == AdjMode_SceneXY)
+		Debug.Notification("SexLab: Adjusting Scene X-Y")
+	ElseIf (_AdjustMode == AdjMode_SceneRZ)
+		Debug.Notification("SexLab: Adjusting Scene R-Z")
+	EndIf
+EndFunction
+
+string[] Function DetermineOffsetAdjustInputType(int aiKey)
+	string[] ret = Utility.CreateStringArray(2, "")
+	If ((aiKey != kDirectionUp) && (aiKey != kDirectionDown) && (aiKey != kDirectionLeft) && (aiKey != kDirectionRight))
+		return ret
+	EndIf
+	bool abAdjustingRZ = (_AdjustMode == AdjMode_PosRZ)  || (_AdjustMode == AdjMode_SceneRZ)
+	If (aiKey == kDirectionLeft)
+		ret[0] = "-"
+		If (abAdjustingRZ)
+			ret[1] = "R"
+		Else
+			ret[1] = "X"
+		EndIf
+	ElseIf (aiKey == kDirectionRight)
+		If (abAdjustingRZ)
+			ret[1] = "R"
+		Else
+			ret[1] = "X"
+		EndIf
+	ElseIf (aiKey == kDirectionUp)
+		If (abAdjustingRZ)
+			ret[1] = "Z"
+		Else
+			ret[1] = "Y"
+		EndIf
+	ElseIf (aiKey == kDirectionDown)
+		ret[0] = "-"
+		If (abAdjustingRZ)
+			ret[1] = "Z"
+		Else
+			ret[1] = "Y"
+		EndIf
+	EndIf
+	return ret
+EndFunction
+
+Function HandleOffsetAdjustment(String[] asOffsetType)
+	If (asOffsetType[1] == "")
+		return
+	EndIf
+	float afValue = Config.AdjustStepSize
+	If (asOffsetType[0] == "-")
+		afValue = -afValue
+	EndIf
+	bool abAdjustingPos = (_AdjustMode == AdjMode_PosXY)  || (_AdjustMode == AdjMode_PosRZ)
+	If (abAdjustingPos)
+		SetStageOffset(_AdjustActor, afValue, asOffsetType[1])
+	Else
+		SetSceneOffset(afValue, asOffsetType[1])
+	EndIf
+EndFunction
+
+Function RestoreOffsets()
+	SexLabRegistry.ResetSceneOffset(GetActiveScene())
+	SexLabRegistry.ResetStageOffsetA(GetActiveScene(), GetActiveStage())
+	RealignActors()
+EndFunction
+
+int Function GetAdjustPos()
+	If (_AdjustActor)
+		return GetPositionIdx(_AdjustActor)
+	EndIf
+	int AdjustIdx = -1
+	If (Config.TargetRef)
+		AdjustIdx = GetPositionIdx(Config.TargetRef)
+	Else
+		If (HasPlayer)
+			AdjustIdx = IndexTravelComplex(GetPositionIdx(PlayerRef))
+		Else
+			AdjustIdx = (GetPositions().Length > 1) as int
+		EndIf
+	EndIf
+	_AdjustActor = GetIdxPosition(AdjustIdx)
+	Config.SetTargetActor(_AdjustActor)
+	return AdjustIdx
+EndFunction
+
+Function ChangeTargetActor(bool abBackwards = false)
+	If (Positions.Length < 2)
+		return
+	EndIf
+	int curIdx = GetAdjustPos()
+	int newIdx = IndexTravelComplex(curIdx, abBackwards)
+	_AdjustActor = GetIdxPosition(newIdx)
+	Config.SetTargetActor(_AdjustActor)
+	Config.SelectedSpell.Cast(_AdjustActor)	; SFX for visual feedback
+	PlayHotkeyFX(0, !abBackwards)
+	Log("ChangeTargetActor(), currently focused actor: " + SexLabUtil.ActorName(_AdjustActor))
+EndFunction
+
+Function PlayHotkeyFX(int i, bool abBackwards)
+	If (abBackwards)
+		Config.HotkeyDown[i].Play(PlayerRef)
+	Else
+		Config.HotkeyUp[i].Play(PlayerRef)
+	EndIf
 EndFunction
 
 ; *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-* ;
@@ -302,22 +559,20 @@ EndFunction
 ; ----------------------------------------------------------------------------- ;
 ; *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-* ;
 
-sslActorAlias AdjustAlias		; The actor currently selected for position adjustments
-
-int[] Hotkeys
-int Property kAdvanceAnimation = 0 AutoReadOnly
-int Property kChangeAnimation  = 1 AutoReadOnly
-int Property kChangePositions  = 2 AutoReadOnly
-int Property kAdjustChange     = 3 AutoReadOnly
+;int[] Hotkeys
+;int Property kAdvanceAnimation = 0 AutoReadOnly
+;int Property kChangeAnimation  = 1 AutoReadOnly
+;int Property kChangePositions  = 2 AutoReadOnly
+;int Property kAdjustChange     = 3 AutoReadOnly
 int Property kAdjustForward    = 4 AutoReadOnly
 int Property kAdjustSideways   = 5 AutoReadOnly
 int Property kAdjustUpward     = 6 AutoReadOnly
-int Property kRealignActors    = 7 AutoReadOnly
-int Property kRestoreOffsets   = 8 AutoReadOnly
-int Property kMoveScene        = 9 AutoReadOnly
+;int Property kRealignActors    = 7 AutoReadOnly
+;int Property kRestoreOffsets   = 8 AutoReadOnly
+;int Property kMoveScene        = 9 AutoReadOnly
 int Property kRotateScene      = 10 AutoReadOnly
-int Property kEndAnimation     = 11 AutoReadOnly
-int Property kAdjustSchlong    = 12 AutoReadOnly
+;int Property kEndAnimation     = 11 AutoReadOnly
+;int Property kAdjustSchlong    = 12 AutoReadOnly
 ;/
 Event OnKeyDown(int KeyCode)
 	If(Utility.IsInMenuMode() || _SkipHotkeyEvents)
@@ -359,32 +614,9 @@ Event OnKeyDown(int KeyCode)
 	_SkipHotkeyEvents = false
 EndEvent
 /;
-int Function GetAdjustPos()
-	int AdjustPos = -1
-	if AdjustAlias && AdjustAlias.ActorRef
-		AdjustPos = Positions.Find(AdjustAlias.ActorRef)
-	endIf
-	if AdjustPos == -1 && Config.TargetRef
-		AdjustPos = Positions.Find(Config.TargetRef)
-	endIf
-	if AdjustPos == -1
-		AdjustPos = (ActorCount > 1) as int
-	endIf
-	if Positions[AdjustPos] != PlayerRef
-		Config.TargetRef = Positions[AdjustPos]
-	endIf
-	AdjustAlias = PositionAlias(AdjustPos)
-	return AdjustPos
-EndFunction
 
-Function AdvanceStage(bool backwards = false)
-	If(!backwards)
-		GoToStage(Stage + 1)
-	Elseif(Config.IsAdjustStagePressed())
-		GoToStage(1)
-	ElseIf(Stage > 1)
-		GoToStage(Stage - 1)
-	EndIf
+Function ChangeAnimation(bool backwards = false)
+	return PickRandomScene("")
 EndFunction
 
 Function AdjustCoordinate(bool abBackwards, bool abStageOnly, float afValue, int aiKeyIdx, int aiOffsetType)
@@ -456,64 +688,7 @@ Function RotateScene(bool backwards = false)
 EndFunction
 
 Function AdjustChange(bool backwards = false)
-	If(Positions.Length <= 1)
-		return
-	EndIf
-	int i = GetAdjustPos()
-	i = sslUtility.IndexTravel(i, ActorCount, backwards)
-	If(Positions[i] != PlayerRef)
-		Config.TargetRef = Positions[i]
-	EndIf
-	AdjustAlias = ActorAlias[i]
-	Config.SelectedSpell.Cast(Positions[i])	; SFX for visual feedback
-	PlayHotkeyFX(0, !backwards)
-	String msg = "Adjusting Position For: " + AdjustAlias.GetActorName()
-	Debug.Notification(msg)
-	SexLabUtil.PrintConsole(msg)
-EndFunction
-
-Function RestoreOffsets()
-	SexLabRegistry.ResetStageOffsetA(GetActiveScene(), GetActiveStage())
-	RealignActors()
-EndFunction
-
-Function ChangePositions(bool backwards = false)
-	If(Positions.Length < 2)
-		return
-	EndIf
-	String activeScene = GetActiveScene()
-	Actor actor_adj = AdjustAlias.GetActorReference()
-	int i_adj = GetAdjustPos()
-	int i = i_adj + 1
-	While(i < Positions.Length + i_adj)
-		If(i >= Positions.Length)
-			i -= Positions.Length
-		EndIf
-		If(SexLabRegistry.CanFillPosition(activeScene, i_adj, Positions[i]) && \
-				SexLabRegistry.CanFillPosition(activeScene, i, actor_adj))
-			Actor tmpAct = Positions[i_adj]
-			Positions[i_adj] = Positions[i]
-			Positions[i] = tmpAct
-
-			sslActorAlias tmpAli = ActorAlias[i_adj]
-			ActorAlias[i_adj] = ActorAlias[i]
-			ActorAlias[i] = tmpAli
-
-			SendThreadEvent("PositionChange")
-			ResetStage()
-			return
-		EndIf
-		i += 1
-	EndWhile
-	Debug.Notification("Selected actor cannot switch positions")
-EndFunction
-
-Function PlayHotkeyFX(int i, bool backwards)
-	if backwards
-		Config.HotkeyDown[i].Play(PlayerRef)
-	else
-		Config.HotkeyUp[i].Play(PlayerRef)
-	endIf
+	ChangeTargetActor(backwards)
 EndFunction
 
 float Function GetAnimationRunTime()
