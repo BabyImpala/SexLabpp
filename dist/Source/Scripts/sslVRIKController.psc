@@ -176,11 +176,6 @@ Function HandleOffsetAdjustmentVR(String[] asOffsetType, bool abAdjustTarget)
 	int aiAdjMode = GetOffsetAdjustMode()
 	bool abAdjustingPos = (aiAdjMode == AdjMode_PosXY)  || (aiAdjMode == AdjMode_PosRZ)
 	ApplyOffsetAdjustment(akAffectedActor, afValue, asOffsetType, abAdjustingPos)
-	Utility.Wait(0.4)
-	If VRIK.VrikIsTriggerPressed(true)
-		PauseTimer(false)
-		return
-	EndIf
 	float refX = VRIK.VrikGetHandX(true)
 	float refY = VRIK.VrikGetHandY(true)
 	float refZ = VRIK.VrikGetHandZ(true)
@@ -189,11 +184,6 @@ Function HandleOffsetAdjustmentVR(String[] asOffsetType, bool abAdjustTarget)
 	float newZ = 0.0
 	float curDrift = 0.0
 	While (VRIK.VrikIsTriggerPressed(true))
-		Utility.Wait(0.4)
-		If (!VRIK.VrikIsTriggerPressed(true))
-			PauseTimer(false)
-			return
-		EndIf
 		newX = VRIK.VrikGetHandX(true)
 		newY = VRIK.VrikGetHandY(true)
 		newZ = VRIK.VrikGetHandZ(true)
@@ -203,8 +193,14 @@ Function HandleOffsetAdjustmentVR(String[] asOffsetType, bool abAdjustTarget)
 			return
 		EndIf
 		ApplyOffsetAdjustment(akAffectedActor, afValue, asOffsetType, abAdjustingPos)
-		If (VRConfig.GestureHaptics)
-			VRIK.VrikHapticPulse(true, 2, 800)
+		Utility.Wait(0.02)
+		afValue += Config.AdjustStepSize * 0.1
+		If (afValue > Config.AdjustStepSize * 5.0)
+			afValue = Config.AdjustStepSize * 5.0
 		EndIf
 	EndWhile
+	If (VRConfig.GestureHaptics)
+		VRIK.VrikHapticPulse(true, 2, 800)
+	EndIf
+	PauseTimer(false)
 EndFunction
