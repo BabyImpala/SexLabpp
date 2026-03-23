@@ -1019,6 +1019,7 @@ int _animationSyncCount
 
 bool _ForceAdvance		; Force fully auto advance (set by timed stages)
 float _StageTimer			; timer for the current stage
+bool _TimerPaused		; whether timer drain for current stage should be paused
 float _SFXTimer				; so long until new SFX effect
 float[] _CustomTimers	; Custom set of timers to use for this animation
 float[] Property Timers hidden
@@ -1191,6 +1192,10 @@ State Animating
 		TryUpdateMenuTimer(_StageTimer)
 	EndFunction
 
+	Function PauseTimer(bool abEnable)
+		_TimerPaused = abEnable
+	EndFunction
+
 	Function SetTimers(float[] SetTimers)
 		If (!SetTimers.Length)
 			Log("SetTimers() - Empty timers given.", "ERROR")
@@ -1223,7 +1228,7 @@ State Animating
 	Endfunction
 	
 	Event OnUpdate()
-		If (AutoAdvance || _ForceAdvance)
+		If (!_TimerPaused && (AutoAdvance || _ForceAdvance))
 			_StageTimer -= ANIMATING_UPDATE_INTERVAL
 			If (_StageTimer <= 0)
 				If !ThreadWaitsForOrgasm()
@@ -1389,7 +1394,10 @@ Function ReStartTimer()
 	Log("Cannot re/start timers outside of playing state", "ReStartTimer()")
 EndFunction
 Function UpdateTimer(float AddSeconds = 0.0)
-	Log("Cannot upate timers outside of playing state", "UpdateTimer()")
+	Log("Cannot update timers outside of playing state", "UpdateTimer()")
+EndFunction
+Function PauseTimer(bool abEnable)
+	Log("Cannot pause timers outside of playing state", "PauseTimer()")
 EndFunction
 Function SetTimers(float[] SetTimers)
 	Log("Cannot set timers outside of playing state", "SetTimers()")
@@ -1898,6 +1906,7 @@ Function Initialize()
 	_ContextTags = Utility.CreateStringArray(0)
 	_Hooks = Utility.CreateStringArray(0)
 	_AnimationSpeedBase = 1.0
+	_TimerPaused = false
 	; Enter thread selection pool
 	DestroyInstance()
 	GoToState(STATE_IDLE)
@@ -2179,12 +2188,10 @@ Function GameHoldback(Actor akTarget)
 	EndIf
 EndFunction
 
-Function ProcessEnjGameArg(String arg, Actor akPartner)
-	Actor akTarget = None
-	If (Input.IsKeyPressed(Config.ModifierKey))
+Function ProcessEnjGameArg(String arg, Actor akPartner, bool abAdjustTarget)
+	Actor akTarget = PlayerRef ;change self/player enj
+	If (abAdjustTarget)
 		akTarget = akPartner ;change partner enj
-	Else
-		akTarget = PlayerRef ;change self/player enj
 	EndIf
 	If (arg == "Magicka")
 		GameHoldback(akTarget)

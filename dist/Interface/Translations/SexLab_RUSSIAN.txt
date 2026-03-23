@@ -317,7 +317,6 @@ $SSL_WolfVoice01	[SL] Волк Обычный
 $SSL_PlayerHotkeys	Горячие клавиши
 
 $SSL_bUseSceneMenu  Use Scene Menu
-# TODO: $SSL_bUseSceneMenuHighlight
 $SSL_bUseSceneMenuHighlight	Toggles the use of the native in-scene menu and enjoyment bars.\nDisable this only if the scene menu causes crashes or you prefer legacy SL's hotkey approach.
 
 # ------ Global SexLab Hotkeys
@@ -327,7 +326,6 @@ $SSL_iTargetActor	Выбрать персонажа
 $SSL_iTargetActorHighlight	Направьте перекрестие прицела на персонажа и нажмите эту клавишу, после чего дождитесь сообщения о том, что персонаж выбран. После этого вам станут доступны новые возможности в меню SexLab - к примеру, вы сможете просмотреть сведения о статистике выбранного персонажа, изменить тип его голоса и т.д.
 $SSL_iToggleFreeCamera	Режим "свободная камера"
 $SSL_iToggleFreeCameraHighlight	Включает/отключает режим свободной камеры, что равносильно использованию консольной команды "TFC". Эта клавиша может быть использована в любых сценах, вне зависимости от их типа.
-# TODO: $SSL_iToggleThreadControl
 $SSL_iToggleThreadControl	Toggle Thread Control
 
 # ------ Scene Manipulation
@@ -340,6 +338,7 @@ $SSL_iKeyAdvance	Продолжить сцену / Выбрать
 $SSL_iKeyEnd	Закончить сцену
 $SSL_iKeyMenu   Open Menu / Swap Menu Tab
 $SSL_iKeyMod	Модификатор
+$SSL_iKeyModHighlight	Toggles alternative effect for other hotkeys.\nNext/Prev: ChangePartner, AdvanceStage, OffsetAdjustMode.\nAdjustTarget: EnjRaise, EnjHoldback, ChangePosition, OffsetDirections.\nThe hotkeys changing their mode to "AdjustTarget" with ModifierKey affect Player on their own.
 $SSL_iKeyReset	Инвертирование действия
 
 $SSL_LegacyHotkeys  Legacy Hotkeys
@@ -504,16 +503,10 @@ $SSL_bGameSpamDelayPenalty  Minigame Spam/Delay Penalty
 $SSL_bGameSpamDelayPenaltyHighlight Toggles enjoyment penalties along with stamina and magicka depletion for the player upon badly timed attempts at raising enjoyment.\nNOTE: This option only works when combined with the above option.
 
 # ------ Game Hotkeys
-$SSL_iGameUtilityKey	Game Utility Key
-$SSL_iGameUtilityKeyHighlight	Modifier key for alternate functions of other enjoyment game hotkeys.
-$SSL_iGamePauseKey	Game Pause Key
-$SSL_iGamePauseKeyHighlight	Hotkey to pause/resume the enjoyment game.\nAlternative functions toggled by combining with utility key.
 $SSL_iGameRaiseEnjKey	Raise Enj Key
 $SSL_iGameRaiseEnjKeyHighlight	Hotkey to manually raise enjoyment.
 $SSL_iGameHoldbackKey	Reduce Enj Key
 $SSL_iGameHoldbackKeyHighlight	Hotkey to manually holdback/reduce enjoyment.
-$SSL_iGameSelectNextPos	Next Actor Key
-$SSL_iGameSelectNextPosHighlight	Hotkey to cycle/select the next position or actor.\nDirection of cycle will be reversed when combined with utility key.
 
 # ------------------ Expression Editor --------------------------------------------------
 $SSL_ExpressionEditor	Редактор эмоций

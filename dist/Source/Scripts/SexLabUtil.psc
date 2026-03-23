@@ -137,32 +137,39 @@ float Function CalcPathingTargetDistance(int k) global
     return 128.0
 EndFunction
 
-Function ToggleFreeCamera(bool KeepEnabled = false) global
+Function ToggleFreeCamera(int aiForceState = -1) global
+	;[-1:Toggle, 0:KeepDisabled, 1:KeepEnabled]
 	If (Game.GetCameraState() == 3)
-		If (!KeepEnabled)
+		If (aiForceState != 1)
 			MiscUtil.ToggleFreeCamera()
 		EndIf
 		return
 	Else
-		While (Game.GetCameraState() == 0)
-			Game.ForceThirdPerson()
-			Utility.Wait(0.2)
-		EndWhile
-		MiscUtil.SetFreeCameraSpeed(GetConfig().AutoSUCSM)
-		MiscUtil.ToggleFreeCamera()
+		If (aiForceState != 0)
+			ForceThirdPerson()
+			MiscUtil.SetFreeCameraSpeed(GetConfig().AutoSUCSM)
+			MiscUtil.ToggleFreeCamera()
+		EndIf
 	EndIf
+EndFunction
+
+Function ForceThirdPerson() global
+	EndIf
+	While (Game.GetCameraState() == 0)
+		Game.ForceThirdPerson()
+	EndWhile
 EndFunction
 
 String Function GetTranslation(String asStr) global native
 
 ; *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-* ;
 ; ----------------------------------------------------------------------------- ;
-;								██╗     ███████╗ ██████╗  █████╗  ██████╗██╗   ██╗							;
-;								██║     ██╔════╝██╔════╝ ██╔══██╗██╔════╝╚██╗ ██╔╝							;
-;								██║     █████╗  ██║  ███╗███████║██║      ╚████╔╝ 							;
-;								██║     ██╔══╝  ██║   ██║██╔══██║██║       ╚██╔╝  							;
-;								███████╗███████╗╚██████╔╝██║  ██║╚██████╗   ██║   							;
-;								╚══════╝╚══════╝ ╚═════╝ ╚═╝  ╚═╝ ╚═════╝   ╚═╝   							;
+;				██╗     ███████╗ ██████╗  █████╗  ██████╗██╗   ██╗				;
+;				██║     ██╔════╝██╔════╝ ██╔══██╗██╔════╝╚██╗ ██╔╝				;
+;				██║     █████╗  ██║  ███╗███████║██║      ╚████╔╝ 				;
+;				██║     ██╔══╝  ██║   ██║██╔══██║██║       ╚██╔╝  				;
+;				███████╗███████╗╚██████╔╝██║  ██║╚██████╗   ██║   				;
+;				╚══════╝╚══════╝ ╚═════╝ ╚═╝  ╚═╝ ╚═════╝   ╚═╝   				;
 ; ----------------------------------------------------------------------------- ;
 ; *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-* ;
 
@@ -395,5 +402,5 @@ bool function IsActor(Form FormRef) global
 endFunction
 
 function EnableFreeCamera(bool Enabling = true, float sucsm = 5.0) global
-	return MiscUtil.SetFreeCameraState(Enabling, sucsm)
+	return ToggleFreeCamera(Enabling as int)
 endFunction
