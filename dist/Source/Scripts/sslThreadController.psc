@@ -507,18 +507,15 @@ Function HandleOffsetAdjustment(String[] asOffsetType, int aiKey, bool abAdjustT
 	float afValue = Config.AdjustStepSize
 	bool abAdjustingPos = (_AdjustMode == AdjMode_PosXY)  || (_AdjustMode == AdjMode_PosRZ)
 	ApplyOffsetAdjustment(akAffectedActor, afValue, asOffsetType, abAdjustingPos)
-	If (!Input.IsKeyPressed(aiKey))
-		PauseTimer(false)
-		return
-	EndIf
 	While (Input.IsKeyPressed(aiKey))
-		Utility.Wait(0.4)
-		If (!Input.IsKeyPressed(aiKey))
-			PauseTimer(false)
-			return
-		EndIf
 		ApplyOffsetAdjustment(akAffectedActor, afValue, asOffsetType, abAdjustingPos)
+		afValue += Config.AdjustStepSize * 0.1
+		If (afValue > Config.AdjustStepSize * 5.0)
+			afValue = Config.AdjustStepSize * 5.0
+		EndIf
+		Utility.Wait(0.02)
 	EndWhile
+	PauseTimer(false)
 EndFunction
 
 Function ApplyOffsetAdjustment(Actor akAffectedActor, float afValue, String[] asOffsetType, bool abAdjustingPos)
