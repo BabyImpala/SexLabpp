@@ -555,6 +555,7 @@ State Paused
 		Debug.SendAnimationEvent(_ActorRef, "IdleFurnitureExit")
 		Debug.SendAnimationEvent(_ActorRef, "AnimObjectUnequip")
 		Debug.SendAnimationEvent(_ActorRef, "IdleStop")
+		_VRIKRestoreInTicks = (_Config as sslVRIKConfig).ToggleVRIK(true)
 		LockActorImpl()
 		_ActorRef.SetAnimationVariableInt("IsNPC", 0)
 		_ActorRef.SetAnimationVariableBool("bHumanoidFootIKDisable", 1)
@@ -624,6 +625,7 @@ State Paused
 		If (_ActorRef == _PlayerRef)
 			SexLabUtil.ToggleFreeCamera(0)
 		EndIf
+		_VRIKRestoreInTicks = (_Config as sslVRIKConfig).ToggleVRIK(false)
 		UnlockActorImpl()
 		Log("Unlocked Actor: " + GetActorName())
 		_ActorLocked = False
@@ -718,6 +720,8 @@ bool _LovenseAnal
 bool[] _CurrentInteractions
 bool[] _HomoTypes
 
+int _VRIKRestoreInTicks
+
 State Animating
 	Event OnBeginState()
 		RegisterForModEvent("SSL_ORGASM_Thread" + _Thread.tid, "OnOrgasm")
@@ -766,6 +770,18 @@ State Animating
 			RefreshLovenseActions()
 		Else
 			_LoopLovenseDelay -= UPDATE_INTERVAL
+		EndIf
+		; VRIK (Comeback: Is this always needed or upon offset changes only?) (How does this interfere with POV switching?)
+		_VRIKRestoreInTicks = (_Config as sslVRIKConfig).UpdatePositioningVRIK(_VRIKRestoreInTicks)
+		If (_VRIKRestoreInTicks < 0)
+			_VRIKRestoreInTicks = 0
+			(_Config as sslVRIKConfig).RestoreHmdVRIK()
+		EndIf
+		If (_VRIKRestoreInTicks > 0)
+			_VRIKRestoreInTicks -= 1
+			If _VRIKRestoreInTicks <= 1
+				_VRIKRestoreInTicks = -1
+			EndIf
 		EndIf
 		; Loop
 		_LoopDelay += UPDATE_INTERVAL
@@ -856,8 +872,12 @@ State Animating
 		_OrgasmCount += 1
 		; SFX
 		If(_Config.OrgasmEffects)
-			If (_ActorRef == _PlayerRef && _Config.ShakeStrength > 0 && Game.GetCameraState() >= 8)
-				Game.ShakeCamera(none, _Config.ShakeStrength, _Config.ShakeStrength + 1.0)
+			If (_ActorRef == _PlayerRef)
+				If (_Config.IsSkyrimVR)
+					(_Config as sslVRIKConfig).DoWhiteOutEfffect(_ActorRef, _OrgasmCount)
+				ElseIf (_Config.ShakeStrength > 0 && Game.GetCameraState() >= 8)
+					Game.ShakeCamera(none, _Config.ShakeStrength, _Config.ShakeStrength + 1.0)
+				EndIf
 			EndIf
 			If (!IsSilent)
 				Sound snd = _Thread.GetAliasOrgasmSound(Self, GetActorVoice())
@@ -1099,6 +1119,7 @@ Function Initialize()
 	_CurrentInteractions = Utility.CreateBoolArray(_Thread.SUPPORTED_INTER_COUNT, false)
 	_HomoTypes = Utility.CreateBoolArray(5, false)
 	ResetEnjoymentVariables()
+	_VRIKRestoreInTicks = 0
 EndFunction
 
 Event OnRequestClear(string asEventName, string asStringArg, float afDoStatistics, form akSender)

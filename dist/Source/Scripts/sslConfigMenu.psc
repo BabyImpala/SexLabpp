@@ -936,6 +936,9 @@ Function SystemCheckOptions()
 	AddTextOption("MfgFix NG", okOrFail[Config.CheckSystemPart("MfgFixNG") as int], OPTION_FLAG_DISABLED)
 	AddTextOption("Procedural Penis Animations", okOrFail[Config.CheckSystemPart("PPA") as int], OPTION_FLAG_DISABLED)
 	AddTextOption("CrosshairRefEvents HangFix", okOrFail[Config.CheckSystemPart("CrossHairRef") as int], OPTION_FLAG_DISABLED)
+	If (sslVRIKConfig.CheckForSkyrimVR())
+		AddTextOption("VRIK Player Avatar", okOrFail[Config.CheckSystemPart("VRIK") as int], OPTION_FLAG_DISABLED)
+	EndIf
 EndFunction
 
 State ResetStripOverrides
