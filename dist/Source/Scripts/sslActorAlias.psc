@@ -555,7 +555,7 @@ State Paused
 		Debug.SendAnimationEvent(_ActorRef, "IdleFurnitureExit")
 		Debug.SendAnimationEvent(_ActorRef, "AnimObjectUnequip")
 		Debug.SendAnimationEvent(_ActorRef, "IdleStop")
-		_VRIKRestoreInTicks = (_Config as sslVRIKConfig).ToggleVRIK(true)
+		_VRIKRestoreInTicks = _Config.ToggleVRIK(true)
 		LockActorImpl()
 		_ActorRef.SetAnimationVariableInt("IsNPC", 0)
 		_ActorRef.SetAnimationVariableBool("bHumanoidFootIKDisable", 1)
@@ -625,7 +625,7 @@ State Paused
 		If (_ActorRef == _PlayerRef)
 			SexLabUtil.ToggleFreeCamera(0)
 		EndIf
-		_VRIKRestoreInTicks = (_Config as sslVRIKConfig).ToggleVRIK(false)
+		_VRIKRestoreInTicks = _Config.ToggleVRIK(false)
 		UnlockActorImpl()
 		Log("Unlocked Actor: " + GetActorName())
 		_ActorLocked = False
@@ -772,10 +772,10 @@ State Animating
 			_LoopLovenseDelay -= UPDATE_INTERVAL
 		EndIf
 		; VRIK (Comeback: Is this always needed or upon offset changes only?) (How does this interfere with POV switching?)
-		_VRIKRestoreInTicks = (_Config as sslVRIKConfig).UpdatePositioningVRIK(_VRIKRestoreInTicks)
+		_VRIKRestoreInTicks = _Config.UpdatePositioningVRIK(_VRIKRestoreInTicks)
 		If (_VRIKRestoreInTicks < 0)
 			_VRIKRestoreInTicks = 0
-			(_Config as sslVRIKConfig).RestoreHmdVRIK()
+			_Config.RestoreHmdVRIK()
 		EndIf
 		If (_VRIKRestoreInTicks > 0)
 			_VRIKRestoreInTicks -= 1
@@ -874,7 +874,7 @@ State Animating
 		If(_Config.OrgasmEffects)
 			If (_ActorRef == _PlayerRef)
 				If (_Config.IsSkyrimVR)
-					(_Config as sslVRIKConfig).DoWhiteOutEfffect(_ActorRef, _OrgasmCount)
+					_Config.DoWhiteOutEfffect(_ActorRef, _OrgasmCount)
 				ElseIf (_Config.ShakeStrength > 0 && Game.GetCameraState() >= 8)
 					Game.ShakeCamera(none, _Config.ShakeStrength, _Config.ShakeStrength + 1.0)
 				EndIf
