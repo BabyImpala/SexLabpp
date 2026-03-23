@@ -586,20 +586,6 @@ Function _SetfTimers(int aiIdx0, float[] afSet)
     SetSettingFltA("fTimers", afSet[3], 3)
 EndFunction
 
-; Compatibility checks
-bool property HasNiOverride hidden
-  bool Function Get()
-    return SKSE.GetPluginVersion("SKEE64") >= 7 || NiOverride.GetScriptVersion() >= 7
-  EndFUnction
-  Function Set(bool aSet)
-  EndFunction
-EndProperty
-bool property HasMFGFix hidden
-  bool Function Get()
-    return SKSE.GetPluginVersion("mfgfix") > -1
-  EndFunction
-EndProperty
-
 ; ------------------------------------------------------- ;
 ; --- Config Accessors                                --- ;
 ; ------------------------------------------------------- ;
@@ -965,14 +951,18 @@ bool function CheckSystemPart(string CheckSystem)
     return SKSE.GetScriptVersionRelease() >= 60
   elseIf CheckSystem == "SkyUI"
     return Quest.GetQuest("SKI_ConfigManagerInstance") != none
-  elseIf CheckSystem == "SexLabP+"
+  elseIf CheckSystem == "SexLabUtil"
     return SKSE.GetPluginVersion("SexLabUtil") > -1
   elseIf CheckSystem == "PapyrusUtil"
     return PapyrusUtil.GetVersion() >= 36
-  elseIf CheckSystem == "NiOverride"
-		return HasNiOverride
-  elseIf CheckSystem == "MfgFix"
-		return HasMFGFix
+  elseIf CheckSystem == "RaceMenu"
+		return SKSE.GetPluginVersion("SKEE64") >= 7
+  elseIf CheckSystem == "MfgFixNG"
+		return SKSE.GetPluginVersion("mfgfix") > -1
+  elseIf CheckSystem == "PPA"
+		return SKSE.GetPluginVersion("AccuratePenetration") > -1
+  elseIf CheckSystem == "CrossHairRef"
+		return SKSE.GetPluginVersion("CrosshairRefEventsFix") > -1
   endIf
   return false
 endFunction
@@ -981,8 +971,8 @@ bool function CheckSystem()
   If (!CheckSystemPart("SKSE"))
     CheckSKSE.Show(2.22)
     return false
-  ElseIf (!CheckSystemPart("SexLabP+"))
-    Debug.MessageBox("[SexLab]\nMissing SexLabUtil.dll.\nThis plugin is mandatory for SexLab to function. Ensure you have a with your game compatible version of SexLab installed.")
+  ElseIf (!CheckSystemPart("SexLabUtil"))
+    Debug.MessageBox("[SexLab]\nMissing SexLabUtil.dll.\nThis plugin is mandatory for SexLab to function.")
     return false
   ElseIf (!CheckSystemPart("SkyUI"))
     CheckSkyUI.Show(5.2)
@@ -990,7 +980,12 @@ bool function CheckSystem()
   ElseIf (!CheckSystemPart("PapyrusUtil"))
     CheckPapyrusUtil.Show(4.4)
     return false
-  endIf
+  ElseIf (!CheckSystemPart("CrossHairRef"))
+    Debug.MessageBox("[SexLab]\nMissing 'CrosshairRefEvents Hang Fix'.\nThis mod is mandatory to avoud soft-locks during scene startup.")     
+    return false    
+  ElseIf (!CheckSystemPart("PPA"))
+    Debug.MessageBox("[SexLab]\nMissing 'Procedural Penis Animations'.\nThis mod is highly recommended for schlong allignments to work properly.")
+  EndIf
   return true
 endFunction
 
@@ -1241,22 +1236,6 @@ bool Property GameEnabled hidden
     SetSettingBool("bGameEnabled", value)
   EndFunction
 EndProperty
-int Property GameUtilityKey hidden
-  int Function Get()
-    return GetSettingInt("iKeyMod")
-  EndFunction
-  Function Set(int aiSet)
-    SetSettingInt("iKeyMod", aiSet)
-  EndFunction
-EndProperty
-int Property GamePauseKey hidden
-  int Function Get()
-    return GetSettingInt("iGamePauseKey")
-  EndFunction
-  Function Set(int aiSet)
-    SetSettingInt("iGamePauseKey", aiSet)
-  EndFunction
-EndProperty
 int Property GameRaiseEnjKey hidden
   int Function Get()
     return GetSettingInt("iGameRaiseEnjKey")
@@ -1271,14 +1250,6 @@ int Property GameHoldbackKey hidden
   EndFunction
   Function Set(int aiSet)
     SetSettingInt("iGameHoldbackKey", aiSet)
-  EndFunction
-EndProperty
-int Property GameSelectNextPos hidden
-  int Function Get()
-    return GetSettingInt("iTargetActor")
-  EndFunction
-  Function Set(int aiSet)
-    SetSettingInt("iTargetActor", aiSet)
   EndFunction
 EndProperty
 int Property GameStaminaCost hidden

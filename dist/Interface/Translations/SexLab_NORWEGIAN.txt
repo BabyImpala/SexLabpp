@@ -317,12 +317,12 @@ $SSL_WolfVoice01	[SL] Wolf Default
 $SSL_PlayerHotkeys	Player Hotkeys
 
 $SSL_bUseSceneMenu	Use Scene Menu
-$SSL_bUseSceneMenuHighlight	Toggles the use of the native in-scene menu and enjoyment bars.\nDisable this only if the scene menu causes crashes or you prefer legacy SL's hotkey approach.
+$SSL_bUseSceneMenuHighlight	Toggles the use of the native in-scene menu and enjoyment bars.\nDisabling this brings back support for some modernized legacy SL's hotkeys.
 
 # ------ Global SexLab Hotkeys
 $SSL_GlobalHotkeys	Global SexLab Hotkeys
 
-$SSL_iTargetActor	Target Actor For Edit
+$SSL_iTargetActor	Target Actor / Change Partner
 $SSL_iTargetActorHighlight	After pressing this hotkey, place your crosshairs in game over an actor until your receive a notification that the actor is targeted, afterwards the actor will be available for editing purposes in various menu pages.
 $SSL_iToggleFreeCamera	Toggle Free Camera Mode
 $SSL_iToggleFreeCameraHighlight	Toggles the camera mode into a free flying camera state, same as entering TFC into console, this hotkey is enabled at all times regardless of animation.
@@ -338,6 +338,7 @@ $SSL_iKeyAdvance	Advance Scene / Select
 $SSL_iKeyEnd	End Scene / Close Menu / Back
 $SSL_iKeyMenu	Open Menu / Swap Menu Tab
 $SSL_iKeyMod	Modifier
+$SSL_iKeyModHighlight	Toggles alternative effect for other hotkeys.\nNext/Prev: ChangePartner, AdvanceStage, OffsetAdjustMode.\nAdjustTarget: EnjRaise, EnjHoldback, ChangePosition, OffsetDirections.\nThe hotkeys changing their mode to "AdjustTarget" with ModifierKey affect Player on their own.
 $SSL_iKeyReset	Inverse Action
 
 $SSL_LegacyHotkeys	Legacy Hotkeys
@@ -502,16 +503,10 @@ $SSL_bGameSpamDelayPenalty	Minigame Spam/Delay Penalty
 $SSL_bGameSpamDelayPenaltyHighlight	Toggles enjoyment penalties along with stamina and magicka depletion for the player upon badly timed attempts at raising enjoyment. (IMP: This option only works when combined with the above option.)
 
 # ------ Game Hotkeys
-$SSL_iGameUtilityKey	Game Modifier Key
-$SSL_iGameUtilityKeyHighlight	Modifier key for alternate functions of other enjoyment game hotkeys.
-$SSL_iGamePauseKey	Game Pause Key
-$SSL_iGamePauseKeyHighlight	Hotkey to pause/resume the enjoyment game.\nAlternative functions toggled by combining with utility key.
 $SSL_iGameRaiseEnjKey	RaiseEnj Key
 $SSL_iGameRaiseEnjKeyHighlight	Hotkey to manually raise enjoyment at the cost of stamina. To raise self/player enjoyment, combine with utility key.\nOnce enjoyment reaches 90, this hotkey is used to maintain edge state, whereby timed clicks are required to avoid spam penalties.
 $SSL_iGameHoldbackKey	Holdback Key
 $SSL_iGameHoldbackKeyHighlight	Hotkey to manually holdback/reduce enjoyment at the cost of magicka. To reduce self/player enjoyment, combine with utility key.
-$SSL_iGameSelectNextPos	Next Actor Key
-$SSL_iGameSelectNextPosHighlight	Hotkey to cycle/select the next position or actor.\nDirection of cycle will be reversed when combined with utility key.
 
 # ------------------ Expression Editor --------------------------------------------------
 $SSL_ExpressionEditor	Expression Editor

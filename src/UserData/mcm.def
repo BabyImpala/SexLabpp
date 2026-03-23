@@ -115,7 +115,6 @@ MCM_SETTING(fEnjMultSub, 0.8f)
 MCM_SETTING(fEnjMultDom, 1.2f)
 MCM_SETTING(fPainHugePPMult, 0.5f)
 
-MCM_SETTING(iGamePauseKey, 0x19)           // P
 MCM_SETTING(iGameRaiseEnjKey, 0x100)       // RMB
 MCM_SETTING(iGameHoldbackKey, 0x101)       // LMB
 

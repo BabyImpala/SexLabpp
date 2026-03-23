@@ -779,7 +779,7 @@ Function TestApply(Actor ActorRef)
 	sslLog.Log("Testing Expression: " + _expression[_expressionIdx] + ". Low? " + testlow +", OpenMouth? " + testOpenMouth)
 	Utility.Wait(0.1)
 	If (ActorRef == PlayerRef)
-		Game.ForceThirdPerson()
+		SexLabUtil.ForceThirdPerson()
 	EndIf
 	If (testOpenMouth)
 		sslBaseExpression.OpenMouth(ActorRef)
@@ -822,11 +822,8 @@ Function EnjoymentSettings()
 	AddStateOptionSlider("iMaxNoPainOrgasmFemale", "$SSL_iMaxNoPainOrgasmFemale", 2, 1, 5, 1, "{0}", enj_flag)
 	AddStateOptionSlider("iNoPainRequiredTime", "$SSL_iNoPainRequiredTime", 50, 0, 180, 10, "{0}", enj_flag)
 	AddStateOptionSlider("iNoPainRequiredXP", "$SSL_iNoPainRequiredXP", 50, 0, 100, 5, "{0}", enj_flag)
-
-	AddHeaderOption("Rate Multipliers", enj_header)
 	AddStateOptionSlider("fEnjRaiseMultInter", "$SSL_fEnjRaiseMultInter", 1.2, 0, 3, 0.1, "{1}", enj_flag)
-	AddStateOptionSlider("fEnjMultVictim", "$SSL_fEnjMultVictim", 0.8, 0, 2, 0.1, "{1}", enj_flag)
-	AddStateOptionSlider("fEnjMultSub", "$SSL_fEnjMultSub", 0.8, 0, 2, 0.1, "{1}", enj_flag)
+	AddStateOptionSlider("fPainHugePPMult", "$SSL_fPainHugePPMult", 0.5, 0, 2, 0.1, "{1}", enj_flag)
 
 	SetCursorPosition(1)
 	AddEmptyOption()
@@ -839,14 +836,12 @@ Function EnjoymentSettings()
 	AddStateOptionBool("bGameSpamDelayPenalty", "$SSL_bGameSpamDelayPenalty", game_flag)
 
 	AddHeaderOption("Game Hotkeys", game_header)
-	AddStateOptionKey("iKeyMod", "$SSL_iGameUtilityKey", true, true, abDisable=game_flag)
-	AddStateOptionKey("iGamePauseKey", "$SSL_iGamePauseKey", true, true, abDisable=game_flag)
 	AddStateOptionKey("iGameRaiseEnjKey", "$SSL_iGameRaiseEnjKey", true, true, abDisable=game_flag)
 	AddStateOptionKey("iGameHoldbackKey", "$SSL_iGameHoldbackKey", true, true, abDisable=game_flag)
-	AddStateOptionKey("iTargetActor", "$SSL_iGameSelectNextPos", true, true, abDisable=game_flag)
 
-	AddEmptyOption()
-	AddStateOptionSlider("fPainHugePPMult", "$SSL_fPainHugePPMult", 0.5, 0, 2, 0.1, "{1}", enj_flag)
+	AddHeaderOption("Context Rate Mult", enj_header)
+	AddStateOptionSlider("fEnjMultVictim", "$SSL_fEnjMultVictim", 0.8, 0, 2, 0.1, "{1}", enj_flag)
+	AddStateOptionSlider("fEnjMultSub", "$SSL_fEnjMultSub", 0.8, 0, 2, 0.1, "{1}", enj_flag)
 	AddStateOptionSlider("fEnjMultAggressor", "$SSL_fEnjMultAggressor", 1.2, 0, 2, 0.1, "{1}", enj_flag)
 	AddStateOptionSlider("fEnjMultDom", "$SSL_fEnjMultDom", 1.2, 0, 2, 0.1, "{1}", enj_flag)
 EndFunction
@@ -935,10 +930,12 @@ Function SystemCheckOptions()
 	okOrFail[1] = "<font color='#00FF00'>ok</font>"
 
 	AddTextOption("Skyrim Script Extender", okOrFail[Config.CheckSystemPart("SKSE") as int], OPTION_FLAG_DISABLED)
-	AddTextOption("SexLab.dll", okOrFail[Config.CheckSystemPart("SexLabP+") as int], OPTION_FLAG_DISABLED)
+	AddTextOption("SexLabUtil.dll", okOrFail[Config.CheckSystemPart("SexLabUtil") as int], OPTION_FLAG_DISABLED)
 	AddTextOption("PapyrusUtil.dll", okOrFail[Config.CheckSystemPart("PapyrusUtil") as int], OPTION_FLAG_DISABLED)
-	AddTextOption("RaceMenu", okOrFail[Config.CheckSystemPart("NiOverride") as int], OPTION_FLAG_DISABLED)
-	AddTextOption("MfgFix NG", okOrFail[Config.CheckSystemPart("MfgFix") as int], OPTION_FLAG_DISABLED)
+	AddTextOption("RaceMenu", okOrFail[Config.CheckSystemPart("RaceMenu") as int], OPTION_FLAG_DISABLED)
+	AddTextOption("MfgFix NG", okOrFail[Config.CheckSystemPart("MfgFixNG") as int], OPTION_FLAG_DISABLED)
+	AddTextOption("Procedural Penis Animations", okOrFail[Config.CheckSystemPart("PPA") as int], OPTION_FLAG_DISABLED)
+	AddTextOption("CrosshairRefEvents HangFix", okOrFail[Config.CheckSystemPart("CrossHairRef") as int], OPTION_FLAG_DISABLED)
 EndFunction
 
 State ResetStripOverrides

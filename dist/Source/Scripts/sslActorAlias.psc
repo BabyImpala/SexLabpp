@@ -375,9 +375,7 @@ Auto State Empty
 		ForceRefTo(ProspectRef)
 		_ActorRef = ProspectRef
 		If (_ActorRef == _PlayerRef)
-			If (Game.GetCameraState() == 0)
-				Game.ForceThirdPerson()
-			EndIf
+			SexLabUtil.ForceThirdPerson()
 			Game.DisablePlayerControls(abMovement=true, abFighting=true, abCamSwitch=true, abLooking=false, \
 				abSneaking=true, abMenu=false, abActivate=true, abJournalTabs=false, aiDisablePOVType=0)
 		Else
@@ -408,7 +406,7 @@ Auto State Empty
 			_Thread.RequestStatisticUpdate(_ActorRef, _StartedAt)
 		EndIf
 		If (_ActorRef == _PlayerRef)
-			Game.ForceThirdPerson()
+			SexLabUtil.ForceThirdPerson()
 			Game.EnablePlayerControls()
 		EndIf
 		Parent.Clear()
@@ -463,7 +461,7 @@ State Ready
 				EndWhile
 			EndIf
 			If(_Config.AutoTFC)
-				SexLabUtil.ToggleFreeCamera(true)
+				SexLabUtil.ToggleFreeCamera(1)
 			EndIf
 		Else
 			_Config.CheckBardAudience(_ActorRef, true)
@@ -624,7 +622,7 @@ State Paused
 		_ActorRef.SetAnimationVariableInt("IsNPC", _AnimVarIsNPC)
 		_ActorRef.SetAnimationVariableBool("bHumanoidFootIKDisable", _AnimVarbHumanoidFootIKDisable)
 		If (_ActorRef == _PlayerRef)
-			MiscUtil.SetFreeCameraState(false)
+			SexLabUtil.ToggleFreeCamera(0)
 		EndIf
 		UnlockActorImpl()
 		Log("Unlocked Actor: " + GetActorName())
@@ -855,6 +853,7 @@ State Animating
 			EndIf
 		EndIf
 		UnregisterForUpdate()
+		_OrgasmCount += 1
 		; SFX
 		If(_Config.OrgasmEffects)
 			If (_ActorRef == _PlayerRef && _Config.ShakeStrength > 0 && Game.GetCameraState() >= 8)
@@ -887,7 +886,6 @@ State Animating
 		ModEvent.Send(handle)
 		TrackedEvent(TRACK_ORGASM)
 		_LastOrgasm = SexLabUtil.GetCurrentGameRealTime()
-		_OrgasmCount += 1
 		; Enjoyment
 		If (_bEnjEnabled)
 			_FullEnjoyment = 0
