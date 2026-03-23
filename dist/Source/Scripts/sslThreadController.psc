@@ -18,18 +18,24 @@ Function EnableHotkeys(bool forced = false)
 	If(!HasPlayer && !forced)
 		return
 	EndIf
-	If (Config.UseSceneMenu)
+	If (Config.UseSceneMenu && !Config.IsSkyrimVR)
 		EnableMenuEvents()
 	EndIf
 	EnableTraditionalHotkeys()
+	If (Config.IsSkyrimVR)
+		(self as sslVRIKController).EnableGesturesVR()
+	EndIf
 EndFunction
 
 Function DisableHotkeys()
 	SexLabUtil.ToggleFreeCamera(0) ; If free cam is active here will glitch out controls?
-	If (Config.UseSceneMenu)
+	If (Config.UseSceneMenu && !Config.IsSkyrimVR)
 		DisableMenuEvents()
 	EndIf
 	DisableTraditionalHotkeys()
+	If (Config.IsSkyrimVR)
+		(self as sslVRIKController).DisableGesturesVR()
+	EndIf
 EndFunction
 
 ; ------------------------------------------------------- ;

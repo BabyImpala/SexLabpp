@@ -139,6 +139,9 @@ EndFunction
 
 Function ToggleFreeCamera(int aiForceState = -1) global
 	;[-1:Toggle, 0:KeepDisabled, 1:KeepEnabled]
+	If (GetConfig().IsSkyrimVR)
+		return
+	EndIf
 	If (Game.GetCameraState() == 3)
 		If (aiForceState != 1)
 			MiscUtil.ToggleFreeCamera()
@@ -154,6 +157,8 @@ Function ToggleFreeCamera(int aiForceState = -1) global
 EndFunction
 
 Function ForceThirdPerson() global
+	If (GetConfig().IsSkyrimVR)
+		return
 	EndIf
 	While (Game.GetCameraState() == 0)
 		Game.ForceThirdPerson()

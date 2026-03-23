@@ -943,6 +943,19 @@ Function LoadStraponEx(Armor akStraponForm)
 EndFunction
 
 ; ------------------------------------------------------- ;
+; --- VR Specific                                     --- ;
+; ------------------------------------------------------- ;
+
+bool Property IsSkyrimVR hidden
+  bool Function Get()
+    return GetSettingBool("bSkyrimVR")
+  EndFunction
+  Function Set(bool value)
+    SetSettingBool("bSkyrimVR", value)
+  EndFunction
+EndProperty
+
+; ------------------------------------------------------- ;
 ; --- System Use                                      --- ;
 ; ------------------------------------------------------- ;
 
@@ -963,6 +976,9 @@ bool function CheckSystemPart(string CheckSystem)
 		return SKSE.GetPluginVersion("AccuratePenetration") > -1
   elseIf CheckSystem == "CrossHairRef"
 		return SKSE.GetPluginVersion("CrosshairRefEventsFix") > -1
+  elseif CheckSystem == "VRIK"
+    IsSkyrimVR = sslVRIKConfig.CheckForSkyrimVR()
+    return IsSkyrimVR && sslVRIKConfig.CheckForVRIK()
   endIf
   return false
 endFunction
@@ -986,6 +1002,10 @@ bool function CheckSystem()
   ElseIf (!CheckSystemPart("PPA"))
     Debug.MessageBox("[SexLab]\nMissing 'Procedural Penis Animations'.\nThis mod is highly recommended for schlong allignments to work properly.")
   EndIf
+  If (!CheckSystemPart("VRIK") && IsSkyrimVR)
+      Debug.MessageBox("[SexLab]\nMissing VRIK.\nThis mod is mandatory for SexLab to function properly in VR.")
+    return false
+  EndIf
   return true
 endFunction
 
@@ -1000,6 +1020,7 @@ Function Reload()
   _CrosshairRef = none
   TargetRef = none
   _Hooks = sslUtility.ClearNoneThreadHook(_Hooks)
+  IsSkyrimVR = sslVRIKConfig.CheckForSkyrimVR()
 
   UnregisterForAllKeys()
   RegisterForKey(ToggleFreeCamera)

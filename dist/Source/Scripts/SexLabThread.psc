@@ -431,3 +431,15 @@ int Property PATHING_FORCE = 1 AutoReadOnly			; Always try to walk unless the di
 ; This can only be set before playing state
 Function SetPathingFlag(Actor akActor, int aiPathingFlag)
 EndFunction
+
+; ------------------------------------------------------- ;
+; --- VRIK Configs + Init                             --- ;
+; ------------------------------------------------------- ;
+
+; Function to temporarily dictate SL's VRIK configs for the duration of the active scene.
+; Example Use: restrain hands to anim: SexLabUtil.SetConfigsVRIK(true, true, aiTrackHands=0)
+Function SetConfigsVRIK(bool abApply=true, bool abOverrideConfig=false, int ab3rdPerson=-1, \
+	int abLockHeight=-1, float afHeightAdjSpeed=-1.0, int abTrackHead=-1, int aiTrackHands=-1, \
+	float afDistHideHead=-1.0, float afDistNearClip=-1.0, int abLockHmdToBody=-1, \
+	float afLockHmdDistance=-1.0, float afLockHmdTolerance=-1.0, float afLockHmdSpeed=-1.0)
+EndFunction
