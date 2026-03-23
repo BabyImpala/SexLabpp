@@ -572,11 +572,11 @@ Function SetConfigsVRIK(bool abApply=true, bool abOverrideConfig=false, int ab3r
 	float afDistHideHead=-1.0, float afDistNearClip=-1.0, int abLockHmdToBody=-1, \
 	float afLockHmdDistance=-1.0, float afLockHmdTolerance=-1.0, float afLockHmdSpeed=-1.0)
 	If (abApply)
-		(Config as sslVRIKConfig).RefreshConfigsVRIK(abOverrideConfig, ab3rdPerson, abLockHeight, afHeightAdjSpeed, \
+		Config.RefreshConfigsVRIK(abOverrideConfig, ab3rdPerson, abLockHeight, afHeightAdjSpeed, \
 			abTrackHead, aiTrackHands, afDistHideHead, afDistNearClip, abLockHmdToBody, \
 			afLockHmdDistance, afLockHmdTolerance, afLockHmdSpeed)
 	EndIf
-	(Config as sslVRIKConfig).ApplyConfigsVRIK(abApply)
+	Config.ApplyConfigsVRIK(abApply)
 EndFunction
 
 ; *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-* ;

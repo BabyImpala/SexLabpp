@@ -978,8 +978,8 @@ bool function CheckSystemPart(string CheckSystem)
   elseIf CheckSystem == "CrossHairRef"
 		return SKSE.GetPluginVersion("CrosshairRefEventsFix") > -1
   elseif CheckSystem == "VRIK"
-    IsSkyrimVR = sslVRIKConfig.CheckForSkyrimVR()
-    return IsSkyrimVR && sslVRIKConfig.CheckForVRIK()
+    IsSkyrimVR = CheckForSkyrimVR()
+    return IsSkyrimVR && CheckForVRIK()
   endIf
   return false
 endFunction
@@ -1021,7 +1021,7 @@ Function Reload()
   _CrosshairRef = none
   TargetRef = none
   _Hooks = sslUtility.ClearNoneThreadHook(_Hooks)
-  IsSkyrimVR = sslVRIKConfig.CheckForSkyrimVR()
+  IsSkyrimVR = CheckForSkyrimVR()
 
   UnregisterForAllKeys()
   RegisterForKey(ToggleFreeCamera)
@@ -1304,6 +1304,388 @@ bool Property GameSpamDelayPenalty hidden
   EndFunction
   Function Set(bool value)
     SetSettingBool("bGameSpamDelayPenalty", value)
+  EndFunction
+EndProperty
+
+; *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-* ;
+; ----------------------------------------------------------------------------- ;
+;                          ██╗   ██╗██████╗ ██╗██╗  ██╗                         ;
+;                          ██║   ██║██╔══██╗██║██║ ██╔╝                         ;
+;                          ██║   ██║██████╔╝██║█████╔╝                          ;
+;                          ╚██╗ ██╔╝██╔══██╗██║██╔═██╗                          ;
+;                           ╚████╔╝ ██║  ██║██║██║  ██╗                         ;
+;                            ╚═══╝  ╚═╝  ╚═╝╚═╝╚═╝  ╚═╝                         ;
+; ----------------------------------------------------------------------------- ;
+; *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-* ;
+
+bool Function CheckForSkyrimVR() global
+	int iSKSE = SKSE.GetVersion()*10000 + SKSE.GetVersionMinor()*100 + SKSE.GetVersionBeta()
+	return (iSKSE == 20012) ;SKSE VR v2.0.12
+EndFunction
+
+bool Function CheckForVRIK() global
+	int iVRIK = VRIK.VrikGetBuildNumber()
+	return (iVRIK >= 80123)
+EndFunction
+
+; ----------------------------------------------- ;
+; --- VRIK CONFIGURATION                      --- ;
+; ----------------------------------------------- ;
+
+bool _b3rdPerson
+bool _bLockHeight
+float _fHeightAdjSpeed
+bool _bTrackHead
+int _iTrackHands
+float _fDistHideHead
+float _fDistNearClip
+bool _aLockHmdToBody
+float _fLockHmdDistance
+float _fLockHmdTolerance
+float _fLockHmdSpeed
+
+Function RefreshConfigsVRIK(bool abOverrideConfig=false, int ab3rdPerson=-1, \
+	int abLockHeight=-1, float afHeightAdjSpeed=-1.0, int abTrackHead=-1, int aiTrackHands=-1, \
+	float afDistHideHead=-1.0, float afDistNearClip=-1.0, int abLockHmdToBody=-1, \
+	float afLockHmdDistance=-1.0, float afLockHmdTolerance=-1.0, float afLockHmdSpeed=-1.0)
+  If (!IsSkyrimVR)
+    return
+  EndIf
+  ;Handle primary determiners first
+  _b3rdPerson = Use3rdPerson
+  _aLockHmdToBody = LockHmdToBody
+  If (abOverrideConfig)
+    If (ab3rdPerson != -1)
+      _b3rdPerson = ab3rdPerson as bool
+    EndIf
+    If (abLockHmdToBody != -1)
+      _aLockHmdToBody = abLockHmdToBody as bool
+    EndIf
+  EndIf
+  ;Load defaults
+  _bLockHeight = true
+  _fHeightAdjSpeed = HeightAdjustSpeed
+  _bTrackHead = TrackHead
+  _iTrackHands = TrackHands
+  _fDistHideHead = DistanceHideHead
+  _fDistNearClip = DistanceNearClip
+  _fLockHmdDistance = LockHmdDistance
+  _fLockHmdTolerance = LockHmdTolerance
+  _fLockHmdSpeed = LockHmdSpeed
+  NoCollision = true
+  ;Load first person non-HmdToBody configs
+  If (!_b3rdPerson && !_aLockHmdToBody)
+    _bTrackHead = false
+    _iTrackHands = 0
+    _fLockHmdDistance = 0.0
+    _fLockHmdTolerance = 0.0
+    _fLockHmdSpeed = 150.0
+  EndIf
+  ;Load third person configs
+  If (_b3rdPerson)
+    _bLockHeight = LockHeight
+    _bTrackHead = false
+    _iTrackHands = 0
+    _fDistHideHead = 2.0
+    _aLockHmdToBody = false
+    _fLockHmdDistance = 500.0
+    _fLockHmdTolerance = 500.0
+    _fLockHmdSpeed = 60.0
+    NoCollision = false
+    If (AutoTFC)
+      NoCollision = true
+    EndIf
+  EndIf
+  ;Handle overrides, if any
+  If (abOverrideConfig)
+    If (abLockHeight != -1)
+      _bLockHeight = abLockHeight as bool
+    EndIf
+    If (afHeightAdjSpeed != -1.0)
+      _fHeightAdjSpeed = afHeightAdjSpeed
+    EndIf
+    If (abTrackHead != -1)
+      _bTrackHead = abTrackHead as bool
+    EndIf
+    If (aiTrackHands != -1)
+      _iTrackHands = aiTrackHands
+    EndIf
+    If (afDistHideHead != -1.0)
+      _fDistHideHead = afDistHideHead
+    EndIf
+    If (afDistNearClip != -1.0)
+      _fDistNearClip = afDistNearClip
+    EndIf
+    If (afLockHmdDistance != -1.0)
+      _fLockHmdDistance = afLockHmdDistance
+    EndIf
+    If (afLockHmdTolerance != -1.0)
+      _fLockHmdTolerance = afLockHmdTolerance
+    EndIf
+    If (afLockHmdSpeed != -1.0)
+      _fLockHmdSpeed = afLockHmdSpeed
+    EndIf
+  EndIf
+EndFunction
+
+Function ApplyConfigsVRIK(bool abEnabled)
+  If (!IsSkyrimVR)
+    return
+  EndIf
+  If (!abEnabled)
+    NoCollision = false
+    Utility.SetIniBool("bComfortSneak:VR", false)
+    Utility.SetIniBool("bDisablePlayerCollision:Havok", false)
+    VRIK.VrikRestoreSettings()
+    return
+  EndIf
+  float afScaleBody = Game.GetPlayer().GetScale()
+  ;float afScaleVR = VRIK.VrikGetSetting("bodySize")
+  If (ScaleVRBody)
+    VRIK.VrikSetSetting("bodySize", afScaleBody)
+    VRIK.VrikSetSetting("armSize", afScaleBody)
+    VRIK.VrikSetSetting("armLength", afScaleBody) ; or 1.0?
+  EndIf
+  ; Constant
+  Utility.SetIniBool("bComfortSneak:VR", true)
+  VRIK.VrikSetSetting("enablePosture", 0)
+  VRIK.VrikSetSetting("enableBody", 0)
+  VRIK.VrikSetSetting("enableJumping", 0)
+  VRIK.VrikSetSetting("displayHolsters", 0)
+  VRIK.VrikSetSetting("lockRotation", 1)
+  ; Mode Dependent
+  VRIK.VrikSetSetting("lockHeightToBody", _bLockHeight as int)
+  VRIK.VrikSetSetting("heightAdjustSpeed", _fHeightAdjSpeed)
+  VRIK.VrikSetSetting("enableHead", _bTrackHead as int)
+  If (_iTrackHands > 0)
+    VRIK.VrikSetSetting("enableLeftArm", 1)
+    VRIK.VrikSetSetting("enableRightArm", 1)
+    VRIK.VrikSetSetting("enableInteractiveHands", _iTrackHands - 1)
+  Else
+    VRIK.VrikSetSetting("enableLeftArm", 0)
+    VRIK.VrikSetSetting("enableRightArm", 0)
+  EndIf
+  VRIK.VrikSetSetting("hidePlayerHeadDistance", _fDistHideHead)
+  VRIK.VrikSetSetting("nearClipDistance", _fDistNearClip)
+  Utility.SetIniFloat("fNearDistance:Display", _fDistNearClip)
+  If (_aLockHmdToBody)
+    VRIK.VrikSetSetting("lockHmdToBody", 1)
+    VRIK.VrikSetSetting("lockHmdMinThreshold", _fLockHmdDistance)
+    VRIK.VrikSetSetting("lockHmdMaxThreshold", _fLockHmdTolerance)
+    VRIK.VrikSetSetting("lockHmdSpeed", _fLockHmdSpeed)
+  EndIf
+  Utility.SetIniBool("bDisablePlayerCollision:Havok", NoCollision)
+  VRIK.VrikSetGesture("enableGestureHaptics", GestureHaptics as int)
+EndFunction
+
+int Function ToggleVRIK(bool abEnabled, int ai3rdPerson = -1)
+  If (!IsSkyrimVR)
+    return 0
+  EndIf
+  int VRIKRestoreInTicks = 0
+  If (!abEnabled)
+    ApplyConfigsVRIK(false)
+    Game.EnablePlayerControls(true, true, true, false, true, false, true, false, 0)
+		Game.SetPlayerAIDriven(false)
+    return VRIKRestoreInTicks
+  EndIf
+  int tempLockHmd = -1
+  If ((ai3rdPerson > -1) && (Use3rdPerson != ai3rdPerson as bool))
+    Use3rdPerson = ai3rdPerson as bool
+  EndIf
+  If (Use3rdPerson)
+    Game.SetPlayerAIDriven(false)
+  Else
+    Game.SetPlayerAIDriven(true)
+    If (!LockHmdToBody)
+      tempLockHmd = 1
+      VRIKRestoreInTicks = 3 ; t=1.5s
+    EndIf
+  EndIf
+  Game.EnablePlayerControls(true, false, false, true, false, true, false, true, 0)
+  Game.DisablePlayerControls(false, true, true, false, true, false, true, false, 0)
+  RefreshConfigsVRIK(true, abLockHmdToBody=tempLockHmd)
+  ApplyConfigsVRIK(true)
+  return VRIKRestoreInTicks
+EndFunction
+
+int Function UpdatePositioningVRIK(int VRIKRestoreInTicks)
+  If (!IsSkyrimVR)
+    return 0
+  EndIf
+  Actor PlayerRef = Game.GetPlayer()
+  VRIK.VrikSetSetting("lockRotationAngle", PlayerRef.GetAngleZ())
+  VRIK.VrikSetSetting("lockPositionX", PlayerRef.X)
+  VRIK.VrikSetSetting("lockPositionY", PlayerRef.Y)
+  VRIK.VrikSetSetting("lockPositionZ", PlayerRef.Z)
+  VRIK.VrikSetSetting("lockPosition", 2)
+  If (!Use3rdPerson)
+    VRIK.VrikSetSetting("rotateHmdToBodySeconds", 1.5)
+    If (!LockHmdToBody)
+      VRIK.VrikSetSetting("lockHmdToBody", 1) ;temp override
+      If (VRIKRestoreInTicks < 3)
+        VRIKRestoreInTicks = 3 ; t=1.5s
+      EndIf
+    EndIf
+  EndIf
+  return VRIKRestoreInTicks
+EndFunction
+
+Function RestoreHmdVRIK()
+  If (!IsSkyrimVR)
+    return
+  EndIf
+  VRIK.VrikSetSetting("lockHmdToBody", 2)
+  VRIK.VrikSetSetting("lockPosition", 0)
+EndFunction
+
+Function DoWhiteOutEfffect(Actor akActor, int aiOrgasms)
+  If (!IsSkyrimVR || !OrgasmWhiteout || (akActor != Game.GetPlayer()))
+    return
+  EndIf
+  bool abKO = (akActor.GetActorValuePercentage("Stamina") < 0.25)
+  float HoldTime = (aiOrgasms as float) + 1.0
+  If (HoldTime > 4.0)
+    HoldTime = 4.0
+  EndIf
+  Game.FadeOutGame(true, abKO, 0.0, 2.0)
+  Utility.WaitMenuMode(0.5)
+  Game.FadeOutGame(false, false, HoldTime, 2.0)
+EndFunction
+
+; ----------------------------------------------- ;
+; --- VRIK Settings                           --- ;
+; ----------------------------------------------- ;
+
+; General
+bool Property UseGestures hidden
+  bool Function Get()
+    return GetSettingBool("bVRGestures")
+  EndFunction
+  Function Set(bool value)
+    SetSettingBool("bVRGestures", value)
+  EndFunction
+EndProperty
+bool Property GestureHaptics hidden
+  bool Function Get()
+    return GetSettingBool("bVRGestureHaptics")
+  EndFunction
+  Function Set(bool value)
+    SetSettingBool("bVRGestureHaptics", value)
+  EndFunction
+EndProperty
+bool Property ScaleVRBody hidden
+  bool Function Get()
+    return GetSettingBool("bVRScaleBody")
+  EndFunction
+  Function Set(bool value)
+    SetSettingBool("bVRScaleBody", value)
+  EndFunction
+EndProperty
+bool Property OrgasmWhiteout hidden
+  bool Function Get()
+    return GetSettingBool("bVROrgasmFX")
+  EndFunction
+  Function Set(bool value)
+    SetSettingBool("bVROrgasmFX", value)
+  EndFunction
+EndProperty
+bool Property NoCollision hidden
+  bool Function Get()
+    return GetSettingBool("bVRNoCollision")
+  EndFunction
+  Function Set(bool value)
+    SetSettingBool("bVRNoCollision", value)
+  EndFunction
+EndProperty
+
+; VRIK
+bool Property Use3rdPerson hidden
+  bool Function Get()
+    return GetSettingBool("b3rdPersonVR")
+  EndFunction
+  Function Set(bool value)
+    SetSettingBool("b3rdPersonVR", value)
+  EndFunction
+EndProperty
+bool Property LockHeight hidden
+  bool Function Get()
+    return GetSettingBool("bLockHeightVR")
+  EndFunction
+  Function Set(bool value)
+    SetSettingBool("bLockHeightVR", value)
+  EndFunction
+EndProperty
+bool Property TrackHead hidden
+  bool Function Get()
+    return GetSettingBool("bTrackHeadVR")
+  EndFunction
+  Function Set(bool value)
+    SetSettingBool("bTrackHeadVR", value)
+  EndFunction
+EndProperty
+int Property TrackHands hidden
+  int Function Get()
+    return GetSettingInt("iTrackHandsVR")
+  EndFunction
+  Function Set(int aiSet)
+    SetSettingInt("iTrackHandsVR", aiSet)
+  EndFunction
+EndProperty
+float Property HeightAdjustSpeed hidden
+  float Function Get()
+    return GetSettingFlt("fHeightAdjSpeedVR")
+  EndFunction
+  Function Set(float afSet)
+    SetSettingFlt("fHeightAdjSpeedVR", afSet)
+  EndFunction
+EndProperty 
+float Property DistanceHideHead hidden
+  float Function Get()
+    return GetSettingFlt("fDistHideHeadVR")
+  EndFunction
+  Function Set(float afSet)
+    SetSettingFlt("fDistHideHeadVR", afSet)
+  EndFunction
+EndProperty
+float Property DistanceNearClip hidden
+  float Function Get()
+    return GetSettingFlt("fDistNearClipVR")
+  EndFunction
+  Function Set(float afSet)
+    SetSettingFlt("fDistNearClipVR", afSet)
+  EndFunction
+EndProperty
+bool Property LockHmdToBody hidden
+  bool Function Get()
+    return GetSettingBool("bLockHmdToBody")
+  EndFunction
+  Function Set(bool value)
+    SetSettingBool("bLockHmdToBody", value)
+  EndFunction
+EndProperty
+float Property LockHmdDistance hidden
+  float Function Get()
+    return GetSettingFlt("fLockHmdDistance")
+  EndFunction
+  Function Set(float afSet)
+    SetSettingFlt("fLockHmdDistance", afSet)
+  EndFunction
+EndProperty
+float Property LockHmdTolerance hidden
+  float Function Get()
+    return GetSettingFlt("fLockHmdTolerance")
+  EndFunction
+  Function Set(float afSet)
+    SetSettingFlt("fLockHmdTolerance", afSet)
+  EndFunction
+EndProperty
+float Property LockHmdSpeed hidden
+  float Function Get()
+    return GetSettingFlt("fLockHmdSpeed")
+  EndFunction
+  Function Set(float afSet)
+    SetSettingFlt("fLockHmdSpeed", afSet)
   EndFunction
 EndProperty
 
