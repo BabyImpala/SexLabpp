@@ -555,8 +555,10 @@ State Paused
 		Debug.SendAnimationEvent(_ActorRef, "IdleFurnitureExit")
 		Debug.SendAnimationEvent(_ActorRef, "AnimObjectUnequip")
 		Debug.SendAnimationEvent(_ActorRef, "IdleStop")
-		_VRIKRestoreInTicks = _Config.ToggleVRIK(true)
 		LockActorImpl()
+		If (_ActorRef == _PlayerRef)
+			_Config.ToggleVRIK(true)
+		EndIf
 		_ActorRef.SetAnimationVariableInt("IsNPC", 0)
 		_ActorRef.SetAnimationVariableBool("bHumanoidFootIKDisable", 1)
 		SendDefaultAnimEvent()
@@ -624,8 +626,8 @@ State Paused
 		_ActorRef.SetAnimationVariableBool("bHumanoidFootIKDisable", _AnimVarbHumanoidFootIKDisable)
 		If (_ActorRef == _PlayerRef)
 			SexLabUtil.ToggleFreeCamera(0)
+			_Config.ToggleVRIK(false)
 		EndIf
-		_VRIKRestoreInTicks = _Config.ToggleVRIK(false)
 		UnlockActorImpl()
 		Log("Unlocked Actor: " + GetActorName())
 		_ActorLocked = False
@@ -772,15 +774,17 @@ State Animating
 			_LoopLovenseDelay -= UPDATE_INTERVAL
 		EndIf
 		; VRIK (Comeback: Is this always needed or upon offset changes only?) (How does this interfere with POV switching?)
-		_VRIKRestoreInTicks = _Config.UpdatePositioningVRIK(_VRIKRestoreInTicks)
-		If (_VRIKRestoreInTicks < 0)
-			_VRIKRestoreInTicks = 0
-			_Config.RestoreHmdVRIK()
-		EndIf
-		If (_VRIKRestoreInTicks > 0)
-			_VRIKRestoreInTicks -= 1
-			If _VRIKRestoreInTicks <= 1
-				_VRIKRestoreInTicks = -1
+		If (_ActorRef == _PlayerRef)
+			_VRIKRestoreInTicks = _Config.UpdatePositioningVRIK(_VRIKRestoreInTicks)
+			If (_VRIKRestoreInTicks < 0)
+				_VRIKRestoreInTicks = 0
+				_Config.RestoreHmdVRIK()
+			EndIf
+			If (_VRIKRestoreInTicks > 0)
+				_VRIKRestoreInTicks -= 1
+				If _VRIKRestoreInTicks <= 1
+					_VRIKRestoreInTicks = -1
+				EndIf
 			EndIf
 		EndIf
 		; Loop
