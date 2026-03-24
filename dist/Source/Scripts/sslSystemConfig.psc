@@ -1332,101 +1332,106 @@ EndFunction
 ; --- VRIK CONFIGURATION                      --- ;
 ; ----------------------------------------------- ;
 
-bool _b3rdPerson
+int Property VRIK_FPP_HMD   = 0 AutoReadOnly   ; 1st Person [Headset Locked to Body]
+int Property VRIK_FPP_FREE  = 1 AutoReadOnly   ; 1st Person [Headset Unlocked]
+int Property VRIK_TPP_FREE  = 2 AutoReadOnly   ; 3rd Person [Headset Unlocked]
+
 bool _bLockHeight
 float _fHeightAdjSpeed
 bool _bTrackHead
 int _iTrackHands
 float _fDistHideHead
 float _fDistNearClip
-bool _aLockHmdToBody
+int _iLockHmdToBody
 float _fLockHmdDistance
 float _fLockHmdTolerance
 float _fLockHmdSpeed
 SoundCategory _AudioCategoryFST
 SoundCategory _AudioCategoryNPCFST
 
-Function RefreshConfigsVRIK(bool abOverrideConfig=false, int ab3rdPerson=-1, \
-	int abLockHeight=-1, float afHeightAdjSpeed=-1.0, int abTrackHead=-1, int aiTrackHands=-1, \
-	float afDistHideHead=-1.0, float afDistNearClip=-1.0, int abLockHmdToBody=-1, \
-	float afLockHmdDistance=-1.0, float afLockHmdTolerance=-1.0, float afLockHmdSpeed=-1.0)
+Function RefreshConfigsVRIK(bool abOverrideConfig=false, int aiPOVMode=-1, \
+  int abLockHeight=-1, float afHeightAdjSpeed=-1.0, int abTrackHead=-1, int aiTrackHands=-1, \
+  float afDistHideHead=-1.0, float afDistNearClip=-1.0, int aiLockHmdToBody=-1, \
+  float afLockHmdDistance=-1.0, float afLockHmdTolerance=-1.0, float afLockHmdSpeed=-1.0)
   If (!IsSkyrimVR)
     return
   EndIf
-  ;Handle primary determiners first
-  _b3rdPerson = Use3rdPerson
-  _aLockHmdToBody = LockHmdToBody
-  If (abOverrideConfig)
-    If (ab3rdPerson != -1)
-      _b3rdPerson = ab3rdPerson as bool
-    EndIf
-    If (abLockHmdToBody != -1)
-      _aLockHmdToBody = abLockHmdToBody as bool
-    EndIf
+  ; Camera Mode
+  If (abOverrideConfig) && (aiPOVMode != -1)
+    POVModeVR = aiPOVMode
   EndIf
-  ;Load defaults
-  _bLockHeight = true
+  bool VR_1st_HMD  = (POVModeVR == VRIK_FPP_HMD)
+  bool VR_1st_FREE = (POVModeVR == VRIK_FPP_FREE)
+  bool VR_3rd_FREE = (POVModeVR == VRIK_TPP_FREE)
+  ; Shared
   _fHeightAdjSpeed = HeightAdjustSpeed
-  _bTrackHead = TrackHead
-  _iTrackHands = TrackHands
-  _fDistHideHead = DistanceHideHead
   _fDistNearClip = DistanceNearClip
-  _fLockHmdDistance = LockHmdDistance
-  _fLockHmdTolerance = LockHmdTolerance
-  _fLockHmdSpeed = LockHmdSpeed
-  NoCollision = true
-  ;Load first person non-HmdToBody configs
-  If (!_b3rdPerson && !_aLockHmdToBody)
+  NoCollision = false
+  If (VR_3rd_FREE && AutoTFC)
+    NoCollision = true
+  EndIf
+  ; Mode Dependent
+  If (VR_1st_HMD)
+    _bLockHeight = true
+    _iLockHmdToBody = 1
+    _bTrackHead = TrackHead
+    _iTrackHands = TrackHands
+    _fDistHideHead = DistanceHideHead
+    _fLockHmdDistance = LockHmdDistance
+    _fLockHmdTolerance = LockHmdTolerance
+    _fLockHmdSpeed = LockHmdSpeed
+  ElseIf (VR_1st_FREE)
+    _bLockHeight = true
+    _iLockHmdToBody = 0
     _bTrackHead = false
     _iTrackHands = 0
+    _fDistHideHead = DistanceHideHead
     _fLockHmdDistance = 0.0
     _fLockHmdTolerance = 0.0
     _fLockHmdSpeed = 150.0
-  EndIf
-  ;Load third person configs
-  If (_b3rdPerson)
+  ElseIf (VR_3rd_FREE)
     _bLockHeight = LockHeight
+    _iLockHmdToBody = 0
     _bTrackHead = false
     _iTrackHands = 0
     _fDistHideHead = 2.0
-    _aLockHmdToBody = false
     _fLockHmdDistance = 500.0
     _fLockHmdTolerance = 500.0
     _fLockHmdSpeed = 60.0
-    NoCollision = false
-    If (AutoTFC)
-      NoCollision = true
-    EndIf
   EndIf
-  ;Handle overrides, if any
-  If (abOverrideConfig)
-    If (abLockHeight != -1)
-      _bLockHeight = abLockHeight as bool
-    EndIf
-    If (afHeightAdjSpeed != -1.0)
-      _fHeightAdjSpeed = afHeightAdjSpeed
-    EndIf
-    If (abTrackHead != -1)
-      _bTrackHead = abTrackHead as bool
-    EndIf
-    If (aiTrackHands != -1)
-      _iTrackHands = aiTrackHands
-    EndIf
-    If (afDistHideHead != -1.0)
-      _fDistHideHead = afDistHideHead
-    EndIf
-    If (afDistNearClip != -1.0)
-      _fDistNearClip = afDistNearClip
-    EndIf
-    If (afLockHmdDistance != -1.0)
-      _fLockHmdDistance = afLockHmdDistance
-    EndIf
-    If (afLockHmdTolerance != -1.0)
-      _fLockHmdTolerance = afLockHmdTolerance
-    EndIf
-    If (afLockHmdSpeed != -1.0)
-      _fLockHmdSpeed = afLockHmdSpeed
-    EndIf
+  If (!abOverrideConfig)
+    return
+  EndIf
+  ; Apply Overrides
+  If (abLockHeight != -1)
+    _bLockHeight = abLockHeight as bool
+  EndIf
+  If (afHeightAdjSpeed != -1.0)
+    _fHeightAdjSpeed = afHeightAdjSpeed
+  EndIf
+  If (abTrackHead != -1)
+    _bTrackHead = abTrackHead as bool
+  EndIf
+  If (aiTrackHands != -1)
+    _iTrackHands = aiTrackHands
+  EndIf
+  If (afDistHideHead != -1.0)
+    _fDistHideHead = afDistHideHead
+  EndIf
+  If (afDistNearClip != -1.0)
+    _fDistNearClip = afDistNearClip
+  EndIf
+  If (aiLockHmdToBody != -1)
+    _iLockHmdToBody = aiLockHmdToBody
+  EndIf
+  If (afLockHmdDistance != -1.0)
+    _fLockHmdDistance = afLockHmdDistance
+  EndIf
+  If (afLockHmdTolerance != -1.0)
+    _fLockHmdTolerance = afLockHmdTolerance
+  EndIf
+  If (afLockHmdSpeed != -1.0)
+    _fLockHmdSpeed = afLockHmdSpeed
   EndIf
 EndFunction
 
@@ -1455,9 +1460,14 @@ Function ApplyConfigsVRIK(bool abEnabled)
   VRIK.VrikSetSetting("enableJumping", 0)
   VRIK.VrikSetSetting("displayHolsters", 0)
   VRIK.VrikSetSetting("lockRotation", 1)
+  ; Shared
+  VRIK.VrikSetGesture("enableGestureHaptics", GestureHaptics as int)
+  VRIK.VrikSetSetting("heightAdjustSpeed", _fHeightAdjSpeed)
+  VRIK.VrikSetSetting("nearClipDistance", _fDistNearClip)
+  Utility.SetIniFloat("fNearDistance:Display", _fDistNearClip)  
+  Utility.SetIniBool("bDisablePlayerCollision:Havok", NoCollision)
   ; Mode Dependent
   VRIK.VrikSetSetting("lockHeightToBody", _bLockHeight as int)
-  VRIK.VrikSetSetting("heightAdjustSpeed", _fHeightAdjSpeed)
   VRIK.VrikSetSetting("enableHead", _bTrackHead as int)
   If (_iTrackHands > 0)
     VRIK.VrikSetSetting("enableLeftArm", 1)
@@ -1466,22 +1476,17 @@ Function ApplyConfigsVRIK(bool abEnabled)
   Else
     VRIK.VrikSetSetting("enableLeftArm", 0)
     VRIK.VrikSetSetting("enableRightArm", 0)
+    VRIK.VrikSetSetting("enableInteractiveHands", 0)
   EndIf
   VRIK.VrikSetSetting("hidePlayerHeadDistance", _fDistHideHead)
-  VRIK.VrikSetSetting("nearClipDistance", _fDistNearClip)
-  Utility.SetIniFloat("fNearDistance:Display", _fDistNearClip)
-  If (_aLockHmdToBody)
-    VRIK.VrikSetSetting("lockHmdToBody", 1)
-    VRIK.VrikSetSetting("lockHmdMinThreshold", _fLockHmdDistance)
-    VRIK.VrikSetSetting("lockHmdMaxThreshold", _fLockHmdTolerance)
-    VRIK.VrikSetSetting("lockHmdSpeed", _fLockHmdSpeed)
-  EndIf
-  Utility.SetIniBool("bDisablePlayerCollision:Havok", NoCollision)
-  VRIK.VrikSetGesture("enableGestureHaptics", GestureHaptics as int)
+  VRIK.VrikSetSetting("lockHmdToBody", _iLockHmdToBody)
+  VRIK.VrikSetSetting("lockHmdMinThreshold", _fLockHmdDistance)
+  VRIK.VrikSetSetting("lockHmdMaxThreshold", _fLockHmdTolerance)
+  VRIK.VrikSetSetting("lockHmdSpeed", _fLockHmdSpeed)
 EndFunction
 
-int Function ToggleVRIK(bool abEnabled, int ai3rdPerson = -1)
-  If (!IsSkyrimVR)
+int Function ToggleVRIK(bool abEnabled, int aiPOVMode = -1)
+  If ((!IsSkyrimVR) || (aiPOVMode < -1) || (aiPOVMode > VRIK_TPP_FREE))
     return 0
   EndIf
   If (!abEnabled)
@@ -1492,31 +1497,46 @@ int Function ToggleVRIK(bool abEnabled, int ai3rdPerson = -1)
     _AudioCategoryNPCFST.Unmute() 
     return 0
   EndIf
+  ; VRIK Setup
+  If (aiPOVMode > -1)
+    POVModeVR = aiPOVMode
+  EndIf
   int VRIKRestoreInTicks = 0
   int tempLockHmd = -1
-  If ((ai3rdPerson > -1) && (Use3rdPerson != ai3rdPerson as bool))
-    Use3rdPerson = ai3rdPerson as bool
+  If (POVModeVR == VRIK_FPP_FREE)
+    tempLockHmd = 1
+    VRIKRestoreInTicks = 3 ; t=1.5s
   EndIf
-  If (Use3rdPerson)
+  RefreshConfigsVRIK(true, aiLockHmdToBody=tempLockHmd)
+  ApplyConfigsVRIK(true)
+  ; Controls and Sound Fix
+  If (POVModeVR == VRIK_TPP_FREE)
     Game.SetPlayerAIDriven(false)
+    Game.EnablePlayerControls(true, false, false, true, false, true, false, true, 0)
   Else
     Game.SetPlayerAIDriven(true)
-    If (!LockHmdToBody)
-      tempLockHmd = 1
-      VRIKRestoreInTicks = 3 ; t=1.5s
-    EndIf
   EndIf
-  Game.EnablePlayerControls(true, false, false, true, false, true, false, true, 0)
-  Game.DisablePlayerControls(false, true, true, false, true, false, true, false, 0)
   _AudioCategoryFST.Mute()
-  _AudioCategoryNPCFST.Mute()  
-  RefreshConfigsVRIK(true, abLockHmdToBody=tempLockHmd)
-  ApplyConfigsVRIK(true)
+  _AudioCategoryNPCFST.Mute()
   return VRIKRestoreInTicks
 EndFunction
 
+Function SetPOVModeVRIK(int aiSet)
+  If ((aiSet == POVModeVR) || (aiSet < VRIK_FPP_HMD) || (aiSet > VRIK_TPP_FREE))
+    return
+  EndIf
+  If (aiSet == VRIK_FPP_HMD)
+    Debug.Notification("SexLabVR POV: 1st LOCKED")
+  ElseIf (aiSet == VRIK_FPP_FREE)
+    Debug.Notification("SexLabVR POV: 1st FREE")
+  ElseIf (aiSet == VRIK_TPP_FREE)
+    Debug.Notification("SexLabVR POV: 3rd FREE")
+  EndIf
+  ToggleVRIK(true, aiSet)
+EndFunction
+
 int Function UpdatePositioningVRIK(int VRIKRestoreInTicks)
-  If (!IsSkyrimVR)
+  If ((!IsSkyrimVR) || (POVModeVR != VRIK_FPP_FREE))
     return 0
   EndIf
   Actor PlayerRef = Game.GetPlayer()
@@ -1525,20 +1545,16 @@ int Function UpdatePositioningVRIK(int VRIKRestoreInTicks)
   VRIK.VrikSetSetting("lockPositionY", PlayerRef.Y)
   VRIK.VrikSetSetting("lockPositionZ", PlayerRef.Z)
   VRIK.VrikSetSetting("lockPosition", 2)
-  If (!Use3rdPerson)
-    VRIK.VrikSetSetting("rotateHmdToBodySeconds", 1.5)
-    If (!LockHmdToBody)
-      VRIK.VrikSetSetting("lockHmdToBody", 1) ;temp override
-      If (VRIKRestoreInTicks < 3)
-        VRIKRestoreInTicks = 3 ; t=1.5s
-      EndIf
-    EndIf
+  VRIK.VrikSetSetting("rotateHmdToBodySeconds", 1.5)
+  VRIK.VrikSetSetting("lockHmdToBody", 1) ;temp override
+  If (VRIKRestoreInTicks < 3)
+    VRIKRestoreInTicks = 3 ; t=1.5s
   EndIf
   return VRIKRestoreInTicks
 EndFunction
 
 Function RestoreHmdVRIK()
-  If (!IsSkyrimVR)
+  If ((!IsSkyrimVR) || (POVModeVR != VRIK_FPP_FREE))
     return
   EndIf
   VRIK.VrikSetSetting("lockHmdToBody", 2)
@@ -1611,12 +1627,12 @@ bool Property NoCollision hidden
 EndProperty
 
 ; VRIK
-bool Property Use3rdPerson hidden
-  bool Function Get()
-    return GetSettingBool("b3rdPersonVR")
+int Property POVModeVR hidden
+  int Function Get()
+    return GetSettingInt("iPOVModeVR")
   EndFunction
-  Function Set(bool value)
-    SetSettingBool("b3rdPersonVR", value)
+  Function Set(int aiSet)
+    SetSettingInt("iPOVModeVR", aiSet)
   EndFunction
 EndProperty
 bool Property LockHeight hidden
@@ -1665,14 +1681,6 @@ float Property DistanceNearClip hidden
   EndFunction
   Function Set(float afSet)
     SetSettingFlt("fDistNearClipVR", afSet)
-  EndFunction
-EndProperty
-bool Property LockHmdToBody hidden
-  bool Function Get()
-    return GetSettingBool("bLockHmdToBody")
-  EndFunction
-  Function Set(bool value)
-    SetSettingBool("bLockHmdToBody", value)
   EndFunction
 EndProperty
 float Property LockHmdDistance hidden

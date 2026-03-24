@@ -557,7 +557,7 @@ State Paused
 		Debug.SendAnimationEvent(_ActorRef, "IdleStop")
 		LockActorImpl()
 		If (_ActorRef == _PlayerRef)
-			_Config.ToggleVRIK(true)
+			_Config.ToggleVRIK(true, _Config.VRIK_FPP_HMD)
 		EndIf
 		_ActorRef.SetAnimationVariableInt("IsNPC", 0)
 		_ActorRef.SetAnimationVariableBool("bHumanoidFootIKDisable", 1)
@@ -774,16 +774,18 @@ State Animating
 			_LoopLovenseDelay -= UPDATE_INTERVAL
 		EndIf
 		; VRIK (Comeback: Is this always needed or upon offset changes only?) (How does this interfere with POV switching?)
-		If (_ActorRef == _PlayerRef)
-			_VRIKRestoreInTicks = _Config.UpdatePositioningVRIK(_VRIKRestoreInTicks)
-			If (_VRIKRestoreInTicks < 0)
-				_VRIKRestoreInTicks = 0
-				_Config.RestoreHmdVRIK()
-			EndIf
-			If (_VRIKRestoreInTicks > 0)
-				_VRIKRestoreInTicks -= 1
-				If _VRIKRestoreInTicks <= 1
-					_VRIKRestoreInTicks = -1
+		If ((_ActorRef == _PlayerRef) && (_Config.POVModeVR == _Config.VRIK_FPP_FREE))
+			If ((_Thread as sslThreadController).GetOffsetAdjustMode() > (_Thread as sslThreadController).AdjMode_None)
+				_VRIKRestoreInTicks = _Config.UpdatePositioningVRIK(_VRIKRestoreInTicks)
+				If (_VRIKRestoreInTicks < 0)
+					_VRIKRestoreInTicks = 0
+					_Config.RestoreHmdVRIK()
+				EndIf
+				If (_VRIKRestoreInTicks > 0)
+					_VRIKRestoreInTicks -= 1
+					If _VRIKRestoreInTicks <= 1
+						_VRIKRestoreInTicks = -1
+					EndIf
 				EndIf
 			EndIf
 		EndIf
