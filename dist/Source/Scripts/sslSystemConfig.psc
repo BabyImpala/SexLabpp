@@ -978,8 +978,7 @@ bool function CheckSystemPart(string CheckSystem)
   elseIf CheckSystem == "CrossHairRef"
 		return SKSE.GetPluginVersion("CrosshairRefEventsFix") > -1
   elseif CheckSystem == "VRIK"
-    IsSkyrimVR = CheckForSkyrimVR()
-    return IsSkyrimVR && CheckForVRIK()
+    return CheckForVRIK()
   endIf
   return false
 endFunction
@@ -1003,7 +1002,7 @@ bool function CheckSystem()
   ElseIf (!CheckSystemPart("PPA"))
     Debug.MessageBox("[SexLab]\nMissing 'Procedural Penis Animations'.\nThis mod is highly recommended for schlong allignments to work properly.")
   EndIf
-  If (!CheckSystemPart("VRIK") && IsSkyrimVR)
+  If (CheckForSkyrimVR() && !CheckSystemPart("VRIK"))
       Debug.MessageBox("[SexLab]\nMissing VRIK.\nThis mod is mandatory for SexLab to function properly in VR.")
     return false
   EndIf
@@ -1022,6 +1021,7 @@ Function Reload()
   TargetRef = none
   _Hooks = sslUtility.ClearNoneThreadHook(_Hooks)
   IsSkyrimVR = CheckForSkyrimVR()
+  InitFootStepVariablesVR()
 
   UnregisterForAllKeys()
   RegisterForKey(ToggleFreeCamera)
@@ -1343,6 +1343,8 @@ bool _aLockHmdToBody
 float _fLockHmdDistance
 float _fLockHmdTolerance
 float _fLockHmdSpeed
+SoundCategory _AudioCategoryFST
+SoundCategory _AudioCategoryNPCFST
 
 Function RefreshConfigsVRIK(bool abOverrideConfig=false, int ab3rdPerson=-1, \
 	int abLockHeight=-1, float afHeightAdjSpeed=-1.0, int abTrackHead=-1, int aiTrackHands=-1, \
@@ -1482,13 +1484,15 @@ int Function ToggleVRIK(bool abEnabled, int ai3rdPerson = -1)
   If (!IsSkyrimVR)
     return 0
   EndIf
-  int VRIKRestoreInTicks = 0
   If (!abEnabled)
     ApplyConfigsVRIK(false)
     Game.EnablePlayerControls(true, true, true, false, true, false, true, false, 0)
-		Game.SetPlayerAIDriven(false)
-    return VRIKRestoreInTicks
+    Game.SetPlayerAIDriven(false)
+    _AudioCategoryFST.Unmute()
+    _AudioCategoryNPCFST.Unmute() 
+    return 0
   EndIf
+  int VRIKRestoreInTicks = 0
   int tempLockHmd = -1
   If ((ai3rdPerson > -1) && (Use3rdPerson != ai3rdPerson as bool))
     Use3rdPerson = ai3rdPerson as bool
@@ -1504,6 +1508,8 @@ int Function ToggleVRIK(bool abEnabled, int ai3rdPerson = -1)
   EndIf
   Game.EnablePlayerControls(true, false, false, true, false, true, false, true, 0)
   Game.DisablePlayerControls(false, true, true, false, true, false, true, false, 0)
+  _AudioCategoryFST.Mute()
+  _AudioCategoryNPCFST.Mute()  
   RefreshConfigsVRIK(true, abLockHmdToBody=tempLockHmd)
   ApplyConfigsVRIK(true)
   return VRIKRestoreInTicks
@@ -1551,6 +1557,11 @@ Function DoWhiteOutEfffect(Actor akActor, int aiOrgasms)
   Game.FadeOutGame(true, abKO, 0.0, 2.0)
   Utility.WaitMenuMode(0.5)
   Game.FadeOutGame(false, false, HoldTime, 2.0)
+EndFunction
+
+Function InitFootStepVariablesVR()
+  _AudioCategoryFST = Game.GetFormFromFile(0x0F5FFC,"Skyrim.esm") as SoundCategory
+  _AudioCategoryNPCFST = Game.GetFormFromFile(0x000F72,"Skyrim.esm") as SoundCategory
 EndFunction
 
 ; ----------------------------------------------- ;
