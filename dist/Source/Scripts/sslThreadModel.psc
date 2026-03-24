@@ -567,13 +567,13 @@ EndFunction
 ; --- VRIK Configs + Init                             --- ;
 ; ------------------------------------------------------- ;
 
-Function SetConfigsVRIK(bool abApply=true, bool abOverrideConfig=false, int ab3rdPerson=-1, \
+Function SetConfigsVRIK(bool abApply=true, bool abOverrideConfig=false, int aiPOVMode=-1, \
 	int abLockHeight=-1, float afHeightAdjSpeed=-1.0, int abTrackHead=-1, int aiTrackHands=-1, \
-	float afDistHideHead=-1.0, float afDistNearClip=-1.0, int abLockHmdToBody=-1, \
+	float afDistHideHead=-1.0, float afDistNearClip=-1.0, int aiLockHmdToBody=-1, \
 	float afLockHmdDistance=-1.0, float afLockHmdTolerance=-1.0, float afLockHmdSpeed=-1.0)
 	If (abApply)
-		Config.RefreshConfigsVRIK(abOverrideConfig, ab3rdPerson, abLockHeight, afHeightAdjSpeed, \
-			abTrackHead, aiTrackHands, afDistHideHead, afDistNearClip, abLockHmdToBody, \
+		Config.RefreshConfigsVRIK(abOverrideConfig, aiPOVMode, abLockHeight, afHeightAdjSpeed, \
+			abTrackHead, aiTrackHands, afDistHideHead, afDistNearClip, aiLockHmdToBody, \
 			afLockHmdDistance, afLockHmdTolerance, afLockHmdSpeed)
 	EndIf
 	Config.ApplyConfigsVRIK(abApply)
