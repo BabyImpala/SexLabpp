@@ -997,7 +997,7 @@ bool function CheckSystem()
     CheckPapyrusUtil.Show(4.4)
     return false
   ElseIf (!CheckSystemPart("CrossHairRef"))
-    Debug.MessageBox("[SexLab]\nMissing 'CrosshairRefEvents Hang Fix'.\nThis mod is mandatory to avoud soft-locks during scene startup.")     
+    Debug.MessageBox("[SexLab]\nMissing 'CrosshairRefEvents Hang Fix'.\nThis mod is mandatory to avoid soft-locks during scene startup.")     
     return false    
   ElseIf (!CheckSystemPart("PPA"))
     Debug.MessageBox("[SexLab]\nMissing 'Procedural Penis Animations'.\nThis mod is highly recommended for schlong allignments to work properly.")
