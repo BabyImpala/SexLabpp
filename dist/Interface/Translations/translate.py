@@ -22,6 +22,7 @@ languages = [
 ]
 translated_languages = [
   "RUSSIAN",
+  "SPANISH"
 ]
 
 script_dir = Path(__file__).parent.resolve()
