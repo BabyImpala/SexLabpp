@@ -207,9 +207,11 @@ Function SetSceneOffset(String asID, float afValue, int aiOffsetID) native globa
 Function SetSceneOffsetA(String asID, float[] afNewOffset) native global
 Function ResetSceneOffset(String asID) native global
 ; Offsets for the specified position in the given stage, 'raw' ignores unedited (SLSB) offsets
+; Note: Offset for Rotation is returned in radians, use Math.RadiansToDegrees() if needed.
 float[] Function GetStageOffset(String asID, String asStage, int n) native global
 float[] Function GetStageOffsetRaw(String asID, String asStage, int n) native global
 ; Update  Offsets for the specified position and stage. Pass an empty stage to edit the offset of all stages at once
+; Note: Offset for Rotation is expected in degrees, and will be transformed interanlly to radians.
 Function SetStageOffset(String asID, String asStage, int n, float afValue, int aiOffsetID) native global
 Function SetStageOffsetA(String asID, String asStage, int n, float[] afNewOffset) native global
 Function ResetStageOffset(String asID, String asStage, int n) native global

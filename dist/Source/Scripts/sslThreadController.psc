@@ -231,7 +231,12 @@ Function SetStageOffset(Actor akAffectedActor, float afOffsetValue, String asOff
 		activeStage = GetActiveStage()
 	EndIf
 	If (abIncrement)
-		afOffsetValue += SexLabRegistry.GetStageOffset(activeScene, activeStage, n)[idx]
+		float afEditedValue = SexLabRegistry.GetStageOffset(activeScene, activeStage, n)[idx]
+		If (idx != 3)
+			afOffsetValue += afEditedValue
+		Else
+			afOffsetValue += Math.RadiansToDegrees(afEditedValue)
+		EndIf
 	EndIf
 	SexLabRegistry.SetStageOffset(activeScene, activeStage, n, afOffsetValue, idx)
 	UpdatePlacement(akAffectedActor)
@@ -293,11 +298,11 @@ Function EnableTraditionalHotkeys()
 EndFunction
 
 Function DisableTraditionalHotkeys()
-    int i = 0
-    While (i < Hotkeys.Length)
-        UnregisterForKey(Hotkeys[i])
-        i += 1
-    EndWhile
+	int i = 0
+	While (i < Hotkeys.Length)
+		UnregisterForKey(Hotkeys[i])
+		i += 1
+	EndWhile
 EndFunction
 
 Event OnKeyDown(int aiKey)
