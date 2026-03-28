@@ -24,8 +24,9 @@ namespace Papyrus::ThreadModel
 		void SetActorVoiceImpl(ALIASARGS, RE::BSFixedString a_voice);
 		void SetActorExpressionImpl(ALIASARGS, RE::BSFixedString a_expression);
 
-		void LockActorImpl(ALIASARGS);
-		void UnlockActorImpl(ALIASARGS);
+		void StartSetActorInterrupts(ALIASARGS);
+		void EndSetActorInterrupts(ALIASARGS);
+		void SetActorCollisions(ALIASARGS, bool a_enable);
 
 		std::vector<RE::TESForm*> StripByData(ALIASARGS, int32_t a_stripdata, std::vector<uint32_t> a_defaults, std::vector<uint32_t> a_overwrite);
 		std::vector<RE::TESForm*> StripByDataEx(ALIASARGS, int32_t a_stripdata, std::vector<uint32_t> a_defaults, std::vector<uint32_t> a_overwrite, std::vector<RE::TESForm*> a_mergewith);
@@ -39,8 +40,9 @@ namespace Papyrus::ThreadModel
 			REGISTERFUNC(SetActorVoiceImpl, "sslActorAlias", false);
 			REGISTERFUNC(SetActorExpressionImpl, "sslActorAlias", false);
 
-			REGISTERFUNC(LockActorImpl, "sslActorAlias", false);
-			REGISTERFUNC(UnlockActorImpl, "sslActorAlias", false);
+			REGISTERFUNC(StartSetActorInterrupts, "sslActorAlias", false);
+			REGISTERFUNC(EndSetActorInterrupts, "sslActorAlias", false);
+			REGISTERFUNC(SetActorCollisions, "sslActorAlias", false);
 
 			REGISTERFUNC(StripByData, "sslActorAlias", false);
 			REGISTERFUNC(StripByDataEx, "sslActorAlias", false);

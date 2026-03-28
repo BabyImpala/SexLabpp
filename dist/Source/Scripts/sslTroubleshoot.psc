@@ -329,20 +329,15 @@ bool function Ask(string msg)
 endFunction
 
 function LockPlayer()
-	Game.SetPlayerAIDriven()
-	SexLabUtil.ForceThirdPerson()
-	Game.DisablePlayerControls(true, true, true, false, true, true, true, true)
-	SexLabUtil.ForceThirdPerson()
+	SexLabUtil.SetActorMovement(PlayerRef, 2) ;MOVEMENT_LOCK
 	Debug.SendAnimationEvent(PlayerRef, "IdleForceDefaultState")
 	PlayerRef.StopCombat()
 	PlayerRef.SheatheWeapon()
 	Utility.Wait(1.0)
-	SexLabUtil.ForceThirdPerson()
 endFunction
 
 function UnlockPlayer()
-	Game.EnablePlayerControls()
-	Game.SetPlayerAIDriven(false)
+	SexLabUtil.SetActorMovement(PlayerRef, 0) ;MOVEMENT_RELEASE
 	Debug.SendAnimationEvent(PlayerRef, "IdleForceDefaultState")
 	Utility.Wait(1.0)
 endFunction
