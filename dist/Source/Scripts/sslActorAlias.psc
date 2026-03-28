@@ -374,13 +374,6 @@ Auto State Empty
 	bool Function SetActor(Actor ProspectRef)
 		ForceRefTo(ProspectRef)
 		_ActorRef = ProspectRef
-		If (_ActorRef == _PlayerRef)
-			SexLabUtil.ForceThirdPerson()
-			Game.DisablePlayerControls(abMovement=true, abFighting=true, abCamSwitch=true, abLooking=false, \
-				abSneaking=true, abMenu=false, abActivate=true, abJournalTabs=false, aiDisablePOVType=0)
-		Else
-			_ActorRef.SetDontMove(true)
-		EndIf
 		If (_ActorRef.IsDead())
 			_livestatus = LIVESTATUS_DEAD
 			_killer = _ActorRef.GetKiller()
@@ -391,12 +384,15 @@ Auto State Empty
 		EndIf
 		_sex = SexLabRegistry.GetSex(_ActorRef, true)
 		_raceID = SexLabRegistry.GetRaceID(_ActorRef)
+		SexLabUtil.SetActorMovement(_ActorRef, 2) ;MOVEMENT_LOCK
+		StartSetActorInterrupts()
 		TrackedEvent(TRACK_ADDED)
 		GoToState(STATE_SETUP)
 		return true
 	EndFunction
 
 	Function Clear()
+		EndSetActorInterrupts()
 		If (GetIsDead())
 			If (_ActorRef.IsEssential())
 				_ActorRef.GetActorBase().SetEssential(false)
@@ -405,10 +401,7 @@ Auto State Empty
 		Else
 			_Thread.RequestStatisticUpdate(_ActorRef, _StartedAt)
 		EndIf
-		If (_ActorRef == _PlayerRef)
-			SexLabUtil.ForceThirdPerson()
-			Game.EnablePlayerControls()
-		EndIf
+		SexLabUtil.SetActorMovement(_ActorRef, 0) ;MOVEMENT_RELEASE
 		Parent.Clear()
 	EndFunction
 
@@ -425,6 +418,11 @@ bool Function SetActor(Actor ProspectRef)
 	Error("Not in idle phase", "SetActor")
 	return false
 EndFunction
+
+; Take this actor out of combat and clear all actor states, return true if the actor was the player
+Function StartSetActorInterrupts() native
+; Undo "StartSetActorInterrupts()" persistent changes
+Function EndSetActorInterrupts() native
 
 ; ------------------------------------------------------- ;
 ; --- Alias SETUP                                     --- ;
@@ -460,9 +458,6 @@ State Ready
 					Utility.Wait(interval)
 				EndWhile
 			EndIf
-			If(_Config.AutoTFC)
-				SexLabUtil.ToggleFreeCamera(1)
-			EndIf
 		Else
 			_Config.CheckBardAudience(_ActorRef, true)
 			If(akPathTo && DoPathToCenter)
@@ -470,7 +465,7 @@ State Ready
 				float target_distance = SexLabUtil.CalcPathingTargetDistance(_raceID)
 				float distance = _ActorRef.GetDistance(target)
 				If(distance > target_distance && distance <= 6144.0)
-					_ActorRef.SetDontMove(false)
+					SexLabUtil.SetActorMovement(_ActorRef, 1) ;MOVEMENT_UNLOCK
 					float fallback_timer = 15.0
 					float prev_dist = distance + 1.0
 					_ActorRef.SetFactionRank(_AnimatingFaction, 2)
@@ -552,12 +547,16 @@ EndFunction
 
 State Paused
 	Function LockActor()
+		SexLabUtil.SetActorMovement(_ActorRef, 2) ;MOVEMENT_LOCK
 		Debug.SendAnimationEvent(_ActorRef, "IdleFurnitureExit")
 		Debug.SendAnimationEvent(_ActorRef, "AnimObjectUnequip")
 		Debug.SendAnimationEvent(_ActorRef, "IdleStop")
-		LockActorImpl()
+		SetActorCollisions(false)
 		If (_ActorRef == _PlayerRef)
 			_Config.ToggleVRIK(true, _Config.VRIK_FPP_HMD)
+			If(_Config.AutoTFC)
+				SexLabUtil.ToggleFreeCamera(1) ;TFC_ON
+			EndIf
 		EndIf
 		_ActorRef.SetAnimationVariableInt("IsNPC", 0)
 		_ActorRef.SetAnimationVariableBool("bHumanoidFootIKDisable", 1)
@@ -625,10 +624,11 @@ State Paused
 		_ActorRef.SetAnimationVariableInt("IsNPC", _AnimVarIsNPC)
 		_ActorRef.SetAnimationVariableBool("bHumanoidFootIKDisable", _AnimVarbHumanoidFootIKDisable)
 		If (_ActorRef == _PlayerRef)
-			SexLabUtil.ToggleFreeCamera(0)
+			SexLabUtil.ToggleFreeCamera(0) ;TFC_OFF
 			_Config.ToggleVRIK(false)
 		EndIf
-		UnlockActorImpl()
+		SetActorCollisions(true)
+		SexLabUtil.SetActorMovement(_ActorRef, 1) ;MOVEMENT_UNLOCK
 		Log("Unlocked Actor: " + GetActorName())
 		_ActorLocked = False
 	EndFunction
@@ -692,10 +692,8 @@ EndFunction
 ; This stays functional in STATE_PLAYING as well
 Function TryPauseAndUnlock()
 EndFunction
-; Take this actor out of combat and clear all actor states, return true if the actor was the player
-Function LockActorImpl() native
-; Undo "LockActor()" persistent changes
-Function UnlockActorImpl() native
+
+Function SetActorCollisions(bool abEnable) native
 
 Form[] Function StripByData(int aiStripData, int[] aiDefaults, int[] aiOverwrites) native
 

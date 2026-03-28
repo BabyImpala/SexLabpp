@@ -2,9 +2,11 @@
 A high performance and stability patch for SexLab for Skyrim SE.
 
 ## Requirements
+* [python](https://www.python.org/downloads/)
 * [xmake](https://xmake.io/#/)
 	* Add this to your `PATH`
-* [python](https://www.python.org/downloads/)
+* [Spriggit CLI](https://github.com/Mutagen-Modding/Spriggit/)
+	* Requires [Microsoft .NET SDK](https://dotnet.microsoft.com/en-us/download/dotnet/)
 * [Visual Studio Community 2022](https://visualstudio.microsoft.com/)
 	* Desktop development with C++
 	* On VS Community 2026, use this command first:

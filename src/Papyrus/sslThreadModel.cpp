@@ -65,37 +65,36 @@ namespace Papyrus::ThreadModel
             position->expression = Registry::Library::GetSingleton()->GetExpressionById(a_expression);
         }
 
-        void LockActorImpl(ALIASARGS)
-        {
-            const auto actor = a_alias->GetActorReference();
-            if (!actor) {
-                a_vm->TraceStack("Reference is empty or not an actor", a_stackID);
-                return;
-            }
-            if (actor->IsPlayerRef()) {
-                RE::PlayerCharacter::GetSingleton()->SetAIDriven(true);
-                const auto ui = RE::UI::GetSingleton();
-                const auto interfacestr = RE::InterfaceStrings::GetSingleton();
-                if (ui->IsMenuOpen(interfacestr->dialogueMenu)) {
-                    if (auto view = ui->GetMovieView(interfacestr->dialogueMenu)) {
-                        RE::GFxValue arg{ interfacestr->dialogueMenu };
-                        view->InvokeNoReturn("_global.skse.CloseMenu", &arg, 1);
-                    }
-                }
-                actor->AsActorState()->actorState1.lifeState = RE::ACTOR_LIFE_STATE::kAlive;
-            } else {
-                switch (actor->AsActorState()->actorState1.lifeState) {
-                case RE::ACTOR_LIFE_STATE::kUnconcious:
-                    actor->AsActorValueOwner()->SetActorValue(RE::ActorValue::kVariable05, STATUS05::Unconscious);
-                    break;
-                case RE::ACTOR_LIFE_STATE::kDying:
-                case RE::ACTOR_LIFE_STATE::kDead:
-                    actor->AsActorValueOwner()->SetActorValue(RE::ActorValue::kVariable05, STATUS05::Dying);
-                    actor->Resurrect(false, true);
-                    break;
-                }
-                actor->AsActorState()->actorState1.lifeState = RE::ACTOR_LIFE_STATE::kRestrained;
-            }
+		void StartSetActorInterrupts(ALIASARGS)
+		{
+			const auto actor = a_alias->GetActorReference();
+			if (!actor) {
+				a_vm->TraceStack("Reference is empty or not an actor", a_stackID);
+				return;
+			}
+			if (actor->IsPlayerRef()) {
+				const auto ui = RE::UI::GetSingleton();
+				const auto interfacestr = RE::InterfaceStrings::GetSingleton();
+				if (ui->IsMenuOpen(interfacestr->dialogueMenu)) {
+					if (auto view = ui->GetMovieView(interfacestr->dialogueMenu)) {
+						RE::GFxValue arg{ interfacestr->dialogueMenu };
+						view->InvokeNoReturn("_global.skse.CloseMenu", &arg, 1);
+					}
+				}
+				actor->AsActorState()->actorState1.lifeState = RE::ACTOR_LIFE_STATE::kAlive;
+			} else {
+				switch (actor->AsActorState()->actorState1.lifeState) {
+				case RE::ACTOR_LIFE_STATE::kUnconcious:
+					actor->AsActorValueOwner()->SetActorValue(RE::ActorValue::kVariable05, STATUS05::Unconscious);
+					break;
+				case RE::ACTOR_LIFE_STATE::kDying:
+				case RE::ACTOR_LIFE_STATE::kDead:
+					actor->AsActorValueOwner()->SetActorValue(RE::ActorValue::kVariable05, STATUS05::Dying);
+					actor->Resurrect(false, true);
+					break;
+				}
+				actor->AsActorState()->actorState1.lifeState = RE::ACTOR_LIFE_STATE::kRestrained;
+			}
 
             if (actor->AsActorState()->IsWeaponDrawn()) {
                 const auto factory = RE::IFormFactory::GetConcreteFormFactoryByType<RE::Script>();
@@ -110,44 +109,58 @@ namespace Papyrus::ThreadModel
                 }
             }
 
-            Thread::Collision::CollisionHandler::GetSingleton()->AddActor(actor->GetFormID());
+			actor->StopCombat();
+			actor->EndDialogue();
+			actor->InterruptCast(false);
+			actor->StopInteractingQuick(true);
 
-            actor->StopCombat();
-            actor->EndDialogue();
-            actor->InterruptCast(false);
-            actor->StopInteractingQuick(true);
-            // actor->SetCollision(false);
+			if (const auto process = actor->GetActorRuntimeData().currentProcess) {
+				process->ClearMuzzleFlashes();
+			}
+		}
 
-            if (const auto process = actor->GetActorRuntimeData().currentProcess) {
-                process->ClearMuzzleFlashes();
-            }
-            actor->StopMoving(1.0f);
-        }
+		void EndSetActorInterrupts(ALIASARGS)
+		{
+			const auto actor = a_alias->GetActorReference();
+			if (!actor) {
+				a_vm->TraceStack("Reference is empty or not an actor", a_stackID);
+				return;
+			}
+			Registry::Scale::GetSingleton()->RemoveScale(actor);
+			switch (static_cast<int32_t>(actor->AsActorValueOwner()->GetActorValue(RE::ActorValue::kVariable05))) {
+			case STATUS05::Unconscious:
+				actor->AsActorState()->actorState1.lifeState = RE::ACTOR_LIFE_STATE::kUnconcious;
+				break;
+			default:
+				actor->AsActorState()->actorState1.lifeState = RE::ACTOR_LIFE_STATE::kAlive;
+				break;
+			}
+			if (!actor->IsPlayerRef()) {
+				actor->AsActorValueOwner()->SetActorValue(RE::ActorValue::kVariable05, 0.0f);
+			}	
+		}
 
-        void UnlockActorImpl(ALIASARGS)
-        {
-            const auto actor = a_alias->GetActorReference();
-            if (!actor) {
-                a_vm->TraceStack("Reference is empty or not an actor", a_stackID);
-                return;
-            }
-            Registry::Scale::GetSingleton()->RemoveScale(actor);
-            switch (static_cast<int32_t>(actor->AsActorValueOwner()->GetActorValue(RE::ActorValue::kVariable05))) {
-            case STATUS05::Unconscious:
-                actor->AsActorState()->actorState1.lifeState = RE::ACTOR_LIFE_STATE::kUnconcious;
-                break;
-            default:
-                actor->AsActorState()->actorState1.lifeState = RE::ACTOR_LIFE_STATE::kAlive;
-                break;
-            }
-            if (actor->IsPlayerRef()) {
-                RE::PlayerCharacter::GetSingleton()->SetAIDriven(false);
-            } else {
-                actor->AsActorValueOwner()->SetActorValue(RE::ActorValue::kVariable05, 0.0f);
-            }
-            Thread::Collision::CollisionHandler::GetSingleton()->RemoveActor(actor->GetFormID());
-            // actor->SetCollision(true);
-        }
+		void SetActorCollisions(ALIASARGS, bool a_enable)
+		{
+			const auto actor = a_alias->GetActorReference();
+			if (!actor) {
+				a_vm->TraceStack("Reference is empty or not an actor", a_stackID);
+				return;
+			}
+			const auto handler = Thread::Collision::CollisionHandler::GetSingleton();
+			const auto formID = actor->GetFormID();
+			if (!a_enable) {
+				if (!handler->HasActor(formID)) {
+					handler->AddActor(formID);
+				}
+				// actor->SetCollision(false);
+			} else {
+				if (handler->HasActor(formID)) {
+					handler->RemoveActor(formID);
+				}
+				// actor->SetCollision(true);
+			}
+		}
 
         std::vector<RE::TESForm*> StripByData(ALIASARGS, int32_t a_stripdata, std::vector<uint32_t> a_defaults, std::vector<uint32_t> a_overwrite)
         {

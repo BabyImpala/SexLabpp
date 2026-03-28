@@ -28,7 +28,7 @@ Function EnableHotkeys(bool forced = false)
 EndFunction
 
 Function DisableHotkeys()
-	SexLabUtil.ToggleFreeCamera(0) ; If free cam is active here will glitch out controls?
+	SexLabUtil.ToggleFreeCamera(0) ; TFC_OFF... If free cam is active here will glitch out controls?
 	If (Config.UseSceneMenu && !Config.IsSkyrimVR)
 		DisableMenuEvents()
 	EndIf
@@ -163,15 +163,14 @@ Function MoveScene()
 		EndIf
 		n += 1
 	EndWhile
-	Game.SetPlayerAIDriven(false)
-	Game.EnablePlayerControls()
+	SexLabUtil.SetActorMovement(PlayerRef, 1) ;MOVEMENT_UNLOCK
 	Utility.Wait(1)
 	int t = 0
 	While(t < 60 && !Input.IsKeyPressed(Config.MoveScene))
 		Utility.Wait(0.5)
 		t += 1
 	EndWhile
-	Game.SetPlayerAIDriven()	; make sure player isnt moving before resync
+	SexLabUtil.SetActorMovement(PlayerRef, 2)	; MOVEMENT_LOCK... make sure player isnt moving before resync
 	float x = PlayerRef.X
 	float y = PlayerRef.Y
 	float z = PlayerRef.Z

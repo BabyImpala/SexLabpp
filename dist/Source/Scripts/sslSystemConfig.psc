@@ -710,7 +710,7 @@ Function ToggleThreadControl()
   SexLabThread TargetThread = ThreadSlots.GetThreadByActor(akTarget)
   If (TargetThread && TargetThread.GetStatus() == TargetThread.STATUS_INSCENE)
     Log("AttemptThreadControl(), Attempting thread control for actor: " + SexLabUtil.ActorName(akTarget))
-    If (TakeThreadControl.Show())
+    If (TargetThread.HasPlayer() || TakeThreadControl.Show())
       GetThreadControl(TargetThread as sslThreadController)
       If (UseSceneMenu) ;Comeback: Reasses need after UI update
         _ActiveControl.RealignActors()
@@ -745,13 +745,13 @@ Function GetThreadControl(sslThreadController TargetThread)
   _ActiveControl = TargetThread
   ; Lock players movement iff they arent owned by the thread
   If (!_ActiveControl.HasPlayer)
-    Actor player = Game.GetPlayer()
     _ActiveControl.AutoAdvance = false
+    Actor player = Game.GetPlayer()
     player.StopCombatAlarm()
     if player.IsWeaponDrawn()
       player.SheatheWeapon()
     endIf
-    Game.SetPlayerAIDriven()
+    SexLabUtil.SetActorMovement(player, 2) ;MOVEMENT_LOCK
     player.SetFactionRank(AnimatingFaction, 0)
     player.EvaluatePackage()
   EndIf
@@ -768,10 +768,10 @@ Function DisableThreadControl(sslThreadController TargetThread)
   _ActiveControl.AutoAdvance = true
   ; Unlock players movement iff they arent owned by the thread
   If (!_ActiveControl.HasPlayer)
-    Game.GetPlayer().SetFactionRank(AnimatingFaction, -1)
-    Game.GetPlayer().EvaluatePackage()
-    Game.SetPlayerAIDriven(false)
-    Game.EnablePlayerControls()
+    Actor player = Game.GetPlayer()
+    SexLabUtil.SetActorMovement(player, 0) ;MOVEMENT_RELEASE
+    player.RemoveFromFaction(AnimatingFaction)
+    player.EvaluatePackage()
   EndIf
   _ActiveControl = none
 Endfunction
@@ -1491,8 +1491,6 @@ int Function ToggleVRIK(bool abEnabled, int aiPOVMode = -1)
   EndIf
   If (!abEnabled)
     ApplyConfigsVRIK(false)
-    Game.EnablePlayerControls(true, true, true, false, true, false, true, false, 0)
-    Game.SetPlayerAIDriven(false)
     _AudioCategoryFST.Unmute()
     _AudioCategoryNPCFST.Unmute() 
     return 0
@@ -1509,13 +1507,7 @@ int Function ToggleVRIK(bool abEnabled, int aiPOVMode = -1)
   EndIf
   RefreshConfigsVRIK(true, aiLockHmdToBody=tempLockHmd)
   ApplyConfigsVRIK(true)
-  ; Controls and Sound Fix
-  If (POVModeVR == VRIK_TPP_FREE)
-    Game.SetPlayerAIDriven(false)
-    Game.EnablePlayerControls(true, false, false, true, false, true, false, true, 0)
-  Else
-    Game.SetPlayerAIDriven(true)
-  EndIf
+  ; Footsteps Sound Fix
   _AudioCategoryFST.Mute()
   _AudioCategoryNPCFST.Mute()
   return VRIKRestoreInTicks

@@ -84,6 +84,7 @@ function PrintConsole(string output) global native
 Actor[] function MakeActorArray(Actor Actor1 = none, Actor Actor2 = none, Actor Actor3 = none, Actor Actor4 = none, Actor Actor5 = none) global native
 float function GetCurrentGameRealTime() global native
 bool Function IsGodModeEnabled() global native
+String Function GetTranslation(String asStr) global native
 
 String[] Function MergeSplitTags(String asTags, String asTagsSuppress, bool abRequireAll) global
   String[] ret1 = PapyrusUtil.ClearEmpty(PapyrusUtil.StringSplit(asTags, ","))
@@ -137,8 +138,12 @@ float Function CalcPathingTargetDistance(int k) global
     return 128.0
 EndFunction
 
+; ------------------------------------------------------- ;
+; --- Threading Utilities                             --- ;
+; ------------------------------------------------------- ;
+
 Function ToggleFreeCamera(int aiForceState = -1) global
-	;[-1:Toggle, 0:KeepDisabled, 1:KeepEnabled]
+	;[-1:Toggle, 0:TFC_STAYS_OFF, 1:TFC_STAYS_ON]
 	If (GetConfig().IsSkyrimVR)
 		return
 	EndIf
@@ -156,6 +161,43 @@ Function ToggleFreeCamera(int aiForceState = -1) global
 	EndIf
 EndFunction
 
+Function SetActorMovement(Actor akActor, int aiMovement) global
+	;[0:MOVEMENT_RELEASE, 1:MOVEMENT_UNLOCK, 2:MOVEMENT_LOCK]
+	If ((aiMovement < 0) || (aiMovement > 2))
+		return
+	EndIf
+	If (akActor != Game.GetPlayer())
+		If (aiMovement == 0) ;RELEASE
+			akActor.SetDontMove(false)
+			akActor.SetRestrained(false)
+		Else
+			akActor.SetDontMove(true)
+			akActor.SetRestrained(true)
+		EndIf
+		return
+	EndIf
+	bool bVRMode = GetConfig().IsSkyrimVR
+	While (!bVRMode && Game.GetCameraState()==0)
+		Game.ForceThirdPerson()
+	EndWhile
+	If (aiMovement == 2) ;LOCK
+		bool bVRTPP = bVRMode && (GetConfig().POVModeVR == 2) ;VRIK_TPP_FREE
+		Game.SetPlayerAIDriven(!bVRTPP)
+		Game.DisablePlayerControls(abMovement=!bVRTPP, abCamSwitch=true, abSneaking=true, abMenu=false)
+	Else
+		Game.SetPlayerAIDriven(false)
+		If (aiMovement == 1) ;UNLOCK
+			If (!bVRMode)
+				Game.EnablePlayerControls(abFighting=false, abCamSwitch=false, abSneaking=false, abActivate=false)
+			Else
+				Game.EnablePlayerControls(ablooking=false, abMenu=false, abJournalTabs=false) ; from SLVR patch (weird abLooking)
+			EndIf
+		Else ;RELEASE
+			Game.EnablePlayerControls()
+		EndIf
+	EndIf
+EndFunction
+
 Function ForceThirdPerson() global
 	If (GetConfig().IsSkyrimVR)
 		return
@@ -164,8 +206,6 @@ Function ForceThirdPerson() global
 		Game.ForceThirdPerson()
 	EndWhile
 EndFunction
-
-String Function GetTranslation(String asStr) global native
 
 ; *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-* ;
 ; ----------------------------------------------------------------------------- ;
