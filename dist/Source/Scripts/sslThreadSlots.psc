@@ -98,8 +98,8 @@ EndFunction
 Function StopThread(sslThreadController Slot)
   If (Slot.GetStatus() != Slot.STATUS_IDLE)
     sslLog.Log("Stopping thread " + Slot + " in state " + Slot.GetState())
+    Slot.EndAnimation()
   EndIf
-  Slot.EndAnimation()
   Slot.Initialize()
 EndFunction
 
