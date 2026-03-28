@@ -270,13 +270,13 @@ bool _SkipHotkeyEvents = False
 
 Function EnableTraditionalHotkeys()
 	InitLegacyHotkeys()
+	GetAdjustPos()
 	RegisterForKey(Hotkeys[kChangeAnimation])
 	RegisterForKey(Hotkeys[kMoveScene])
 	RegisterForKey(Hotkeys[kChangePartner])
 	If (Config.GameEnabled && HasPlayer)
 		RegisterForKey(Hotkeys[kGameRaiseEnj])
 		RegisterForKey(Hotkeys[kGameHoldback])
-		GetAdjustPos()
 	EndIf
 	If (!Config.UseSceneMenu)
 		RegisterForKey(Hotkeys[kAdvanceAnimation])
@@ -499,7 +499,7 @@ Function HandleOffsetAdjustment(String[] asOffsetType, int aiKey, bool abAdjustT
 		return
 	EndIf
 	PauseTimer(true)
-	Actor akAffectedActor = _AdjustActor
+	Actor akAffectedActor = GetTargetPartner()
 	If (HasPlayer && !abAdjustTarget)
 		akAffectedActor = PlayerRef
 	EndIf
