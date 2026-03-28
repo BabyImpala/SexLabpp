@@ -66,7 +66,7 @@ MCM_SETTING(iKeyLeft, 0xCB)                // Left Arrow
 MCM_SETTING(iKeyRight, 0xCD)               // Right Arrow
 MCM_SETTING(iKeyAdvance, 0x39)             // Space
 MCM_SETTING(iKeyEnd, 0xCF)                 // End
-MCM_SETTING(iKeyMenu, 0x12)                // E
+MCM_SETTING(iKeyExtra2, 0x12)              // E
 MCM_SETTING(iKeyMod, 0x2A)                 // Shift
 MCM_SETTING(iKeyReset, 0x1D)               // Ctrl
 

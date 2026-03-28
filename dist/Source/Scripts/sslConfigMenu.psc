@@ -1490,7 +1490,7 @@ function PlayerHotkeys()
 	AddStateOptionKey("iKeyRight", "$SSL_iKeyRight", true, true)
 	AddStateOptionKey("iKeyAdvance", "$SSL_iKeyAdvance", true, true)
 	AddStateOptionKey("iKeyEnd", "$SSL_iKeyEnd", true, true)
-	AddStateOptionKey("iKeyMenu", "$SSL_iKeyMenu", true, true) ;open SL menu
+	AddStateOptionKey("iKeyExtra2", "$SSL_iKeyExtra2", true, true) ;open SL menu
 	AddStateOptionKey("iKeyMod", "$SSL_iKeyMod", true, true) ;modifier
 	AddStateOptionKey("iKeyReset", "$SSL_iKeyReset", true, true) ;inverse action
 
