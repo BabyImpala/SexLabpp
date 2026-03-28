@@ -1626,20 +1626,20 @@ EndFunction
 /;
 
 Function CenterOnObject(ObjectReference CenterOn, bool resync = true)
-	Log("Invalid State", "CenterOnObject()")
+	Log("CenterOnObject(), Function called from invalid state: " + GetState())
 EndFunction
 Function EndAnimation(bool Quickly = false)
-	Log("Invalid state", "EndAnimation()")
+	Log("EndAnimation(), Function called from invalid state: " + GetState())
 EndFunction
 bool Function ResetAnimation(Actor[] akNewPositions, Actor[] akSubmissives, ObjectReference akCenter)
-	Log("Invalid state", "ResetAnimation()")
+	Log("ResetAnimation(), Function called from invalid state: " + GetState())
 	return false
 EndFunction
 Function PrepareDone()
-	Log("Invalid state", "PrepareDone()")
+	Log("PrepareDone(), Function called from invalid state: " + GetState())
 EndFunction
 Function AnimationStart()
-	Log("Invalid state", "AnimationStart()")
+	Log("AnimationStart(), Function called from invalid state: " + GetState())
 EndFunction
 
 ; ------------------------------------------------------- ;
