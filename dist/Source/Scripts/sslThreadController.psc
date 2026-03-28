@@ -439,7 +439,6 @@ Function SetOffsetAdjustMode(int aiSet)
 		Debug.Notification("SexLab: Disabled offset adjustments")
 		return
 	EndIf
-	;TODO: allign/recenter camera along with world coordinates directions
 	If (_AdjustMode == AdjMode_PosXY)
 		Debug.Notification("SexLab: Adjusting Position X-Y")
 	ElseIf (_AdjustMode == AdjMode_PosRZ)
@@ -601,7 +600,7 @@ EndFunction
 ; *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-* ;
 
 bool _SkipGestureEvents = False
-bool _AdjustSelf = True
+bool _AdjustSelfVR = True
 
 Function RegisterGesture(int aiGesture, String asName)
 	VRIK.VrikSetProfileAction(aiGesture, "SLVR_"+asName)
@@ -625,8 +624,8 @@ Function EnableGesturesVR()
 	EndIf
 	RegisterGesture(4, "TargetPartnerPrev")         ; L + left
 	RegisterGesture(5, "TargetPartnerNext")         ; L + right
-	RegisterGesture(6, "POVFirstPerson")            ; L + back
-	RegisterGesture(7, "POVThirdPerson")            ; L + forward
+	RegisterGesture(6, "SwitchPOVPrev")             ; L + back
+	RegisterGesture(7, "SwitchPOVNext")             ; L + forward
 	; R1 -> SceneControl Main
 	RegisterGesture(14, "ToggleCollision")          ; R (tap) = Right Thumbstick Press or Trackpad Tap
 	RegisterGesture(15, "SceneChange")              ; R + up
@@ -640,7 +639,7 @@ Function EnableGesturesVR()
 	RegisterGesture(30, "OffsetLeft")               ; L2 + left
 	RegisterGesture(31, "OffsetRight")              ; L2 + right
 	; R2 -> SceneControl Complex
-	RegisterGesture(40, "POV1stUnlocked")           ; R2 (tap) = Right Index Touchpad Press
+	;RegisterGesture(40, "")                        ; R2 (tap) = Right Index Touchpad Press
 	RegisterGesture(41, "AdjOffsetModeNext")        ; R2 + up
 	RegisterGesture(42, "AdjOffsetModePrev")        ; R2 + down
 	RegisterGesture(43, "ChangePosForward")         ; R2 + left
@@ -659,8 +658,8 @@ Function DisableGesturesVR()
 	UnregisterGesture("GameHoldback")
 	UnregisterGesture("TargetPartnerPrev")
 	UnregisterGesture("TargetPartnerNext")
-	UnregisterGesture("POVFirstPerson")
-	UnregisterGesture("POVThirdPerson")
+	UnregisterGesture("SwitchPOVPrev")
+	UnregisterGesture("SwitchPOVNext")
 	UnregisterGesture("ToggleCollision")
 	UnregisterGesture("SceneChange")
 	UnregisterGesture("SceneEnd")
@@ -671,7 +670,6 @@ Function DisableGesturesVR()
 	UnregisterGesture("OffsetDown")
 	UnregisterGesture("OffsetLeft")
 	UnregisterGesture("OffsetRight")
-	UnregisterGesture("POV1stUnlocked")
 	UnregisterGesture("AdjOffsetModeNext")
 	UnregisterGesture("AdjOffsetModePrev")
 	UnregisterGesture("ChangePosForward")
@@ -685,7 +683,7 @@ Function VRHandleGesture(String asEventName, String Foobar, float Presses, Form 
 		return
 	EndIf
 	_SkipGestureEvents = true
-	bool abAdjustTarget = !_AdjustSelf
+	bool abAdjustTarget = !_AdjustSelfVR
 	If (HasPlayer && Config.GameEnabled)
 		If (asEventName == "SLVR_GameRaiseEnj")
 			ProcessEnjGameArg("Stamina", GetTargetPartner(), abAdjustTarget)
@@ -694,16 +692,16 @@ Function VRHandleGesture(String asEventName, String Foobar, float Presses, Form 
 		EndIf
 	EndIf
 	If (asEventName == "ToggleAdjustSelf")
-		_AdjustSelf = !_AdjustSelf
-		Debug.Notification("SexLab: AdjustSelf: " + _AdjustSelf)
+		_AdjustSelfVR = !_AdjustSelfVR
+		Debug.Notification("SexLab: AdjustSelf: " + _AdjustSelfVR)
 	ElseIf (asEventName == "SLVR_TargetPartnerPrev")
 		ChangeTargetPartner(true)
 	ElseIf (asEventName == "SLVR_TargetPartnerNext")
 		ChangeTargetPartner()
-	ElseIf (asEventName == "SLVR_POVFirstPerson")
-		Config.SetPOVModeVRIK(Config.VRIK_FPP_HMD)
-	ElseIf (asEventName == "SLVR_POVThirdPerson")
-		Config.SetPOVModeVRIK(Config.VRIK_TPP_FREE)
+	ElseIf (asEventName == "SwitchPOVPrev")
+		CyclePOVModesVR(true)
+	ElseIf (asEventName == "SwitchPOVNext")
+		CyclePOVModesVR()
 	ElseIf (asEventName == "SLVR_ToggleCollision")
 		If ((HasPlayer) && (Config.POVModeVR == Config.VRIK_TPP_FREE))
 			Config.NoCollision = !Config.NoCollision
@@ -720,13 +718,15 @@ Function VRHandleGesture(String asEventName, String Foobar, float Presses, Form 
 	ElseIf (asEventName == "SLVR_AdjustStageToggle")
 		Config.AdjustStage = !Config.AdjustStage
 		Debug.Notification("SexLab: AdjustStage: " + Config.AdjustStage)
-	ElseIf (asEventName == "SLVR_POV1stUnlocked")
-		If (GetOffsetAdjustMode() == AdjMode_None)
-			Config.SetPOVModeVRIK(Config.VRIK_FPP_FREE)
-		EndIf
 	ElseIf (asEventName == "SLVR_AdjOffsetModeNext")
+		If (GetOffsetAdjustMode() == AdjMode_None)
+			Config.SetPOVModeVRIK(Config.VRIK_TPP_FREE)
+		EndIf
 		CycleOffsetAdjustModes()
 	ElseIf (asEventName == "SLVR_AdjOffsetModePrev")
+		If (GetOffsetAdjustMode() == AdjMode_None)
+			Config.SetPOVModeVRIK(Config.VRIK_TPP_FREE)
+		EndIf
 		CycleOffsetAdjustModes(true)
 	ElseIf (asEventName == "SLVR_ChangePosForward")
 		ChangePositions(false, abAdjustTarget)
@@ -751,6 +751,24 @@ Function VRHandleGesture(String asEventName, String Foobar, float Presses, Form 
 		HandleOffsetAdjustmentVR(asOffsetType, abAdjustTarget)
 	EndIf
 	_SkipGestureEvents = false
+EndFunction
+
+Function CyclePOVModesVR(bool abBackwards = false)
+	int aiMode = Config.VRIK_TPP_FREE
+	If (GetOffsetAdjustMode() == AdjMode_None)
+		int modesCount = 3
+		int step = 1
+		If (abBackwards)
+			step = -1
+		EndIf
+		aiMode = Config.POVModeVR + step
+		If (aiMode >= modesCount)
+			aiMode = 0
+		ElseIf (aiMode < 0)
+			aiMode = (modesCount - 1)
+		EndIf
+	EndIf
+	Config.SetPOVModeVRIK(aiMode)
 EndFunction
 
 Function HandleOffsetAdjustmentVR(String[] asOffsetType, bool abAdjustTarget)
