@@ -20,7 +20,7 @@ struct Settings
 		Right,
 		Select,
 		End,
-		Menu,
+		Extra2,
 		Modes,
 		Reset,
 	};

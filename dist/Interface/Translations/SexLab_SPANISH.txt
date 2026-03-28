@@ -336,7 +336,7 @@ $SSL_iKeyLeft	Reducir velocidad / Izquierda
 $SSL_iKeyRight	Aumentar velocidad / Derecha
 $SSL_iKeyAdvance	Avanzar escena / Seleccionar
 $SSL_iKeyEnd	Finalizar escena / Atrás
-$SSL_iKeyMenu	Open Menu / Swap Menu Tab
+$SSL_iKeyExtra2	Open Menu / Swap Menu Tab
 $SSL_iKeyMod	Modificador
 $SSL_iKeyModHighlight	Toggles alternative effect for other hotkeys.\nNext/Prev: ChangePartner, AdvanceStage, OffsetAdjustMode.\nAdjustTarget: EnjRaise, EnjHoldback, ChangePosition, OffsetDirections.\nThe hotkeys changing their mode to "AdjustTarget" with ModifierKey affect Player on their own.
 $SSL_iKeyReset	Acción inversa
