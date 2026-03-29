@@ -46,7 +46,8 @@ f_raw = en_path.name.replace("ENGLISH.txt", "")
 def parse_file(file_path):
   with open(file_path, 'r', encoding='utf-16le') as file:
     lines = file.readlines()
-  keys = {line.split(maxsplit=1)[0]: line for line in lines if line.startswith('$')}
+  todo_keys = {lines[i+1].split(maxsplit=1)[0] for i, line in enumerate(lines) if line.startswith("# TODO:") and i+1 < len(lines)}
+  keys = {line.split(maxsplit=1)[0]: line for line in lines if line.startswith('$') and line.split(maxsplit=1)[0] not in todo_keys}
   return keys, lines
 
 if len(translated_languages) > 0:

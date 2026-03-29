@@ -239,9 +239,13 @@ $SSL_bShowInMap	Mostrar escenas en el mapa
 $SSL_bShowInMapHighlight	Muestra un marcador de misión para cada escena cercana (excepto las del jugador).
 $SSL_bSetAnimSpeedByEnjoyment	Velocidad según disfrute
 $SSL_bSetAnimSpeedByEnjoymentHighlight	La velocidad de la animación cambia según el disfrute del actor (+/-20%).
+# TODO: $SSL_AdjustStage
 $SSL_AdjustStage	Adjust Stage Only
+# TODO: $SSL_AdjustStageHighlight
 $SSL_AdjustStageHighlight	Toggles whether all edits to position/stage offsets will apply for currently playing stage only.
+# TODO: $SSL_fAdjustStepSize
 $SSL_fAdjustStepSize	Offset Step Size
+# TODO: $SSL_fAdjustStepSizeHighlight
 $SSL_fAdjustStepSizeHighlight	Determines the step size for offset adjustments.
 $SSL_bHideHUD	Ocultar HUD del juego
 $SSL_bHideHUDHighlight	Oculta la interfaz del juego, no la de escena.
@@ -316,7 +320,9 @@ $SSL_WolfVoice01	[SL] Lobo (predeterminado)
 # ------------------Player Hotkeys--------------------------------------------------
 $SSL_PlayerHotkeys	Atajos del jugador
 
+# TODO: $SSL_bUseSceneMenu
 $SSL_bUseSceneMenu	Use Scene Menu
+# TODO: $SSL_bUseSceneMenuHighlight
 $SSL_bUseSceneMenuHighlight	Toggles the use of the native in-scene menu and enjoyment bars.\nDisabling this brings back support for some modernized legacy SL's hotkeys.
 
 # ------ Global SexLab Hotkeys
@@ -326,6 +332,7 @@ $SSL_iTargetActor	Seleccionar actor para editar
 $SSL_iTargetActorHighlight	Tras pulsar esta tecla, apunta con la mira a un actor hasta recibir notificación. Luego podrás editarlo en varios menús.
 $SSL_iToggleFreeCamera	Alternar cámara libre
 $SSL_iToggleFreeCameraHighlight	Activa/desactiva la cámara libre (igual que TFC). Funciona siempre, incluso fuera de animaciones.
+# TODO: $SSL_iToggleThreadControl
 $SSL_iToggleThreadControl	Toggle Thread Control
 
 # ------ Scene Manipulation
@@ -336,18 +343,25 @@ $SSL_iKeyLeft	Reducir velocidad / Izquierda
 $SSL_iKeyRight	Aumentar velocidad / Derecha
 $SSL_iKeyAdvance	Avanzar escena / Seleccionar
 $SSL_iKeyEnd	Finalizar escena / Atrás
-$SSL_iKeyExtra2	Open Menu / Swap Menu Tab
+$SSL_iKeyExtra2	Abrir menú / Cambiar pestaña
 $SSL_iKeyMod	Modificador
+# TODO: $SSL_iKeyModHighlight
 $SSL_iKeyModHighlight	Toggles alternative effect for other hotkeys.\nNext/Prev: ChangePartner, AdvanceStage, OffsetAdjustMode.\nAdjustTarget: EnjRaise, EnjHoldback, ChangePosition, OffsetDirections.\nThe hotkeys changing their mode to "AdjustTarget" with ModifierKey affect Player on their own.
 $SSL_iKeyReset	Acción inversa
 
+# TODO: $SSL_LegacyHotkeys
 $SSL_LegacyHotkeys	Legacy Hotkeys
 $SSL_iChangeAnimation	Cambiar animación
 $SSL_iMoveScene	Mover escena
+# TODO: $SSL_iChangePositions
 $SSL_iChangePositions	Change Positions
+# TODO: $SSL_iOffsetAdjustMode
 $SSL_iOffsetAdjustMode	Cycle Offset Adjust Modes
+# TODO: $SSL_iOffsetAdjustModeHighlight
 $SSL_iOffsetAdjustModeHighlight	Hotkey to switch between the 5 offset adjust modes when in scene.\nNone: Offset adjustments are disabled (default).\nPOS-XY: L/R keys adjust position's X, U/D adjust Y.\nPOS-RZ: L/R adjust pos's Rotation, U/D adjust Z.\nSCENE-XY: L/R adjust scene's X, U/D adjust Y (furniture scene only).\nSCENE-RZ: L/R adjust scene's Rotation, U/D adjust Z (furniture only).
+# TODO: $SSL_iToggleAdjustStage
 $SSL_iToggleAdjustStage	Toggle Adjust Stage
+# TODO: $SSL_iRestoreOffsets
 $SSL_iRestoreOffsets	Reset Offset Adjustments
 
 # ------------------- Timers & Stripping -------------------------------------------------

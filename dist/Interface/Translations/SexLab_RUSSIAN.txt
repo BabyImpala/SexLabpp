@@ -22,8 +22,9 @@ $SSL_High	Выше
 $SSL_ConflictControl{}{}	Эта клавиша уже назначена на:\n{} ({})\n\nХотите продолжить?
 $SSL_ConflictControl{}	Эта клавиша уже назначена на:\n{}\n\nХотите продолжить?
 $SSL_KeyCannotBeDisabled	Эта клавиша является обязательной для назначения и не может быть отключена.
+# TODO: $SSL_TSModeSelect
 $SSL_TSModeSelect	Scenes Category
-$SSL_TSModeSelectHighlight	Choose the category of scenes for which the strip settings on this page are being configured
+$SSL_TSModeSelectHighlight	Тип сцены для которой регулируется время стадии
 
 # --------------- Races -----------------------------------------------------
 
@@ -36,7 +37,7 @@ $SSL_Race_2	Медведь
 $SSL_Race_3	Кабан
 $SSL_Race_4	Оседланный кабан
 $SSL_Race_5	Одинокий кабан
-$SSL_Race_6	Собачатина
+$SSL_Race_6	Собакоподобный
 $SSL_Race_7	Корус
 $SSL_Race_8	Корус охотник
 $SSL_Race_9	Корус жнец
@@ -112,9 +113,9 @@ $SSL_MoveScene	Переместить сцену
 $SSL_Speed	Скорость
 $SSL_NextStage	Следующая стадия
 $SSL_EndScene	Завершение
-$SSL_HideHUD	Hide Game HUD
-$SSL_HideUI	Hide Scene HUD
-$SSL_None	None
+$SSL_HideHUD	Спрятать интерфейс игры
+$SSL_HideUI	Спрятать интерфейс сцены
+$SSL_None	Нет
 
 # --------------- Sex Journal (Sex Diary) -----------------------------------------------------
 $SSL_SexJournal	Секс Журнал
@@ -173,77 +174,125 @@ $SSL_AnimationSettings	Настройки сцены
 # ------ Player settings
 $SSL_PlayerSettings	Настройки игрока
 
-$SSL_bAutoAdvance	Продолжать анимацию по таймеру
-$SSL_bAutoAdvanceHighlight	Отключение/включение данного параметра позволяет игнорировать/использовать настройки таймера анимации, предотвращает/разрешает автоматицескую смену стадий анимации, но лишь в тех случаях, когда ИП (игровой персонаж) является участником сцены.
-$SSL_bDisablePlayer	Отключить управление в роли жертвы
-$SSL_bDisablePlayerHighlight	Если игрок является жертвой, управление анимацией блокируется.
-$SSL_bAutoTFC	Автоматическая "свободная камера"
-$SSL_bAutoTFCHighlight	Если включено, режим "свободная камера" (консольная команда "TFC") будет автоматически включен после начала сцены. Автоматическая "свободная камера" будет включена лишь для тех сцен, в которых принимает участие ИП (игровой персонаж).
-$SSL_fAutoSUCSM	Скорость "свободной камеры"
-$SSL_fAutoSUCSMHighlight	Скорость движения камеры в режиме "свободная камера".
+# TODO: $SSL_bAutoAdvance
+$SSL_bAutoAdvance	Auto Advance Stages
+# TODO: $SSL_bAutoAdvanceHighlight
+$SSL_bAutoAdvanceHighlight	Animations will automatically advance by timer when player is involved.
+# TODO: $SSL_bDisablePlayer
+$SSL_bDisablePlayer	Disable Victim Controls
+# TODO: $SSL_bDisablePlayerHighlight
+$SSL_bDisablePlayerHighlight	When player is the victim in an animation, animation controls are not enabled.
+# TODO: $SSL_bAutoTFC
+$SSL_bAutoTFC	Automatic Free Camera
+# TODO: $SSL_bAutoTFCHighlight
+$SSL_bAutoTFCHighlight	If enabled, will automatically enable the free flying camera (TFC) when animation involving the player starts.
+# TODO: $SSL_fAutoSUCSM
+$SSL_fAutoSUCSM	Free Camera Speed
+# TODO: $SSL_fAutoSUCSMHighlight
+$SSL_fAutoSUCSMHighlight	When starting the free camera this will be the default speed it will move at.
 $SSL_PlayerSex	Пол игрового персонажа
 $SSL_{}Sex	Пол персонажа {}
-$SSL_SexSelectHighlight	Этот параметр не изменяет фактический пол игрового персонажа, а лишь указывает системе SexLab, как нужно рассматривать этого персонажа и как вести обработку сцен и анимаций. Эта параметр предназначен для корректной обработки персонажей транссексуалов (футанари). К примеру, если игровой персонаж - женщина, то установка параметра "мужчина" заставит SexLab отвести женскому персонажу мужскую роль в сценах, даст возможность проигрывать сцены и анимации, помеченные как "мужские".
+# TODO: $SSL_SexSelectHighlight
+$SSL_SexSelectHighlight	How SexLab perceives this actor's sex. This is used to determine which position(s) an actor can be placed in during scenes. Has no direct influence on how an actor acts or looks.
 
 # ------ Extra effects
 $SSL_ExtraEffects	Экстра эффекты
 
 $SSL_ClimaxType	Тип оргазмов
-$SSL_ClimaxTypeHighlight	Есть три варианта того как мод обрабатывает оргазмы \n1) На базе настроек сцен (сцена должна быть создана специально для P+) \n2) Как в старых Sexlab (один общий оргазм в конце сцены) \n3) Раздельные оргазмы (это новый встроенный алгоритм, который совместим с модами для SLSO)
+# TODO: $SSL_ClimaxTypeHighlight
+$SSL_ClimaxTypeHighlight	The behavior of climaxes during Scenes.
 $SSL_Climax_0	На базе настроек сцен
 $SSL_Climax_1	Как в старых Sexlab
 $SSL_Climax_2	Раздельные оргазмы
 
-$SSL_bOrgasmEffects	Спец-эффекты при оргазме
-$SSL_bOrgasmEffectsHighlight	Если этот параметр включен, звуковые эффекты оргазма будут воспроизводиться при оргазме каждого актера, а также дрожание камеры при оргазме игрока.
-$SSL_fShakeStrength	Сила тряски камеры
-$SSL_fShakeStrengthHighlight	Если включено «Спец-эффекты при оргазме», установите силу дрожания камеры при оргазме игрока. \nУстановите «0», чтобы отключить это.
-$SSL_bUseCum	Применение эффектов спермы
-$SSL_bUseCumHighlight	Примените эффект текстуры спермы к персонажам-получателям / жертвам после оргазма партнера / агрессора-мужчины.
-$SSL_fCumTimer	Таймер эффектов спермы
-$SSL_fCumTimerHighlight	Определяет время, в течении которого следы спермы будут отображаться на персонаже.
-$SSL_bUseExpressions	Использовать эмоции
-$SSL_bUseExpressionsHighlight	Применяет выбранные установки MFG к персонажам, участвующим в сцене, которые увеличиваются по мере продвижения анимации в зависимости от применимых навыков этого конкретного персонажа.\nВНИМАНИЕ: Использование установок MFG в сочетании с функцией синхронизации рта может вызвать различные графические дефекты.
-$SSL_bUseLipSync	Использовать анимацию рта
-$SSL_bUseLipSyncHighlight	Всякий раз, когда актер стонет, будет воспроизводиться основная анимация рта.\nВНИМАНИЕ: Использование функции синхронизации рта в сочетании с установками MFG может привести к некорректному проигрыванию анимации рта.
+# TODO: $SSL_bOrgasmEffects
+$SSL_bOrgasmEffects	Play Orgasm Effects
+# TODO: $SSL_bOrgasmEffectsHighlight
+$SSL_bOrgasmEffectsHighlight	If enabled, orgasm sounds effects will be played on each actor orgasm, also the camera shake on player orgasm.
+# TODO: $SSL_fShakeStrength
+$SSL_fShakeStrength	Shake Camera Strength
+# TODO: $SSL_fShakeStrengthHighlight
+$SSL_fShakeStrengthHighlight	If "Play Orgasm Effects" is enabled, set the strength of the camera shake on player orgasm.\nSet on "0" to disable it.
+# TODO: $SSL_bUseCum
+$SSL_bUseCum	Apply Cum Effects
+# TODO: $SSL_bUseCumHighlight
+$SSL_bUseCumHighlight	Apply a cum texture effect to receiver/victim characters after a male partner/aggressor orgasm.
+# TODO: $SSL_fCumTimer
+$SSL_fCumTimer	Cum Effect Timer
+# TODO: $SSL_fCumTimerHighlight
+$SSL_fCumTimerHighlight	How long the above cum effect will display on a character.
+# TODO: $SSL_bUseExpressions
+$SSL_bUseExpressions	Apply Facial Expressions
+# TODO: $SSL_bUseExpressionsHighlight
+$SSL_bUseExpressionsHighlight	Applies selected MFG presets to an actor during animation which increases as the animation progresses in relation to that particular characters applicable skills. WARNING: The expression presets can cause graphical oddities when combined with the voice lip syncing option.
+# TODO: $SSL_bUseLipSync
+$SSL_bUseLipSync	Play Lip Sync Animation
+# TODO: $SSL_bUseLipSyncHighlight
+$SSL_bUseLipSyncHighlight	Whenever an actor moans, a basic mouth movement animation will be played. WARNING: The animation tends to fail to play correctly when combined with MFG facial expressions.
 
 # ------ Lovense
 $SSL_Lovense	Lovense
-$SSL_iLovenseStrength	Мощность по умолчанию
-$SSL_iLovenseStrengthHighlight	Мощность вибрации игрушек Lovense во время сцен секса. Работает только если ваш персонаж принимает участие в сцене.
-$SSL_iLovenseStrengthOrgasm	Мощность оргазма
-$SSL_iLovenseStrengthOrgasmHighlight	Мощность вибрации игрушек Lovense во время оргазма. Работает только если ваш персонаж испытывает оргазм.
-$SSL_iLovenseDurationOrgasm	Продолжительность оргазма
-$SSL_iLovenseDurationOrgasmHighlight	Продолжительность вибро-эффектов во время игрового оргазма.
+# TODO: $SSL_iLovenseStrength
+$SSL_iLovenseStrength	Default Strength
+# TODO: $SSL_iLovenseStrengthHighlight
+$SSL_iLovenseStrengthHighlight	Vibration strength of Lovense Toys during scenes. Only applies to scenes the player is involved.
+# TODO: $SSL_iLovenseStrengthOrgasm
+$SSL_iLovenseStrengthOrgasm	Orgasm Strength
+# TODO: $SSL_iLovenseStrengthOrgasmHighlight
+$SSL_iLovenseStrengthOrgasmHighlight	Vibration strength of Lovense Toys after an orgasm occurs. Only applies to the player's orgasms.
+# TODO: $SSL_iLovenseDurationOrgasm
+$SSL_iLovenseDurationOrgasm	Orgasm Duration
+# TODO: $SSL_iLovenseDurationOrgasmHighlight
+$SSL_iLovenseDurationOrgasmHighlight	How long the vibration will last before resetting when an orgasm occurs.
 
 # ------ Creatures
-$SSL_bAllowCreatures	Сцены с существами
-$SSL_bAllowCreaturesHighlight	Разрешает существам участвовать в сценах.\nДля корректной работы требуется FNIS 5.0 Creatures или выше.
-$SSL_bCreatureGender	Пол существа должен соответствовать
-$SSL_bCreatureGenderHighlight	Если включено, Sexlab проверит к какому полу относится существо и попытается использовать только соответствующие этому полу анимации с существами. Если отключено, SexLab будет относить всех существ только к мужскому полу и обрабатывать все соответствующие этому полу сцены и анимации.
+# TODO: $SSL_bAllowCreatures
+$SSL_bAllowCreatures	Allow Creature Animation
+# TODO: $SSL_bAllowCreaturesHighlight
+$SSL_bAllowCreaturesHighlight	Allows creatures to be used in animations.
+# TODO: $SSL_bCreatureGender
+$SSL_bCreatureGender	Match Creature Sex
+# TODO: $SSL_bCreatureGenderHighlight
+$SSL_bCreatureGenderHighlight	If SexLab should differ between male and female creatures.\nSexLab usually treats all non-human actors as male.
 
 # ------ Animation Handling
 $SSL_AnimationHandling	Обработка анимации
 
 $SSL_UseFade	Использовать затухание экрана
-$SSL_UseFadeHighlight	Если включено и Игрок является частью анимации, применить эффект затухания экрана к не реалестичным событиям, таким как телепорт или начало выравнивания.\nЗатухание можно установить как размытие или черный экран.
+# TODO: $SSL_UseFadeHighlight
+$SSL_UseFadeHighlight	Apply an image modifier effect at the beginning of an animation.
 $SSL_UseBlur	Размытие
 $SSL_UseBlack	Черный экран
-$SSL_bUndressAnimation	Анимация раздевания
-$SSL_bUndressAnimationHighlight	Если включено, все участники сцены будут проигрывать специальную анимацию раздевания перед началом сцены.
-$SSL_bRedressVictim	Одевать жертву
-$SSL_bRedressVictimHighlight	Включение данного параметра указывает, что жертва будет автоматически одеваться сразу же после окончания сцены.
-$SSL_bDisableTeleport	Отключить запуск телепорта
-$SSL_bDisableTeleportHighlight	Включение данного параметра предотвращает мгновенную телепортацию участников сцены к месту ее проигрывания. Если включено, то участники сцены, находящиеся не слишком далеко друг от друга, попытаются подойти и/или подбежать друг к другу перед началом проигрывания сцены.
-$SSL_bShowInMap	Показать сцены на карте
-$SSL_bShowInMapHighlight	Если включено и Игрок не являющейся частью анимации, но анимация рядом с Игроком, сцены SexLab будут показаны на карте как квест дополнительного типа
-$SSL_bSetAnimSpeedByEnjoyment	Изменять скорость анимации
-$SSL_bSetAnimSpeedByEnjoymentHighlight	Изменять скорость анимации в зависимости от степени возбуждения. На данный момент 0.8~1.2
-$SSL_AdjustStage    Adjust Stage Only
-$SSL_AdjustStageHighlight    Toggles whether all edits to position/stage offsets will apply for currently playing stage only.
-$SSL_fAdjustStepSize    Offset Step Size
-$SSL_fAdjustStepSizeHighlight   Determines the step size for offset adjustments.
+# TODO: $SSL_bUndressAnimation
+$SSL_bUndressAnimation	Undress Animation
+# TODO: $SSL_bUndressAnimationHighlight
+$SSL_bUndressAnimationHighlight	Actors will play an undressing animation when initially stripping.
+# TODO: $SSL_bRedressVictim
+$SSL_bRedressVictim	Victim's Re-dress
+# TODO: $SSL_bRedressVictimHighlight
+$SSL_bRedressVictimHighlight	Victims in animations will not automatically dress after the animation ends.
+# TODO: $SSL_bDisableTeleport
+$SSL_bDisableTeleport	Disable Starting Teleport
+# TODO: $SSL_bDisableTeleportHighlight
+$SSL_bDisableTeleportHighlight	On animation start, actors will attempt to approach each other prior to the animation fully starting.
+# TODO: $SSL_bShowInMap
+$SSL_bShowInMap	Show Scenes on Map
+# TODO: $SSL_bShowInMapHighlight
+$SSL_bShowInMapHighlight	Get a miscellaneous quest marker for each scene playing nearby (except the ones you are participating in yourself).
+# TODO: $SSL_bSetAnimSpeedByEnjoyment
+$SSL_bSetAnimSpeedByEnjoyment	Enjoyment affected Animation Speed
+# TODO: $SSL_bSetAnimSpeedByEnjoymentHighlight
+$SSL_bSetAnimSpeedByEnjoymentHighlight	Base animation speed changes depending on actor enjoyment (+/-20%).
+$SSL_AdjustStage	Корректирование текущей стадии
+# TODO: $SSL_AdjustStageHighlight
+$SSL_AdjustStageHighlight	Toggles whether all edits to position/stage offsets will apply for currently playing stage only.
+# TODO: $SSL_fAdjustStepSize
+$SSL_fAdjustStepSize	Offset Step Size
+# TODO: $SSL_fAdjustStepSizeHighlight
+$SSL_fAdjustStepSizeHighlight	Determines the step size for offset adjustments.
+# TODO: $SSL_bHideHUD
 $SSL_bHideHUD	Hide Game HUD
+# TODO: $SSL_bHideHUDHighlight
 $SSL_bHideHUDHighlight	Hides the elements from game's HUD, not the scene HUD.
 $SSL_FurnitureNPC	Использование мебели: NPC
 $SSL_FurnitureNPCHighlight	Как NPC используют мебель. Если быть более точным, будут ли NPC использовать мебель, если она доступна и при каких условиях.
@@ -253,28 +302,42 @@ $SSL_FurniturePlayer	Использование мебели: Игрок
 $SSL_FurniturePlayerHighlight	Позволяет решить, будет ли использована мебель в сценах с участием игрока (если доступна). Заменяет все прочие настройки касающиеся мебели. "Спрашивать" - выдаёт меню позволяющее выбрать варианты. Если игрок покорный (и выбрана опция "если игрок не покорный"), то решение принимается без выпадающих опций исходя из настроек NPC.
 
 # ---- COMEBACK: Might delete
-$SSL_bDisableScale	Отключить масштабирование / исправление CTD
-$SSL_bDisableScaleHighlight	!!! Использовать лишь в случае необходимости !!!\nОтключает использование функции SetScale() в SexLab, из-за которой у некоторых пользователей происходят вылеты на рабочий стол во время проигрывания сцен.
+# TODO: $SSL_bDisableScale
+$SSL_bDisableScale	Disable Scaling / CTD Fix
+# TODO: $SSL_bDisableScaleHighlight
+$SSL_bDisableScaleHighlight	!!! Only Enable if Needed !!!\nDisables all internal uses of SetScale() within SexLab, which is known to cause crashes during animation start for some users. Some scaling may still occur through other means, such as furniture use, which SexLab will be unable to correct for while this is enabled. Your results may vary.
 
 # ----------------- Voices & SFX ---------------------------------------------------
 $SSL_SoundSettings	Настройки звука
 
-$SSL_fSFXVolume	Громкость звуковых эффектов
-$SSL_fSFXVolumeHighlight	Регулирует уровень громкости звуковых эффектов в диапазоне от 1% до 100%
-$SSL_fSFXDelay	Задержка  звуковых эффектов
-$SSL_fSFXDelayHighlight	Звуковые эффекты будут воспроизводится каждый раз через указанный интервал времени.
-$SSL_fVoiceVolume	Громкость голосов
-$SSL_fVoiceVolumeHighlight	Регулирует уровень громкости голоса в диапазоне от 1% до 100%
-$SSL_fMaleVoiceDelay	Задержка мужского голоса
-$SSL_fMaleVoiceDelayHighlight	Мужские голоса будут воспроизводится каждый раз через указанный интервал времени.
-$SSL_fFemaleVoiceDelay	Задержка женского голоса
-$SSL_fFemaleVoiceDelayHighlight	Женские голоса будут воспроизводится каждый раз через указанный интервал времени.
+# TODO: $SSL_fSFXVolume
+$SSL_fSFXVolume	SFX Volume
+# TODO: $SSL_fSFXVolumeHighlight
+$SSL_fSFXVolumeHighlight	The overall volume of the SFX from 0.0 as silent to 1.0 as full volume.
+# TODO: $SSL_fSFXDelay
+$SSL_fSFXDelay	SFX Delay
+# TODO: $SSL_fSFXDelayHighlight
+$SSL_fSFXDelayHighlight	Applicable sound effects will start out at this interval and will decrease with each stage.
+# TODO: $SSL_fVoiceVolume
+$SSL_fVoiceVolume	Voice Volume
+# TODO: $SSL_fVoiceVolumeHighlight
+$SSL_fVoiceVolumeHighlight	The overall volume of the voices from 0.0 as silent to 1.0 as full volume.
+# TODO: $SSL_fMaleVoiceDelay
+$SSL_fMaleVoiceDelay	Male Voice Delay
+# TODO: $SSL_fMaleVoiceDelayHighlight
+$SSL_fMaleVoiceDelayHighlight	Male's will start out voicing at this interval and will decrease with each stage.
+# TODO: $SSL_fFemaleVoiceDelay
+$SSL_fFemaleVoiceDelay	Female Voice Delay
+# TODO: $SSL_fFemaleVoiceDelayHighlight
+$SSL_fFemaleVoiceDelayHighlight	Female's will start out voicing at this interval and will decrease with each stage.
 
 $SSL_CachedVoices	Кэшированные голоса
 $SSL_SelectVoiceCache	Выбранный персонаж
-$SSL_SelectVoiceCacheHighlight	Персонаж, голос которого на данный момент выбирается
+# TODO: $SSL_SelectVoiceCacheHighlight
+$SSL_SelectVoiceCacheHighlight	The actor which's voice you are currently viewing.
 $SSL_SelectVoiceCacheV	Голос персонажа
-$SSL_SelectVoiceCacheVHighlight	Голос SexLab который на данный момент использует выбранный персонаж.\nГолос (если не был выбран вручную) будет выбран случайным образом в момент первого использования.
+# TODO: $SSL_SelectVoiceCacheVHighlight
+$SSL_SelectVoiceCacheVHighlight	The SexLab Voice this actor is using.\nVoices (if not manually selected) will be set the first time an actor partakes in an animation.
 
 $SSL_ToggleVoices	Переключение голосов
 $SSL_ActiveVoices	Просматриваемые голоса
@@ -316,39 +379,64 @@ $SSL_WolfVoice01	[SL] Волк Обычный
 # ------------------Player Hotkeys--------------------------------------------------
 $SSL_PlayerHotkeys	Горячие клавиши
 
-$SSL_bUseSceneMenu  Use Scene Menu
-$SSL_bUseSceneMenuHighlight	Toggles the use of the native in-scene menu and enjoyment bars.\nDisable this only if the scene menu causes crashes or you prefer legacy SL's hotkey approach.
+# TODO: $SSL_bUseSceneMenu
+$SSL_bUseSceneMenu	Use Scene Menu
+# TODO: $SSL_bUseSceneMenuHighlight
+$SSL_bUseSceneMenuHighlight	Toggles the use of the native in-scene menu and enjoyment bars.\nDisabling this brings back support for some modernized legacy SL's hotkeys.
 
 # ------ Global SexLab Hotkeys
 $SSL_GlobalHotkeys	Глобальные горячие клавиши
 
-$SSL_iTargetActor	Выбрать персонажа
-$SSL_iTargetActorHighlight	Направьте перекрестие прицела на персонажа и нажмите эту клавишу, после чего дождитесь сообщения о том, что персонаж выбран. После этого вам станут доступны новые возможности в меню SexLab - к примеру, вы сможете просмотреть сведения о статистике выбранного персонажа, изменить тип его голоса и т.д.
-$SSL_iToggleFreeCamera	Режим "свободная камера"
-$SSL_iToggleFreeCameraHighlight	Включает/отключает режим свободной камеры, что равносильно использованию консольной команды "TFC". Эта клавиша может быть использована в любых сценах, вне зависимости от их типа.
+# TODO: $SSL_iTargetActor
+$SSL_iTargetActor	Target Actor / Change Partner
+# TODO: $SSL_iTargetActorHighlight
+$SSL_iTargetActorHighlight	After pressing this hotkey, place your crosshairs in game over an actor until your receive a notification that the actor is targeted, afterwards the actor will be available for editing purposes in various menu pages.
+# TODO: $SSL_iToggleFreeCamera
+$SSL_iToggleFreeCamera	Toggle Free Camera Mode
+# TODO: $SSL_iToggleFreeCameraHighlight
+$SSL_iToggleFreeCameraHighlight	Toggles the camera mode into a free flying camera state, same as entering TFC into console, this hotkey is enabled at all times regardless of animation.
+# TODO: $SSL_iToggleThreadControl
 $SSL_iToggleThreadControl	Toggle Thread Control
 
 # ------ Scene Manipulation
 $SSL_SceneManipulation	Управление сценой
-$SSL_iKeyUp	Выберите ветвь / Вверх
-$SSL_iKeyDown	Выберите ветвь / Вниз
-$SSL_iKeyLeft	Уменьшить скорость / Влево
-$SSL_iKeyRight	Увеличить скорость / Вправо
-$SSL_iKeyAdvance	Продолжить сцену / Выбрать
-$SSL_iKeyEnd	Закончить сцену
-$SSL_iKeyExtra2   Open Menu / Swap Menu Tab
-$SSL_iKeyMod	Модификатор
+# TODO: $SSL_iKeyUp
+$SSL_iKeyUp	Select Branch / Up
+# TODO: $SSL_iKeyDown
+$SSL_iKeyDown	Select Branch / Down
+# TODO: $SSL_iKeyLeft
+$SSL_iKeyLeft	Decrease Speed / Left
+# TODO: $SSL_iKeyRight
+$SSL_iKeyRight	Increase Speed / Right
+# TODO: $SSL_iKeyAdvance
+$SSL_iKeyAdvance	Advance Scene / Select
+# TODO: $SSL_iKeyEnd
+$SSL_iKeyEnd	End Scene / Close Menu / Back
+# TODO: $SSL_iKeyExtra2
+$SSL_iKeyExtra2	Open Menu / Swap Menu Tab
+# TODO: $SSL_iKeyMod
+$SSL_iKeyMod	Modifier
+# TODO: $SSL_iKeyModHighlight
 $SSL_iKeyModHighlight	Toggles alternative effect for other hotkeys.\nNext/Prev: ChangePartner, AdvanceStage, OffsetAdjustMode.\nAdjustTarget: EnjRaise, EnjHoldback, ChangePosition, OffsetDirections.\nThe hotkeys changing their mode to "AdjustTarget" with ModifierKey affect Player on their own.
-$SSL_iKeyReset	Инвертирование действия
+# TODO: $SSL_iKeyReset
+$SSL_iKeyReset	Inverse Action
 
-$SSL_LegacyHotkeys  Legacy Hotkeys
+# TODO: $SSL_LegacyHotkeys
+$SSL_LegacyHotkeys	Legacy Hotkeys
+# TODO: $SSL_iChangeAnimation
 $SSL_iChangeAnimation	Change Animation
-$SSL_iMoveScene Move Scene
-$SSL_iChangePositions   Change Positions
-$SSL_iOffsetAdjustMode  Cycle Offset Adjust Modes
-$SSL_iOffsetAdjustModeHighlight Hotkey to switch between the 5 offset adjust modes when in scene.\nNone: Offset adjustments are disabled (default).\nPOS-XY: L/R keys adjust position's X, U/D adjust Y.\nPOS-RZ: L/R adjust pos's Rotation, U/D adjust Z.\nSCENE-XY: L/R adjust scene's X, U/D adjust Y (furniture scene only).\nSCENE-RZ: L/R adjust scene's Rotation, U/D adjust Z (furniture only).
-$SSL_iToggleAdjustStage Toggle Adjust Stage
-$SSL_iRestoreOffsets    Reset Offset Adjustments
+# TODO: $SSL_iMoveScene
+$SSL_iMoveScene	Move Scene
+# TODO: $SSL_iChangePositions
+$SSL_iChangePositions	Change Positions
+# TODO: $SSL_iOffsetAdjustMode
+$SSL_iOffsetAdjustMode	Cycle Offset Adjust Modes
+# TODO: $SSL_iOffsetAdjustModeHighlight
+$SSL_iOffsetAdjustModeHighlight	Hotkey to switch between the 5 offset adjust modes when in scene.\nNone: Offset adjustments are disabled (default).\nPOS-XY: L/R keys adjust position's X, U/D adjust Y.\nPOS-RZ: L/R adjust pos's Rotation, U/D adjust Z.\nSCENE-XY: L/R adjust scene's X, U/D adjust Y (furniture scene only).\nSCENE-RZ: L/R adjust scene's Rotation, U/D adjust Z (furniture only).
+# TODO: $SSL_iToggleAdjustStage
+$SSL_iToggleAdjustStage	Toggle Adjust Stage
+# TODO: $SSL_iRestoreOffsets
+$SSL_iRestoreOffsets	Reset Offset Adjustments
 
 # ------------------- Timers & Stripping -------------------------------------------------
 $SSL_TimersStripping	Таймеры/Раздевание
@@ -409,12 +497,16 @@ $SSL_Weapons	[--] Оружие
 # ------------------ Toggle Animations --------------------------------------------------
 $SSL_ToggleAnimations	Анимации
 $SSL_TogglePackage	Фильтровать по пакету
+# TODO: $SSL_TogglePackageHighlight
 $SSL_TogglePackageHighlight	Filter animations of a specific animation pack/module only
 $SSL_ToggleGroup	Фильтровать по группе
+# TODO: $SSL_togglecategoryHighlight
 $SSL_togglecategoryHighlight	Filter animations by human/creature category
 $SSL_ToggleVisible	Показывать отключённые
+# TODO: $SSL_ToggleVisibleHighlight
 $SSL_ToggleVisibleHighlight	Enable or disable all animations filtered on this page
 $SSL_TagFilter	Фильтровать по тэгам
+# TODO: $SSL_toggletagsHighlight
 $SSL_toggletagsHighlight	Filter animations by tags
 $SSL_Page{}{}	Страница {}/{}
 
@@ -423,90 +515,149 @@ $SSL_Page{}{}	Страница {}/{}
 $SSL_MatchMaker	Генератор сцен
 
 $SSL_ToggleMatchMaker	Включить Генератор сцен
-$SSL_ToggleMatchMakerHighlight	Включить Генератор сцен. Заклинания будут добавлены в меню заклинаний.
+# TODO: $SSL_ToggleMatchMakerHighlight
+$SSL_ToggleMatchMakerHighlight	Enable Matchmaker. Spells will be added to the spell menu
 
 # ------ Tag Settings
 $SSL_MatchMakerTagsSettings	Настройки Тегов
 $SSL_InputTags	Тэги:
+# TODO: $SSL_matchmakerInputTagsHighlight
 $SSL_matchmakerInputTagsHighlight	Resulting tag string based on tag inputs below
 $SSL_InputRequiredTags	Обязательные тэги:
+# TODO: $SSL_matchmakerInputRequiredTagsHighlight
 $SSL_matchmakerInputRequiredTagsHighlight	A list of comma-separated tags, all of which must be present simultaneously in the filtered scene(s)
 $SSL_InputExcludedTags	Исключённые тэги:
+# TODO: $SSL_matchmakerInputExcludedTagsHighlight
 $SSL_matchmakerInputExcludedTagsHighlight	A list of comma-separated tags, none of which shall be present in the filtered scene(s)
 $SSL_InputOptionalTags	Опциональные тэги:
+# TODO: $SSL_matchmakerInputOptionalTagsHighlight
 $SSL_matchmakerInputOptionalTagsHighlight	A list of comma-separated tags, at least one of which shall be present in the filtered scene(s)
 $SSL_TextResetTags	Сбросить тэги
+# TODO: $SSL_TextResetTagsHighlight
 $SSL_TextResetTagsHighlight	Resets all tag input fields
 $SSL_ResetTagsHere	Сбросить
 $SSL_TagResetAreYouSure	Это сбросит все тэги, вы уверены?
 
 # ------ Actor Settings
 $SSL_MatchMakerActorSettings	Настройка актёров
-$SSL_bSubmissivePlayer	Игрок будет покорным
+# TODO: $SSL_bSubmissivePlayer
+$SSL_bSubmissivePlayer	Submissive Player
+# TODO: $SSL_bSubmissivePlayerHighlight
 $SSL_bSubmissivePlayerHighlight	Filter scenes with player in the submissive position
-$SSL_bSubmissiveTarget	Цель будет покорной
+# TODO: $SSL_bSubmissiveTarget
+$SSL_bSubmissiveTarget	Submissive Target
+# TODO: $SSL_bSubmissiveTargetHighlight
 $SSL_bSubmissiveTargetHighlight	Filter scenes with target actor in the submissive position
 
 # ------------------ Enjoyment --------------------------------------------------
+# TODO: $SSL_EnjoymentSettings
 $SSL_EnjoymentSettings	Enjoyment Settings
 
 # ------ Primary Settings
+# TODO: $SSL_bInternalEnjoymentEnabled
 $SSL_bInternalEnjoymentEnabled	Enable Internal Enjoyment
+# TODO: $SSL_bInternalEnjoymentEnabledHighlight
 $SSL_bInternalEnjoymentEnabledHighlight	Toggles the internal enjoyment system. Should stay enabled unless an external mod desires to take full control of the enjoyment calculus.
+# TODO: $SSL_fEnjRaiseMultInter
 $SSL_fEnjRaiseMultInter	EnjRaise Mult: Interactions
-$SSL_fEnjRaiseMultInterHighlight	The main multiplier/factor determining the rate at which enjoyment increases for an actor based on detected interactions.\n Higher values mean faster enjoyment raise and vice versa.\n Can be reduced to zero if user desires enjoyment raise to depend solely on the enjoyment minigame (automated for NPCs by default).
+# TODO: $SSL_fEnjRaiseMultInterHighlight
+$SSL_fEnjRaiseMultInterHighlight	The main multiplier/factor determining the rate at which enjoyment increases for an actor based on detected interactions. Higher values mean faster enjoyment raise and vice versa.\n Can be reduced to zero if user desires enjoyment raise to depend solely on the enjoyment minigame.
+# TODO: $SSL_bGameEnabled
 $SSL_bGameEnabled	Enable Enjoyment Game
+# TODO: $SSL_bGameEnabledHighlight
 $SSL_bGameEnabledHighlight	Toggles the enjoyment minigame inspired from SLSO's implementation.
 
 # ------ General Configs
+# TODO: $SSL_bFallbackToTagsForDetection
 $SSL_bFallbackToTagsForDetection	Allow Fallback to Position Tags
+# TODO: $SSL_bFallbackToTagsForDetectionHighlight
 $SSL_bFallbackToTagsForDetectionHighlight	Toggles fallback to position tags for interactions detection when the internal physics-based real-time collision type guessing is not available.
+# TODO: $SSL_bNoStaminaEndsScene
 $SSL_bNoStaminaEndsScene	No Stamina Ends Scene
+# TODO: $SSL_bNoStaminaEndsSceneHighlight
 $SSL_bNoStaminaEndsSceneHighlight	Ends the scene automatically when the actor's stamina is depleted.
+# TODO: $SSL_bMaleOrgasmEndsScene
 $SSL_bMaleOrgasmEndsScene	Male Orgasm Ends Scene
+# TODO: $SSL_bMaleOrgasmEndsSceneHighlight
 $SSL_bMaleOrgasmEndsSceneHighlight	Ends the scene after the first male orgasm.
+# TODO: $SSL_bDomMustOrgasm
 $SSL_bDomMustOrgasm	Dom Actor Must Orgasm
-$SSL_bDomMustOrgasmHighlight	Requires the dominant actor to orgasm before scene ends.\nThread is perpetuated by chnaging to similar animations till the dominiant actor has orgasmsed once.
+# TODO: $SSL_bDomMustOrgasmHighlight
+$SSL_bDomMustOrgasmHighlight	Requires the dominant actor to orgasm before scene ends.\nThread is perpetuated by changing to similar animations till the dominant actor has orgasmed once.
+# TODO: $SSL_bPlayerMustOrgasm
 $SSL_bPlayerMustOrgasm	Player Must Orgasm
-$SSL_bPlayerMustOrgasmHighlight	Requires the player to orgasm before scene ends\nThread is perpetuated by chnaging to similar animations till the player has orgasmsed once.
+# TODO: $SSL_bPlayerMustOrgasmHighlight
+$SSL_bPlayerMustOrgasmHighlight	Requires the player to orgasm before scene ends\nThread is perpetuated by changing to similar animations till the player has orgasmed once.
+# TODO: $SSL_bHighEnjOrgasmWait
 $SSL_bHighEnjOrgasmWait	High Enj Orgasm Wait
-$SSL_bHighEnjOrgasmWaitHighlight	Scene will perpetutate if an actor's enjoyment is above 75 or if the actor is in edging state (maintaining enjoyment above 100) regardless of orgasms count.\nThread is perpetuated by chnaging to similar animations till the actor with high enjoyment has orgasmsed.
+# TODO: $SSL_bHighEnjOrgasmWaitHighlight
+$SSL_bHighEnjOrgasmWaitHighlight	Scene perpetuates if an actor's enjoyment is >75 or if the actor is in edging state regardless of orgasms count.\nThread is perpetuated by changing to similar animations till the actor with high enjoyment has orgasmed.
+# TODO: $SSL_iMaxNoPainOrgasmMale
 $SSL_iMaxNoPainOrgasmMale	Max NoPain Orgasms Male
+# TODO: $SSL_iMaxNoPainOrgasmMaleHighlight
 $SSL_iMaxNoPainOrgasmMaleHighlight	Determines the number of orgasms till which no pain penalty will be imposed on male actors. Once the orgasm counts goes higher than the limit here, each subsequent orgasm will inflict successively higher pain penalties.
+# TODO: $SSL_iMaxNoPainOrgasmFemale
 $SSL_iMaxNoPainOrgasmFemale	Max NoPain Orgasms Female
+# TODO: $SSL_iMaxNoPainOrgasmFemaleHighlight
 $SSL_iMaxNoPainOrgasmFemaleHighlight	Determines the number of orgasms till which no pain penalty will be imposed on female/futa actors. Once the orgasm counts goes higher than the limit here, each subsequent orgasm will inflict successively higher pain penalties.
+# TODO: $SSL_iNoPainRequiredTime
 $SSL_iNoPainRequiredTime	Pain Decay Time
-$SSL_iNoPainRequiredTimeHighlight	Determines the time required in seconds for pain effects (e.g. from penetration for inexperienced actors) to decay during a scene. 
+# TODO: $SSL_iNoPainRequiredTimeHighlight
+$SSL_iNoPainRequiredTimeHighlight	Time required in seconds for pain effects (e.g. from penetration for inexperienced actors) to decay during a scene. 
+# TODO: $SSL_iNoPainRequiredXP
 $SSL_iNoPainRequiredXP	Pain Avoidance XP
+# TODO: $SSL_iNoPainRequiredXPHighlight
 $SSL_iNoPainRequiredXPHighlight	Determines the Anal and Vaginal XP required to avoid pain effects from penetration interactions.
 
 # ------ Misc Multipliers
+# TODO: $SSL_fEnjMultVictim
 $SSL_fEnjMultVictim	EnjRaise Mult: Victim
+# TODO: $SSL_fEnjMultVictimHighlight
 $SSL_fEnjMultVictimHighlight	Additional enjoyment raise multiplier for victim actors.\n(FYI: Victim state is defined by scene's context, not tags.)
+# TODO: $SSL_fEnjMultAggressor
 $SSL_fEnjMultAggressor	EnjRaise Mult: Aggressor
+# TODO: $SSL_fEnjMultAggressorHighlight
 $SSL_fEnjMultAggressorHighlight	Additional enjoyment raise multiplier for aggressor actors.\n(FYI: Aggressor state is defined by scene's context, not tags.)
+# TODO: $SSL_fEnjMultSub
 $SSL_fEnjMultSub	EnjRaise Mult: Submissive
+# TODO: $SSL_fEnjMultSubHighlight
 $SSL_fEnjMultSubHighlight	Additional enjoyment raise multiplier for submissive actors.\n(FYI: Submissive role is defined by SLSB's submissive flags, not tags.)
+# TODO: $SSL_fEnjMultDom
 $SSL_fEnjMultDom	EnjRaise Mult: Dominant
+# TODO: $SSL_fEnjMultDomHighlight
 $SSL_fEnjMultDomHighlight	Additional enjoyment raise multiplier for dominant/non-sub actors.\n(FYI: Dominant role is defined by SLSB's submissive flags, not tags.)
+# TODO: $SSL_fPainHugePPMult
 $SSL_fPainHugePPMult	Pain Mult: Huge PP
-$SSL_fPainHugePPMultHighlight	Additional factor enhancing pain for actors having penetration interactions in receieving position with actors having large schlongs.\nUsed during penetration by certain creatures only, for now.
+# TODO: $SSL_fPainHugePPMultHighlight
+$SSL_fPainHugePPMultHighlight	Additional factor enhancing pain for actors having penetration interactions in receiving position with actors having large schlongs. Used during penetration by certain creatures only, for now.
 
 # ------ Game Configs
+# TODO: $SSL_iEnjGameStaminaCost
 $SSL_iEnjGameStaminaCost	Game Stamina Cost
-$SSL_iEnjGameStaminaCostHighlight	The amount of stamina to be depleted upon a relevant minigame action.
+# TODO: $SSL_iEnjGameStaminaCostHighlight
+$SSL_iEnjGameStaminaCostHighlight	The amount of STAMINA to be depleted upon a relevant minigame action.
+# TODO: $SSL_iEnjGameMagickaCost
 $SSL_iEnjGameMagickaCost	Game Magicka Cost
-$SSL_iEnjGameMagickaCostHighlight	The amount of magicka to be depleted upon a relevant minigame action.
-$SSL_bGameRequiredOnHighEnj Require Minigame on High Enj
-$SSL_bGameRequiredOnHighEnjHighlight    Toggles/disables player's enjoyment gain through collision detection when it goes above 80.\nWith this enabled, the player will have to actively rely on the minigame to reach orgasm.
-$SSL_bGameSpamDelayPenalty  Minigame Spam/Delay Penalty
-$SSL_bGameSpamDelayPenaltyHighlight Toggles enjoyment penalties along with stamina and magicka depletion for the player upon badly timed attempts at raising enjoyment.\nNOTE: This option only works when combined with the above option.
+# TODO: $SSL_iEnjGameMagickaCostHighlight
+$SSL_iEnjGameMagickaCostHighlight	The amount of MAGICKA to be depleted upon a relevant minigame action.
+# TODO: $SSL_bGameRequiredOnHighEnj
+$SSL_bGameRequiredOnHighEnj	Require Minigame on High Enj
+# TODO: $SSL_bGameRequiredOnHighEnjHighlight
+$SSL_bGameRequiredOnHighEnjHighlight	Toggles/disables player's enjoyment gain through collision detection when it goes above 80.\nWith this enabled, the player will have to actively rely on the minigame to reach orgasm.
+# TODO: $SSL_bGameSpamDelayPenalty
+$SSL_bGameSpamDelayPenalty	Minigame Spam/Delay Penalty
+# TODO: $SSL_bGameSpamDelayPenaltyHighlight
+$SSL_bGameSpamDelayPenaltyHighlight	Toggles enjoyment penalties along with stamina and magicka depletion for the player upon badly timed attempts at raising enjoyment. (IMP: This option only works when combined with the above option.)
 
 # ------ Game Hotkeys
-$SSL_iGameRaiseEnjKey	Raise Enj Key
-$SSL_iGameRaiseEnjKeyHighlight	Hotkey to manually raise enjoyment.
-$SSL_iGameHoldbackKey	Reduce Enj Key
-$SSL_iGameHoldbackKeyHighlight	Hotkey to manually holdback/reduce enjoyment.
+# TODO: $SSL_iGameRaiseEnjKey
+$SSL_iGameRaiseEnjKey	RaiseEnj Key
+# TODO: $SSL_iGameRaiseEnjKeyHighlight
+$SSL_iGameRaiseEnjKeyHighlight	Hotkey to manually raise enjoyment at the cost of stamina. To raise self/player enjoyment, combine with utility key.\nOnce enjoyment reaches 90, this hotkey is used to maintain edge state, whereby timed clicks are required to avoid spam penalties.
+# TODO: $SSL_iGameHoldbackKey
+$SSL_iGameHoldbackKey	Holdback Key
+# TODO: $SSL_iGameHoldbackKeyHighlight
+$SSL_iGameHoldbackKeyHighlight	Hotkey to manually holdback/reduce enjoyment at the cost of magicka. To reduce self/player enjoyment, combine with utility key.
 
 # ------------------ Expression Editor --------------------------------------------------
 $SSL_ExpressionEditor	Редактор эмоций
@@ -567,12 +718,14 @@ $SSL_ScaleMode_Cubic	Кубический
 $SSL_ScaleMode_Exponential	Экспоненциальный
 
 $SSL_ModifyingExpression	Модификаторы Эмоций
+# TODO: $SSL_enableexpressionHighlight
 $SSL_enableexpressionHighlight	Enable or disable the expression being modified currently
 $SSL_ExpressionScaling	Алгоритм масштабирования
 $SSL_ExpressionsNormal	Доступно в нормальных сценах
 $SSL_ExpressionsVictim	Доступно как жертве
 $SSL_ExpressionsAggressor	Доступно как агрессору
-$SSL_ExpressionScalingHighlight	Алгоритм изменения эмоции относительно роста наслаждения.\nЛинейный: Линейное увеличение | Квадратичный: Резкое увеличение вначале, медленный рост в середине и быстрый рост близко к оргазму.\nCubic: Медленное начало, постепенное нарастание по мере приближения оргазма | Экспоненциальный: Очень медленное начало, быстрое нарастание по мере приближения оргазма
+# TODO: $SSL_ExpressionScalingHighlight
+$SSL_ExpressionScalingHighlight	Scaling behavior to map expression progress to scene enjoyment.\nLinear: Steady and even increase\nSquared: Fast initial increase, slow mid section, second spike as orgasm approaches\nCubic: Slow start, gradual ramp up as orgasm approaches\nExponential: Very slow start, rapid growth as orgasm approaches
 $SSL_EditFemale	Редактировать данные женщин
 $SSL_TestOnPlayer	Тестировать на игроке
 
@@ -599,15 +752,19 @@ $SSL_SyncLipsConfig	Конфигурация синхронизации губ
 $SSL_Sync	Синхронно
 $SSL_Async	Несинхронно
 $SSL_LipsSoundTime	Поведение при синхронизации губ
-$SSL_LipsSoundTimeHighlight	Синхронно: Губы начинают закрыватся, когда стон заканчивается.\nAsync: Губы закрываются с небольшой задержкой, независимо от состояния звука.
-$SSL_bLipsFixedValue	Фиксированное значение губ
-$SSL_bLipsFixedValueHighlight	Интенсивность синхронизации губ должна увеличиваться по мере увеличения удовольствия.
+# TODO: $SSL_LipsSoundTimeHighlight
+$SSL_LipsSoundTimeHighlight	Sync: Lips begin closing when the moan has finished playing. \nAsync: Lips close after a short delay, independent of sound state.
+# TODO: $SSL_bLipsFixedValue
+$SSL_bLipsFixedValue	Lips Fixed Value
+# TODO: $SSL_bLipsFixedValueHighlight
+$SSL_bLipsFixedValueHighlight	If lip sync intensity should increase as enjoyment increases.
 
 # ------------------ Strip Item Editor --------------------------------------------------
 $SSL_StripEditor	Редактор раздевания
 
 $SSL_Equipment{}	Снаряжение {}
 $SSL_FullInventory	Показать весь инвентарь персонажа
+# TODO: $SSL_FullInventoryHighlight
 $SSL_FullInventoryHighlight	Allows all items in actor's inventory to show up for strip behavior editing
 $SSL_AlwaysRemove	Всегда удалять
 $SSL_NeverRemove	Никогда не удалять
@@ -618,14 +775,19 @@ $SSL_StripItemSlots{}	Снять вещи из слотов: {}
 $SSL_RebuildClean	Дебаг
 $SSL_Installation	Установка
 
-$SSL_bDebugMode	Режим отладки/Разработки (моддерам)
-$SSL_bDebugModeHighlight	Включает дополнительное логирование. Может немного замедлить работу, но позволяет отлавливать ошибки.
+# TODO: $SSL_bDebugMode
+$SSL_bDebugMode	Debug Mode
+# TODO: $SSL_bDebugModeHighlight
+$SSL_bDebugModeHighlight	Enable extra logs for thread and scene info.\nThis can slow down the framework but may help troubleshooting issues.
 $SSL_StopCurrentAnimations	Остановить текущую анимацию
+# TODO: $SSL_StopCurrentAnimationsHighlight
 $SSL_StopCurrentAnimationsHighlight	Stops all active SexLab threads, regardless of player involvement
 $SSL_StopRunningAnimations	Все запущенные анимации остановлены.
 $SSL_ResetStripOverrides	Сброс опций редактора раздевания
+# TODO: $SSL_ResetStripOverridesHighlight
 $SSL_ResetStripOverridesHighlight	Resets all custom strip settings set by the user
 $SSL_CleanSystem	Реинициализировать SexLab
+# TODO: $SSL_CleanSystemHighlight
 $SSL_CleanSystemHighlight	Reinstalls SexLab; not recommended!
 $SSL_WarnCleanSystem	Процедура очистки сбросит все внутренние настройки SexLab до первоначальных значений, остановит все запущенные анимации и остановит выполнение скриптов. Вы действительно хотите продолжить?
 $SSL_Resetting	Сброс...
@@ -641,9 +803,11 @@ $SSL_Expressions	Эмоции
 # ------ Available Strap-ons
 $SSL_AvailableStrapons	Доступные страпоны
 $SSL_RebuildStraponList	Переустановить страпоны
+# TODO: $SSL_RebuildStraponListHighlight
 $SSL_RebuildStraponListHighlight	Updates the strap-ons list accessible to the framework
 $SSL_FoundStrapon	Обнаружены поддерживаемые страпоны. Установка завершена.
 $SSL_NoStrapons	Поддерживаемых страпонов не найдено. Установка отменена.
+# TODO: $SSL_toggleStraponHighlight
 $SSL_toggleStraponHighlight	Click to disable the use of this strap-on by SexLab
 
 
