@@ -1369,9 +1369,20 @@ State Animating
 		GoToState(STATE_END)
 	EndFunction
 
-	bool Function ResetAnimation(Actor[] akNewPositions, Actor[] akSubmissives, ObjectReference akCenter)
+	bool Function ResetAnimation(Actor[] akNewPositions, Actor[] akSubmissives, ObjectReference akCenter, string asPriorityTags = "")
 		EndAnimation()
-		return ResetAnimation(akNewPositions, akSubmissives, akCenter)
+		return ResetAnimation(akNewPositions, akSubmissives, akCenter, asPriorityTags)
+	EndFunction
+
+	bool Function ResetPlayingScenesByTag(String asTagString)
+		If (asTagString == "")
+			return false
+		EndIf
+		If ((SexLabRegistry.LookupScenesA(_Positions, asTagString, GetSubmissives(), _furniStatus, CenterRef).Length) < 1)
+			return false
+		EndIf
+		_QuickResetScenes = true
+		return ResetAnimation(_Positions, GetSubmissives(), CenterRef, asTagString)
 	EndFunction
 
 	int Function GetStatus()
@@ -1441,6 +1452,10 @@ EndFunction
 Function SkipTo(String asNextStage)
 	Log("Cannot skip to another stage while scene is not playing", "SkipTo()")
 EndFunction
+bool Function ResetPlayingScenesByTag(String asTagString)
+	Log("Cannot reset playing scenes outside of playing state", "ResetPlayingScenesByTag")
+	return false
+EndFunction
 
 Function PlayStageAnimations()
 	RealignActors()
@@ -1501,18 +1516,21 @@ State Ending
 		RegisterForSingleUpdateGameTime(0.1)
 	EndEvent
 
-	bool Function ResetAnimation(Actor[] akNewPositions, Actor[] akSubmissives, ObjectReference akCenter)
+	bool Function ResetAnimation(Actor[] akNewPositions, Actor[] akSubmissives, ObjectReference akCenter, string asPriorityTags = "")
 		UnregisterForUpdateGameTime()
 		If (!akCenter)
 			akCenter = CenterRef
 		EndIf
 		String[] validScenes
 		If (akCenter == CenterRef)
-			validScenes = SexLabRegistry.ValidateScenesA(GetPrimaryScenes(), akNewPositions, "", akSubmissives)
+			validScenes = SexLabRegistry.ValidateScenesA(GetPrimaryScenes(), akNewPositions, asPriorityTags, akSubmissives)
 		EndIf
 		If (validScenes.Length == 0)
 			String threadTags = PapyrusUtil.StringJoin(_ThreadTags)
-			validScenes = SexLabRegistry.LookupScenesA(akNewPositions, threadTags, akSubmissives, _furniStatus, akCenter)
+			If (asPriorityTags == "")
+				asPriorityTags = threadTags
+			EndIf
+			validScenes = SexLabRegistry.LookupScenesA(akNewPositions, asPriorityTags, akSubmissives, _furniStatus, akCenter)
 			If (validScenes.Length == 0)
 				Log("Unable to find a valid scene for the given actors", "ResetAnimation()")
 				RegisterForSingleUpdateGameTime(0.1)
@@ -1661,7 +1679,7 @@ EndFunction
 Function EndAnimation(bool Quickly = false)
 	Log("EndAnimation(), Function called from invalid state: " + GetState())
 EndFunction
-bool Function ResetAnimation(Actor[] akNewPositions, Actor[] akSubmissives, ObjectReference akCenter)
+bool Function ResetAnimation(Actor[] akNewPositions, Actor[] akSubmissives, ObjectReference akCenter, string asPriorityTags = "")
 	Log("ResetAnimation(), Function called from invalid state: " + GetState())
 	return false
 EndFunction
