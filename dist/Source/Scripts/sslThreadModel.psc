@@ -736,6 +736,10 @@ State Making
 	EndEvent
 	Event OnUpdate()
 		Fatal("Thread has timed out during setup. Resetting thread...")
+		If (_QuickResetScenes)
+			_QuickResetScenes = false
+			GoToState(STATE_END)
+		EndIf
 		Initialize()
 	EndEvent
 
@@ -864,7 +868,9 @@ State Making
 			Initialize()
 			return none
 		EndIf
-		GoToState(STATE_SETUP_M)
+		If (!_QuickResetScenes)
+			GoToState(STATE_SETUP_M)
+		EndIf
     return self as sslThreadController
 	EndFunction
 	; Called after CreateInstance() terminates (maybe async due to center selection)
@@ -1033,6 +1039,7 @@ String[] Function GetCustomScenes() native
 float Property ANIMATING_UPDATE_INTERVAL = 0.5 AutoReadOnly
 int _animationSyncCount
 
+bool _QuickResetScenes		; reinits thread without actor/center changes (e.g. to get new playing scenes)
 bool _ForceAdvance		; Force fully auto advance (set by timed stages)
 float _StageTimer			; timer for the current stage
 bool _TimerPaused		; whether timer drain for current stage should be paused
@@ -1055,9 +1062,11 @@ State Animating
 	Event OnBeginState()
 		SetFurnitureIgnored(true)
 		_SFXTimer = Config.SFXDelay
-		_animationSyncCount = 0
-		SendModEvent("SSL_READY_Thread" + tid)
-		AnimationStart()
+		If (!_QuickResetScenes)
+			_animationSyncCount = 0
+			SendModEvent("SSL_READY_Thread" + tid)
+			AnimationStart()
+		EndIf
 	EndEvent
 	Function AnimationStart()
 		_animationSyncCount += 1
@@ -1465,22 +1474,24 @@ float Function GetActionVelocity(Actor akPosition, Actor akPartner, int aiType) 
 
 State Ending
 	Event OnBeginState()
-		Config.DisableThreadControl(self as sslThreadController)
-		SendModEvent("SSL_CLEAR_Thread" + tid, "", 1.0)
-		MoveActorsAwayFromPlayer()
-		UnregisterCollision()
-		If(IsObjectiveDisplayed(0))
-			SetObjectiveDisplayed(0, False)
-		EndIf
-		UpdateAllEncounters()
-		int i = 0
-		While (i < ActorAlias.Length)
-			If (ActorAlias[i].GetState() == ActorAlias[i].STATE_IDLE)
-				i += 1
-			Else
-				Utility.Wait(0.05)
+		If (!_QuickResetScenes)
+			Config.DisableThreadControl(self as sslThreadController)
+			SendModEvent("SSL_CLEAR_Thread" + tid, "", 1.0)
+			MoveActorsAwayFromPlayer()
+			UnregisterCollision()
+			If(IsObjectiveDisplayed(0))
+				SetObjectiveDisplayed(0, False)
 			EndIf
-		EndWhile
+			UpdateAllEncounters()
+			int i = 0
+			While (i < ActorAlias.Length)
+				If (ActorAlias[i].GetState() == ActorAlias[i].STATE_IDLE)
+					i += 1
+				Else
+					Utility.Wait(0.05)
+				EndIf
+			EndWhile
+		EndIf
 		SendThreadEvent("AnimationEnding")
 		SendThreadEvent("AnimationEnd")
 		RunHook(Config.HOOKID_END)
@@ -1508,16 +1519,34 @@ State Ending
 				return false
 			EndIf
 		EndIf
-		int i = 0
-		While(i < ActorAlias.Length)
-			ActorAlias[i].Initialize()
-			i += 1
-		EndWhile
+		If (!_QuickResetScenes)
+			int i = 0
+			While(i < ActorAlias.Length)
+				ActorAlias[i].Initialize()
+				i += 1
+			EndWhile
+			_Positions = PapyrusUtil.ActorArray(0)
+		EndIf
 		DestroyInstance()
-		_Positions = PapyrusUtil.ActorArray(0)
 		GoToState(STATE_SETUP)
 		SetScenes(validScenes)
-		return AddActorsA(akNewPositions, akSubmissives) && StartThread()
+		If (!_QuickResetScenes)
+			return AddActorsA(akNewPositions, akSubmissives) && StartThread()
+		ElseIf (StartThread())
+			; Pseudo MAKING_M and OnBeginState(ANIMATING)
+			_PrimaryScenes = GetPrimaryScenes()
+			_ThreadTags = SexLabRegistry.GetCommonTags(_PrimaryScenes)
+			string activeScene = GetActiveScene()
+			Log("Thread validated, playing animation: " + activeScene + ", " + SexLabRegistry.GetSceneName(activeScene), "StartThread()")
+			SendThreadEvent("AnimationStarting")
+			GoToState(STATE_PLAYING)
+			StartStage(Utility.CreateStringArray(0), "")
+			SendThreadEvent("AnimationStart")
+			_QuickResetScenes = false
+			return true
+		EndIf
+		RegisterForSingleUpdateGameTime(0.1)
+		return false
 	EndFunction
 
 	Event OnUpdateGameTime()
@@ -1924,6 +1953,7 @@ Function Initialize()
 	_Hooks = Utility.CreateStringArray(0)
 	_AnimationSpeedBase = 1.0
 	_TimerPaused = false
+	_QuickResetScenes = false
 	; Enter thread selection pool
 	DestroyInstance()
 	GoToState(STATE_IDLE)
