@@ -1513,6 +1513,7 @@ State Ending
 			ActorAlias[i].Initialize()
 			i += 1
 		EndWhile
+		DestroyInstance()
 		_Positions = PapyrusUtil.ActorArray(0)
 		GoToState(STATE_SETUP)
 		SetScenes(validScenes)
