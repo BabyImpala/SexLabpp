@@ -1896,6 +1896,12 @@ Function ApplyCumFX(Actor SourceRef)
 		bool aGrinding_ = interFlags[aGrinding]
 		bool aAnal_ = interFlags[aAnal]
 		bool any_oral = pOral_ || pDeepthroat_ || pLickingShaft_
+		; Comeback: reasses need for fallback
+		If (!any_oral && !aVaginal_ && !aGrinding_ && !aAnal_)
+			any_oral = IsOral()
+			aVaginal_ = IsVaginal()
+			aAnal_ = IsAnal()
+		EndIf
 		Log("ApplyCumFX(): Source [" + SexLabUtil.ActorName(SourceRef) + "] Target [" + SexLabUtil.ActorName(TargetRef) + "] CumFX_Types [O: " + any_oral + ", V: " + (aVaginal_ || aGrinding_) + ", A: " + aAnal_ + "]")
 		int aiType = -2
 		If (aVaginal_ || aGrinding_)
