@@ -722,6 +722,7 @@ EndFunction
 
 int _instanceCreationWaitLock
 int _prepareAsyncCount
+int _lockAsyncCount
 String[] _CustomScenes
 String[] _PrimaryScenes
 String[] _LeadInScenes
@@ -909,26 +910,36 @@ State Making_M
 	; Invoked n times by Aliases and once by StartThread, then continue to next state
 	Function PrepareDone()
 		_prepareAsyncCount += 1
-		Log("Prepare done called " + _prepareAsyncCount + "/" + (_Positions.Length + 1) + " times")
+		Log("PrepareDone() called " + _prepareAsyncCount + "/" + (_Positions.Length + 1) + " times")
 		If (_prepareAsyncCount < (_Positions.Length + 1))
 			return
 		EndIf
+		_lockAsyncCount = 0
+		CenterRef.SendModEvent("SSL_LOCK_Thread" + tid)
 		String activeScene = GetActiveScene()
 		LeadIn = LeadIn && _LeadInScenes.Find(activeScene) > -1
 		Log("Thread validated, playing animation: " + activeScene + ", " + SexLabRegistry.GetSceneName(activeScene), "StartThread()")
 		SendThreadEvent("AnimationStarting")
-		If (!UndressAndStripActors(activeScene))
+		AliasLockDone()
+	EndFunction
+
+	Function AliasLockDone()
+		_lockAsyncCount += 1
+		Log("AliasLockDone() called " + _lockAsyncCount + "/" + (_Positions.Length + 1) + " times")
+		If (_lockAsyncCount < (_Positions.Length + 1))
+			return
+		EndIf
+		If (!UndressAndStripActors())
 			EndAnimation()
 			return
 		EndIf
 		GoToState(STATE_PLAYING)
 	EndFunction
 
-	bool Function UndressAndStripActors(string activeScene)
+	bool Function UndressAndStripActors()
 		bool WaitForUndress = false
 		int i = 0
 		While (i < _Positions.Length)
-			ActorAlias[i].LockActor()
 			WaitForUndress= (ActorAlias[i].InitiateUndressing() || WaitForUndress)
 			i += 1
 		EndWhile
@@ -944,6 +955,7 @@ State Making_M
 				SetObjectiveDisplayed(0, true)
 			EndIf
 		EndIf
+		string activeScene = GetActiveScene()
 		int[] strips_ = SexLabRegistry.GetStripDataA(activeScene, "")
 		int[] sex_ = SexLabRegistry.GetPositionSexA(activeScene)
 		int j = 0
@@ -1018,7 +1030,7 @@ EndFunction
 Function ContinueSetup(bool abContinue)
 	Log("ContinueSetup() can only be called during setup", "ContinueSetup()")
 EndFunction
-bool Function UndressAndStripActors(string activeScene)
+bool Function UndressAndStripActors()
 	Log("Actors can be undressed only during setup", "UndressAndStripActors()")
 	return false
 EndFunction
@@ -1685,6 +1697,9 @@ bool Function ResetAnimation(Actor[] akNewPositions, Actor[] akSubmissives, Obje
 EndFunction
 Function PrepareDone()
 	Log("PrepareDone(), Function called from invalid state: " + GetState())
+EndFunction
+Function AliasLockDone()
+	Log("AliasLockDone(), Function called from invalid state: " + GetState())
 EndFunction
 Function AnimationStart()
 	Log("AnimationStart(), Function called from invalid state: " + GetState())
