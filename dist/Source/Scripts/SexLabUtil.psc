@@ -164,7 +164,7 @@ EndFunction
 
 Function SetActorMovement(Actor akActor, int aiMovement) global
 	;[0:MOVEMENT_RELEASE, 1:MOVEMENT_UNLOCK, 2:MOVEMENT_LOCK]
-	If ((aiMovement < 0) || (aiMovement > 2))
+	If ((!akActor) || (aiMovement < 0) || (aiMovement > 2))
 		return
 	EndIf
 	If (akActor != Game.GetPlayer())
@@ -197,6 +197,24 @@ Function SetActorMovement(Actor akActor, int aiMovement) global
 			Game.EnablePlayerControls()
 		EndIf
 	EndIf
+EndFunction
+
+Function UpdateAnimatingActorMovement(Actor akActor) global
+	If (!akActor)
+		return
+	EndIf
+	akActor.EvaluatePackage()
+	int aiFactionRank = akActor.GetFactionRank(GetConfig().AnimatingFaction)
+	int aiMovement = -1
+	If (aiFactionRank < 0) ; OnAliasClear / NotAnimating / OnExtThreadRelease -> MOVEMENT_RELEASE
+		aiMovement = 0
+	ElseIf (aiFactionRank == 0 || aiFactionRank == 2) ; OnActorUnlocked / OnPathing -> MOVEMENT_UNLOCK
+		aiMovement = 1
+	ElseIf (aiFactionRank == 1) ; OnSetActor / OnActorLocked / OnStateAnimating / OnExtThreadControl -> MOVEMENT_LOCK
+		aiMovement = 2
+	EndIf
+	SetActorMovement(akActor, aiMovement)
+	akActor.EvaluatePackage()
 EndFunction
 
 Function ForceThirdPerson() global

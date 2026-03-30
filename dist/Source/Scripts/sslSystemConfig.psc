@@ -759,9 +759,8 @@ Function GetThreadControl(sslThreadController TargetThread)
     if player.IsWeaponDrawn()
       player.SheatheWeapon()
     endIf
-    SexLabUtil.SetActorMovement(player, 2) ;MOVEMENT_LOCK
-    player.SetFactionRank(AnimatingFaction, 0)
-    player.EvaluatePackage()
+    player.SetFactionRank(AnimatingFaction, 1)
+    SexLabUtil.UpdateAnimatingActorMovement(player) ;MOVEMENT_LOCK
   EndIf
   _ActiveControl.EnableHotkeys(true)
 EndFunction
@@ -777,9 +776,8 @@ Function DisableThreadControl(sslThreadController TargetThread)
   ; Unlock players movement iff they arent owned by the thread
   If (!_ActiveControl.HasPlayer)
     Actor player = Game.GetPlayer()
-    SexLabUtil.SetActorMovement(player, 0) ;MOVEMENT_RELEASE
-    player.RemoveFromFaction(AnimatingFaction)
-    player.EvaluatePackage()
+    player.SetFactionRank(AnimatingFaction, -1)
+    SexLabUtil.UpdateAnimatingActorMovement(player) ;MOVEMENT_RELEASE
   EndIf
   _ActiveControl = none
 Endfunction
