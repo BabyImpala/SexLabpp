@@ -451,35 +451,7 @@ State Ready
 	Event OnDoPrepare(string asEventName, string asStringArg, float afNumArg, form akPathTo)
 		UnregisterForModEvent("SSL_PREPARE_Thread" + _Thread.tid)
 		_ActorRef.SetActorValue("Paralysis", 0.0)
-		float interval = 0.05
-		If(_ActorRef == _PlayerRef)
-			If (UI.IsMenuOpen("Dialogue Menu"))
-				UI.InvokeString("Dialogue Menu", "_global.skse.CloseMenu", "Dialogue Menu")
-				While (UI.IsMenuOpen("Dialogue Menu"))
-					Utility.Wait(interval)
-				EndWhile
-			EndIf
-		Else
-			_Config.CheckBardAudience(_ActorRef, true)
-			If(akPathTo && DoPathToCenter)
-				ObjectReference target = akPathTo as ObjectReference
-				float target_distance = SexLabUtil.CalcPathingTargetDistance(_raceID)
-				float distance = _ActorRef.GetDistance(target)
-				If(distance > target_distance && distance <= 6144.0)
-					_ActorRef.SetFactionRank(_AnimatingFaction, 2)
-					SexLabUtil.UpdateAnimatingActorMovement(_ActorRef) ;MOVEMENT_UNLOCK
-					float fallback_timer = 15.0
-					float prev_dist = distance + 1.0
-					Utility.Wait(2.0)
-					While (distance > target_distance && Math.abs(prev_dist - distance) > 0.5 && fallback_timer > 0)
-						fallback_timer -= interval
-						Utility.Wait(interval)
-						prev_dist = distance
-						distance = _ActorRef.GetDistance(target)
-					EndWhile
-				EndIf
-			EndIf
-		EndIf
+		WaitForPathToCenter(akPathTo)
 		_AnimVarIsNPC = _ActorRef.GetAnimationVariableInt("IsNPC")
 		_AnimVarbHumanoidFootIKDisable = _ActorRef.GetAnimationVariableBool("bHumanoidFootIKDisable")
 		GoToState(STATE_PAUSED)
@@ -510,6 +482,33 @@ State Ready
 		EndIf
 	EndEvent
 
+	Function WaitForPathToCenter(form akPathTo)	
+		If(_ActorRef == _PlayerRef)
+			return
+		EndIf
+		_Config.CheckBardAudience(_ActorRef, true)
+		If(!akPathTo || !DoPathToCenter)
+			return
+		EndIf
+		ObjectReference target = akPathTo as ObjectReference
+		float distance = _ActorRef.GetDistance(target)		
+		float target_distance = SexLabUtil.CalcPathingTargetDistance(_raceID)
+		If(distance > target_distance && distance <= 6144.0)
+			_ActorRef.SetFactionRank(_AnimatingFaction, 2)
+			SexLabUtil.UpdateAnimatingActorMovement(_ActorRef) ;MOVEMENT_UNLOCK
+			float fallback_timer = 15.0
+			float prev_dist = distance + 1.0
+			Utility.Wait(2.0)
+			float interval = 0.05
+			While (distance > target_distance && Math.abs(prev_dist - distance) > 0.5 && fallback_timer > 0)
+				fallback_timer -= interval
+				Utility.Wait(interval)
+				prev_dist = distance
+				distance = _ActorRef.GetDistance(target)
+			EndWhile
+		EndIf
+	EndFunction
+
 	Function Clear()
 		GoToState(STATE_IDLE)
 		Clear()
@@ -527,6 +526,9 @@ EndState
 Event OnDoPrepare(string asEventName, string asStringArg, float afNumArg, form akPathTo)
 	Error("Preparation request outside a valid state", "OnDoPrepare()")
 EndEvent
+Function WaitForPathToCenter(form akPathTo)
+	Error("Pathing request outside a valid state", "WaitForPathToCenter()")
+EndFunction
 
 ; --- Legacy
 
@@ -765,7 +767,7 @@ State Animating
 	EndFunction
 
 	Event OnUpdate()
-		If(_Thread.GetStatus() != _Thread.STATUS_INSCENE)
+		If ((_Thread.GetStatus() != _Thread.STATUS_INSCENE) || (GetState() != STATE_PLAYING))
 			return
 		EndIf
 		_CurrentInteractions = _Thread.ListDetectedInteractionsInternal(_ActorRef)
@@ -970,6 +972,7 @@ State Animating
 	EndFunction
 
 	Event OnEndState()
+		UnregisterForUpdate()
 		SendDefaultAnimEvent()
 	EndEvent
 EndState
