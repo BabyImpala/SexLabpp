@@ -950,19 +950,6 @@ Function LoadStraponEx(Armor akStraponForm)
 EndFunction
 
 ; ------------------------------------------------------- ;
-; --- VR Specific                                     --- ;
-; ------------------------------------------------------- ;
-
-bool Property IsSkyrimVR hidden
-  bool Function Get()
-    return GetSettingBool("bSkyrimVR")
-  EndFunction
-  Function Set(bool value)
-    SetSettingBool("bSkyrimVR", value)
-  EndFunction
-EndProperty
-
-; ------------------------------------------------------- ;
 ; --- System Use                                      --- ;
 ; ------------------------------------------------------- ;
 
@@ -1030,7 +1017,7 @@ Function Reload()
   _CrosshairRef = none
   TargetRef = none
   _Hooks = sslUtility.ClearNoneThreadHook(_Hooks)
-  IsSkyrimVR = CheckForSkyrimVR()
+  HasVRIK = CheckForSkyrimVR() && CheckForVRIK()
   InitFootStepVariablesVR()
 
   UnregisterForAllKeys()
@@ -1329,13 +1316,44 @@ EndProperty
 ; *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-* ;
 
 bool Function CheckForSkyrimVR() global
-	int iSKSE = SKSE.GetVersion()*10000 + SKSE.GetVersionMinor()*100 + SKSE.GetVersionBeta()
-	return (iSKSE == 20012) ;SKSE VR v2.0.12
+  return ((SKSE.GetVersion()*10000 + SKSE.GetVersionMinor()*100 + SKSE.GetVersionBeta()) == 20012) ;SKSE VR v2.0.12
 EndFunction
 
 bool Function CheckForVRIK() global
-	int iVRIK = VRIK.VrikGetBuildNumber()
-	return (iVRIK >= 80123)
+  return (VRIK.VrikGetBuildNumber() >= 80123)
+EndFunction
+
+Function ToggleVRIK(bool abEnabled, int aiPOVMode = -1)
+  If ((!HasVRIK) ||(_bAnimatingVR && abEnabled && aiPOVMode==POVModeVR) || (aiPOVMode < -1) || (aiPOVMode > VRIK_TPP_FREE))
+    return
+  EndIf
+  If (abEnabled)
+    If (aiPOVMode > -1)
+      POVModeVR = aiPOVMode
+    EndIf
+    RefreshConfigsVRIK()
+  EndIf
+  ApplyConfigsVRIK(abEnabled)
+EndFunction
+
+Function SetPOVModeVRIK(int aiSet, bool abForced = false)
+  If (!HasVRIK || !_bAnimatingVR)
+    If (abForced)
+      POVModeVR = aiSet
+    EndIf
+    return
+  EndIf
+  If ((aiSet==POVModeVR) || (aiSet < VRIK_FPP_HMD) || (aiSet > VRIK_TPP_FREE))
+    return
+  EndIf 
+  If (aiSet == VRIK_FPP_HMD)
+    Debug.Notification("SexLabVR POV: 1st LOCKED")
+  ElseIf (aiSet == VRIK_FPP_FREE)
+    Debug.Notification("SexLabVR POV: 1st FREE")
+  ElseIf (aiSet == VRIK_TPP_FREE)
+    Debug.Notification("SexLabVR POV: 3rd FREE")
+  EndIf
+  ToggleVRIK(true, aiPOVMode=aiSet)
 EndFunction
 
 ; ----------------------------------------------- ;
@@ -1356,6 +1374,7 @@ int _iLockHmdToBody
 float _fLockHmdDistance
 float _fLockHmdTolerance
 float _fLockHmdSpeed
+bool _bAnimatingVR
 SoundCategory _AudioCategoryFST
 SoundCategory _AudioCategoryNPCFST
 
@@ -1363,7 +1382,7 @@ Function RefreshConfigsVRIK(bool abOverrideConfig=false, int aiPOVMode=-1, \
   int abLockHeight=-1, float afHeightAdjSpeed=-1.0, int abTrackHead=-1, int aiTrackHands=-1, \
   float afDistHideHead=-1.0, float afDistNearClip=-1.0, int aiLockHmdToBody=-1, \
   float afLockHmdDistance=-1.0, float afLockHmdTolerance=-1.0, float afLockHmdSpeed=-1.0)
-  If (!IsSkyrimVR)
+  If ((!HasVRIK) || (aiPOVMode < -1) || (aiPOVMode > VRIK_TPP_FREE))
     return
   EndIf
   ; Camera Mode
@@ -1376,10 +1395,6 @@ Function RefreshConfigsVRIK(bool abOverrideConfig=false, int aiPOVMode=-1, \
   ; Shared
   _fHeightAdjSpeed = HeightAdjustSpeed
   _fDistNearClip = DistanceNearClip
-  NoCollision = false
-  If (VR_3rd_FREE && AutoTFC)
-    NoCollision = true
-  EndIf
   ; Mode Dependent
   If (VR_1st_HMD)
     _bLockHeight = true
@@ -1446,14 +1461,16 @@ Function RefreshConfigsVRIK(bool abOverrideConfig=false, int aiPOVMode=-1, \
 EndFunction
 
 Function ApplyConfigsVRIK(bool abEnabled)
-  If (!IsSkyrimVR)
+  If (!HasVRIK)
     return
   EndIf
   If (!abEnabled)
-    NoCollision = false
+    _bAnimatingVR = false
     Utility.SetIniBool("bComfortSneak:VR", false)
-    Utility.SetIniBool("bDisablePlayerCollision:Havok", false)
     VRIK.VrikRestoreSettings()
+    _AudioCategoryFST.Unmute()
+    _AudioCategoryNPCFST.Unmute()
+    SexLabUtil.UpdateAnimatingActorMovement(Game.GetPlayer())
     return
   EndIf
   float afScaleBody = Game.GetPlayer().GetScale()
@@ -1474,8 +1491,7 @@ Function ApplyConfigsVRIK(bool abEnabled)
   VRIK.VrikSetGesture("enableGestureHaptics", GestureHaptics as int)
   VRIK.VrikSetSetting("heightAdjustSpeed", _fHeightAdjSpeed)
   VRIK.VrikSetSetting("nearClipDistance", _fDistNearClip)
-  Utility.SetIniFloat("fNearDistance:Display", _fDistNearClip)  
-  Utility.SetIniBool("bDisablePlayerCollision:Havok", NoCollision)
+  Utility.SetIniFloat("fNearDistance:Display", _fDistNearClip)
   ; Mode Dependent
   VRIK.VrikSetSetting("lockHeightToBody", _bLockHeight as int)
   VRIK.VrikSetSetting("enableHead", _bTrackHead as int)
@@ -1493,52 +1509,15 @@ Function ApplyConfigsVRIK(bool abEnabled)
   VRIK.VrikSetSetting("lockHmdMinThreshold", _fLockHmdDistance)
   VRIK.VrikSetSetting("lockHmdMaxThreshold", _fLockHmdTolerance)
   VRIK.VrikSetSetting("lockHmdSpeed", _fLockHmdSpeed)
-EndFunction
-
-int Function ToggleVRIK(bool abEnabled, int aiPOVMode = -1)
-  If ((!IsSkyrimVR) || (aiPOVMode < -1) || (aiPOVMode > VRIK_TPP_FREE))
-    return 0
-  EndIf
-  If (!abEnabled)
-    ApplyConfigsVRIK(false)
-    _AudioCategoryFST.Unmute()
-    _AudioCategoryNPCFST.Unmute() 
-    return 0
-  EndIf
-  ; VRIK Setup
-  If (aiPOVMode > -1)
-    POVModeVR = aiPOVMode
-  EndIf
-  int VRIKRestoreInTicks = 0
-  int tempLockHmd = -1
-  If (POVModeVR == VRIK_FPP_FREE)
-    tempLockHmd = 1
-    VRIKRestoreInTicks = 3 ; t=1.5s
-  EndIf
-  RefreshConfigsVRIK(true, aiLockHmdToBody=tempLockHmd)
-  ApplyConfigsVRIK(true)
-  ; Footsteps Sound Fix
+  ; Other Configs
+  _bAnimatingVR = true
   _AudioCategoryFST.Mute()
   _AudioCategoryNPCFST.Mute()
-  return VRIKRestoreInTicks
-EndFunction
-
-Function SetPOVModeVRIK(int aiSet)
-  If ((aiSet == POVModeVR) || (aiSet < VRIK_FPP_HMD) || (aiSet > VRIK_TPP_FREE))
-    return
-  EndIf
-  If (aiSet == VRIK_FPP_HMD)
-    Debug.Notification("SexLabVR POV: 1st LOCKED")
-  ElseIf (aiSet == VRIK_FPP_FREE)
-    Debug.Notification("SexLabVR POV: 1st FREE")
-  ElseIf (aiSet == VRIK_TPP_FREE)
-    Debug.Notification("SexLabVR POV: 3rd FREE")
-  EndIf
-  ToggleVRIK(true, aiSet)
+  SexLabUtil.UpdateAnimatingActorMovement(Game.GetPlayer())
 EndFunction
 
 int Function UpdatePositioningVRIK(int VRIKRestoreInTicks)
-  If ((!IsSkyrimVR) || (POVModeVR != VRIK_FPP_FREE))
+  If ((!_bAnimatingVR) || (POVModeVR != VRIK_FPP_FREE))
     return 0
   EndIf
   Actor PlayerRef = Game.GetPlayer()
@@ -1556,18 +1535,18 @@ int Function UpdatePositioningVRIK(int VRIKRestoreInTicks)
 EndFunction
 
 Function RestoreHmdVRIK()
-  If ((!IsSkyrimVR) || (POVModeVR != VRIK_FPP_FREE))
+  If ((!_bAnimatingVR) || (POVModeVR != VRIK_FPP_FREE))
     return
   EndIf
   VRIK.VrikSetSetting("lockHmdToBody", 2)
   VRIK.VrikSetSetting("lockPosition", 0)
 EndFunction
 
-Function DoWhiteOutEfffect(Actor akActor, int aiOrgasms)
-  If (!IsSkyrimVR || !OrgasmWhiteout || (akActor != Game.GetPlayer()))
+Function DoWhiteOutEfffect(int aiOrgasms)
+  If (!_bAnimatingVR || !OrgasmWhiteout)
     return
   EndIf
-  bool abKO = (akActor.GetActorValuePercentage("Stamina") < 0.25)
+  bool abKO = (Game.GetPlayer().GetActorValuePercentage("Stamina") < 0.25)
   float HoldTime = (aiOrgasms as float) + 1.0
   If (HoldTime > 4.0)
     HoldTime = 4.0
@@ -1578,6 +1557,9 @@ Function DoWhiteOutEfffect(Actor akActor, int aiOrgasms)
 EndFunction
 
 Function InitFootStepVariablesVR()
+  If (!HasVRIK)
+    return
+  EndIf
   _AudioCategoryFST = Game.GetFormFromFile(0x0F5FFC,"Skyrim.esm") as SoundCategory
   _AudioCategoryNPCFST = Game.GetFormFromFile(0x000F72,"Skyrim.esm") as SoundCategory
 EndFunction
@@ -1587,6 +1569,14 @@ EndFunction
 ; ----------------------------------------------- ;
 
 ; General
+bool Property HasVRIK hidden
+  bool Function Get()
+    return GetSettingBool("bHasVRIK")
+  EndFunction
+  Function Set(bool value)
+    SetSettingBool("bHasVRIK", value)
+  EndFunction
+EndProperty
 bool Property UseGestures hidden
   bool Function Get()
     return GetSettingBool("bVRGestures")
@@ -1617,14 +1607,6 @@ bool Property OrgasmWhiteout hidden
   EndFunction
   Function Set(bool value)
     SetSettingBool("bVROrgasmFX", value)
-  EndFunction
-EndProperty
-bool Property NoCollision hidden
-  bool Function Get()
-    return GetSettingBool("bVRNoCollision")
-  EndFunction
-  Function Set(bool value)
-    SetSettingBool("bVRNoCollision", value)
   EndFunction
 EndProperty
 
