@@ -324,7 +324,6 @@ Form _HadStrapon	; Strapon worn prior to animation start
 
 ; Voice
 bool _IsForcedSilent
-float _BaseDelay
 float _VoiceDelay
 float _ExpressionDelay
 
@@ -490,9 +489,9 @@ State Ready
 		; Delayed Initialization
 		If (_sex <= 2)
 			If (_sex == 0)
-				_BaseDelay = _Config.MaleVoiceDelay
+				_VoiceDelay = _Config.MaleVoiceDelay
 			Else
-				_BaseDelay = _Config.FemaleVoiceDelay
+				_VoiceDelay = _Config.FemaleVoiceDelay
 				If (_sex == 1)
 					_HadStrapon = _Config.WornStrapon(_ActorRef)
 					If (!_HadStrapon)
@@ -503,10 +502,9 @@ State Ready
 				EndIf
 			EndIf
 		Else	; Creature
-			_BaseDelay = 3.0
+			_VoiceDelay = 3.0
 		EndIf
-		_VoiceDelay = _BaseDelay
-		_ExpressionDelay = _BaseDelay * 2
+		_ExpressionDelay = 1.0
 		If (_Config.DebugMode)
 			Log("Strapon[" + _Strapon + "] Voice[" + GetActorVoice() + "] Expression[" + GetActorExpression() + "]")
 		EndIf
@@ -713,7 +711,8 @@ Form[] Function StripByData(int aiStripData, int[] aiDefaults, int[] aiOverwrite
 
 float Property UPDATE_INTERVAL = 0.250 AutoReadOnly Hidden
 
-float _LoopDelay
+float _LoopVoiceDelay
+float _LoopExpressionDelay
 float _LoopLovenseDelay
 bool _LovenseGenital
 bool _LovenseAnal
@@ -760,13 +759,16 @@ State Animating
 		_CurrentInteractions = _Thread.ListDetectedInteractionsInternal(_ActorRef)
 		UpdateEffectiveEnjoymentCalculations()
 		int strength = CalcReaction()
-		If (_LoopDelay >= _VoiceDelay && !IsSilent)
-			_LoopDelay = 0.0
+		If (_LoopVoiceDelay >= _VoiceDelay && !IsSilent)
+			_LoopVoiceDelay = 0.0
 			bool lipsync = !OpenMouth && _Config.UseLipSync && _sex <= 2
 			Sound snd = _Thread.GetAliasSound(Self, GetActorVoice(), strength)
 			sslBaseVoice.PlaySound(_ActorRef, snd, strength, lipsync)
 		EndIf
-		RefreshExpressionEx(strength)
+		If (_LoopExpressionDelay >= _ExpressionDelay)
+			_LoopExpressionDelay = 0.0
+			RefreshExpressionEx(strength)
+		EndIf
 		If (_LoopLovenseDelay <= 0)
 			RefreshLovenseActions()
 		Else
@@ -787,7 +789,8 @@ State Animating
 			EndIf
 		EndIf
 		; Loop
-		_LoopDelay += UPDATE_INTERVAL
+		_LoopVoiceDelay += UPDATE_INTERVAL
+		_LoopExpressionDelay += UPDATE_INTERVAL
 		_LoopEnjoymentDelay += UPDATE_INTERVAL
 		RegisterForSingleUpdate(UPDATE_INTERVAL)
 	EndEvent
