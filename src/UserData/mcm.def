@@ -57,7 +57,7 @@ MCM_SETTING(fTimers, std::vector<float>({ 10.0f, 15.0f, 25.0f, 7.0f }))
 // KeyBinds/Global Hotkeys
 MCM_SETTING(iToggleFreeCamera, 0x51)       // Numpad 3
 MCM_SETTING(iTargetActor, 0x31)            // N
-MCM_SETTING(iToggleThreadControl, 0x14)    // T
+MCM_SETTING(iToggleThreadControl, 0x15)    // Y
 
 // KeyBinds/Scene Control Related
 MCM_SETTING(iKeyUp, 0xC8)                  // Up Arrow
@@ -73,6 +73,7 @@ MCM_SETTING(iKeyReset, 0x1D)               // Ctrl
 // KeyBinds/Legacy Hotkeys
 MCM_SETTING(iMoveScene, 0x25)              // K
 MCM_SETTING(iChangeAnimation, 0x18)        // O
+MCM_SETTING(iSceneSelectorMenu, 0x23)      // H
 MCM_SETTING(iChangePositions, 0x0D)        // Numpad Enter
 MCM_SETTING(iOffsetAdjustMode, 0x4E)       // Numpad +
 MCM_SETTING(iToggleAdjustStage, 0x52)      // Numpad 0

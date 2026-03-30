@@ -410,6 +410,14 @@ int property EndAnimation hidden
     SetSettingInt("iKeyEnd", aiSet)
   EndFunction
 EndProperty
+int property SceneSelectorMenu hidden
+  int Function Get()
+    return GetSettingInt("iSceneSelectorMenu")
+  EndFunction
+  Function Set(int aiSet)
+    SetSettingInt("iSceneSelectorMenu", aiSet)
+  EndFunction
+EndProperty
 
 ; Offset Adjustment Keys
 int property OffsetAdjustMode hidden
@@ -977,6 +985,8 @@ bool function CheckSystemPart(string CheckSystem)
 		return SKSE.GetPluginVersion("AccuratePenetration") > -1
   elseIf CheckSystem == "CrossHairRef"
 		return SKSE.GetPluginVersion("CrosshairRefEventsFix") > -1
+  elseIf CheckSystem == "UIExtensions"
+    return Game.GetModByName("UIExtensions.esp") != 255
   elseif CheckSystem == "VRIK"
     return CheckForVRIK()
   endIf
@@ -998,9 +1008,11 @@ bool function CheckSystem()
     return false
   ElseIf (!CheckSystemPart("CrossHairRef"))
     Debug.MessageBox("[SexLab]\nMissing 'CrosshairRefEvents Hang Fix'.\nThis mod is mandatory to avoid soft-locks during scene startup.")     
-    return false    
+    return false
   ElseIf (!CheckSystemPart("PPA"))
     Debug.MessageBox("[SexLab]\nMissing 'Procedural Penis Animations'.\nThis mod is highly recommended for schlong allignments to work properly.")
+  ElseIf (!CheckSystemPart("UIExtensions"))
+    Debug.MessageBox("[SexLab]\nMissing 'UIExtensions'.\nThis mod is a soft dependency required for the internal Scene Selector Menu only.")
   EndIf
   If (CheckForSkyrimVR() && !CheckSystemPart("VRIK"))
       Debug.MessageBox("[SexLab]\nMissing VRIK.\nThis mod is mandatory for SexLab to function properly in VR.")

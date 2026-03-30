@@ -363,6 +363,26 @@ $SSL_iOffsetAdjustModeHighlight	Hotkey to switch between the 5 offset adjust mod
 $SSL_iToggleAdjustStage	Toggle Adjust Stage
 # TODO: $SSL_iRestoreOffsets
 $SSL_iRestoreOffsets	Reset Offset Adjustments
+# TODO: $SSL_iSceneSelectorMenu
+$SSL_iSceneSelectorMenu	Scene Selector Menu
+
+# ------ Scene Selector Menu
+# TODO: $SSL_SS_OffsetAdjustMode
+$SSL_SS_OffsetAdjustMode	Select Offset Adjust Mode
+# TODO: $SSL_SS_ChangeCurrentScene
+$SSL_SS_ChangeCurrentScene	Change Current Scene
+# TODO: $SSL_SS_ResetScenesByTagName
+$SSL_SS_ResetScenesByTagName	Search By Tag/Name
+# TODO: $SSL_SS_AdjNone
+$SSL_SS_AdjNone	Disable Offset Adjustments
+# TODO: $SSL_SS_AdjPosXY
+$SSL_SS_AdjPosXY	Ajust Position XY
+# TODO: $SSL_SS_AdjPosRZ
+$SSL_SS_AdjPosRZ	Ajust Position RZ
+# TODO: $SSL_SS_AdjSceneXY
+$SSL_SS_AdjSceneXY	Ajust Furniture XY
+# TODO: $SSL_SS_AdjSceneRZ
+$SSL_SS_AdjSceneRZ	Ajust Furniture RZ
 
 # ------------------- Timers & Stripping -------------------------------------------------
 $SSL_TimersStripping	Tiempos y desvestido
