@@ -384,7 +384,8 @@ Auto State Empty
 		EndIf
 		_sex = SexLabRegistry.GetSex(_ActorRef, true)
 		_raceID = SexLabRegistry.GetRaceID(_ActorRef)
-		SexLabUtil.SetActorMovement(_ActorRef, 2) ;MOVEMENT_LOCK
+		_ActorRef.SetFactionRank(_AnimatingFaction, 1)
+		SexLabUtil.UpdateAnimatingActorMovement(_ActorRef) ;MOVEMENT_LOCK
 		StartSetActorInterrupts()
 		TrackedEvent(TRACK_ADDED)
 		GoToState(STATE_SETUP)
@@ -401,7 +402,8 @@ Auto State Empty
 		Else
 			_Thread.RequestStatisticUpdate(_ActorRef, _StartedAt)
 		EndIf
-		SexLabUtil.SetActorMovement(_ActorRef, 0) ;MOVEMENT_RELEASE
+		_ActorRef.SetFactionRank(_AnimatingFaction, -1)
+		SexLabUtil.UpdateAnimatingActorMovement(_ActorRef) ;MOVEMENT_RELEASE
 		Parent.Clear()
 	EndFunction
 
@@ -465,11 +467,10 @@ State Ready
 				float target_distance = SexLabUtil.CalcPathingTargetDistance(_raceID)
 				float distance = _ActorRef.GetDistance(target)
 				If(distance > target_distance && distance <= 6144.0)
-					SexLabUtil.SetActorMovement(_ActorRef, 1) ;MOVEMENT_UNLOCK
+					_ActorRef.SetFactionRank(_AnimatingFaction, 2)
+					SexLabUtil.UpdateAnimatingActorMovement(_ActorRef) ;MOVEMENT_UNLOCK
 					float fallback_timer = 15.0
 					float prev_dist = distance + 1.0
-					_ActorRef.SetFactionRank(_AnimatingFaction, 2)
-					_ActorRef.EvaluatePackage()
 					Utility.Wait(2.0)
 					While (distance > target_distance && Math.abs(prev_dist - distance) > 0.5 && fallback_timer > 0)
 						fallback_timer -= interval
@@ -480,8 +481,6 @@ State Ready
 				EndIf
 			EndIf
 		EndIf
-		_ActorRef.SetFactionRank(_AnimatingFaction, 1)
-		_ActorRef.EvaluatePackage()
 		_AnimVarIsNPC = _ActorRef.GetAnimationVariableInt("IsNPC")
 		_AnimVarbHumanoidFootIKDisable = _ActorRef.GetAnimationVariableBool("bHumanoidFootIKDisable")
 		GoToState(STATE_PAUSED)
@@ -547,7 +546,8 @@ EndFunction
 
 State Paused
 	Function LockActor()
-		SexLabUtil.SetActorMovement(_ActorRef, 2) ;MOVEMENT_LOCK
+		_ActorRef.SetFactionRank(_AnimatingFaction, 1)
+		SexLabUtil.UpdateAnimatingActorMovement(_ActorRef) ;MOVEMENT_LOCK
 		Debug.SendAnimationEvent(_ActorRef, "IdleFurnitureExit")
 		Debug.SendAnimationEvent(_ActorRef, "AnimObjectUnequip")
 		Debug.SendAnimationEvent(_ActorRef, "IdleStop")
@@ -628,7 +628,8 @@ State Paused
 			_Config.ToggleVRIK(false)
 		EndIf
 		SetActorCollisions(true)
-		SexLabUtil.SetActorMovement(_ActorRef, 1) ;MOVEMENT_UNLOCK
+		_ActorRef.SetFactionRank(_AnimatingFaction, 0)
+		SexLabUtil.UpdateAnimatingActorMovement(_ActorRef) ;MOVEMENT_UNLOCK
 		Log("Unlocked Actor: " + GetActorName())
 		_ActorLocked = False
 	EndFunction
