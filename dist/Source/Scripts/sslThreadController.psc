@@ -262,6 +262,7 @@ int Property kDirectionUp       = 11 AutoReadOnly
 int Property kDirectionDown     = 12 AutoReadOnly
 int Property kDirectionLeft     = 13 AutoReadOnly
 int Property kDirectionRight    = 14 AutoReadOnly
+int Property kSceneSelector     = 15 AutoReadOnly
 
 int Property AdjMode_None     = 0 AutoReadOnly
 int Property AdjMode_PosXY    = 1 AutoReadOnly
@@ -294,6 +295,7 @@ Function EnableTraditionalHotkeys()
 		RegisterForKey(Hotkeys[kDirectionDown])
 		RegisterForKey(Hotkeys[kDirectionLeft])
 		RegisterForKey(Hotkeys[kDirectionRight])
+		RegisterForKey(Hotkeys[kSceneSelector])
 	EndIf
 EndFunction
 
@@ -344,6 +346,8 @@ Event OnKeyDown(int aiKey)
 		Debug.Notification("SexLab: AdjustStage: " + Config.AdjustStage)
 	ElseIf (aiKey == Hotkeys[kRestoreOffsets])
 		RestoreOffsets()
+	ElseIf (aiKey == Hotkeys[kSceneSelector])
+		SceneSelectorMenu()
 	EndIf
 	If (_AdjustMode > AdjMode_None)
 		string[] asOffsetType = DetermineOffsetAdjustInputType(aiKey)
@@ -353,7 +357,7 @@ Event OnKeyDown(int aiKey)
 EndEvent
 
 Function InitLegacyHotkeys()
-	Hotkeys = new int[15]
+	Hotkeys = new int[16]
 	Hotkeys[kChangeAnimation]   = Config.ChangeAnimation
 	Hotkeys[kMoveScene]         = Config.MoveScene
 	Hotkeys[kChangePartner]     = Config.TargetActor
@@ -370,6 +374,7 @@ Function InitLegacyHotkeys()
 	Hotkeys[kDirectionDown]     = Config.DirectionDown
 	Hotkeys[kDirectionLeft]     = Config.DirectionLeft
 	Hotkeys[kDirectionRight]    = Config.DirectionRight
+	Hotkeys[kSceneSelector]     = Config.SceneSelectorMenu
 EndFunction
 
 ; ------------------------------------------------------- ;
@@ -541,6 +546,76 @@ Function RestoreOffsets()
 	RealignActors()
 EndFunction
 
+Function SceneSelectorMenu()
+	If (Game.GetModByName("UIExtensions.esp") == 255)
+		return
+	EndIf
+	string asActiveScene = GetActiveScene()
+	string asActSceneName = SexlabRegistry.GetSceneName(asActiveScene)
+	string[] asPlayingScenes = GetPlayingScenes()
+	int aiPlayingLen = asPlayingScenes.Length
+	; Init Menus
+	UIListMenu ListMenu = UIExtensions.GetMenu("UIListMenu") as UIListMenu
+	int alOffsetAdjMode = ListMenu.AddEntryItem("$SSL_SS_OffsetAdjustMode", entryHasChildren=True)
+	int alPlayingScenes = ListMenu.AddEntryItem("$SSL_SS_ChangeCurrentScene", entryHasChildren=True)
+	int alCustomInput   = ListMenu.AddEntryItem("$SSL_SS_ResetScenesByTagName")
+	ListMenu.AddEntryItem("$SSL_SS_AdjNone", entryParent=alOffsetAdjMode)
+	ListMenu.AddEntryItem("$SSL_SS_AdjPosXY", entryParent=alOffsetAdjMode)
+	ListMenu.AddEntryItem("$SSL_SS_AdjPosRZ", entryParent=alOffsetAdjMode)
+	ListMenu.AddEntryItem("$SSL_SS_AdjSceneXY", entryParent=alOffsetAdjMode)
+	ListMenu.AddEntryItem("$SSL_SS_AdjSceneRZ", entryParent=alOffsetAdjMode)
+	If (aiPlayingLen > 120) ; Range for AddEntryItem 0-127 (hardcoded: 8 above)
+		aiPlayingLen = 120
+		asPlayingScenes = SexLabUtil.ShuffleStringArray(asPlayingScenes, asActiveScene, 120)
+	EndIf
+	int i = 0
+	While (i < aiPlayingLen)
+		If (asPlayingScenes[i] == asActiveScene)
+			ListMenu.AddEntryItem(">>> " + asActSceneName, entryParent=alPlayingScenes)
+		Else
+			string asSceneName = SexlabRegistry.GetSceneName(asPlayingScenes[i])
+			ListMenu.AddEntryItem(asSceneName, entryParent=alPlayingScenes)
+		EndIf
+		i += 1
+	EndWhile
+	; Exec Menus
+	ListMenu.OpenMenu()
+	string asOptSelected = ListMenu.GetResultString()
+	If (asOptSelected == "")
+		return
+	EndIf
+	If (asOptSelected == "$SSL_SS_ResetScenesByTagName")
+		UITextEntryMenu TextMenu = UIExtensions.GetMenu("UITextEntryMenu") as UITextEntryMenu
+		TextMenu.OpenMenu()
+		string asTypedText = TextMenu.GetResultString()
+		If (asTypedText == "")
+			return
+		EndIf
+		bool aiNewScenes = ResetPlayingScenesByTag(asTypedText)
+		If (!aiNewScenes)
+			string asNewScene = SexLabRegistry.GetSceneByName(asTypedText)
+			If (asNewScene)
+				ResetScene(asNewScene)
+			EndIf
+		EndIf
+	ElseIf (asOptSelected == "$SSL_SS_AdjNone")
+		SetOffsetAdjustMode(AdjMode_None)
+	ElseIf (asOptSelected == "$SSL_SS_AdjPosXY")
+		SetOffsetAdjustMode(AdjMode_PosXY)
+	ElseIf (asOptSelected == "$SSL_SS_AdjPosRZ")
+		SetOffsetAdjustMode(AdjMode_PosRZ)
+	ElseIf (asOptSelected == "$SSL_SS_AdjSceneXY")
+		SetOffsetAdjustMode(AdjMode_SceneXY)
+	ElseIf (asOptSelected == "$SSL_SS_AdjSceneRZ")
+		SetOffsetAdjustMode(AdjMode_SceneRZ)		
+	Else
+		If (asOptSelected != ">>> " + asActSceneName)
+			string asSelectedScene = SexLabRegistry.GetSceneByName(asOptSelected)
+			ResetScene(asSelectedScene)
+		EndIf
+	EndIf
+EndFunction
+
 int Function GetAdjustPos()
 	If (_AdjustActor)
 		return GetPositionIdx(_AdjustActor)
@@ -639,7 +714,7 @@ Function EnableGesturesVR()
 	RegisterGesture(30, "OffsetLeft")               ; L2 + left
 	RegisterGesture(31, "OffsetRight")              ; L2 + right
 	; R2 -> SceneControl Complex
-	;RegisterGesture(40, "")                        ; R2 (tap) = Right Index Touchpad Press
+	RegisterGesture(40, "SceneSelectorMenu")        ; R2 (tap) = Right Index Touchpad Press
 	RegisterGesture(41, "AdjOffsetModeNext")        ; R2 + up
 	RegisterGesture(42, "AdjOffsetModePrev")        ; R2 + down
 	RegisterGesture(43, "ChangePosForward")         ; R2 + left
@@ -670,6 +745,7 @@ Function DisableGesturesVR()
 	UnregisterGesture("OffsetDown")
 	UnregisterGesture("OffsetLeft")
 	UnregisterGesture("OffsetRight")
+	UnregisterGesture("SceneSelectorMenu")
 	UnregisterGesture("AdjOffsetModeNext")
 	UnregisterGesture("AdjOffsetModePrev")
 	UnregisterGesture("ChangePosForward")
@@ -736,6 +812,8 @@ Function VRHandleGesture(String asEventName, String Foobar, float Presses, Form 
 		MoveScene()
 	ElseIf (asEventName == "SLVR_RestoreOffsets")
 		RestoreOffsets()
+	ElseIf (asEventName == "SLVR_SceneSelectorMenu")
+		SceneSelectorMenu()
 	EndIf
 	If (GetOffsetAdjustMode() > AdjMode_None)
 		string[] asOffsetType = Utility.CreateStringArray(2, "")

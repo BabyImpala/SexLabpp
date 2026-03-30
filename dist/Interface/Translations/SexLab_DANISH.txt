@@ -349,6 +349,17 @@ $SSL_iOffsetAdjustMode	Cycle Offset Adjust Modes
 $SSL_iOffsetAdjustModeHighlight	Hotkey to switch between the 5 offset adjust modes when in scene.\nNone: Offset adjustments are disabled (default).\nPOS-XY: L/R keys adjust position's X, U/D adjust Y.\nPOS-RZ: L/R adjust pos's Rotation, U/D adjust Z.\nSCENE-XY: L/R adjust scene's X, U/D adjust Y (furniture scene only).\nSCENE-RZ: L/R adjust scene's Rotation, U/D adjust Z (furniture only).
 $SSL_iToggleAdjustStage	Toggle Adjust Stage
 $SSL_iRestoreOffsets	Reset Offset Adjustments
+$SSL_iSceneSelectorMenu	Scene Selector Menu
+
+# ------ Scene Selector Menu
+$SSL_SS_OffsetAdjustMode	Select Offset Adjust Mode
+$SSL_SS_ChangeCurrentScene	Change Current Scene
+$SSL_SS_ResetScenesByTagName	Search By Tag/Name
+$SSL_SS_AdjNone	Disable Offset Adjustments
+$SSL_SS_AdjPosXY	Ajust Position XY
+$SSL_SS_AdjPosRZ	Ajust Position RZ
+$SSL_SS_AdjSceneXY	Ajust Furniture XY
+$SSL_SS_AdjSceneRZ	Ajust Furniture RZ
 
 # ------------------- Timers & Stripping -------------------------------------------------
 $SSL_TimersStripping	Timers & Stripping
