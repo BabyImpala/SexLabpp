@@ -211,11 +211,7 @@ Function SetActorMovement(Actor akActor, int aiMovement) global
 	Else
 		Game.SetPlayerAIDriven(false)
 		If (aiMovement == 1) ;UNLOCK
-			If (!bVRMode)
-				Game.EnablePlayerControls(abFighting=false, abCamSwitch=false, abSneaking=false, abActivate=false)
-			Else
-				Game.EnablePlayerControls(ablooking=false, abMenu=false, abJournalTabs=false) ; from SLVR patch (weird abLooking)
-			EndIf
+			Game.DisablePlayerControls(abMovement=false, abCamSwitch=true, abSneaking=true, abMenu=false)
 		Else ;RELEASE
 			Game.EnablePlayerControls()
 		EndIf
@@ -237,7 +233,6 @@ Function UpdateAnimatingActorMovement(Actor akActor) global
 		aiMovement = 2
 	EndIf
 	SetActorMovement(akActor, aiMovement)
-	akActor.EvaluatePackage()
 EndFunction
 
 ; *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-* ;

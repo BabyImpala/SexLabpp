@@ -778,7 +778,7 @@ State Making
 			EndIf
 			i += 1
 		EndWhile
-    	Log("Added " + SexLabUtil.ActorNames(ActorList) + " to thread", "AddActors()")
+		Log("Added " + SexLabUtil.ActorNames(ActorList) + " to thread", "AddActors()")
 		return true
 	EndFunction
 	bool Function AddActorsA(Actor[] ActorList, Actor[] akVictims)
@@ -789,7 +789,7 @@ State Making
 			EndIf
 			i += 1
 		EndWhile
-    	Log("Added " + SexLabUtil.ActorNames(ActorList) + " to thread", "AddActorsA()")
+		Log("Added " + SexLabUtil.ActorNames(ActorList) + " to thread", "AddActorsA()")
 		return true
 	EndFunction
 
@@ -799,19 +799,19 @@ State Making
 	Function ClearScenes()
 		_PrimaryScenes = Utility.CreateStringArray(0)
 	EndFunction
-  Function SetForcedScenes(String[] asScenes)
-    _CustomScenes = SexLabRegistry.SceneExistA(asScenes)
-  EndFunction
+	Function SetForcedScenes(String[] asScenes)
+		_CustomScenes = SexLabRegistry.SceneExistA(asScenes)
+	EndFunction
 	Function ClearForcedScenes()
 		_CustomScenes = Utility.CreateStringArray(0)
 	EndFunction
-  Function SetLeadInScenes(String[] asScenes)
-    _LeadInScenes = SexLabRegistry.SceneExistA(asScenes)
-    LeadIn = _LeadInScenes.Length > 0
-  EndFunction
+	Function SetLeadInScenes(String[] asScenes)
+		_LeadInScenes = SexLabRegistry.SceneExistA(asScenes)
+		LeadIn = _LeadInScenes.Length > 0
+	EndFunction
 	Function ClearLeadInScenes()
 		_LeadInScenes = Utility.CreateStringArray(0)
-    LeadIn = false
+	LeadIn = false
 	EndFunction
 	Function AddScene(String asSceneID)
 		If (!asSceneID || !SexLabRegistry.SceneExists(asSceneID))
@@ -845,7 +845,7 @@ State Making
 		EndIf
 	EndFunction
 
-  sslThreadController Function StartThread()
+	sslThreadController Function StartThread()
 		UnregisterForUpdate()
 		_Positions = PapyrusUtil.RemoveActor(_Positions, none)
 		If(_Positions.Length <= 0 || _Positions.Length > POSITION_COUNT_MAX)
@@ -872,7 +872,7 @@ State Making
 		If (!_QuickResetScenes)
 			GoToState(STATE_SETUP_M)
 		EndIf
-    return self as sslThreadController
+	return self as sslThreadController
 	EndFunction
 	; Called after CreateInstance() terminates (maybe async due to center selection)
 	Function ContinueSetup(bool abContinue)
