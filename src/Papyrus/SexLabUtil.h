@@ -105,11 +105,39 @@ namespace Papyrus::SexLabUtil
         return "";
     }
 
-    bool IsGodModeEnabled(RE::StaticFunctionTag*)
-    {
-        const auto player = RE::PlayerCharacter::GetSingleton();
-        return player->IsGodMode();
-    }
+	bool IsGodModeEnabled(RE::StaticFunctionTag*)
+	{
+		const auto player = RE::PlayerCharacter::GetSingleton();
+		return player->IsGodMode();
+	}
+	
+	std::vector<RE::BSFixedString> ShuffleStringArray(RE::StaticFunctionTag*, std::vector<RE::BSFixedString> arr, RE::BSFixedString asFirst, int aiMaxLen)
+	{
+		if (arr.empty()) return arr;
+		bool bFirstSet = false;
+		if (!asFirst.empty()) {
+			for (int i = 0; i < static_cast<int>(arr.size()); i++) {
+				if (arr[i] == asFirst) {
+					std::swap(arr[0], arr[i]);
+					bFirstSet = true;
+					break;
+				}
+			}
+		}
+		const int total = static_cast<int>(arr.size());
+		int pickLen = aiMaxLen;
+		if (pickLen < 1) pickLen = 1;
+		if (pickLen > total) pickLen = total;
+		thread_local std::mt19937 rng{ std::random_device{}() };
+		const int shuffleStart = bFirstSet ? 1 : 0;
+		for (int j = shuffleStart; j < pickLen; j++) {
+			std::uniform_int_distribution<int> dist(j, total - 1);
+			int k = dist(rng);
+			std::swap(arr[j], arr[k]);
+		}
+		arr.resize(pickLen);
+		return arr;
+	}
 
 	inline bool Register(VM* a_vm)
 	{
@@ -124,6 +152,7 @@ namespace Papyrus::SexLabUtil
 		REGISTERFUNC(GetCurrentGameRealTime, "SexLabUtil", true);
 		REGISTERFUNC(GetTranslation, "SexLabUtil", true);
 		REGISTERFUNC(IsGodModeEnabled, "SexLabUtil", true);
+		REGISTERFUNC(ShuffleStringArray, "SexLabUtil", true);
 
         return true;
     }
