@@ -518,6 +518,10 @@ State Ready
 		Clear()
 		Initialize()
 	EndFunction
+
+	Event OnEndState()
+		RegisterForModEvent("SSL_LOCK_Thread" + _Thread.tid, "OnRequestLock")
+	EndEvent
 EndState
 
 Event OnDoPrepare(string asEventName, string asStringArg, float afNumArg, form akPathTo)
@@ -543,6 +547,11 @@ EndFunction
 /;
 
 State Paused
+	Event OnRequestLock(string asEventName, string asStringArg, float afNumArg, form akSender)
+		UnregisterForModEvent("SSL_LOCK_Thread" + _Thread.tid)
+		LockActor()
+		_Thread.AliasLockDone()
+	EndEvent
 	Function LockActor()
 		_ActorRef.SetFactionRank(_AnimatingFaction, 1)
 		SexLabUtil.UpdateAnimatingActorMovement(_ActorRef) ;MOVEMENT_LOCK
@@ -680,6 +689,9 @@ Function RemoveStrapon()
 EndFunction
 
 ;	Lock/Unlock actor if in idling state, otherwise do nothing
+Event OnRequestLock(string asEventName, string asStringArg, float afNumArg, form akSender)
+	Error("Lock request outside a valid state", "OnRequestLock()")
+EndEvent
 Function LockActor()
 	Error("Cannot lock actor outside of paused state", "LockActor()")
 EndFunction
