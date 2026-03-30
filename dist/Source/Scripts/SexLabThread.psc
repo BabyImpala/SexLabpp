@@ -438,7 +438,7 @@ EndFunction
 
 ; Function to temporarily dictate SL's VRIK configs for the duration of the active scene.
 ; Example Use: restrain hands to anim: SexLabUtil.SetConfigsVRIK(true, true, aiTrackHands=0)
-Function SetConfigsVRIK(bool abApply=true, bool abOverrideConfig=false, int aiPOVMode=-1, \
+Function SetConfigsVRIK(bool abEnabled=true, bool abOverrideConfig=false, int aiPOVMode=-1, \
 	int abLockHeight=-1, float afHeightAdjSpeed=-1.0, int abTrackHead=-1, int aiTrackHands=-1, \
 	float afDistHideHead=-1.0, float afDistNearClip=-1.0, int aiLockHmdToBody=-1, \
 	float afLockHmdDistance=-1.0, float afLockHmdTolerance=-1.0, float afLockHmdSpeed=-1.0)

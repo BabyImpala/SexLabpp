@@ -145,20 +145,43 @@ EndFunction
 
 Function ToggleFreeCamera(int aiForceState = -1) global
 	;[-1:Toggle, 0:TFC_STAYS_OFF, 1:TFC_STAYS_ON]
-	If (GetConfig().IsSkyrimVR)
-		return
-	EndIf
+	bool bVRMode = GetConfig().HasVRIK
 	If (Game.GetCameraState() == 3)
 		If (aiForceState != 1)
-			MiscUtil.ToggleFreeCamera()
+			If (!bVRMode)
+				MiscUtil.ToggleFreeCamera()
+			Else
+				Utility.SetIniBool("bDisablePlayerCollision:Havok", false)
+				SetActorMovement(Game.GetPlayer(), 2) ;MOVEMENT_LOCK
+			EndIf
 		EndIf
 		return
 	Else
 		If (aiForceState != 0)
 			ForceThirdPerson()
-			MiscUtil.SetFreeCameraSpeed(GetConfig().AutoSUCSM)
-			MiscUtil.ToggleFreeCamera()
+			If (!bVRMode)
+				MiscUtil.SetFreeCameraSpeed(GetConfig().AutoSUCSM)
+				MiscUtil.ToggleFreeCamera()
+			Else
+				Utility.SetIniBool("bDisablePlayerCollision:Havok", true)
+				SetActorMovement(Game.GetPlayer(), 2) ;MOVEMENT_LOCK (bVRTPP==true)
+			EndIf
 		EndIf
+	EndIf
+EndFunction
+
+Function ForceThirdPerson() global
+	bool bVRMode = GetConfig().HasVRIK
+	bool bVRTPP = bVRMode && (GetConfig().POVModeVR == 2) ;VRIK_TPP_FREE
+	If (bVRTPP)
+		return
+	ElseIf (bVRMode)
+		GetConfig().SetPOVModeVRIK(2, abForced=true) ;VRIK_TPP_FREE
+		return
+	Else
+		While (Game.GetCameraState() == 0)
+			Game.ForceThirdPerson()
+		EndWhile
 	EndIf
 EndFunction
 
@@ -177,7 +200,7 @@ Function SetActorMovement(Actor akActor, int aiMovement) global
 		EndIf
 		return
 	EndIf
-	bool bVRMode = GetConfig().IsSkyrimVR
+	bool bVRMode = GetConfig().HasVRIK
 	While (!bVRMode && Game.GetCameraState()==0)
 		Game.ForceThirdPerson()
 	EndWhile
@@ -215,15 +238,6 @@ Function UpdateAnimatingActorMovement(Actor akActor) global
 	EndIf
 	SetActorMovement(akActor, aiMovement)
 	akActor.EvaluatePackage()
-EndFunction
-
-Function ForceThirdPerson() global
-	If (GetConfig().IsSkyrimVR)
-		return
-	EndIf
-	While (Game.GetCameraState() == 0)
-		Game.ForceThirdPerson()
-	EndWhile
 EndFunction
 
 ; *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-* ;

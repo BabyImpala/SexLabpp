@@ -876,8 +876,8 @@ State Animating
 		; SFX
 		If(_Config.OrgasmEffects)
 			If (_ActorRef == _PlayerRef)
-				If (_Config.IsSkyrimVR)
-					_Config.DoWhiteOutEfffect(_ActorRef, _OrgasmCount)
+				If (_Config.HasVRIK)
+					_Config.DoWhiteOutEfffect(_OrgasmCount)
 				ElseIf (_Config.ShakeStrength > 0 && Game.GetCameraState() >= 8)
 					Game.ShakeCamera(none, _Config.ShakeStrength, _Config.ShakeStrength + 1.0)
 				EndIf

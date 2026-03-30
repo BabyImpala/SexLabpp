@@ -94,12 +94,11 @@ MCM_SETTING(iRestoreOffsets, 0x4A)         // Numpad -
 // MCM_SETTING(iAdjustSchlong, 46)
 
 // VRIK Related
-MCM_SETTING(bSkyrimVR, false)
+MCM_SETTING(bHasVRIK, false)
 MCM_SETTING(bVRGestures, true)
 MCM_SETTING(bVRGestureHaptics, true)
 MCM_SETTING(bVRScaleBody, true)
 MCM_SETTING(bVROrgasmFX, true)
-MCM_SETTING(bVRNoCollision, false)
 MCM_SETTING(iPOVModeVR, 2)
 MCM_SETTING(bLockHeightVR, true)
 MCM_SETTING(bTrackHeadVR, true)

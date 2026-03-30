@@ -18,22 +18,22 @@ Function EnableHotkeys(bool forced = false)
 	If(!HasPlayer && !forced)
 		return
 	EndIf
-	If (Config.UseSceneMenu && !Config.IsSkyrimVR)
+	If (Config.UseSceneMenu && !Config.HasVRIK)
 		EnableMenuEvents()
 	EndIf
 	EnableTraditionalHotkeys()
-	If (Config.IsSkyrimVR)
+	If (Config.HasVRIK)
 		EnableGesturesVR()
 	EndIf
 EndFunction
 
 Function DisableHotkeys()
 	SexLabUtil.ToggleFreeCamera(0) ; TFC_OFF... If free cam is active here will glitch out controls?
-	If (Config.UseSceneMenu && !Config.IsSkyrimVR)
+	If (Config.UseSceneMenu && !Config.HasVRIK)
 		DisableMenuEvents()
 	EndIf
 	DisableTraditionalHotkeys()
-	If (Config.IsSkyrimVR)
+	If (Config.HasVRIK)
 		DisableGesturesVR()
 	EndIf
 EndFunction
@@ -702,7 +702,7 @@ Function EnableGesturesVR()
 	RegisterGesture(6, "SwitchPOVPrev")             ; L + back
 	RegisterGesture(7, "SwitchPOVNext")             ; L + forward
 	; R1 -> SceneControl Main
-	RegisterGesture(14, "ToggleCollision")          ; R (tap) = Right Thumbstick Press or Trackpad Tap
+	RegisterGesture(14, "ToggleFreeCam")            ; R (tap) = Right Thumbstick Press or Trackpad Tap
 	RegisterGesture(15, "SceneChange")              ; R + up
 	RegisterGesture(16, "SceneEnd")                 ; R + down
 	RegisterGesture(17, "StagePrev")                ; R + left
@@ -735,7 +735,7 @@ Function DisableGesturesVR()
 	UnregisterGesture("TargetPartnerNext")
 	UnregisterGesture("SwitchPOVPrev")
 	UnregisterGesture("SwitchPOVNext")
-	UnregisterGesture("ToggleCollision")
+	UnregisterGesture("ToggleFreeCam")
 	UnregisterGesture("SceneChange")
 	UnregisterGesture("SceneEnd")
 	UnregisterGesture("StagePrev")
@@ -767,22 +767,19 @@ Function VRHandleGesture(String asEventName, String Foobar, float Presses, Form 
 			ProcessEnjGameArg("Magicka", GetTargetPartner(), abAdjustTarget)
 		EndIf
 	EndIf
-	If (asEventName == "ToggleAdjustSelf")
+	If (asEventName == "SLVR_ToggleAdjustSelf")
 		_AdjustSelfVR = !_AdjustSelfVR
 		Debug.Notification("SexLab: AdjustSelf: " + _AdjustSelfVR)
 	ElseIf (asEventName == "SLVR_TargetPartnerPrev")
 		ChangeTargetPartner(true)
 	ElseIf (asEventName == "SLVR_TargetPartnerNext")
 		ChangeTargetPartner()
-	ElseIf (asEventName == "SwitchPOVPrev")
+	ElseIf (asEventName == "SLVR_SwitchPOVPrev")
 		CyclePOVModesVR(true)
-	ElseIf (asEventName == "SwitchPOVNext")
+	ElseIf (asEventName == "SLVR_SwitchPOVNext")
 		CyclePOVModesVR()
-	ElseIf (asEventName == "SLVR_ToggleCollision")
-		If ((HasPlayer) && (Config.POVModeVR == Config.VRIK_TPP_FREE))
-			Config.NoCollision = !Config.NoCollision
-			Utility.SetIniBool("bDisablePlayerCollision:Havok", Config.NoCollision)
-		EndIf
+	ElseIf (asEventName == "SLVR_ToggleFreeCam")
+		SexLabUtil.ToggleFreeCamera()
 	ElseIf (asEventName == "SLVR_SceneChange")
 		PickRandomScene("")
 	ElseIf (asEventName == "SLVR_SceneEnd")
@@ -796,12 +793,12 @@ Function VRHandleGesture(String asEventName, String Foobar, float Presses, Form 
 		Debug.Notification("SexLab: AdjustStage: " + Config.AdjustStage)
 	ElseIf (asEventName == "SLVR_AdjOffsetModeNext")
 		If (GetOffsetAdjustMode() == AdjMode_None)
-			Config.SetPOVModeVRIK(Config.VRIK_TPP_FREE)
+			SexLabUtil.ForceThirdPerson()
 		EndIf
 		CycleOffsetAdjustModes()
 	ElseIf (asEventName == "SLVR_AdjOffsetModePrev")
 		If (GetOffsetAdjustMode() == AdjMode_None)
-			Config.SetPOVModeVRIK(Config.VRIK_TPP_FREE)
+			SexLabUtil.ForceThirdPerson()
 		EndIf
 		CycleOffsetAdjustModes(true)
 	ElseIf (asEventName == "SLVR_ChangePosForward")
