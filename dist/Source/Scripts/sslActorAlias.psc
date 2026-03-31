@@ -452,8 +452,10 @@ State Ready
 		UnregisterForModEvent("SSL_PREPARE_Thread" + _Thread.tid)
 		_ActorRef.SetActorValue("Paralysis", 0.0)
 		WaitForPathToCenter(akPathTo)
-		_AnimVarIsNPC = _ActorRef.GetAnimationVariableInt("IsNPC")
-		_AnimVarbHumanoidFootIKDisable = _ActorRef.GetAnimationVariableBool("bHumanoidFootIKDisable")
+		If (_sex <= 2)
+			_AnimVarIsNPC = _ActorRef.GetAnimationVariableInt("IsNPC")
+			_AnimVarbHumanoidFootIKDisable = _ActorRef.GetAnimationVariableBool("bHumanoidFootIKDisable")
+		EndIf		
 		GoToState(STATE_PAUSED)
 		If (asStringArg != "skip")
 			_Thread.PrepareDone()
@@ -650,6 +652,7 @@ State Paused
 		If (_sex <= 2)
 			Redress()
 			RemoveStrapon()
+			_ActorRef.ClearExpressionOverride() ;error with _sex>2
 		EndIf
 		If (_ActorLocked)
 			UnlockActor()
@@ -661,7 +664,6 @@ State Paused
 		UnregisterForModEvent("SSL_ORGASM_Thread" + _Thread.tid)
 		StoreExcitementState("Backup")
 		sslBaseExpression.CloseMouth(_ActorRef)
-		_ActorRef.ClearExpressionOverride()
 		_ActorRef.ResetExpressionOverrides()
 		sslBaseExpression.ClearMFG(_ActorRef)
 		SendDefaultAnimEvent()
