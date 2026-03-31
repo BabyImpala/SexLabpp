@@ -415,14 +415,16 @@ Function ChangePositions(bool abBackwards = false, bool abAdjustTarget = false)
 		EndIf
 		If (SexLabRegistry.CanFillPosition(activeScene, curIdx, GetIdxPosition(newIdx)) && \
 			SexLabRegistry.CanFillPosition(activeScene, newIdx, curPos))
-			Actor tmpActor = Positions[curIdx]
-			Positions[curIdx] = Positions[newIdx]
-			Positions[newIdx] = tmpActor
+			Actor[] akPositions = GetPositions()
+			Actor tmpActor = akPositions[curIdx]
+			akPositions[curIdx] = akPositions[newIdx]
+			akPositions[newIdx] = tmpActor
 			sslActorAlias tmpAlias = ActorAlias[curIdx]
 			ActorAlias[curIdx] = ActorAlias[newIdx]
 			ActorAlias[newIdx] = tmpAlias
-			SendThreadEvent("PositionChange")
-			ResetStage()
+			If (ResetAnimationQuick(akPositions, "", true))
+				SendThreadEvent("PositionChange")
+			EndIf
 			return
 		EndIf
 		newIdx += step
@@ -591,7 +593,7 @@ Function SceneSelectorMenu()
 		If (asTypedText == "")
 			return
 		EndIf
-		bool aiNewScenes = ResetPlayingScenesByTag(asTypedText)
+		bool aiNewScenes = ResetAnimationQuick(GetPositions(), asTypedText, false)
 		If (!aiNewScenes)
 			string asNewScene = SexLabRegistry.GetSceneByName(asTypedText)
 			If (asNewScene)
