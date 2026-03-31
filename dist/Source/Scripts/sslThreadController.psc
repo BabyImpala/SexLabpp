@@ -287,7 +287,7 @@ Function EnableTraditionalHotkeys()
 	If (!Config.UseSceneMenu)
 		RegisterForKey(Hotkeys[kAdvanceAnimation])
 		RegisterForKey(Hotkeys[kEndAnimation])
-		RegisterForKey(Hotkeys[kChangePositions])
+		;RegisterForKey(Hotkeys[kChangePositions])
 		RegisterForKey(Hotkeys[kOffsetAdjustMode])
 		RegisterForKey(Hotkeys[kToggleAdjustStage])
 		RegisterForKey(Hotkeys[kRestoreOffsets])
@@ -337,8 +337,8 @@ Event OnKeyDown(int aiKey)
 		AdvanceStage(abModifier)
 	ElseIf (aiKey == Hotkeys[kEndAnimation])
 		EndAnimation()
-	ElseIf (aiKey == Hotkeys[kChangePositions])
-		ChangePositions(false, abAdjustTarget)
+	;ElseIf (aiKey == Hotkeys[kChangePositions])
+	;	ChangePositions(false, abAdjustTarget)
 	ElseIf (aiKey == Hotkeys[kOffsetAdjustMode])
 		CycleOffsetAdjustModes(abModifier)
 	ElseIf (aiKey == Hotkeys[kToggleAdjustStage])
@@ -366,7 +366,7 @@ Function InitLegacyHotkeys()
 	;Legacy
 	Hotkeys[kAdvanceAnimation]  = Config.AdvanceAnimation
 	Hotkeys[kEndAnimation]      = Config.EndAnimation
-	Hotkeys[kChangePositions]   = Config.ChangePositions
+	;Hotkeys[kChangePositions]   = Config.ChangePositions
 	Hotkeys[kOffsetAdjustMode]  = Config.OffsetAdjustMode
 	Hotkeys[kToggleAdjustStage] = Config.ToggleAdjustStage
 	Hotkeys[kRestoreOffsets]    = Config.RestoreOffsets
@@ -719,8 +719,8 @@ Function EnableGesturesVR()
 	RegisterGesture(40, "SceneSelectorMenu")        ; R2 (tap) = Right Index Touchpad Press
 	RegisterGesture(41, "AdjOffsetModeNext")        ; R2 + up
 	RegisterGesture(42, "AdjOffsetModePrev")        ; R2 + down
-	RegisterGesture(43, "ChangePosForward")         ; R2 + left
-	RegisterGesture(44, "ChangePosBackward")        ; R2 + right
+	;RegisterGesture(43, "ChangePosForward")         ; R2 + left
+	;RegisterGesture(44, "ChangePosBackward")        ; R2 + right
 	RegisterGesture(45, "RestoreOffsets")           ; R2 + back
 	RegisterGesture(46, "MoveScene")                ; R2 + forward
 EndFunction
@@ -750,8 +750,8 @@ Function DisableGesturesVR()
 	UnregisterGesture("SceneSelectorMenu")
 	UnregisterGesture("AdjOffsetModeNext")
 	UnregisterGesture("AdjOffsetModePrev")
-	UnregisterGesture("ChangePosForward")
-	UnregisterGesture("ChangePosBackward")
+	;UnregisterGesture("ChangePosForward")
+	;UnregisterGesture("ChangePosBackward")
 	UnregisterGesture("RestoreOffsets")
 	UnregisterGesture("MoveScene")
 EndFunction
@@ -803,10 +803,10 @@ Function VRHandleGesture(String asEventName, String Foobar, float Presses, Form 
 			SexLabUtil.ForceThirdPerson()
 		EndIf
 		CycleOffsetAdjustModes(true)
-	ElseIf (asEventName == "SLVR_ChangePosForward")
-		ChangePositions(false, abAdjustTarget)
-	ElseIf (asEventName == "SLVR_ChangePosBackward")
-		ChangePositions(true, abAdjustTarget)
+	;ElseIf (asEventName == "SLVR_ChangePosForward")
+	;	ChangePositions(false, abAdjustTarget)
+	;ElseIf (asEventName == "SLVR_ChangePosBackward")
+	;	ChangePositions(true, abAdjustTarget)
 	ElseIf (asEventName == "SLVR_MoveScene")
 		MoveScene()
 	ElseIf (asEventName == "SLVR_RestoreOffsets")
