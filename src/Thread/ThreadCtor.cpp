@@ -179,23 +179,29 @@ namespace Thread
 		return prioScenes;
 	}
 
-    bool Instance::InitializeFixedCenter(RE::Actor* centerAct, std::vector<const Registry::Scene*>& prioScenes, REX::EnumSet<Registry::FurnitureType::Value> sceneTypes)
-    {
-        const auto& details = center.details = Registry::Library::GetSingleton()->GetFurnitureDetails(center.GetRef());
-        auto inBounds = details ? details->GetClosestCoordinatesInBound(center.GetRef(), sceneTypes, centerAct) : std::vector<Registry::FurnitureOffset>{};
-        for (auto i = inBounds.begin(); i < inBounds.end(); i++) {
-            if (std::ranges::any_of(prioScenes, [type = i->type](const auto& scene) { return scene->IsCompatibleFurniture(type); })) {
-                center.offset = *i;
-                return true;
-            }
-        }
-        if (std::ranges::any_of(prioScenes, [](const auto& scene) { return scene->IsCompatibleFurniture(Registry::FurnitureType::None); })) {
-            center.offset = { Registry::FurnitureType::None, {} };
-            return true;
-        }
-        logger::warn("Center reference {:X} is not compatible with any scene.", center.GetRef()->GetFormID());
-        return false;
-    }
+	bool Instance::InitializeFixedCenter(RE::Actor* centerAct, std::vector<const Registry::Scene*>& prioScenes, REX::EnumSet<Registry::FurnitureType::Value> sceneTypes)
+	{
+		const auto& details = center.details = Registry::Library::GetSingleton()->GetFurnitureDetails(center.GetRef());
+		if (((bool (*)(void))Offsets::NotOnGameThread.address())()) {
+			logger::error("Initialize Fixed Center called on wrong thread, not executing!");
+			return false;
+		} else {
+			auto inBounds = details ? details->GetClosestCoordinatesInBound(center.GetRef(), sceneTypes, centerAct) : std::vector<Registry::FurnitureOffset>{};
+
+			for (auto i = inBounds.begin(); i < inBounds.end(); i++) {
+				if (std::ranges::any_of(prioScenes, [type = i->type](const auto& scene) { return scene->IsCompatibleFurniture(type); })) {
+					center.offset = *i;
+					return true;
+				}
+			}
+			if (std::ranges::any_of(prioScenes, [](const auto& scene) { return scene->IsCompatibleFurniture(Registry::FurnitureType::None); })) {
+				center.offset = { Registry::FurnitureType::None, {} };
+				return true;
+			}
+			logger::warn("Center reference {:X} is not compatible with any scene.", center.GetRef()->GetFormID());
+			return false;
+		}
+	}
 
     Instance::CenterSelection Instance::GetSelectionMethod(FurniturePreference furniturePreference)
     {
