@@ -183,99 +183,99 @@ namespace Papyrus::ThreadModel
                 Left = 2,
             };
 
-            if (!a_alias) {
-                a_vm->TraceStack("Cannot call StripByDataEx on a none alias", a_stackID);
-                return a_mergewith;
-            }
-            const auto actor = a_alias->GetActorReference();
-            if (!actor) {
-                a_vm->TraceStack("ReferenceAlias must be filled with an actor reference", a_stackID);
-                return a_mergewith;
-            }
-            if (!actor->IsHumanoid()) {
-                return a_mergewith;
-            }
-            if (a_mergewith.size() < 3) {
-                a_mergewith.resize(3, nullptr);
-            }
-            REX::EnumSet<Strip> stripnum(static_cast<Strip>(a_stripdata));
-            if (stripnum == Strip::None) {
-                logger::info("Using stripping policy: None");
-                return a_mergewith;
-            }
-            uint32_t slots;
-            bool weapon;
-            if (a_overwrite.size() >= 2) {
-                slots = a_overwrite[0];
-                weapon = a_overwrite[1];
-            } else if (stripnum.all(Strip::All)) {
-                slots = static_cast<uint32_t>(-1);
-                weapon = true;
-            } else {
-                if (stripnum.all(Strip::Default) && a_defaults.size() >= 2) {
-                    slots = a_defaults[0];
-                    weapon = a_defaults[1];
-                } else {
-                    slots = 0;
-                    weapon = 0;
-                }
-                if (stripnum.all(Strip::Boots)) {
-                    slots |= static_cast<uint32_t>(SlotMask::kFeet);
-                }
-                if (stripnum.all(Strip::Gloves)) {
-                    slots |= static_cast<uint32_t>(SlotMask::kHands);
-                }
-                if (stripnum.all(Strip::Helmet)) {
-                    slots |= static_cast<uint32_t>(SlotMask::kHead);
-                }
-            }
-            const auto stripconfig = UserData::StripData::GetSingleton();
-            const auto manager = RE::ActorEquipManager::GetSingleton();
-            for (const auto& [form, data] : actor->GetInventory()) {
-                if (!data.second->IsWorn()) {
-                    continue;
-                }
-                switch (stripconfig->CheckStrip(form)) {
-                case UserData::Strip::NoStrip:
-                    continue;
-                case UserData::Strip::Always:
-                    break;
-                case UserData::Strip::None:
-                    if (form->IsWeapon() && !weapon) {
-                        continue;
-                    } else if (const auto biped = form->As<RE::BGSBipedObjectForm>()) {
-                        const auto biped_slots = biped->GetSlotMask().underlying();
-                        if ((biped_slots & slots) == 0) {
-                            continue;
-                        }
-                    }
-                    break;
-                }
-                if (form->IsWeapon() && actor->GetActorRuntimeData().currentProcess) {
-                    if (actor->GetActorRuntimeData().currentProcess->GetEquippedRightHand() == form)
-                        a_mergewith[Right] = form;
-                    else
-                        a_mergewith[Left] = form;
-                } else {
-                    a_mergewith.push_back(form);
-                }
-                manager->UnequipObject(actor, form);
-            }
-            std::vector<RE::FormID> ids{};
-            ids.reserve(a_mergewith.size());
-            for (auto&& it : a_mergewith)
-                ids.push_back(it ? it->formID : 0);
-            logger::info("Stripping, Policy: [{:X}, {}], Stripped Equipment: [{}]", weapon, slots, [&] {
-                if (ids.empty()) {
-                    return std::string("");
-                }
-                return std::accumulate(std::next(ids.begin()), ids.end(), std::format("{:X}", ids[0]), [](std::string a, auto b) {
-                    return std::move(a) + ", " + std::format("{:X}", b);
-                });
-            }());
-            actor->Update3DModel();
-            return a_mergewith;
-        }
+			if (!a_alias) {
+				a_vm->TraceStack("Cannot call StripByDataEx on a none alias", a_stackID);
+				return a_mergewith;
+			}
+			const auto actor = a_alias->GetActorReference();
+			if (!actor) {
+				a_vm->TraceStack("ReferenceAlias must be filled with an actor reference", a_stackID);
+				return a_mergewith;
+			}
+			if (!actor->IsHumanoid()) {
+				return a_mergewith;
+			}
+			if (a_mergewith.size() < 3) {
+				a_mergewith.resize(3, nullptr);
+			}
+			REX::EnumSet<Strip> stripnum(static_cast<Strip>(a_stripdata));
+			if (stripnum == Strip::None) {
+				logger::info("Using stripping policy: None");
+				return a_mergewith;
+			}
+			uint32_t slots;
+			bool weapon;
+			if (a_overwrite.size() >= 2) {
+				slots = a_overwrite[0];
+				weapon = a_overwrite[1];
+			} else if (stripnum.all(Strip::All)) {
+				slots = static_cast<uint32_t>(-1);
+				weapon = true;
+			} else {
+				if (stripnum.all(Strip::Default) && a_defaults.size() >= 2) {
+					slots = a_defaults[0];
+					weapon = a_defaults[1];
+				} else {
+					slots = 0;
+					weapon = 0;
+				}
+				if (stripnum.all(Strip::Boots)) {
+					slots |= static_cast<uint32_t>(SlotMask::kFeet);
+				}
+				if (stripnum.all(Strip::Gloves)) {
+					slots |= static_cast<uint32_t>(SlotMask::kHands);
+				}
+				if (stripnum.all(Strip::Helmet)) {
+					slots |= static_cast<uint32_t>(SlotMask::kHead);
+				}
+			}
+			const auto stripconfig = UserData::StripData::GetSingleton();
+			const auto manager = RE::ActorEquipManager::GetSingleton();
+			for (const auto& [form, data] : actor->GetInventory()) {
+				if (!data.second->IsWorn()) {
+					continue;
+				}
+				switch (stripconfig->CheckStrip(form)) {
+				case UserData::Strip::NoStrip:
+					continue;
+				case UserData::Strip::Always:
+					break;
+				case UserData::Strip::None:
+					if (form->IsWeapon() && !weapon) {
+						continue;
+					} else if (const auto biped = form->As<RE::BGSBipedObjectForm>()) {
+						const auto biped_slots = static_cast<uint32_t>(biped->GetSlotMask().underlying());
+						if ((biped_slots & slots) == 0) {
+							continue;
+						}
+					}
+					break;
+				}
+				if (form->IsWeapon() && actor->GetActorRuntimeData().currentProcess) {
+					if (actor->GetActorRuntimeData().currentProcess->GetEquippedRightHand() == form)
+						a_mergewith[Right] = form;
+					else
+						a_mergewith[Left] = form;
+				} else {
+					a_mergewith.push_back(form);
+				}
+				manager->UnequipObject(actor, form);
+			}
+			std::vector<RE::FormID> ids{};
+			ids.reserve(a_mergewith.size());
+			for (auto&& it : a_mergewith)
+				ids.push_back(it ? it->formID : 0);
+			logger::info("Stripping, Policy: [{:X}, {}], Stripped Equipment: [{}]", weapon, slots, [&] {
+				if (ids.empty()) {
+					return std::string("");
+				}
+				return std::accumulate(std::next(ids.begin()), ids.end(), std::format("{:X}", ids[0]), [](std::string a, auto b) {
+					return std::move(a) + ", " + std::format("{:X}", b);
+				});
+			}());
+			actor->Update3DModel();
+			return a_mergewith;
+		}
 
         void UpdateEnjoyment(ALIASARGS, float a_enjoyment)
         {
