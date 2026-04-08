@@ -456,11 +456,17 @@ namespace Papyrus::ThreadModel
         return instance->ReplaceCenterRef(a_centeron);
     }
 
-    void UpdatePlacement(QUESTARGS, RE::Actor* a_position)
-    {
-        GET_INSTANCE();
-        instance->UpdatePlacement(a_position);
-    }
+	bool SetNextPermutation(QUESTARGS, RE::Actor* a_position)
+	{
+		GET_INSTANCE(false);
+		return instance->SetNextPermutation(a_position);
+	}
+
+	void UpdatePlacement(QUESTARGS, RE::Actor* a_position)
+	{
+		GET_INSTANCE();
+		instance->UpdatePlacement(a_position);
+	}
 
     bool GetIsCompatiblecenter(QUESTARGS, RE::BSFixedString a_sceneid, RE::TESObjectREFR* a_center)
     {
