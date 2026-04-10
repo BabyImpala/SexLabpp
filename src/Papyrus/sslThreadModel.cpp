@@ -744,4 +744,10 @@ namespace Papyrus::ThreadModel
         instance->UpdateTimer(a_time);
     }
 
+	void OpenSLToolsMenu(QUESTARGS)
+	{
+		GET_INSTANCE();
+		return instance->OpenSLToolsMenu();
+	}
+
 }  // namespace Papyrus::ThreadModel
