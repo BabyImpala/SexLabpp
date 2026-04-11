@@ -335,38 +335,35 @@ namespace Papyrus::ThreadModel
         return a_oldcontext;
     }
 
-    void CreateInstance(QUESTARGS,
-        std::vector<RE::Actor*> a_submissives,
-        std::vector<RE::BSFixedString> a_scenesPrimary,
-        std::vector<RE::BSFixedString> a_scenesLeadIn,
-        std::vector<RE::BSFixedString> a_scenesCustom,
-        int a_furniturepref)
-    {
-        const auto library = Registry::Library::GetSingleton();
-        const auto toVector = [&](const auto& a_list) {
-            return std::ranges::fold_left(a_list, std::vector<const Registry::Scene*>{}, [&](auto&& acc, const auto& it) {
-                const auto scene = library->GetSceneById(it);
-                if (!scene) {
-                    const auto err = std::format("Invalid scene id {}", it);
-                    a_vm->TraceStack(err.c_str(), a_stackID);
-                    return acc;
-                }
-                return (acc.push_back(scene), acc);
-            });
-        };
-        Thread::Instance::FurniturePreference preference{ a_furniturepref };
-        Thread::Instance::SceneMapping scenes{
-            toVector(a_scenesPrimary),
-            toVector(a_scenesLeadIn),
-            toVector(a_scenesCustom)
-        };
-        std::thread([=]() {
-            bool result = Thread::Instance::CreateInstance(a_qst, a_submissives, scenes, preference);
-            auto handle = Script::GetScriptObject(a_qst, "sslThreadModel");
-            Script::CallbackPtr callbackPtr{};
-            Script::DispatchMethodCall(handle, "ContinueSetup", callbackPtr, std::move(result));
-        }).detach();
-    }
+	void CreateInstance(QUESTARGS,
+	  std::vector<RE::Actor*> a_submissives,
+	  std::vector<RE::BSFixedString> a_scenesPrimary,
+	  std::vector<RE::BSFixedString> a_scenesLeadIn,
+	  std::vector<RE::BSFixedString> a_scenesCustom,
+	  int a_furniturepref)
+	{
+		const auto library = Registry::Library::GetSingleton();
+		const auto toVector = [&](const auto& a_list) {
+			return std::ranges::fold_left(a_list, std::vector<const Registry::Scene*>{}, [&](auto&& acc, const auto& it) {
+				const auto scene = library->GetSceneById(it);
+				if (!scene) {
+					const auto err = std::format("Invalid scene id {}", it);
+					a_vm->TraceStack(err.c_str(), a_stackID);
+					return acc;
+				}
+				return (acc.push_back(scene), acc);
+			});
+		};
+		Thread::Instance::FurniturePreference preference{ a_furniturepref };
+		Thread::Instance::SceneMapping scenes{
+			toVector(a_scenesPrimary),
+			toVector(a_scenesLeadIn),
+			toVector(a_scenesCustom)
+		};
+		std::thread([=]() {
+			Thread::Instance::CreateInstance(a_qst, a_submissives, scenes, preference);
+		}).detach();
+	}
 
     void DestroyInstance(RE::TESQuest* a_qst)
     {
