@@ -105,74 +105,77 @@ namespace Papyrus::SexLabUtil
         return "";
     }
 
-	bool IsGodModeEnabled(RE::StaticFunctionTag*)
-	{
-		const auto player = RE::PlayerCharacter::GetSingleton();
-		return player->IsGodMode();
-	}
-	
-	std::vector<RE::BSFixedString> ShuffleStringArray(RE::StaticFunctionTag*, std::vector<RE::BSFixedString> arr, RE::BSFixedString asFirst, int aiMaxLen)
-	{
-		if (arr.empty()) return arr;
-		bool bFirstSet = false;
-		if (!asFirst.empty()) {
-			for (int i = 0; i < static_cast<int>(arr.size()); i++) {
-				if (arr[i] == asFirst) {
-					std::swap(arr[0], arr[i]);
-					bFirstSet = true;
-					break;
-				}
-			}
-		}
-		const int total = static_cast<int>(arr.size());
-		int pickLen = aiMaxLen;
-		if (pickLen < 1) pickLen = 1;
-		if (pickLen > total) pickLen = total;
-		thread_local std::mt19937 rng{ std::random_device{}() };
-		const int shuffleStart = bFirstSet ? 1 : 0;
-		for (int j = shuffleStart; j < pickLen; j++) {
-			std::uniform_int_distribution<int> dist(j, total - 1);
-			int k = dist(rng);
-			std::swap(arr[j], arr[k]);
-		}
-		arr.resize(pickLen);
-		return arr;
-	}
+    bool IsGodModeEnabled(RE::StaticFunctionTag*)
+    {
+        const auto player = RE::PlayerCharacter::GetSingleton();
+        return player->IsGodMode();
+    }
 
-	static constexpr std::array<std::string_view, 21> HUD_ELEMENTS = {
-		"HUD Menu", "LootMenu", "TrueHUD", "BTPS Menu", "BTPS Ovelay Menu", "oxygenMeter2", "CastingBar", "MiniMapMenu", 
-		"Floating Damage V2", "Durability Menu", "KNNWidgetMeter", "KNNWidgetMeterOp", "lvlWidget", "goldWidget",
-		"gametimeWidget", "shoutWidget", "resistWidget", "playtimeWidget", "weightWidget", "equipWidget_STB", "STBActiveEffects"
-	};
+    std::vector<RE::BSFixedString> ShuffleStringArray(RE::StaticFunctionTag*, std::vector<RE::BSFixedString> arr, RE::BSFixedString asFirst, int aiMaxLen)
+    {
+        if (arr.empty())
+            return arr;
+        bool bFirstSet = false;
+        if (!asFirst.empty()) {
+            for (int i = 0; i < static_cast<int>(arr.size()); i++) {
+                if (arr[i] == asFirst) {
+                    std::swap(arr[0], arr[i]);
+                    bFirstSet = true;
+                    break;
+                }
+            }
+        }
+        const int total = static_cast<int>(arr.size());
+        int pickLen = aiMaxLen;
+        if (pickLen < 1)
+            pickLen = 1;
+        if (pickLen > total)
+            pickLen = total;
+        thread_local std::mt19937 rng{ std::random_device{}() };
+        const int shuffleStart = bFirstSet ? 1 : 0;
+        for (int j = shuffleStart; j < pickLen; j++) {
+            std::uniform_int_distribution<int> dist(j, total - 1);
+            int k = dist(rng);
+            std::swap(arr[j], arr[k]);
+        }
+        arr.resize(pickLen);
+        return arr;
+    }
 
-	void HideElementsGameHUD(RE::StaticFunctionTag*, bool a_hide)
-	{
-		SKSE::GetTaskInterface()->AddUITask([a_hide]() {
-			RE::GFxValue alphaValue{ a_hide ? 0.0 : 100.0 };
-			auto ui = RE::UI::GetSingleton();
-			for (const auto& name : HUD_ELEMENTS) {
-				if (auto uiMovie = ui->GetMovieView(name)) {
-					uiMovie->SetVariable("_root._alpha", alphaValue);
-				}
-			}
-		});
-	}
+    static constexpr std::array<std::string_view, 21> HUD_ELEMENTS = {
+        "HUD Menu", "LootMenu", "TrueHUD", "BTPS Menu", "BTPS Ovelay Menu", "oxygenMeter2", "CastingBar", "MiniMapMenu",
+        "Floating Damage V2", "Durability Menu", "KNNWidgetMeter", "KNNWidgetMeterOp", "lvlWidget", "goldWidget",
+        "gametimeWidget", "shoutWidget", "resistWidget", "playtimeWidget", "weightWidget", "equipWidget_STB", "STBActiveEffects"
+    };
 
-	inline bool Register(VM* a_vm)
-	{
-		REGISTERFUNC(HasKeywordSub, "SexLabUtil", true);
-		REGISTERFUNC(RemoveSubString, "SexLabUtil", true);
-		REGISTERFUNC(PrintConsole, "SexLabUtil", true);
-		REGISTERFUNC(IntMinMaxIndex, "SexLabUtil", true);
-		REGISTERFUNC(IntMinMaxValue, "SexLabUtil", true);
-		REGISTERFUNC(FloatMinMaxIndex, "SexLabUtil", true);
-		REGISTERFUNC(FloatMinMaxValue, "SexLabUtil", true);
-		REGISTERFUNC(MakeActorArray, "SexLabUtil", true);
-		REGISTERFUNC(GetCurrentGameRealTime, "SexLabUtil", true);
-		REGISTERFUNC(GetTranslation, "SexLabUtil", true);
-		REGISTERFUNC(IsGodModeEnabled, "SexLabUtil", true);
-		REGISTERFUNC(ShuffleStringArray, "SexLabUtil", true);
-		REGISTERFUNC(HideElementsGameHUD, "SexLabUtil", true);
+    void HideElementsGameHUD(RE::StaticFunctionTag*, bool a_hide)
+    {
+        SKSE::GetTaskInterface()->AddUITask([a_hide]() {
+            RE::GFxValue alphaValue{ a_hide ? 0.0 : 100.0 };
+            auto ui = RE::UI::GetSingleton();
+            for (const auto& name : HUD_ELEMENTS) {
+                if (auto uiMovie = ui->GetMovieView(name)) {
+                    uiMovie->SetVariable("_root._alpha", alphaValue);
+                }
+            }
+        });
+    }
+
+    inline bool Register(VM* a_vm)
+    {
+        REGISTERFUNC(HasKeywordSub, "SexLabUtil", true);
+        REGISTERFUNC(RemoveSubString, "SexLabUtil", true);
+        REGISTERFUNC(PrintConsole, "SexLabUtil", true);
+        REGISTERFUNC(IntMinMaxIndex, "SexLabUtil", true);
+        REGISTERFUNC(IntMinMaxValue, "SexLabUtil", true);
+        REGISTERFUNC(FloatMinMaxIndex, "SexLabUtil", true);
+        REGISTERFUNC(FloatMinMaxValue, "SexLabUtil", true);
+        REGISTERFUNC(MakeActorArray, "SexLabUtil", true);
+        REGISTERFUNC(GetCurrentGameRealTime, "SexLabUtil", true);
+        REGISTERFUNC(GetTranslation, "SexLabUtil", true);
+        REGISTERFUNC(IsGodModeEnabled, "SexLabUtil", true);
+        REGISTERFUNC(ShuffleStringArray, "SexLabUtil", true);
+        REGISTERFUNC(HideElementsGameHUD, "SexLabUtil", true);
 
         return true;
     }

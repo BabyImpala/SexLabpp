@@ -10,22 +10,22 @@ struct Settings
     static void Initialize();
     static void Save();
 
-	// --- Key Codes
-	enum class KeyType
-	{
-		None,
-		Up,
-		Down,
-		Left,
-		Right,
-		Select,
-		End,
-		Extra2,
-		Modes,
-		Reset,
-	};
-	static KeyType GetKeyType(uint32_t a_keyCode);
-	static uint32_t GetKeyCode(KeyType a_keyType);
+    // --- Key Codes
+    enum class KeyType
+    {
+        None,
+        Up,
+        Down,
+        Left,
+        Right,
+        Select,
+        End,
+        Extra2,
+        Modes,
+        Reset,
+    };
+    static KeyType GetKeyType(uint32_t a_keyCode);
+    static uint32_t GetKeyCode(KeyType a_keyType);
 
     // --- MCM
     enum class FurnitureSlection

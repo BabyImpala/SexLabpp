@@ -45,40 +45,40 @@ namespace Thread::Interface
         using Type = RE::UI_MESSAGE_TYPE;
         using Result = RE::UI_MESSAGE_RESULTS;
 
-		const auto input = RE::BSInputDeviceManager::GetSingleton();
-		const auto controls = RE::ControlMap::GetSingleton();
-		switch (*a_message.type) {
-		case Type::kShow:
-			logger::info("SceneMenu opened.");
-			assert(threadInstance);
-			UpdatePositions();
-			UpdateActiveScene();
-			input->AddEventSink<RE::InputEvent*>(this);
-			// controls->ToggleControls(RE::ControlMap::UEFlag::kMovement, false, false);
-			controls->ToggleControls(RE::ControlMap::UEFlag::kActivate, false, false);
-			if (Settings::bHideHUD) {
-				RE::UIMessageQueue::GetSingleton()->AddMessage(RE::HUDMenu::MENU_NAME, RE::UI_MESSAGE_TYPE::kHide, nullptr);
-			}
-			return Result::kHandled;
-		case Type::kForceHide:
-		case Type::kHide:
-			logger::info("SceneMenu closed.");
-			RE::UIMessageQueue::GetSingleton()->AddMessage(RE::HUDMenu::MENU_NAME, RE::UI_MESSAGE_TYPE::kShow, nullptr);
-			// controls->ToggleControls(RE::ControlMap::UEFlag::kMovement, true, false);
-			controls->ToggleControls(RE::ControlMap::UEFlag::kActivate, true, false);
-			controls->AllowTextInput(false);
-			input->RemoveEventSink(this);
-			threadInstance = nullptr;
-			return Result::kHandled;
-		case Type::kUserEvent:
-		case Type::kScaleformEvent:
-			if (RE::ControlMap::GetSingleton()->GetRuntimeData().textEntryCount <= 0)
-				return Result::kPassOn;
-			__fallthrough;
-		default:
-			return RE::IMenu::ProcessMessage(a_message);
-		}
-	}
+        const auto input = RE::BSInputDeviceManager::GetSingleton();
+        const auto controls = RE::ControlMap::GetSingleton();
+        switch (*a_message.type) {
+        case Type::kShow:
+            logger::info("SceneMenu opened.");
+            assert(threadInstance);
+            UpdatePositions();
+            UpdateActiveScene();
+            input->AddEventSink<RE::InputEvent*>(this);
+            // controls->ToggleControls(RE::ControlMap::UEFlag::kMovement, false, false);
+            controls->ToggleControls(RE::ControlMap::UEFlag::kActivate, false, false);
+            if (Settings::bHideHUD) {
+                RE::UIMessageQueue::GetSingleton()->AddMessage(RE::HUDMenu::MENU_NAME, RE::UI_MESSAGE_TYPE::kHide, nullptr);
+            }
+            return Result::kHandled;
+        case Type::kForceHide:
+        case Type::kHide:
+            logger::info("SceneMenu closed.");
+            RE::UIMessageQueue::GetSingleton()->AddMessage(RE::HUDMenu::MENU_NAME, RE::UI_MESSAGE_TYPE::kShow, nullptr);
+            // controls->ToggleControls(RE::ControlMap::UEFlag::kMovement, true, false);
+            controls->ToggleControls(RE::ControlMap::UEFlag::kActivate, true, false);
+            controls->AllowTextInput(false);
+            input->RemoveEventSink(this);
+            threadInstance = nullptr;
+            return Result::kHandled;
+        case Type::kUserEvent:
+        case Type::kScaleformEvent:
+            if (RE::ControlMap::GetSingleton()->GetRuntimeData().textEntryCount <= 0)
+                return Result::kPassOn;
+            __fallthrough;
+        default:
+            return RE::IMenu::ProcessMessage(a_message);
+        }
+    }
 
     void SceneMenu::UpdateSlider(RE::FormID a_actorId, float a_enjoyment)
     {

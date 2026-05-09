@@ -2,7 +2,7 @@
 
 namespace Offsets
 {
-    static constexpr auto NotOnGameThread=REL::VariantID(38079, 39033, 0x6488a0);
+    static constexpr auto NotOnGameThread = REL::VariantID(38079, 39033, 0x6488a0);
 
     // SE: 2F4C910
     // AE: ???

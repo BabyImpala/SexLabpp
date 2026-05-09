@@ -21,7 +21,7 @@ Raycast::RayResult Raycast::CastRay(glm::vec4 start, glm::vec4 end, float traceH
     if (((bool (*)(void))Offsets::NotOnGameThread.address())()) {
         logger::error("CastRay was called on wrong thread, this should never happen and can cause random CTD/freezes");
     }
-	RayResult res;
+    RayResult res;
 
     const auto ply = RE::PlayerCharacter::GetSingleton();
     const auto cam = RE::PlayerCamera::GetSingleton()->GetRuntimeData();
@@ -71,11 +71,11 @@ Raycast::RayResult Raycast::hkpCastRay(const glm::vec4& start, const glm::vec4& 
 
 Raycast::RayResult Raycast::hkpCastRay(const glm::vec4& start, const glm::vec4& end, const std::vector<RE::NiAVObject*>& a_filter) noexcept
 {
-	if (((bool (*)(void))Offsets::NotOnGameThread.address())()) {
+    if (((bool (*)(void))Offsets::NotOnGameThread.address())()) {
         logger::error("hkpCastRay was called on wrong thread, this should never happen and can cause random CTD/freezes");
     }
-	const auto hkpScale = RE::bhkWorld::GetWorldScale();
-	const auto dif = end - start;
+    const auto hkpScale = RE::bhkWorld::GetWorldScale();
+    const auto dif = end - start;
 
     SkyrimSE::bhkRayCastInfo info;
     info.start = start * hkpScale;

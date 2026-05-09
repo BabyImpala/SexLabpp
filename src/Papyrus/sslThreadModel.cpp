@@ -65,36 +65,36 @@ namespace Papyrus::ThreadModel
             position->expression = Registry::Library::GetSingleton()->GetExpressionById(a_expression);
         }
 
-		void StartSetActorInterrupts(ALIASARGS)
-		{
-			const auto actor = a_alias->GetActorReference();
-			if (!actor) {
-				a_vm->TraceStack("Reference is empty or not an actor", a_stackID);
-				return;
-			}
-			if (actor->IsPlayerRef()) {
-				const auto ui = RE::UI::GetSingleton();
-				const auto interfacestr = RE::InterfaceStrings::GetSingleton();
-				if (ui->IsMenuOpen(interfacestr->dialogueMenu)) {
-					if (auto view = ui->GetMovieView(interfacestr->dialogueMenu)) {
-						RE::GFxValue arg{ interfacestr->dialogueMenu };
-						view->InvokeNoReturn("_global.skse.CloseMenu", &arg, 1);
-					}
-				}
-				actor->AsActorState()->actorState1.lifeState = RE::ACTOR_LIFE_STATE::kAlive;
-			} else {
-				switch (actor->AsActorState()->actorState1.lifeState) {
-				case RE::ACTOR_LIFE_STATE::kUnconcious:
-					actor->AsActorValueOwner()->SetActorValue(RE::ActorValue::kVariable05, STATUS05::Unconscious);
-					break;
-				case RE::ACTOR_LIFE_STATE::kDying:
-				case RE::ACTOR_LIFE_STATE::kDead:
-					actor->AsActorValueOwner()->SetActorValue(RE::ActorValue::kVariable05, STATUS05::Dying);
-					actor->Resurrect(false, true);
-					break;
-				}
-				actor->AsActorState()->actorState1.lifeState = RE::ACTOR_LIFE_STATE::kRestrained;
-			}
+        void StartSetActorInterrupts(ALIASARGS)
+        {
+            const auto actor = a_alias->GetActorReference();
+            if (!actor) {
+                a_vm->TraceStack("Reference is empty or not an actor", a_stackID);
+                return;
+            }
+            if (actor->IsPlayerRef()) {
+                const auto ui = RE::UI::GetSingleton();
+                const auto interfacestr = RE::InterfaceStrings::GetSingleton();
+                if (ui->IsMenuOpen(interfacestr->dialogueMenu)) {
+                    if (auto view = ui->GetMovieView(interfacestr->dialogueMenu)) {
+                        RE::GFxValue arg{ interfacestr->dialogueMenu };
+                        view->InvokeNoReturn("_global.skse.CloseMenu", &arg, 1);
+                    }
+                }
+                actor->AsActorState()->actorState1.lifeState = RE::ACTOR_LIFE_STATE::kAlive;
+            } else {
+                switch (actor->AsActorState()->actorState1.lifeState) {
+                case RE::ACTOR_LIFE_STATE::kUnconcious:
+                    actor->AsActorValueOwner()->SetActorValue(RE::ActorValue::kVariable05, STATUS05::Unconscious);
+                    break;
+                case RE::ACTOR_LIFE_STATE::kDying:
+                case RE::ACTOR_LIFE_STATE::kDead:
+                    actor->AsActorValueOwner()->SetActorValue(RE::ActorValue::kVariable05, STATUS05::Dying);
+                    actor->Resurrect(false, true);
+                    break;
+                }
+                actor->AsActorState()->actorState1.lifeState = RE::ACTOR_LIFE_STATE::kRestrained;
+            }
 
             if (actor->AsActorState()->IsWeaponDrawn()) {
                 const auto factory = RE::IFormFactory::GetConcreteFormFactoryByType<RE::Script>();
@@ -109,58 +109,58 @@ namespace Papyrus::ThreadModel
                 }
             }
 
-			actor->StopCombat();
-			actor->EndDialogue();
-			actor->InterruptCast(false);
-			actor->StopInteractingQuick(true);
+            actor->StopCombat();
+            actor->EndDialogue();
+            actor->InterruptCast(false);
+            actor->StopInteractingQuick(true);
 
-			if (const auto process = actor->GetActorRuntimeData().currentProcess) {
-				process->ClearMuzzleFlashes();
-			}
-		}
+            if (const auto process = actor->GetActorRuntimeData().currentProcess) {
+                process->ClearMuzzleFlashes();
+            }
+        }
 
-		void EndSetActorInterrupts(ALIASARGS)
-		{
-			const auto actor = a_alias->GetActorReference();
-			if (!actor) {
-				a_vm->TraceStack("Reference is empty or not an actor", a_stackID);
-				return;
-			}
-			Registry::Scale::GetSingleton()->RemoveScale(actor);
-			switch (static_cast<int32_t>(actor->AsActorValueOwner()->GetActorValue(RE::ActorValue::kVariable05))) {
-			case STATUS05::Unconscious:
-				actor->AsActorState()->actorState1.lifeState = RE::ACTOR_LIFE_STATE::kUnconcious;
-				break;
-			default:
-				actor->AsActorState()->actorState1.lifeState = RE::ACTOR_LIFE_STATE::kAlive;
-				break;
-			}
-			if (!actor->IsPlayerRef()) {
-				actor->AsActorValueOwner()->SetActorValue(RE::ActorValue::kVariable05, 0.0f);
-			}	
-		}
+        void EndSetActorInterrupts(ALIASARGS)
+        {
+            const auto actor = a_alias->GetActorReference();
+            if (!actor) {
+                a_vm->TraceStack("Reference is empty or not an actor", a_stackID);
+                return;
+            }
+            Registry::Scale::GetSingleton()->RemoveScale(actor);
+            switch (static_cast<int32_t>(actor->AsActorValueOwner()->GetActorValue(RE::ActorValue::kVariable05))) {
+            case STATUS05::Unconscious:
+                actor->AsActorState()->actorState1.lifeState = RE::ACTOR_LIFE_STATE::kUnconcious;
+                break;
+            default:
+                actor->AsActorState()->actorState1.lifeState = RE::ACTOR_LIFE_STATE::kAlive;
+                break;
+            }
+            if (!actor->IsPlayerRef()) {
+                actor->AsActorValueOwner()->SetActorValue(RE::ActorValue::kVariable05, 0.0f);
+            }
+        }
 
-		void SetActorCollisions(ALIASARGS, bool a_enable)
-		{
-			const auto actor = a_alias->GetActorReference();
-			if (!actor) {
-				a_vm->TraceStack("Reference is empty or not an actor", a_stackID);
-				return;
-			}
-			const auto handler = Thread::Collision::CollisionHandler::GetSingleton();
-			const auto formID = actor->GetFormID();
-			if (!a_enable) {
-				if (!handler->HasActor(formID)) {
-					handler->AddActor(formID);
-				}
-				// actor->SetCollision(false);
-			} else {
-				if (handler->HasActor(formID)) {
-					handler->RemoveActor(formID);
-				}
-				// actor->SetCollision(true);
-			}
-		}
+        void SetActorCollisions(ALIASARGS, bool a_enable)
+        {
+            const auto actor = a_alias->GetActorReference();
+            if (!actor) {
+                a_vm->TraceStack("Reference is empty or not an actor", a_stackID);
+                return;
+            }
+            const auto handler = Thread::Collision::CollisionHandler::GetSingleton();
+            const auto formID = actor->GetFormID();
+            if (!a_enable) {
+                if (!handler->HasActor(formID)) {
+                    handler->AddActor(formID);
+                }
+                // actor->SetCollision(false);
+            } else {
+                if (handler->HasActor(formID)) {
+                    handler->RemoveActor(formID);
+                }
+                // actor->SetCollision(true);
+            }
+        }
 
         std::vector<RE::TESForm*> StripByData(ALIASARGS, int32_t a_stripdata, std::vector<uint32_t> a_defaults, std::vector<uint32_t> a_overwrite)
         {
@@ -183,99 +183,99 @@ namespace Papyrus::ThreadModel
                 Left = 2,
             };
 
-			if (!a_alias) {
-				a_vm->TraceStack("Cannot call StripByDataEx on a none alias", a_stackID);
-				return a_mergewith;
-			}
-			const auto actor = a_alias->GetActorReference();
-			if (!actor) {
-				a_vm->TraceStack("ReferenceAlias must be filled with an actor reference", a_stackID);
-				return a_mergewith;
-			}
-			if (!actor->IsHumanoid()) {
-				return a_mergewith;
-			}
-			if (a_mergewith.size() < 3) {
-				a_mergewith.resize(3, nullptr);
-			}
-			REX::EnumSet<Strip> stripnum(static_cast<Strip>(a_stripdata));
-			if (stripnum == Strip::None) {
-				logger::info("Using stripping policy: None");
-				return a_mergewith;
-			}
-			uint32_t slots;
-			bool weapon;
-			if (a_overwrite.size() >= 2) {
-				slots = a_overwrite[0];
-				weapon = a_overwrite[1];
-			} else if (stripnum.all(Strip::All)) {
-				slots = static_cast<uint32_t>(-1);
-				weapon = true;
-			} else {
-				if (stripnum.all(Strip::Default) && a_defaults.size() >= 2) {
-					slots = a_defaults[0];
-					weapon = a_defaults[1];
-				} else {
-					slots = 0;
-					weapon = 0;
-				}
-				if (stripnum.all(Strip::Boots)) {
-					slots |= static_cast<uint32_t>(SlotMask::kFeet);
-				}
-				if (stripnum.all(Strip::Gloves)) {
-					slots |= static_cast<uint32_t>(SlotMask::kHands);
-				}
-				if (stripnum.all(Strip::Helmet)) {
-					slots |= static_cast<uint32_t>(SlotMask::kHead);
-				}
-			}
-			const auto stripconfig = UserData::StripData::GetSingleton();
-			const auto manager = RE::ActorEquipManager::GetSingleton();
-			for (const auto& [form, data] : actor->GetInventory()) {
-				if (!data.second->IsWorn()) {
-					continue;
-				}
-				switch (stripconfig->CheckStrip(form)) {
-				case UserData::Strip::NoStrip:
-					continue;
-				case UserData::Strip::Always:
-					break;
-				case UserData::Strip::None:
-					if (form->IsWeapon() && !weapon) {
-						continue;
-					} else if (const auto biped = form->As<RE::BGSBipedObjectForm>()) {
-						const auto biped_slots = static_cast<uint32_t>(biped->GetSlotMask().underlying());
-						if ((biped_slots & slots) == 0) {
-							continue;
-						}
-					}
-					break;
-				}
-				if (form->IsWeapon() && actor->GetActorRuntimeData().currentProcess) {
-					if (actor->GetActorRuntimeData().currentProcess->GetEquippedRightHand() == form)
-						a_mergewith[Right] = form;
-					else
-						a_mergewith[Left] = form;
-				} else {
-					a_mergewith.push_back(form);
-				}
-				manager->UnequipObject(actor, form);
-			}
-			std::vector<RE::FormID> ids{};
-			ids.reserve(a_mergewith.size());
-			for (auto&& it : a_mergewith)
-				ids.push_back(it ? it->formID : 0);
-			logger::info("Stripping, Policy: [{:X}, {}], Stripped Equipment: [{}]", weapon, slots, [&] {
-				if (ids.empty()) {
-					return std::string("");
-				}
-				return std::accumulate(std::next(ids.begin()), ids.end(), std::format("{:X}", ids[0]), [](std::string a, auto b) {
-					return std::move(a) + ", " + std::format("{:X}", b);
-				});
-			}());
-			actor->Update3DModel();
-			return a_mergewith;
-		}
+            if (!a_alias) {
+                a_vm->TraceStack("Cannot call StripByDataEx on a none alias", a_stackID);
+                return a_mergewith;
+            }
+            const auto actor = a_alias->GetActorReference();
+            if (!actor) {
+                a_vm->TraceStack("ReferenceAlias must be filled with an actor reference", a_stackID);
+                return a_mergewith;
+            }
+            if (!actor->IsHumanoid()) {
+                return a_mergewith;
+            }
+            if (a_mergewith.size() < 3) {
+                a_mergewith.resize(3, nullptr);
+            }
+            REX::EnumSet<Strip> stripnum(static_cast<Strip>(a_stripdata));
+            if (stripnum == Strip::None) {
+                logger::info("Using stripping policy: None");
+                return a_mergewith;
+            }
+            uint32_t slots;
+            bool weapon;
+            if (a_overwrite.size() >= 2) {
+                slots = a_overwrite[0];
+                weapon = a_overwrite[1];
+            } else if (stripnum.all(Strip::All)) {
+                slots = static_cast<uint32_t>(-1);
+                weapon = true;
+            } else {
+                if (stripnum.all(Strip::Default) && a_defaults.size() >= 2) {
+                    slots = a_defaults[0];
+                    weapon = a_defaults[1];
+                } else {
+                    slots = 0;
+                    weapon = 0;
+                }
+                if (stripnum.all(Strip::Boots)) {
+                    slots |= static_cast<uint32_t>(SlotMask::kFeet);
+                }
+                if (stripnum.all(Strip::Gloves)) {
+                    slots |= static_cast<uint32_t>(SlotMask::kHands);
+                }
+                if (stripnum.all(Strip::Helmet)) {
+                    slots |= static_cast<uint32_t>(SlotMask::kHead);
+                }
+            }
+            const auto stripconfig = UserData::StripData::GetSingleton();
+            const auto manager = RE::ActorEquipManager::GetSingleton();
+            for (const auto& [form, data] : actor->GetInventory()) {
+                if (!data.second->IsWorn()) {
+                    continue;
+                }
+                switch (stripconfig->CheckStrip(form)) {
+                case UserData::Strip::NoStrip:
+                    continue;
+                case UserData::Strip::Always:
+                    break;
+                case UserData::Strip::None:
+                    if (form->IsWeapon() && !weapon) {
+                        continue;
+                    } else if (const auto biped = form->As<RE::BGSBipedObjectForm>()) {
+                        const auto biped_slots = static_cast<uint32_t>(biped->GetSlotMask().underlying());
+                        if ((biped_slots & slots) == 0) {
+                            continue;
+                        }
+                    }
+                    break;
+                }
+                if (form->IsWeapon() && actor->GetActorRuntimeData().currentProcess) {
+                    if (actor->GetActorRuntimeData().currentProcess->GetEquippedRightHand() == form)
+                        a_mergewith[Right] = form;
+                    else
+                        a_mergewith[Left] = form;
+                } else {
+                    a_mergewith.push_back(form);
+                }
+                manager->UnequipObject(actor, form);
+            }
+            std::vector<RE::FormID> ids{};
+            ids.reserve(a_mergewith.size());
+            for (auto&& it : a_mergewith)
+                ids.push_back(it ? it->formID : 0);
+            logger::info("Stripping, Policy: [{:X}, {}], Stripped Equipment: [{}]", weapon, slots, [&] {
+                if (ids.empty()) {
+                    return std::string("");
+                }
+                return std::accumulate(std::next(ids.begin()), ids.end(), std::format("{:X}", ids[0]), [](std::string a, auto b) {
+                    return std::move(a) + ", " + std::format("{:X}", b);
+                });
+            }());
+            actor->Update3DModel();
+            return a_mergewith;
+        }
 
         void UpdateEnjoyment(ALIASARGS, float a_enjoyment)
         {
@@ -284,19 +284,19 @@ namespace Papyrus::ThreadModel
             instance->SetEnjoyment(a_alias->GetActorReference(), a_enjoyment);
         }
 
-		void EnjBarsUpdateSlider(ALIASARGS, float a_enjoyment, RE::BSFixedString a_interactions)
-		{
-			const auto& a_qst = a_alias->owningQuest;
-			GET_INSTANCE();
-			instance->EnjBarsUpdateSlider(a_alias->GetActorReference(), a_enjoyment, a_interactions);
-		}
+        void EnjBarsUpdateSlider(ALIASARGS, float a_enjoyment, RE::BSFixedString a_interactions)
+        {
+            const auto& a_qst = a_alias->owningQuest;
+            GET_INSTANCE();
+            instance->EnjBarsUpdateSlider(a_alias->GetActorReference(), a_enjoyment, a_interactions);
+        }
 
-		void RegisterRaiseEnjAttempt(ALIASARGS, float a_nextTimeCycle)
-		{
-			const auto& a_qst = a_alias->owningQuest;
-			GET_INSTANCE();
-			instance->RegisterRaiseEnjAttempt(a_alias->GetActorReference(), a_nextTimeCycle);
-		}
+        void RegisterRaiseEnjAttempt(ALIASARGS, float a_nextTimeCycle)
+        {
+            const auto& a_qst = a_alias->owningQuest;
+            GET_INSTANCE();
+            instance->RegisterRaiseEnjAttempt(a_alias->GetActorReference(), a_nextTimeCycle);
+        }
 
 #undef GET_POSITION
     }  // namespace ActorAlias
@@ -349,35 +349,35 @@ namespace Papyrus::ThreadModel
         return a_oldcontext;
     }
 
-	void CreateInstance(QUESTARGS,
-	  std::vector<RE::Actor*> a_submissives,
-	  std::vector<RE::BSFixedString> a_scenesPrimary,
-	  std::vector<RE::BSFixedString> a_scenesLeadIn,
-	  std::vector<RE::BSFixedString> a_scenesCustom,
-	  int a_furniturepref)
-	{
-		const auto library = Registry::Library::GetSingleton();
-		const auto toVector = [&](const auto& a_list) {
-			return std::ranges::fold_left(a_list, std::vector<const Registry::Scene*>{}, [&](auto&& acc, const auto& it) {
-				const auto scene = library->GetSceneById(it);
-				if (!scene) {
-					const auto err = std::format("Invalid scene id {}", it);
-					a_vm->TraceStack(err.c_str(), a_stackID);
-					return acc;
-				}
-				return (acc.push_back(scene), acc);
-			});
-		};
-		Thread::Instance::FurniturePreference preference{ a_furniturepref };
-		Thread::Instance::SceneMapping scenes{
-			toVector(a_scenesPrimary),
-			toVector(a_scenesLeadIn),
-			toVector(a_scenesCustom)
-		};
-		std::thread([=]() {
-			Thread::Instance::CreateInstance(a_qst, a_submissives, scenes, preference);
-		}).detach();
-	}
+    void CreateInstance(QUESTARGS,
+        std::vector<RE::Actor*> a_submissives,
+        std::vector<RE::BSFixedString> a_scenesPrimary,
+        std::vector<RE::BSFixedString> a_scenesLeadIn,
+        std::vector<RE::BSFixedString> a_scenesCustom,
+        int a_furniturepref)
+    {
+        const auto library = Registry::Library::GetSingleton();
+        const auto toVector = [&](const auto& a_list) {
+            return std::ranges::fold_left(a_list, std::vector<const Registry::Scene*>{}, [&](auto&& acc, const auto& it) {
+                const auto scene = library->GetSceneById(it);
+                if (!scene) {
+                    const auto err = std::format("Invalid scene id {}", it);
+                    a_vm->TraceStack(err.c_str(), a_stackID);
+                    return acc;
+                }
+                return (acc.push_back(scene), acc);
+            });
+        };
+        Thread::Instance::FurniturePreference preference{ a_furniturepref };
+        Thread::Instance::SceneMapping scenes{
+            toVector(a_scenesPrimary),
+            toVector(a_scenesLeadIn),
+            toVector(a_scenesCustom)
+        };
+        std::thread([=]() {
+            Thread::Instance::CreateInstance(a_qst, a_submissives, scenes, preference);
+        }).detach();
+    }
 
     void DestroyInstance(RE::TESQuest* a_qst)
     {
@@ -467,17 +467,17 @@ namespace Papyrus::ThreadModel
         return instance->ReplaceCenterRef(a_centeron);
     }
 
-	bool SetNextPermutation(QUESTARGS, RE::Actor* a_position)
-	{
-		GET_INSTANCE(false);
-		return instance->SetNextPermutation(a_position);
-	}
+    bool SetNextPermutation(QUESTARGS, RE::Actor* a_position)
+    {
+        GET_INSTANCE(false);
+        return instance->SetNextPermutation(a_position);
+    }
 
-	void UpdatePlacement(QUESTARGS, RE::Actor* a_position)
-	{
-		GET_INSTANCE();
-		instance->UpdatePlacement(a_position);
-	}
+    void UpdatePlacement(QUESTARGS, RE::Actor* a_position)
+    {
+        GET_INSTANCE();
+        instance->UpdatePlacement(a_position);
+    }
 
     bool GetIsCompatiblecenter(QUESTARGS, RE::BSFixedString a_sceneid, RE::TESObjectREFR* a_center)
     {
@@ -807,65 +807,47 @@ namespace Papyrus::ThreadModel
 
     bool IsCollisionRegistered(QUESTARGS)
     {
-        return Settings::bUseLegacyNiType
-            ? IsCollisionRegisteredLegacy(a_vm, a_stackID, a_qst)
-            : IsCollisionRegisteredML(a_vm, a_stackID, a_qst);
+        return Settings::bUseLegacyNiType ? IsCollisionRegisteredLegacy(a_vm, a_stackID, a_qst) : IsCollisionRegisteredML(a_vm, a_stackID, a_qst);
     }
 
     void UnregisterCollision(QUESTARGS)
     {
-        Settings::bUseLegacyNiType
-            ? UnregisterCollisionLegacy(a_vm, a_stackID, a_qst)
-            : UnregisterCollisionML(a_vm, a_stackID, a_qst);
+        Settings::bUseLegacyNiType ? UnregisterCollisionLegacy(a_vm, a_stackID, a_qst) : UnregisterCollisionML(a_vm, a_stackID, a_qst);
     }
 
     std::vector<int> GetCollisionActions(QUESTARGS, RE::Actor* a_position, RE::Actor* a_partner)
     {
-        return Settings::bUseLegacyNiType
-            ? GetCollisionActionsLegacy(a_vm, a_stackID, a_qst, a_position, a_partner)
-            : GetCollisionActionsML(a_vm, a_stackID, a_qst, a_position, a_partner);
+        return Settings::bUseLegacyNiType ? GetCollisionActionsLegacy(a_vm, a_stackID, a_qst, a_position, a_partner) : GetCollisionActionsML(a_vm, a_stackID, a_qst, a_position, a_partner);
     }
 
     bool HasCollisionAction(QUESTARGS, int a_type, RE::Actor* a_position, RE::Actor* a_partner)
     {
-        return Settings::bUseLegacyNiType
-            ? HasCollisionActionLegacy(a_vm, a_stackID, a_qst, a_type, a_position, a_partner)
-            : HasCollisionActionML(a_vm, a_stackID, a_qst, a_type, a_position, a_partner);
+        return Settings::bUseLegacyNiType ? HasCollisionActionLegacy(a_vm, a_stackID, a_qst, a_type, a_position, a_partner) : HasCollisionActionML(a_vm, a_stackID, a_qst, a_type, a_position, a_partner);
     }
 
     RE::Actor* GetPartnerByAction(QUESTARGS, RE::Actor* a_position, int a_type)
     {
-        return Settings::bUseLegacyNiType
-            ? GetPartnerByActionLegacy(a_vm, a_stackID, a_qst, a_position, a_type)
-            : GetPartnerByActionML(a_vm, a_stackID, a_qst, a_position, a_type);
+        return Settings::bUseLegacyNiType ? GetPartnerByActionLegacy(a_vm, a_stackID, a_qst, a_position, a_type) : GetPartnerByActionML(a_vm, a_stackID, a_qst, a_position, a_type);
     }
 
     std::vector<RE::Actor*> GetPartnersByAction(QUESTARGS, RE::Actor* a_position, int a_type)
     {
-        return Settings::bUseLegacyNiType
-            ? GetPartnersByActionLegacy(a_vm, a_stackID, a_qst, a_position, a_type)
-            : GetPartnersByActionML(a_vm, a_stackID, a_qst, a_position, a_type);
+        return Settings::bUseLegacyNiType ? GetPartnersByActionLegacy(a_vm, a_stackID, a_qst, a_position, a_type) : GetPartnersByActionML(a_vm, a_stackID, a_qst, a_position, a_type);
     }
 
     RE::Actor* GetPartnerByTypeRev(QUESTARGS, RE::Actor* a_position, int a_type)
     {
-        return Settings::bUseLegacyNiType
-            ? GetPartnerByTypeRevLegacy(a_vm, a_stackID, a_qst, a_position, a_type)
-            : GetPartnerByTypeRevML(a_vm, a_stackID, a_qst, a_position, a_type);
+        return Settings::bUseLegacyNiType ? GetPartnerByTypeRevLegacy(a_vm, a_stackID, a_qst, a_position, a_type) : GetPartnerByTypeRevML(a_vm, a_stackID, a_qst, a_position, a_type);
     }
 
     std::vector<RE::Actor*> GetPartnersByTypeRev(QUESTARGS, RE::Actor* a_position, int a_type)
     {
-        return Settings::bUseLegacyNiType
-            ? GetPartnersByTypeRevLegacy(a_vm, a_stackID, a_qst, a_position, a_type)
-            : GetPartnersByTypeRevML(a_vm, a_stackID, a_qst, a_position, a_type);
+        return Settings::bUseLegacyNiType ? GetPartnersByTypeRevLegacy(a_vm, a_stackID, a_qst, a_position, a_type) : GetPartnersByTypeRevML(a_vm, a_stackID, a_qst, a_position, a_type);
     }
 
     float GetActionVelocity(QUESTARGS, RE::Actor* a_position, RE::Actor* a_partner, int a_type)
     {
-        return Settings::bUseLegacyNiType
-            ? GetActionVelocityLegacy(a_vm, a_stackID, a_qst, a_position, a_partner, a_type)
-            : GetActionVelocityML(a_vm, a_stackID, a_qst, a_position, a_partner, a_type);
+        return Settings::bUseLegacyNiType ? GetActionVelocityLegacy(a_vm, a_stackID, a_qst, a_position, a_partner, a_type) : GetActionVelocityML(a_vm, a_stackID, a_qst, a_position, a_partner, a_type);
     }
 
     //
@@ -1018,34 +1000,34 @@ namespace Papyrus::ThreadModel
         instance->UpdateTimer(a_time);
     }
 
-	void OpenSLToolsMenu(QUESTARGS)
-	{
-		GET_INSTANCE();
-		return instance->OpenSLToolsMenu();
-	}
+    void OpenSLToolsMenu(QUESTARGS)
+    {
+        GET_INSTANCE();
+        return instance->OpenSLToolsMenu();
+    }
 
-	void EnjBarsInit(QUESTARGS, const std::vector<RE::Actor*> a_positions)
-	{
-		GET_INSTANCE();
-		return instance->EnjBarsInit(a_positions);
-	}
+    void EnjBarsInit(QUESTARGS, const std::vector<RE::Actor*> a_positions)
+    {
+        GET_INSTANCE();
+        return instance->EnjBarsInit(a_positions);
+    }
 
-	void EnjBarsClose(QUESTARGS)
-	{
-		GET_INSTANCE();
-		return instance->EnjBarsClose();
-	}
+    void EnjBarsClose(QUESTARGS)
+    {
+        GET_INSTANCE();
+        return instance->EnjBarsClose();
+    }
 
-	void EnjBarsToggle(QUESTARGS)
-	{
-		GET_INSTANCE();
-		return instance->EnjBarsToggle();
-	}
+    void EnjBarsToggle(QUESTARGS)
+    {
+        GET_INSTANCE();
+        return instance->EnjBarsToggle();
+    }
 
-	void EnjBarsChangeHighlightedPartner(QUESTARGS, RE::Actor* a_actor)
-	{
-		GET_INSTANCE();
-		return instance->EnjBarsChangeHighlightedPartner(a_actor);
-	}
+    void EnjBarsChangeHighlightedPartner(QUESTARGS, RE::Actor* a_actor)
+    {
+        GET_INSTANCE();
+        return instance->EnjBarsChangeHighlightedPartner(a_actor);
+    }
 
 }  // namespace Papyrus::ThreadModel
