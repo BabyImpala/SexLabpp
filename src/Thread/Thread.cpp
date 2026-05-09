@@ -103,20 +103,24 @@ namespace Thread
 		Interface::SceneMenu::UpdateTimer(a_timer);
 	}
 
-	void Instance::AdvanceScene(const Registry::Stage* a_nextStage)
-	{
-		assert(activeScene && activeScene->GetStageNodeType(a_nextStage) != Registry::Scene::NodeType::None);
-		if (niInstance == nullptr) {
-			niInstance = NiNode::NiUpdate::Register(linkedQst->formID, *activeAssignment, activeScene);
-		}
-		activeStage = a_nextStage;
-		const auto scaling = Registry::Scale::GetSingleton();
-		for (size_t i = 0; i < activeAssignment->size(); i++) {
-			const auto& actor = activeAssignment->at(i);
-			const auto& position = a_nextStage->positions[i];
-			const auto& coordinate = position.offset.ApplyReturn(baseCoordinates);
-			const auto& positionInfo = activeScene->GetNthPosition(i);
-			const auto& animationEvent = activeScene->GetNthAnimationEvent(a_nextStage, i);
+    void Instance::AdvanceScene(const Registry::Stage* a_nextStage)
+    {
+        assert(activeScene && activeScene->GetStageNodeType(a_nextStage) != Registry::Scene::NodeType::None);
+        if (Settings::bUseLegacyNiType) {
+            if (niInstanceLegacy == nullptr) {
+                niInstanceLegacy = LegacyNiNode::NiUpdate::Register(linkedQst->formID, *activeAssignment, activeScene);
+            }
+        } else if (niInstance == nullptr) {
+            niInstance = NiNode::NiUpdate::Register(linkedQst->formID, *activeAssignment, activeScene);
+        }
+        activeStage = a_nextStage;
+        const auto scaling = Registry::Scale::GetSingleton();
+        for (size_t i = 0; i < activeAssignment->size(); i++) {
+            const auto& actor = activeAssignment->at(i);
+            const auto& position = a_nextStage->positions[i];
+            const auto& coordinate = position.offset.ApplyReturn(baseCoordinates);
+            const auto& positionInfo = activeScene->GetNthPosition(i);
+            const auto& animationEvent = activeScene->GetNthAnimationEvent(a_nextStage, i);
 
 			scaling->SetScale(actor, positionInfo->data.GetRace(), positionInfo->data.GetScale());
 			actor->SetAngle({ 0.0f, 0.0f, coordinate.rotation });

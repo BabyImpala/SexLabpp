@@ -8,6 +8,7 @@
 #include "Thread/Interface/FurnSelectionMenu.h"
 #include "Thread/Interface/EnjoymentBars.h"
 #include "Thread/NiNode/NiUpdate.h"
+#include "Thread/NiNode/Legacy/LegacyNiUpdate.h"
 #include "UserData/StripData.h"
 
 // class EventHandler :
@@ -54,7 +55,11 @@ static void SKSEMessageHandler(SKSE::MessagingInterface::Message* message)
         }
         SKSE::AllocTrampoline(static_cast<size_t>(1) << 5);
         Thread::Collision::CollisionHandler::Install();
-        Thread::NiNode::NiUpdate::Install();
+        if (Settings::bUseLegacyNiType) {
+            Thread::LegacyNiNode::NiUpdate::Install();
+        } else {
+            Thread::NiNode::NiUpdate::Install();
+        }
         Registry::Library::GetSingleton()->Initialize();
         Registry::Statistics::StatisticsData::GetSingleton()->Register();
         UserData::StripData::GetSingleton()->Load();

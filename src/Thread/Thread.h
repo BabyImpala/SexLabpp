@@ -2,6 +2,7 @@
 
 #include "Registry/Library.h"
 #include "Thread/NiNode/NiUpdate.h"
+#include "Thread/NiNode/Legacy/LegacyNiUpdate.h"
 
 namespace Thread
 {
@@ -72,10 +73,14 @@ namespace Thread
 		NiNode::NiInstance* GetNiInstance() { return niInstance.get(); }
 		void UnregisterNiInstance() { (NiNode::NiUpdate::Unregister(linkedQst->GetFormID()), niInstance = nullptr); }
 
-		bool ControlsMenu();
-		bool TryOpenMenu();
-		bool TryCloseMenu();
-		void UpdateTimer(float a_timer);
+        bool HasNiInstanceLegacy() const { return niInstanceLegacy != nullptr; }
+        LegacyNiNode::NiInstance* GetNiInstanceLegacy() { return niInstanceLegacy.get(); }
+        void UnregisterNiInstanceLegacy() { (LegacyNiNode::NiUpdate::Unregister(linkedQst->GetFormID()), niInstanceLegacy = nullptr); }
+
+        bool ControlsMenu();
+        bool TryOpenMenu();
+        bool TryCloseMenu();
+        void UpdateTimer(float a_timer);
 
 		void AdvanceScene(const Registry::Stage* a_nextStage);
 		bool SetActiveScene(const Registry::Scene* a_scene);
@@ -118,9 +123,10 @@ namespace Thread
 		void EnjBarsUpdateSlider(RE::Actor* a_position, float a_enjoyment, RE::BSFixedString a_interactions);
 		void RegisterRaiseEnjAttempt(RE::Actor* a_position, float a_nextTimeCycle);
 
-	private:
-		RE::TESQuest* linkedQst;
-		std::shared_ptr<NiNode::NiInstance> niInstance{ nullptr };
+    private:
+        RE::TESQuest* linkedQst;
+        std::shared_ptr<NiNode::NiInstance> niInstance{ nullptr };
+        std::shared_ptr<LegacyNiNode::NiInstance> niInstanceLegacy { nullptr };
 
 		Center center;
 		std::vector<Position> positions;
