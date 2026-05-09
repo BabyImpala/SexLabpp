@@ -243,22 +243,78 @@ namespace Thread
         }
     }
 
-    Instance::FurnitureMapping::value_type Instance::SelectCenterRefMenu(const FurnitureMapping& a_furnitures, RE::Actor* a_tmpCenter)
+    Instance::FurnitureMapping Instance::GetUniqueFurnituesOfTypeInBound(RE::Actor* a_centerAct, REX::EnumSet<Registry::FurnitureType::Value> a_furnitureTypes)
     {
-        std::vector<Interface::SelectionMenu::Item> items;
-        const auto actName = std::format("{}, 0x{:X}", a_tmpCenter->GetDisplayFullName(), a_tmpCenter->GetFormID());
-        items.emplace_back(actName, "$SSL_None");
-        for (const auto& [ref, offset] : a_furnitures) {
-            const auto itemName = std::format("{}, 0x{:X}", ref->GetDisplayFullName(), ref->GetFormID());
-            const auto itemValue = std::format("{}", offset.type.ToString());
-            items.emplace_back(itemName, itemValue);
+        std::vector<RE::TESObjectREFR*> inUseFurniture{};
+        const auto processlist = RE::ProcessLists::GetSingleton();
+        for (auto&& handle : processlist->highActorHandles) {
+            const auto it = handle.get().get();
+            if (!it || GetPosition(it))
+                continue;
+            if (const auto furni = it->GetOccupiedFurniture().get()) {
+                inUseFurniture.push_back(furni.get());
+            }
         }
-        auto it = Interface::SelectionMenu::CreateSelectionAndWait(items);
-        if (it == items.end() || it == items.begin()) {
-            return { a_tmpCenter, {} };
+        std::vector<std::pair<RE::TESObjectREFR*, glm::vec4>> raycastStart{};
+        for (auto&& p : positions) {
+            auto act = p.data.GetActor();
+            assert(act);
+            auto head = act->GetNodeByName(Thread::NiNode::Node::HEAD);
+            if (!head)
+                continue;
+            auto& t = head->world.translate;
+            raycastStart.emplace_back(act, glm::vec4{ t.x, t.y, t.z, 0.0f });
         }
-        const auto selected = std::distance(items.cbegin(), it);
-        return a_furnitures.at(selected - 1);
+        FurnitureMapping retVal{};
+        const auto library = Registry::Library::GetSingleton();
+        Util::ForEachObjectInRange(a_centerAct, Settings::fFurnitureScanRadius, [&](RE::TESObjectREFR* a_ref) {
+            if (std::ranges::contains(inUseFurniture, a_ref)) {
+                return RE::BSContainer::ForEachResult::kContinue;
+            }
+            const auto details = library->GetFurnitureDetails(a_ref);
+            if (!details || details->GetTypes().none(a_furnitureTypes.get())) {
+                return RE::BSContainer::ForEachResult::kContinue;
+            }
+            const auto coordinates = details->GetClosestCoordinatesInBound(a_ref, a_furnitureTypes, a_centerAct);
+            if (coordinates.empty()) {
+                return RE::BSContainer::ForEachResult::kContinue;
+            }
+            auto obj = a_ref->Get3D();
+            auto node = obj ? obj->AsNode() : nullptr;
+            auto box = node ? ObjectBound::MakeBoundingBox(node) : std::nullopt;
+            if (!box) {
+                return RE::BSContainer::ForEachResult::kContinue;
+            }
+            const auto endPoint = glm::vec4(box->GetCenterWorld(), 0.0f);
+            const auto isReachable = std::ranges::any_of(raycastStart, [&](auto&& it) {
+                auto [startRef, startPoint] = it;
+                std::vector<RE::NiAVObject*> filterList{ a_ref->Get3D(), startRef->Get3D() };
+                do {
+                    auto res = Raycast::hkpCastRay(startPoint, endPoint, filterList);
+                    if (!res.hit) {
+                        return true;
+                    }
+                    auto hitRef = res.hitObject ? res.hitObject->GetUserData() : nullptr;
+                    auto base = hitRef ? hitRef->GetBaseObject() : nullptr;
+                    if (!base || base->Is(RE::FormType::Static, RE::FormType::MovableStatic, RE::FormType::Furniture)) {
+                        break;
+                    }
+                    if (base->Is(RE::FormType::Door) && hitRef->IsLocked()) {
+                        break;
+                    }
+                    filterList.push_back(res.hitObject);
+                    startPoint = res.hitPos;
+                } while (true);
+                return false;
+            });
+            if (isReachable) {
+                for (auto&& coordinate : coordinates) {
+                    retVal.emplace_back(a_ref, coordinate);
+                }
+            }
+            return RE::BSContainer::ForEachResult::kContinue;
+        });
+        return retVal;
     }
 
 	void Instance::InitializeCenterRefMenu(const FurnitureMapping& a_furnitures, RE::Actor* a_tmpCenter)
