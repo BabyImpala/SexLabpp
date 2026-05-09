@@ -1107,7 +1107,7 @@ State Animating
 		If(LeadIn)
 			SendThreadEvent("LeadInStart")
 		EndIf
-		If ((HasPlayer) && (!Config.UseSceneMenu) && (!Config.HasVRIK) && (Config.ClimaxType == Config.CLIMAXTYPE_SLSO))
+		If ((HasPlayer) && (!Config.UseSceneMenu) && (Config.ClimaxType == Config.CLIMAXTYPE_SLSO))
 			EnjBarsInit(_Positions)
 		EndIf
 	EndFunction
@@ -1516,7 +1516,7 @@ State Ending
 		If(IsObjectiveDisplayed(0))
 			SetObjectiveDisplayed(0, False)
 		EndIf
-		If ((HasPlayer()) && (!Config.UseSceneMenu) && (!Config.HasVRIK) && (Config.ClimaxType == Config.CLIMAXTYPE_SLSO))
+		If ((HasPlayer()) && (!Config.UseSceneMenu) && (Config.ClimaxType == Config.CLIMAXTYPE_SLSO))
 			EnjBarsClose()
 		EndIf
 		If (Config.HideHUD)

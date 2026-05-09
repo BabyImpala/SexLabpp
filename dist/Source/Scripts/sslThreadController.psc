@@ -322,7 +322,7 @@ Event OnKeyDown(int aiKey)
 	_SkipHotkeyEvents = true
 	_SkipMenuEvents = true
 	If (aiKey == Hotkeys[kSceneSelector])
-		InitPrismaMenu()
+		InitSceneSelectorMenu()
 		return
 	EndIf
 	bool abModifier = Config.ModifierPressed()
@@ -567,9 +567,7 @@ Function ChangeTargetPartner(bool abBackwards = false)
 	_AdjustActor = GetIdxPosition(newIdx)
 	Config.SetTargetActor(_AdjustActor)
 	Config.SelectedSpell.Cast(_AdjustActor)	; SFX for visual feedback
-	If (!Config.HasVRIK)
-		EnjBarsChangeHighlightedPartner(_AdjustActor)
-	EndIf
+	EnjBarsChangeHighlightedPartner(_AdjustActor)
 	PlayHotkeyFX(0, !abBackwards)
 	Debug.Notification("SexLab partner selected: " + SexLabUtil.ActorName(_AdjustActor))
 	Log("ChangeTargetPartner(), currently focused partner: " + SexLabUtil.ActorName(_AdjustActor))
@@ -587,10 +585,7 @@ EndFunction
 ; --- Prisma UI                                       --- ;
 ; ------------------------------------------------------- ;
 
-Function InitPrismaMenu()
-	If (Config.HasVRIK)
-		return
-	EndIf
+Function InitSceneSelectorMenu()
 	OnPrismaMenuOpened()
 	OpenSLToolsMenu()
 EndFunction
@@ -773,7 +768,7 @@ Function VRHandleGesture(String asEventName, String Foobar, float Presses, Form 
 		ElseIf (asEvent == "L_Back")
 			SexLabUtil.ToggleFreeCamera()
 		ElseIf (asEvent == "L_Forward")
-			InitPrismaMenu() ; awaiting VR support
+			InitSceneSelectorMenu()
 		ElseIf (asEvent == "R_Tap")
 			CyclePOVModesVR()
 		ElseIf (asEvent == "R_Up")
