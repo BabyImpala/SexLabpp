@@ -95,12 +95,14 @@ namespace Papyrus::ThreadModel
     bool IsOwningSceneMenu(QUESTARGS);
     bool TryOpenSceneMenu(QUESTARGS);
     bool TryCloseSceneMenu(QUESTARGS);
-    void TryUpdateMenuTimer(QUESTARGS, float a_time);
-    void OpenSLToolsMenu(QUESTARGS);
 
-    void EnjBarsInit(QUESTARGS, const std::vector<RE::Actor*> a_positions);
-    void EnjBarsClose(QUESTARGS);
-    void EnjBarsToggle(QUESTARGS);
+    // Prisma UI
+    void PrismaOverlayInitImpl(QUESTARGS, int32_t aiOverlayIndex);
+    void PrismaOverlayDestroyImpl(QUESTARGS, int32_t aiOverlayIndex);
+    void TogglePrismaFocusImpl(QUESTARGS);
+
+    void UpdateMenuTimerDisplay(QUESTARGS, float a_duration, float a_time);
+    void UpdateOffsetSlidersDisplay(QUESTARGS);
     void EnjBarsChangeHighlightedPartner(QUESTARGS, RE::Actor* a_actor);
 
     inline bool Register(VM* a_vm)
@@ -141,12 +143,13 @@ namespace Papyrus::ThreadModel
         REGISTERFUNC(IsOwningSceneMenu, "sslThreadModel", true);
         REGISTERFUNC(TryOpenSceneMenu, "sslThreadModel", true);
         REGISTERFUNC(TryCloseSceneMenu, "sslThreadModel", true);
-        REGISTERFUNC(TryUpdateMenuTimer, "sslThreadModel", true);
-        REGISTERFUNC(OpenSLToolsMenu, "sslThreadModel", true);
 
-        REGISTERFUNC(EnjBarsInit, "sslThreadModel", true);
-        REGISTERFUNC(EnjBarsClose, "sslThreadModel", true);
-        REGISTERFUNC(EnjBarsToggle, "sslThreadModel", true);
+        REGISTERFUNC(PrismaOverlayInitImpl, "sslThreadModel", true);
+        REGISTERFUNC(PrismaOverlayDestroyImpl, "sslThreadModel", true);
+        REGISTERFUNC(TogglePrismaFocusImpl, "sslThreadModel", true);
+
+        REGISTERFUNC(UpdateMenuTimerDisplay, "sslThreadModel", true);
+        REGISTERFUNC(UpdateOffsetSlidersDisplay, "sslThreadModel", true);
         REGISTERFUNC(EnjBarsChangeHighlightedPartner, "sslThreadModel", true);
 
         return ActorAlias::Register(a_vm);

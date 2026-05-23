@@ -1,44 +1,38 @@
 #pragma once
 #include "PrismaUI_API.h"
-#include "Thread/Thread.h"
-#include "Util/Script.h"
 
 namespace Thread::PrismaUI
 {
+    // ── VIEW CREATOR
+
     inline PRISMA_UI_API::IVPrismaUI2* PrismaAPI{ nullptr };
-    inline PRISMA_UI_API::IVPrismaUI2* GetAPI() { return PrismaAPI; }
-    inline bool IsAvailable() { return PrismaAPI != nullptr; }
 
-    inline bool Initialize()
+    template<typename ListenerRegistrar>
+    inline bool CreatePrismaView(std::string_view filepath, PrismaView* a_view, ListenerRegistrar&& registerListeners)
     {
-        PrismaAPI = static_cast<PRISMA_UI_API::IVPrismaUI2*>(PRISMA_UI_API::RequestPluginAPI(PRISMA_UI_API::InterfaceVersion::V2));
-        return (PrismaAPI ? true : false);
-    }
-
-    inline PrismaView CreateView(const char* htmlPath)
-    {
-        if (!IsAvailable())
-            return 0;
-        const auto view = PrismaAPI->CreateView(htmlPath);
-        if (view)
-            PrismaAPI->Hide(view);
-        return view;
-    }
-
-    inline std::string JsonEscape(const std::string& s)
-    {
-        std::string out;
-        out.reserve(s.size());
-        for (char c : s) {
-            if (c == '"')
-                out += "\\\"";
-            else if (c == '\\')
-                out += "\\\\";
-            else
-                out += c;
+        if (!a_view) return false;
+        if (!PrismaAPI) {
+            PrismaAPI = PRISMA_UI_API::RequestPluginAPI<PRISMA_UI_API::IVPrismaUI2>();
+            if (!PrismaAPI) {
+                logger::error("CreatePrismaView >> PrismaUI unavailable for '{}'", filepath);
+                return false;
+            }
         }
-        return out;
-    }
+        if (!PrismaAPI->IsValid(*a_view)) {
+            *a_view = PrismaAPI->CreateView(filepath.data());
+            if (!*a_view) {
+                logger::error("CreatePrismaView >> CreateView returned null for '{}'", filepath);
+                return false;
+            }
+            PrismaAPI->SetOrder(*a_view, 1000);
+            PrismaAPI->Hide(*a_view);
+            registerListeners();
+            logger::info("CreatePrismaView >> Initialized '{}'", filepath);
+        }
+        return true;
+    };
+
+    // ── OVERLAY SUPPRESSOR
 
     class OverlaySuppressor : public RE::BSTEventSink<RE::MenuOpenCloseEvent>
     {
@@ -132,4 +126,30 @@ namespace Thread::PrismaUI
             return RE::BSEventNotifyControl::kContinue;
         }
     };
-}
+
+    // ── VIEWS MANAGEMENT
+
+    enum class PrismaOverlayIndex : int32_t
+    {
+        kPrismaSceneMenu        =  0,
+        kAnimSpeedOverlay       =  1,
+        kEnjoymentBars          =  2,
+        kOffsetAdjustMenu       =  3,
+        kSceneSelectorMenu      =  4,
+        kThreadConfigMenu       =  5,
+        kVisibilityControlMenu  =  6,
+    };
+
+    void RegisterPrismaViews();
+
+    bool IsViewValid(PrismaView* a_view);
+    void ShowView(PrismaView* a_view);
+    void HideView(PrismaView* a_view);
+    bool IsViewVisible(PrismaView* a_view);
+
+    void OverlayInit(RE::TESQuest* a_qst, PrismaOverlayIndex index);
+    void OverlayDestroy(PrismaOverlayIndex index);
+
+    std::string JsonEscape(const std::string& s);
+
+}  // namespace Thread::PrismaUI

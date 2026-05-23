@@ -1503,6 +1503,8 @@ function PlayerHotkeys()
 	AddStateOptionKey("iKeyExtra2", "$SSL_iKeyExtra2", true, true) ;open SL menu
 	AddStateOptionKey("iKeyMod", "$SSL_iKeyMod", true, true) ;modifier
 	AddStateOptionKey("iKeyReset", "$SSL_iKeyReset", true, true) ;inverse action
+	AddStateOptionKey("iKeyPrismaMenu", "$SSL_iKeyPrismaMenu", true, true) ;toggle prisma menu
+	AddStateOptionKey("iKeyPrismaFocus", "$SSL_iKeyPrismaFocus", true, true) ;toggle prisma focus
 
 	SetCursorPosition(1)
 

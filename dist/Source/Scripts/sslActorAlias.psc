@@ -774,7 +774,7 @@ State Animating
 		EndIf
 		_CurrentInteractions = _Thread.ListDetectedInteractionsInternal(_ActorRef)
 		UpdateEffectiveEnjoymentCalculations()
-		If (!_Config.UseSceneMenu)
+		If (_bEnjEnabled && !_Config.UseSceneMenu)
 			EnjBarsUpdateSlider(_FullEnjoyment as float, _Thread.GetCurrentInteractionString(_ActorRef))
 		EndIf
 		int strength = CalcReaction()
@@ -1251,7 +1251,7 @@ Function ResetEnjoymentVariables()
 	_PainInterTimer = 0.0
 	_PainInterBackup = 0.0
 	_PainInterDecayBackup = 0.0
-	_PainInterCur = 0
+	_PainInterCur = 0.0
 	_FullEnjoyment = 0
 EndFunction
 

@@ -270,7 +270,8 @@ int Property kDirectionUp       = 11 AutoReadOnly
 int Property kDirectionDown     = 12 AutoReadOnly
 int Property kDirectionLeft     = 13 AutoReadOnly
 int Property kDirectionRight    = 14 AutoReadOnly
-int Property kSceneSelector     = 15 AutoReadOnly
+int Property kPrismaMenu        = 15 AutoReadOnly
+int Property kPrismaFocus       = 16 AutoReadOnly
 
 int Property AdjMode_None     = 0 AutoReadOnly
 int Property AdjMode_PosXY    = 1 AutoReadOnly
@@ -285,6 +286,9 @@ bool _SkipHotkeyEvents = False
 Function EnableTraditionalHotkeys()
 	InitLegacyHotkeys()
 	GetAdjustPos()
+	EnjBarsChangeHighlightedPartner(_AdjustActor)
+	RegisterForKey(Hotkeys[kPrismaMenu])
+	RegisterForKey(Hotkeys[kPrismaFocus])
 	RegisterForKey(Hotkeys[kChangeAnimation])
 	RegisterForKey(Hotkeys[kMoveScene])
 	RegisterForKey(Hotkeys[kChangePartner])
@@ -303,7 +307,6 @@ Function EnableTraditionalHotkeys()
 		RegisterForKey(Hotkeys[kDirectionDown])
 		RegisterForKey(Hotkeys[kDirectionLeft])
 		RegisterForKey(Hotkeys[kDirectionRight])
-		RegisterForKey(Hotkeys[kSceneSelector])
 	EndIf
 EndFunction
 
@@ -319,12 +322,21 @@ Event OnKeyDown(int aiKey)
 	If (Utility.IsInMenuMode() || _SkipHotkeyEvents)
 		return
 	EndIf
-	_SkipHotkeyEvents = true
-	_SkipMenuEvents = true
-	If (aiKey == Hotkeys[kSceneSelector])
-		InitSceneSelectorMenu()
+
+	If (aiKey == Hotkeys[kPrismaMenu])
+		TogglePrismaMenu()
 		return
 	EndIf
+	If (aiKey == Hotkeys[kPrismaFocus])
+		TogglePrismaFocus()
+		return
+	EndIf
+	If (_PrismaFocused)
+		return
+	EndIf
+	
+	_SkipHotkeyEvents = true
+	_SkipMenuEvents = true
 	bool abModifier = Config.ModifierPressed()
 	bool abAdjustTarget = abModifier
 	If (aiKey == Hotkeys[kChangeAnimation])
@@ -370,7 +382,9 @@ Event OnKeyDown(int aiKey)
 EndEvent
 
 Function InitLegacyHotkeys()
-	Hotkeys = new int[16]
+	Hotkeys = new int[17]
+	Hotkeys[kPrismaMenu]        = Config.PrismaMenuKey
+	Hotkeys[kPrismaFocus]       = Config.PrismaFocusKey	
 	Hotkeys[kChangeAnimation]   = Config.ChangeAnimation
 	Hotkeys[kMoveScene]         = Config.MoveScene
 	Hotkeys[kChangePartner]     = Config.TargetActor
@@ -387,7 +401,6 @@ Function InitLegacyHotkeys()
 	Hotkeys[kDirectionDown]     = Config.DirectionDown
 	Hotkeys[kDirectionLeft]     = Config.DirectionLeft
 	Hotkeys[kDirectionRight]    = Config.DirectionRight
-	Hotkeys[kSceneSelector]     = Config.SceneSelectorMenu
 EndFunction
 
 ; ------------------------------------------------------- ;
@@ -584,62 +597,35 @@ EndFunction
 ; ------------------------------------------------------- ;
 ; --- Prisma UI                                       --- ;
 ; ------------------------------------------------------- ;
+bool _PrismaOpened = false
+bool _PrismaFocused = false
 
-Function InitSceneSelectorMenu()
-	OnPrismaMenuOpened()
-	OpenSLToolsMenu()
-EndFunction
-
-Function OnPrismaMenuEvent(String asEventCategory, String asOptSelected)
-	If (asOptSelected == "")
-		OnPrismaMenuClosed()
-		return
+Function TogglePrismaMenu(int aiForceState = 0)
+	;[-1:ForceClose, 0:Toggle, 1:ForceOpen]
+	If (aiForceState == -1 || (aiForceState == 0 && _PrismaOpened))
+		If (_PrismaFocused)
+			TogglePrismaFocus()
+		EndIf
+		TryPrismaOverlaysClose()
+		_PrismaOpened = false
+	ElseIf (aiForceState == 1 || (aiForceState == 0 && !_PrismaOpened))
+		TryPrismaOverlaysStart()
+		_PrismaOpened = true
 	EndIf
-	If (asEventCategory == "OnSceneSelected")
-		If (asOptSelected == SexlabRegistry.GetSceneName(GetActiveScene()))
-			OnPrismaMenuClosed()
-			return
-		EndIf
-		string asSelectedScene = SexLabRegistry.GetSceneByName(asOptSelected)
-		If (asSelectedScene)
-			ResetScene(asSelectedScene)
-		EndIf
-	ElseIf (asEventCategory == "OnSceneResetBySearch")
-		bool aiNewScenes = ResetAnimationQuick(asOptSelected)
-		If (!aiNewScenes)
-			string asSelectedScene = SexLabRegistry.GetSceneByName(asOptSelected)
-			If (asSelectedScene)
-				ResetScene(asSelectedScene)
-			EndIf
-		EndIf
-	ElseIf (asEventCategory == "OnOffsetModeSelected")
-		If (asOptSelected == "None")
-			SetOffsetAdjustMode(AdjMode_None)
-		ElseIf (asOptSelected == "PosXY")
-			SetOffsetAdjustMode(AdjMode_PosXY)
-		ElseIf (asOptSelected == "PosRZ")
-			SetOffsetAdjustMode(AdjMode_PosRZ)
-		ElseIf (asOptSelected == "SceneXY")
-			SetOffsetAdjustMode(AdjMode_SceneXY)
-		ElseIf (asOptSelected == "SceneRZ")
-			SetOffsetAdjustMode(AdjMode_SceneRZ)
-		EndIf
+EndFunction
+
+Function TogglePrismaFocus()
+    If (!_PrismaOpened)
+        return
+    EndIf
+	TogglePrismaFocusImpl()
+	If (_PrismaFocused)
+		_PrismaFocused = false
+		PauseTimer(false)
+	Else
+		_PrismaFocused = true
+		PauseTimer(true)
 	EndIf
-	OnPrismaMenuClosed()
-EndFunction
-
-Function OnPrismaMenuOpened()
-	PauseTimer(true)
-	_SkipMenuEvents = true
-	_SkipHotkeyEvents = true
-	_SkipGestureEvents = true
-EndFunction
-
-Function OnPrismaMenuClosed()
-	PauseTimer(false)
-	_SkipMenuEvents = false
-	_SkipHotkeyEvents = false
-	_SkipMenuEvents = false
 EndFunction
 
 ; *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-* ;
@@ -768,7 +754,7 @@ Function VRHandleGesture(String asEventName, String Foobar, float Presses, Form 
 		ElseIf (asEvent == "L_Back")
 			SexLabUtil.ToggleFreeCamera()
 		ElseIf (asEvent == "L_Forward")
-			InitSceneSelectorMenu()
+			TogglePrismaFocus()
 		ElseIf (asEvent == "R_Tap")
 			CyclePOVModesVR()
 		ElseIf (asEvent == "R_Up")

@@ -1,0 +1,220 @@
+/* Panel specific tokens are declared in _shared.css. */
+/* Position tokens are declared in PrismaSceneMenu.css. */
+
+.oam-picker {
+  position       : fixed;
+  right          : calc(-220 * var(--s));
+  top            : 50%;
+  transform      : translateY(-50%);
+  opacity        : 0;
+  pointer-events : none;
+  z-index        : 180;
+  display        : flex;
+  flex-direction : column;
+  align-items    : stretch;
+  width          : calc(200 * var(--s));
+  background     : rgba(14, 14, 16, 0.82);
+  border         : 1px solid rgba(58, 58, 58, 0.7);
+  border-right   : none;
+  border-radius  : var(--radius) 0 0 var(--radius);
+  box-shadow     : calc(-4 * var(--s)) 0 calc(24 * var(--s)) rgba(0,0,0,0.55);
+  overflow       : hidden;
+  backdrop-filter: blur(6px);
+  transition     : right 200ms cubic-bezier(0.22, 0.68, 0, 1.05),
+                   opacity 160ms ease;
+}
+.oam-picker.open {
+  right          : calc(40 * var(--s));
+  opacity        : 1;
+  pointer-events : auto;
+}
+
+.oam-panel {
+  position       : fixed;
+  top            : 50%;
+  transform      : translateY(-50%);
+  right          : calc(-320 * var(--s));
+  width          : calc(300 * var(--s));
+  overflow       : visible;
+  z-index        : 130;
+  opacity        : 0;
+  pointer-events : none;
+  display        : flex;
+  flex-direction : column;
+  transition     : right 200ms cubic-bezier(0.22, 0.68, 0, 1.05),
+                   opacity 160ms ease;
+}
+
+.oam-panel.open {
+  right          : calc(40 * var(--s)) !important;
+  opacity        : 1 !important;
+  pointer-events : auto !important;
+}
+
+.oam-panel-title {
+  font-size      : calc(9 * var(--s));
+  font-weight    : 700;
+  text-transform : uppercase;
+  letter-spacing : 0.12em;
+  color          : var(--text-muted);
+  text-align     : center;
+  overflow       : hidden;
+  text-overflow  : ellipsis;
+  white-space    : nowrap;
+}
+
+.oam-panel-settings { flex-shrink: 0; }
+
+.oam-step-row {
+  display     : flex;
+  align-items : center;
+  gap         : calc(6 * var(--s));
+}
+.oam-step-slider {
+  width        : calc(90 * var(--s));
+  accent-color : var(--text-secondary);
+  cursor       : pointer;
+  height       : calc(3 * var(--s));
+}
+.oam-step-val {
+  font-size            : calc(10 * var(--s));
+  font-variant-numeric : tabular-nums;
+  color                : var(--text-secondary);
+  min-width            : calc(28 * var(--s));
+  text-align           : right;
+}
+
+.oam-offsets {
+  flex     : 1;
+  overflow : visible;
+}
+
+.oam-offset-row {
+  display        : flex;
+  flex-direction : column;
+  padding        : calc(5 * var(--s)) calc(12 * var(--s)) calc(4 * var(--s));
+  border-bottom  : 1px solid rgba(38, 38, 38, 0.45);
+  gap            : calc(4 * var(--s));
+}
+.oam-offset-row:last-child { border-bottom: none; }
+
+.oam-offset-header {
+  display         : flex;
+  justify-content : space-between;
+  align-items     : baseline;
+}
+.oam-offset-label {
+  font-size      : calc(10 * var(--s));
+  font-weight    : 600;
+  text-transform : uppercase;
+  letter-spacing : 0.08em;
+  color          : var(--text-secondary);
+}
+
+.oam-offset-val {
+  font-size            : calc(10 * var(--s));
+  font-variant-numeric : tabular-nums;
+  color                : var(--text-muted);
+  letter-spacing       : 0.03em;
+  transition           : color 80ms linear, background 80ms linear, border-color 80ms linear;
+  background           : transparent;
+  border               : 1px solid transparent;
+  border-radius        : calc(2 * var(--s));
+  padding              : calc(1 * var(--s)) calc(4 * var(--s));
+  text-align           : right;
+  width                : calc(52 * var(--s));
+  outline              : none;
+  cursor               : text;
+  font-family          : inherit;
+  user-select          : text;
+}
+.oam-offset-val:hover  { border-color: rgba(58,58,58,0.7);  background: rgba(255,255,255,0.03); }
+.oam-offset-val:focus  { border-color: rgba(80,80,90,0.6);  background: rgba(255,255,255,0.05); color: var(--text-primary); }
+.oam-offset-val.nonzero { color: var(--text-secondary); }
+
+
+.oam-offset-track {
+  position      : relative;
+  width         : 100%;
+  height        : calc(4 * var(--s));
+  background    : rgba(255,255,255,0.04);
+  border        : 1px solid rgba(58,58,58,0.5);
+  border-radius : calc(2 * var(--s));
+  cursor        : ew-resize;
+  overflow      : visible;
+  touch-action  : none;
+}
+.oam-offset-track::before {
+  content        : '';
+  position       : absolute;
+  left           : 50%;
+  top            : calc(-2 * var(--s));
+  bottom         : calc(-2 * var(--s));
+  width          : 1px;
+  background     : rgba(255,255,255,0.10);
+  pointer-events : none;
+}
+.oam-offset-fill {
+  position       : absolute;
+  top            : 0;
+  bottom         : 0;
+  pointer-events : none;
+  border-radius  : calc(2 * var(--s));
+  background     : rgba(160, 160, 160, 0.22);
+}
+.oam-offset-needle {
+  position       : absolute;
+  top            : calc(-5 * var(--s));
+  bottom         : calc(-5 * var(--s));
+  width          : calc(3 * var(--s));
+  margin-left    : calc(-1.5 * var(--s));
+  border-radius  : calc(1.5 * var(--s));
+  pointer-events : none;
+  background     : var(--text-secondary);
+}
+.oam-offset-track.dragging .oam-offset-needle { background: var(--text-primary); }
+.oam-offset-track:focus { outline: none; }
+
+.oam-offset-hitarea {
+  position : absolute;
+  left     : 0;
+  right    : 0;
+  top      : calc(-10 * var(--s));
+  bottom   : calc(-10 * var(--s));
+  cursor   : ew-resize;
+  z-index  : 10;
+}
+
+.oam-needle-tip {
+  display              : none;
+  position             : absolute;
+  left                 : calc(100% + calc(6 * var(--s)));
+  top                  : 50%;
+  transform            : translateY(-50%);
+  font-size            : calc(9 * var(--s));
+  font-variant-numeric : tabular-nums;
+  color                : var(--text-primary);
+  background           : rgba(10, 10, 12, 0.88);
+  border               : 1px solid rgba(58,58,58,0.7);
+  border-radius        : calc(2 * var(--s));
+  padding              : calc(1 * var(--s)) calc(5 * var(--s));
+  white-space          : nowrap;
+  pointer-events       : none;
+  z-index              : 300;
+}
+
+.oam-reset-row {
+  flex-shrink     : 0;
+  display         : flex;
+  align-items     : center;
+  justify-content : center;
+  gap             : calc(6 * var(--s));
+  padding         : calc(6 * var(--s)) calc(12 * var(--s));
+  font-size       : calc(9 * var(--s));
+  color           : var(--text-muted);
+  cursor          : pointer;
+  border-top      : 1px solid rgba(50,50,55,0.9);
+  transition      : background var(--transition), color var(--transition);
+  letter-spacing  : 0.06em;
+}
+.oam-reset-row:hover { background:rgba(40,40,46,0.5); color:var(--text-secondary); }

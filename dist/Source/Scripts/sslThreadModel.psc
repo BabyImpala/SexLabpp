@@ -636,8 +636,6 @@ EndFunction
 bool Function IsOwningSceneMenu() native
 bool Function TryOpenSceneMenu() native
 bool Function TryCloseSceneMenu() native
-Function TryUpdateMenuTimer(float afTime) native
-Function OpenSLToolsMenu() native
 
 ; ------------------------------------------------------- ;
 ; --- Thread Data                                     --- ;
@@ -1058,6 +1056,7 @@ int _animationSyncCount
 bool _QuickResetScenes		; reinits thread without actor/center changes (e.g. to get new playing scenes)
 bool _ForceAdvance		; Force fully auto advance (set by timed stages)
 float _StageTimer			; timer for the current stage
+float _StageDuration		; duration of the current stage
 bool _TimerPaused		; whether timer drain for current stage should be paused
 float _SFXTimer				; so long until new SFX effect
 float[] _CustomTimers	; Custom set of timers to use for this animation
@@ -1097,6 +1096,7 @@ State Animating
 			Else
 				AutoAdvance = Config.AutoAdvance
 				Config.GetThreadControl(self as sslThreadController)
+				(self as sslThreadController).TogglePrismaMenu(1)
 			EndIf
 		Else
 			AutoAdvance = true
@@ -1106,9 +1106,6 @@ State Animating
 		SendThreadEvent("AnimationStart")
 		If(LeadIn)
 			SendThreadEvent("LeadInStart")
-		EndIf
-		If ((HasPlayer) && (!Config.UseSceneMenu) && (Config.ClimaxType == Config.CLIMAXTYPE_SLSO))
-			EnjBarsInit(_Positions)
 		EndIf
 	EndFunction
 
@@ -1191,6 +1188,7 @@ State Animating
 		SendThreadEvent("StageStart")
 		RunHook(Config.HOOKID_STAGESTART)
 		_StageHistory = AdvanceScene(asHistory, asNextStageId)
+		UpdateOffsetSlidersDisplay()
 		ReStartTimer()
 	EndFunction
 
@@ -1221,11 +1219,12 @@ State Animating
 
 	Function ReStartTimer()
 		_ForceAdvance = false
-		_StageTimer = GetTimer()
+		_StageDuration = GetTimer()
+		_StageTimer = _StageDuration
 		If (!_ForceAdvance && !AutoAdvance)
-			TryUpdateMenuTimer(0.0)
+			UpdateMenuTimerDisplay(0.0, 0.0)
 		Else
-			TryUpdateMenuTimer(_StageTimer)
+			UpdateMenuTimerDisplay(_StageDuration, _StageTimer)
 		EndIf
 		RegisterForSingleUpdate(ANIMATING_UPDATE_INTERVAL)
 	EndFunction
@@ -1233,7 +1232,7 @@ State Animating
 	Function UpdateTimer(float AddSeconds = 0.0)
 		_StageTimer += AddSeconds
 		_ForceAdvance = true
-		TryUpdateMenuTimer(_StageTimer)
+		UpdateMenuTimerDisplay(_StageDuration, _StageTimer)
 	EndFunction
 
 	Function PauseTimer(bool abEnable)
@@ -1274,6 +1273,7 @@ State Animating
 	Event OnUpdate()
 		If (!_TimerPaused && (AutoAdvance || _ForceAdvance))
 			_StageTimer -= ANIMATING_UPDATE_INTERVAL
+			UpdateMenuTimerDisplay(_StageDuration, _StageTimer)
 			If (_StageTimer <= 0)
 				If !ThreadWaitsForOrgasm()
 					GoToStage(_StageHistory.Length + 1)
@@ -1405,6 +1405,16 @@ State Animating
 		return ResetAnimationQuick(asTagString)
 	EndFunction
 
+	Function OnSceneResetBySearch(String asQuerry)
+		bool aiNewScenes = ResetAnimationQuick(asQuerry)
+		If (!aiNewScenes)
+			string asSelectedScene = SexLabRegistry.GetSceneByName(asQuerry)
+			If (asSelectedScene)
+				ResetScene(asSelectedScene)
+			EndIf
+		EndIf
+	EndFunction
+
 	int Function GetStatus()
 		return STATUS_INSCENE
 	EndFunction
@@ -1472,6 +1482,9 @@ EndFunction
 Function SkipTo(String asNextStage)
 	Log("Cannot skip to another stage while scene is not playing", "SkipTo()")
 EndFunction
+Function OnSceneResetBySearch(String asQuerry)
+	Log("Cannot reset scenes by search outside of playing state", "OnSceneResetBySearch()")
+EndFunction
 
 Function PlayStageAnimations()
 	RealignActors()
@@ -1510,14 +1523,12 @@ State Ending
 			return
 		EndIf
 		Config.DisableThreadControl(self as sslThreadController)
+		(self as sslThreadController).TogglePrismaMenu(-1)
 		SendModEvent("SSL_CLEAR_Thread" + tid, "", 1.0)
 		MoveActorsAwayFromPlayer()
 		UnregisterCollision()
 		If(IsObjectiveDisplayed(0))
 			SetObjectiveDisplayed(0, False)
-		EndIf
-		If ((HasPlayer()) && (!Config.UseSceneMenu) && (Config.ClimaxType == Config.CLIMAXTYPE_SLSO))
-			EnjBarsClose()
 		EndIf
 		If (Config.HideHUD)
 			SexLabUtil.HideElementsGameHUD(false)
@@ -1572,6 +1583,7 @@ State Ending
 
 	bool Function ResetAnimationQuick(String asTagString = "")
 		UnregisterForUpdateGameTime()
+		(self as sslThreadController).TogglePrismaMenu(-1)
 		String[] validScenes = SexLabRegistry.LookupScenesA(_Positions, asTagString, GetSubmissives(), _furniStatus, CenterRef)
 		DestroyInstance()
 		GoToState(STATE_SETUP)
@@ -1586,6 +1598,7 @@ State Ending
 		_ThreadTags = SexLabRegistry.GetCommonTags(_PrimaryScenes)
 		string activeScene = GetActiveScene()
 		Log("Thread validated, playing animation: " + activeScene + ", " + SexLabRegistry.GetSceneName(activeScene), "StartThread()")
+		(self as sslThreadController).TogglePrismaMenu(1)
 		StartStage(Utility.CreateStringArray(0), "")
 		_QuickResetScenes = false
 		return true
@@ -1815,6 +1828,103 @@ Function UpdateAllEncounters()
 EndFunction
 
 ; -------------------------------------------------- ;
+; --- PRISMA UI                                  --- ;
+; -------------------------------------------------- ;
+
+bool Property AdjustStage               Auto Hidden
+float Property MenuScaleMult			Auto Hidden
+
+bool Property GameHUD                   Auto Hidden
+bool Property OverlayAnimSpeed          Auto Hidden
+bool Property OverlayEnjBars            Auto Hidden
+bool Property OverlayOffsetAdjust       Auto Hidden
+bool Property OverlaySceneSelector      Auto Hidden
+bool Property OverlayThreadConfig       Auto Hidden
+bool Property OverlayVisibilityControl  Auto Hidden
+
+int Property PRISMA_SCENE_MENU          = 0 AutoReadOnly
+int Property OVERLAY_ANIM_SPEED         = 1 AutoReadOnly
+int Property OVERLAY_ENJOYMENT_BARS     = 2 AutoReadOnly
+int Property OVERLAY_OFFSET_ADJUST      = 3 AutoReadOnly
+int Property OVERLAY_SCENE_SELECTOR     = 4 AutoReadOnly
+int Property OVERLAY_THREAD_CONFIG      = 5 AutoReadOnly
+int Property OVERLAY_VISIBILITY_CONTROL = 6 AutoReadOnly
+
+Function TryPrismaOverlaysStart()
+	If (GetStatus() != STATUS_INSCENE)
+		Log("Cannot initialize Prisma overlays outside of playing state, TryPrismaOverlayInit()")
+		return
+	EndIf
+	RefreshPrismaPropertiesState("Get")
+	PrismaOverlayInitAndShow(PRISMA_SCENE_MENU)
+	PrismaOverlayInitAndShow(OVERLAY_ANIM_SPEED)
+	PrismaOverlayInitAndShow(OVERLAY_ENJOYMENT_BARS)
+	PrismaOverlayInitAndShow(OVERLAY_OFFSET_ADJUST)
+	PrismaOverlayInitAndShow(OVERLAY_SCENE_SELECTOR)
+	PrismaOverlayInitAndShow(OVERLAY_THREAD_CONFIG)
+	PrismaOverlayInitAndShow(OVERLAY_VISIBILITY_CONTROL)
+EndFunction
+
+Function TryPrismaOverlaysClose()
+	PrismaOverlayDestroyImpl(PRISMA_SCENE_MENU)
+	RefreshPrismaPropertiesState("Set")
+EndFunction
+
+Function PrismaOverlayInitAndShow(int aiOverlayIndex)
+	bool abProceed = False
+	If (aiOverlayIndex == PRISMA_SCENE_MENU)
+		abProceed = True
+	ElseIf (aiOverlayIndex == OVERLAY_ANIM_SPEED)
+		abProceed = Config.OverlayAnimSpeed
+	ElseIf (aiOverlayIndex == OVERLAY_ENJOYMENT_BARS)
+		abProceed = (Config.OverlayEnjBars && (Config.ClimaxType == Config.CLIMAXTYPE_SLSO))
+	ElseIf (aiOverlayIndex == OVERLAY_OFFSET_ADJUST)
+		abProceed = Config.OverlayOffsetAdjust
+	ElseIf (aiOverlayIndex == OVERLAY_SCENE_SELECTOR)
+		abProceed = Config.OverlaySceneSelector
+	ElseIf (aiOverlayIndex == OVERLAY_THREAD_CONFIG)
+		abProceed = Config.OverlayThreadConfig
+	ElseIf (aiOverlayIndex == OVERLAY_VISIBILITY_CONTROL)
+		abProceed = Config.OverlayVisibilityControl		
+	EndIf
+	If (abProceed)
+		PrismaOverlayInitImpl(aiOverlayIndex)
+	EndIf
+EndFunction
+
+Function RefreshPrismaPropertiesState(string asMode)
+	If (asMode == "Get")
+		AdjustStage = Config.AdjustStage
+		MenuScaleMult = Config.MenuScaleMult
+		GameHUD = !Config.HideHUD
+		OverlayAnimSpeed = Config.OverlayAnimSpeed
+		OverlayEnjBars = Config.OverlayEnjBars
+		OverlayOffsetAdjust = Config.OverlayOffsetAdjust
+		OverlaySceneSelector = Config.OverlaySceneSelector
+		OverlayThreadConfig = Config.OverlayThreadConfig
+		OverlayVisibilityControl = Config.OverlayVisibilityControl
+	ElseIf (asMode == "Set")
+		Config.AdjustStage = AdjustStage
+		Config.MenuScaleMult = MenuScaleMult
+		Config.HideHUD = !GameHUD
+		Config.OverlayAnimSpeed = OverlayAnimSpeed
+		Config.OverlayEnjBars = OverlayEnjBars
+		Config.OverlayOffsetAdjust = OverlayOffsetAdjust
+		Config.OverlaySceneSelector = OverlaySceneSelector
+		Config.OverlayThreadConfig = OverlayThreadConfig
+		Config.OverlayVisibilityControl = OverlayVisibilityControl
+	EndIf
+EndFunction
+
+Function PrismaOverlayInitImpl(int aiOverlayIndex) native
+Function PrismaOverlayDestroyImpl(int aiOverlayIndex) native
+Function TogglePrismaFocusImpl() native
+
+Function UpdateMenuTimerDisplay(float afDuration, float afTime) native
+Function UpdateOffsetSlidersDisplay() native ;call on stage change
+Function EnjBarsChangeHighlightedPartner(Actor akActor) native
+
+; -------------------------------------------------- ;
 ; --- Interactions Info - INTERNAL               --- ;
 ; -------------------------------------------------- ;
 
@@ -2009,6 +2119,8 @@ Function Initialize()
 	_AnimationSpeedBase = 1.0
 	_TimerPaused = false
 	_QuickResetScenes = false
+	; Prisma state-awareness
+
 	; Enter thread selection pool
 	DestroyInstance()
 	GoToState(STATE_IDLE)
@@ -2050,11 +2162,6 @@ EndFunction
 ; --------------------------------------------------------------------------------------- ;
 ; *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-* ;
 ; preferably move these to a separate script sslEnjoymentUtils
-
-Function EnjBarsInit(Actor[] akPositions) native
-Function EnjBarsClose() native
-Function EnjBarsToggle() native
-Function EnjBarsChangeHighlightedPartner(Actor akActor) native
 
 Int Property CONSENT_CONNONSUB 		= 0 AutoReadOnly Hidden
 Int Property CONSENT_NONCONNONSUB 	= 1 AutoReadOnly Hidden
@@ -2366,6 +2473,8 @@ Function UpdateAnimationSpeed()
 EndFunction
 
 Function SetAnimationPlaybackSpeed(float afAnimationSpeed) native
+Function AnimSpeedOverlayInit() native
+Function AnimSpeedOverlayClose() native
 
 ; *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-* ;
 ; ----------------------------------------------------------------------------- ;

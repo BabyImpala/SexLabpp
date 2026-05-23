@@ -994,34 +994,37 @@ namespace Papyrus::ThreadModel
         return instance->TryCloseMenu();
     }
 
-    void TryUpdateMenuTimer(QUESTARGS, float a_time)
+    // ---------------------------------------------- //
+    //                   PRISMA UI                    //
+    // ---------------------------------------------- //
+
+    void PrismaOverlayInitImpl(QUESTARGS, int32_t aiOverlayIndex)
     {
         GET_INSTANCE();
-        instance->UpdateTimer(a_time);
+        return instance->PrismaOverlayInitImpl(aiOverlayIndex);
+    }
+    void PrismaOverlayDestroyImpl(QUESTARGS, int32_t aiOverlayIndex)
+    {
+        GET_INSTANCE();
+        return instance->PrismaOverlayDestroyImpl(aiOverlayIndex);
     }
 
-    void OpenSLToolsMenu(QUESTARGS)
+    void TogglePrismaFocusImpl(QUESTARGS)
     {
         GET_INSTANCE();
-        return instance->OpenSLToolsMenu();
+        return instance->TogglePrismaFocusImpl();
     }
 
-    void EnjBarsInit(QUESTARGS, const std::vector<RE::Actor*> a_positions)
+    void UpdateMenuTimerDisplay(QUESTARGS, float a_duration, float a_time)
     {
         GET_INSTANCE();
-        return instance->EnjBarsInit(a_positions);
+        instance->UpdateMenuTimerDisplay(a_duration, a_time);
     }
 
-    void EnjBarsClose(QUESTARGS)
+    void UpdateOffsetSlidersDisplay(QUESTARGS)
     {
         GET_INSTANCE();
-        return instance->EnjBarsClose();
-    }
-
-    void EnjBarsToggle(QUESTARGS)
-    {
-        GET_INSTANCE();
-        return instance->EnjBarsToggle();
+        return instance->UpdateOffsetSlidersDisplay();
     }
 
     void EnjBarsChangeHighlightedPartner(QUESTARGS, RE::Actor* a_actor)
