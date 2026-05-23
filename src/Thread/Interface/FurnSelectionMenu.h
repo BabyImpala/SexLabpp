@@ -20,17 +20,18 @@ namespace Thread::PrismaUI
         };
 
       public:
-        static bool Initialize();
+        static PrismaView* GetView() { return &fsmView; }
+
+        static bool Register();
         static void Open(RE::TESQuest* a_qst, const std::vector<Item>& a_items);
 
       private:
         static inline constexpr std::string_view FILEPATH{ "SexLab\\FurnSelectionMenu.html" };
-        static inline PrismaView view{ 0 };
-        static inline std::vector<Item> s_items{};
-        static inline RE::TESQuest* s_linkedThread{ nullptr };
+        static inline PrismaView fsmView{ 0 };
+        static inline RE::TESQuest* fsm_linkedThread{ nullptr };
+        static inline std::vector<Item> fsm_items{};
 
         static void HandleSelection(const std::string& data);
-        static void HandleClose();
     };
 
 }  // namespace Thread::PrismaUI

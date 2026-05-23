@@ -282,12 +282,62 @@ bool property UseSceneMenu hidden
     SetSettingBool("bUseSceneMenu", aSet)
   EndFunction
 EndProperty
+
+; UI Visibility
 bool property HideHUD hidden
 	bool Function Get()
 	  return GetSettingBool("bHideHUD")
 	EndFunction
 	Function Set(bool aSet)
 	  SetSettingBool("bHideHUD", aSet)
+	EndFunction
+EndProperty
+bool property OverlayAnimSpeed hidden
+	bool Function Get()
+	  return GetSettingBool("bOverlayAnimSpeed")
+	EndFunction
+	Function Set(bool aSet)
+	  SetSettingBool("bOverlayAnimSpeed", aSet)
+	EndFunction
+EndProperty
+bool property OverlayEnjBars hidden
+	bool Function Get()
+	  return GetSettingBool("bOverlayEnjBars")
+	EndFunction
+	Function Set(bool aSet)
+	  SetSettingBool("bOverlayEnjBars", aSet)
+	EndFunction
+EndProperty
+bool property OverlayOffsetAdjust hidden
+	bool Function Get()
+	  return GetSettingBool("bOverlayOffsetAdjust")
+	EndFunction
+	Function Set(bool aSet)
+	  SetSettingBool("bOverlayOffsetAdjust", aSet)
+	EndFunction
+EndProperty
+bool property OverlaySceneSelector hidden
+	bool Function Get()
+	  return GetSettingBool("bOverlaySceneSelector")
+	EndFunction
+	Function Set(bool aSet)
+	  SetSettingBool("bOverlaySceneSelector", aSet)
+	EndFunction
+EndProperty
+bool property OverlayThreadConfig hidden
+	bool Function Get()
+	  return GetSettingBool("bOverlayThreadConfig")
+	EndFunction
+	Function Set(bool aSet)
+	  SetSettingBool("bOverlayThreadConfig", aSet)
+	EndFunction
+EndProperty
+bool property OverlayVisibilityControl hidden
+	bool Function Get()
+	  return GetSettingBool("bOverlayVisibilityControl")
+	EndFunction
+	Function Set(bool aSet)
+	  SetSettingBool("bOverlayVisibilityControl", aSet)
 	EndFunction
 EndProperty
 
@@ -366,6 +416,32 @@ int property LipsSoundTime hidden
   EndFunction
   Function Set(int aiSet)
     SetSettingInt("iLipsSoundTime", aiSet)
+  EndFunction
+EndProperty
+
+; Prisma Menu
+float property MenuScaleMult hidden
+  float Function Get()
+    return GetSettingFlt("fMenuScaleMult")
+  EndFunction
+  Function Set(float afSet)
+    SetSettingFlt("fMenuScaleMult", afSet)
+  EndFunction
+EndProperty
+int property PrismaMenuKey hidden
+  int Function Get()
+    return GetSettingInt("iKeyPrismaMenu")
+  EndFunction
+  Function Set(int aiSet)
+    SetSettingInt("iKeyPrismaMenu", aiSet)
+  EndFunction
+EndProperty
+int property PrismaFocusKey hidden
+  int Function Get()
+    return GetSettingInt("iKeyPrismaFocus")
+  EndFunction
+  Function Set(int aiSet)
+    SetSettingInt("iKeyPrismaFocus", aiSet)
   EndFunction
 EndProperty
 
@@ -711,6 +787,7 @@ EndFunction
 Function ToggleThreadControl()
   If (_ActiveControl)
     DisableThreadControl(_ActiveControl)
+    _ActiveControl.TryPrismaOverlaysClose()
     return
   EndIf
   Actor akTarget = None
@@ -728,6 +805,7 @@ Function ToggleThreadControl()
     Log("AttemptThreadControl(), Attempting thread control for actor: " + SexLabUtil.ActorName(akTarget))
     If (TargetThread.HasPlayer() || TakeThreadControl.Show())
       GetThreadControl(TargetThread as sslThreadController)
+      _ActiveControl.TryPrismaOverlaysStart()
       If (UseSceneMenu) ;Comeback: Reasses need after UI update
         _ActiveControl.RealignActors()
       EndIf

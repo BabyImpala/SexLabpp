@@ -1,0 +1,79 @@
+/* Panel specific tokens are declared in _shared.css. */
+/* Position tokens are declared in PrismaSceneMenu.css. */
+
+.vcm-panel {
+  right      : calc(-300 * var(--s));
+  width      : calc(280 * var(--s));
+  max-height : 80vh;
+  z-index    : 130;
+}
+.vcm-panel.open { right: calc(40 * var(--s)); }
+
+.vcm-section-body {
+  display        : none;
+  flex-direction : column;
+  flex-shrink    : 0;
+}
+.vcm-section-body.open { display: flex; }
+
+.vcm-arrow {
+  font-size  : calc(8 * var(--s));
+  opacity    : 0.5;
+  flex-shrink: 0;
+}
+
+.vcm-scale-wrap {
+  display         : flex;
+  align-items     : center;
+  gap             : calc(6 * var(--s));
+  flex            : 1;
+  justify-content : flex-end;
+}
+
+.vcm-scale-slider {
+  -webkit-appearance : none;
+  appearance         : none;
+  width              : calc(110 * var(--s));
+  height             : calc(3 * var(--s));
+  border-radius      : calc(2 * var(--s));
+  background         : rgba(255, 255, 255, 0.10);
+  outline            : none;
+  cursor             : ew-resize;
+  accent-color       : var(--text-secondary);
+}
+.vcm-scale-slider::-webkit-slider-thumb {
+  -webkit-appearance : none;
+  appearance         : none;
+  width              : calc(3 * var(--s));
+  height             : calc(14 * var(--s));
+  border-radius      : calc(1 * var(--s));
+  background         : var(--text-secondary);
+  cursor             : ew-resize;
+  transition         : background var(--transition);
+}
+.vcm-scale-slider::-moz-range-thumb {
+  width         : calc(3 * var(--s));
+  height        : calc(14 * var(--s));
+  border-radius : calc(1 * var(--s));
+  background    : var(--text-secondary);
+  border        : none;
+  cursor        : ew-resize;
+  transition    : background var(--transition);
+}
+.vcm-scale-slider:hover::-moz-range-thumb    { background: var(--text-primary); }
+.vcm-scale-slider:hover::-webkit-slider-thumb { background: var(--text-primary); }
+
+.vcm-scale-val {
+  font-size            : calc(9 * var(--s));
+  font-variant-numeric : tabular-nums;
+  color                : var(--text-muted);
+  min-width            : calc(34 * var(--s));
+  text-align           : right;
+}
+
+.vcm-row-label {
+  color       : var(--text-secondary);
+  font-size   : calc(10 * var(--s));
+  font-weight : 400;
+  flex-shrink : 0;
+}

@@ -80,7 +80,6 @@ namespace Thread
         bool ControlsMenu();
         bool TryOpenMenu();
         bool TryCloseMenu();
-        void UpdateTimer(float a_timer);
 
         void AdvanceScene(const Registry::Stage* a_nextStage);
         bool SetActiveScene(const Registry::Scene* a_scene);
@@ -99,9 +98,9 @@ namespace Thread
         bool ReplaceCenterRef(RE::TESObjectREFR* a_ref);
         void SetCenterRefSelected(size_t a_index);
 
-        bool GetAutoplayEnabled();
-        void SetAutoplayEnabled(bool a_enabled);
         void SetAnimationPlaybackSpeed(float playbackSpeed);
+        void OffsetAdjustSet(uint32_t actorFormId, Registry::CoordinateType axis, float value);
+        void OffsetAdjustReset();
 
         void SetEnjoyment(RE::Actor* a_position, float a_enjoyment);
         const Registry::Expression* GetExpression(RE::Actor* a_position);
@@ -114,14 +113,21 @@ namespace Thread
         int32_t GetCurrentPermutation(RE::Actor* a_position);
         bool SetNextPermutation(RE::Actor* a_position);
 
-        void OpenSLToolsMenu();
+        template <typename T>
+        T GetThreadProperty(const std::string& a_property);
+        template <typename T>
+        void SetThreadProperty(const std::string& a_property, T a_val);
 
-        void EnjBarsInit(const std::vector<RE::Actor*>& a_positions);
-        void EnjBarsClose();
-        void EnjBarsToggle();
+        // Prisma UI
+        void PrismaOverlayInitImpl(int32_t aiOverlayIndex);
+        void PrismaOverlayDestroyImpl(int32_t aiOverlayIndex);
+        void TogglePrismaFocusImpl();
+
+        void UpdateMenuTimerDisplay(float a_duration, float a_timer);
         void EnjBarsChangeHighlightedPartner(RE::Actor* a_target);
         void EnjBarsUpdateSlider(RE::Actor* a_position, float a_enjoyment, RE::BSFixedString a_interactions);
         void RegisterRaiseEnjAttempt(RE::Actor* a_position, float a_nextTimeCycle);
+        void UpdateOffsetSlidersDisplay();
 
       private:
         RE::TESQuest* linkedQst;

@@ -3,9 +3,7 @@
 #include "Registry/Stats.h"
 #include "Serialization.h"
 #include "Thread/Collision/CollisionHandler.h"
-#include "Thread/Interface/EnjoymentBars.h"
-#include "Thread/Interface/FurnSelectionMenu.h"
-#include "Thread/Interface/SLToolsMenu.h"
+#include "Thread/Interface/PrismaUtil.h"
 #include "Thread/Interface/SceneMenu.h"
 #include "Thread/NiNode/Legacy/LegacyNiUpdate.h"
 #include "Thread/NiNode/NiUpdate.h"
@@ -125,9 +123,7 @@ extern "C" DLLEXPORT bool SKSEAPI SKSEPlugin_Load(const SKSE::LoadInterface* a_s
     }
 
     Thread::Interface::SceneMenu::Register();
-    Thread::PrismaUI::SLToolsMenu::Initialize();
-    Thread::PrismaUI::FurnSelectionMenu::Initialize();
-    Thread::PrismaUI::EnjoymentBars::Initialize();
+    Thread::PrismaUI::RegisterPrismaViews();
 
     const auto serialization = SKSE::GetSerializationInterface();
     serialization->SetUniqueID('slpp');

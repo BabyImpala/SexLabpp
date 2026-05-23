@@ -3,8 +3,10 @@
 #include "Registry/Library.h"
 #include "Registry/Util/RayCast/Offsets.h"
 #include "Registry/Util/Scale.h"
-#include "Thread/Interface/EnjoymentBars.h"
-#include "Thread/Interface/SLToolsMenu.h"
+#include "Thread/Interface/Overlays/AnimSpeedOverlay.h"
+#include "Thread/Interface/Overlays/EnjoymentBars.h"
+#include "Thread/Interface/Overlays/OffsetAdjustMenu.h"
+#include "Thread/Interface/PrismaSceneMenu.h"
 #include "Thread/Interface/SceneMenu.h"
 #include "Util/Script.h"
 
@@ -97,13 +99,6 @@ namespace Thread
             return false;
         Interface::SceneMenu::Hide();
         return true;
-    }
-
-    void Instance::UpdateTimer(float a_timer)
-    {
-        if (!ControlsMenu())
-            return;
-        Interface::SceneMenu::UpdateTimer(a_timer);
     }
 
     void Instance::AdvanceScene(const Registry::Stage* a_nextStage)
@@ -264,18 +259,6 @@ namespace Thread
         return true;
     }
 
-    bool Instance::GetAutoplayEnabled()
-    {
-        const auto scriptObj = Script::GetScriptObject(linkedQst, "sslThreadModel");
-        return Script::GetTrivialProperty<bool>(scriptObj, "AutoAdvance");
-    }
-
-    void Instance::SetAutoplayEnabled(bool a_enabled)
-    {
-        const auto scriptObj = Script::GetScriptObject(linkedQst, "sslThreadModel");
-        Script::SetProperty(scriptObj, "AutoAdvance", a_enabled);
-    }
-
     void Instance::SetAnimationPlaybackSpeed(float playbackSpeed)
     {
         std::vector<std::pair<RE::BSAnimationGraphManagerPtr, std::unique_ptr<RE::BSSpinLockGuard>>> lockedGraphs;
@@ -324,6 +307,58 @@ namespace Thread
                 }
             }
         }
+    }
+
+    void Instance::OffsetAdjustSet(uint32_t actorFormId, Registry::CoordinateType axis, float value)
+    {
+        if (!activeScene || !activeStage) return;
+
+        // scene/furniture offset
+        if (actorFormId == 0) {
+            Registry::Library::GetSingleton()->EditScene(activeScene, [&](Registry::Scene* scene) {
+                scene->furnitureOffset.SetOffset(value, axis);
+            });
+            baseCoordinates = center.offset.offset.ApplyReturn(center.GetRef());
+            activeScene->furnitureOffset.Apply(baseCoordinates);
+            AdvanceScene(activeStage);
+
+        // position offset 
+        } else {
+            const auto it = std::find_if(activeAssignment->begin(), activeAssignment->end(),
+                [&](RE::Actor* a) { return a && a->GetFormID() == actorFormId; });
+            if (it == activeAssignment->end()) return;
+            const auto posIdx = static_cast<size_t>(std::distance(activeAssignment->begin(), it));
+
+            Registry::Library::GetSingleton()->EditScene(activeScene, [&](Registry::Scene* scene) {
+                if (Instance::GetThreadProperty<bool>("AdjustStage")) {
+                    auto* stage = const_cast<Registry::Stage*>(scene->GetStageByID(activeStage->id));
+                    if (stage && posIdx < stage->positions.size())
+                        stage->positions[posIdx].offset.SetOffset(value, axis);
+                } else {
+                    scene->ForEachStage([&](Registry::Stage* st) {
+                        if (posIdx < st->positions.size())
+                            st->positions[posIdx].offset.SetOffset(value, axis);
+                        return false;
+                    });
+                }
+            });
+            UpdatePlacement(*it);
+        }
+    }
+
+    void Instance::OffsetAdjustReset()
+    {
+        if (!activeScene || !activeStage) return;
+        Registry::Library::GetSingleton()->EditScene(activeScene, [&](Registry::Scene* scene) {
+            scene->furnitureOffset.ResetOffset();
+            scene->ForEachStage([](Registry::Stage* stage) {
+                for (auto&& pos : stage->positions) {
+                    pos.offset.ResetOffset();
+                }
+                return false;
+            });
+        });
+        AdvanceScene(activeStage);
     }
 
     void Instance::SetEnjoyment(RE::Actor* a_position, float a_enjoyment)
@@ -469,32 +504,50 @@ namespace Thread
         return false;
     }
 
-    void Instance::OpenSLToolsMenu()
+    // ── CONFIGS STATE COMMUNICATION
+
+    template <typename T>
+    T Instance::GetThreadProperty(const std::string& a_property)
     {
-        std::vector<const Registry::Scene*> playingScenes = GetThreadScenes();
-        std::vector<RE::BSFixedString> playingScenesNames;
-        playingScenesNames.reserve(playingScenes.size());
-        for (const Registry::Scene* playingScene : playingScenes) {
-            playingScenesNames.push_back(playingScene->name);
-        }
-        Script::ObjectPtr scriptObj = Script::GetScriptObject(linkedQst, "sslThreadController");
-        PrismaUI::SLToolsMenu::Open(scriptObj, activeScene->name, playingScenesNames);
+        const auto scriptObj = Script::GetScriptObject(linkedQst, "sslThreadModel");
+        if (!scriptObj) return T{};
+        return Script::GetTrivialProperty<T>(scriptObj, a_property);
+    }
+    template bool Instance::GetThreadProperty<bool>(const std::string&);
+    template float Instance::GetThreadProperty<float>(const std::string&);
+    template int32_t Instance::GetThreadProperty<int32_t>(const std::string&);
+
+    template <typename T>
+    void Instance::SetThreadProperty(const std::string& a_property, T a_val)
+    {
+        const auto scriptObj = Script::GetScriptObject(linkedQst, "sslThreadModel");
+        if (!scriptObj) return;
+        Script::SetProperty<T>(scriptObj, a_property, a_val);
+    }
+    template void Instance::SetThreadProperty<bool>(const std::string&, bool);
+    template void Instance::SetThreadProperty<float>(const std::string&, float);
+    template void Instance::SetThreadProperty<int32_t>(const std::string&, int32_t);
+
+    // ── PRISMA UI
+
+    void Instance::PrismaOverlayInitImpl(int32_t aiOverlayIndex)
+    {
+        PrismaUI::OverlayInit(linkedQst, static_cast<PrismaUI::PrismaOverlayIndex>(aiOverlayIndex));
     }
 
-    void Instance::EnjBarsInit(const std::vector<RE::Actor*>& a_positions)
+    void Instance::PrismaOverlayDestroyImpl(int32_t aiOverlayIndex)
     {
-        Script::ObjectPtr scriptObj = Script::GetScriptObject(linkedQst, "sslThreadController");
-        PrismaUI::EnjoymentBars::InitAndShow(scriptObj, a_positions);
+        PrismaUI::OverlayDestroy(static_cast<PrismaUI::PrismaOverlayIndex>(aiOverlayIndex));
     }
 
-    void Instance::EnjBarsClose()
+    void Instance::TogglePrismaFocusImpl()
     {
-        PrismaUI::EnjoymentBars::HideAndClear();
+        return PrismaUI::PrismaSceneMenu::ToggleFocus();
     }
 
-    void Instance::EnjBarsToggle()
+    void Instance::UpdateMenuTimerDisplay(float a_duration, float a_left)
     {
-        PrismaUI::EnjoymentBars::ToggleEnjoymentBars();
+        PrismaUI::AnimSpeedOverlay::UpdateStageTimerDisplay(a_duration, a_left);
     }
 
     void Instance::EnjBarsChangeHighlightedPartner(RE::Actor* a_partner)
@@ -510,6 +563,11 @@ namespace Thread
     void Instance::RegisterRaiseEnjAttempt(RE::Actor* a_position, float a_nextTimeCycle)
     {
         PrismaUI::EnjoymentBars::RegisterRaiseEnjAttempt(a_position, a_nextTimeCycle);
+    }
+
+    void Instance::UpdateOffsetSlidersDisplay()
+    {
+        PrismaUI::OffsetAdjustMenu::OnStageChanged();
     }
 
 }  // namespace Thread

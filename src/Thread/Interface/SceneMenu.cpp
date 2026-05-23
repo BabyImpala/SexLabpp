@@ -458,12 +458,12 @@ namespace Thread::Interface
     {
         assert(a_args.argCount == 1 && a_args.args[0].GetType() == RE::GFxValue::ValueType::kBoolean);
         bool enable = a_args.args->GetBool();
-        threadInstance->SetAutoplayEnabled(enable);
+        threadInstance->SetThreadProperty<bool>("AutoAdvance", enable);
     }
 
     void SceneMenu::SLAPI_IsAutoPlay::Call(Params& a_args)
     {
-        a_args.retVal->SetBoolean(threadInstance->GetAutoplayEnabled());
+        a_args.retVal->SetBoolean(threadInstance->GetThreadProperty<bool>("AutoAdvance"));
     }
 
     void SceneMenu::SLAPI_SetHideHUD::Call(Params& a_args)
