@@ -1,37 +1,22 @@
-/* Panel specific tokens are declared in _shared.css. */
-/* Position tokens are declared in PrismaSceneMenu.css. */
+/* Tokens from _shared.css. Position config from PrismaSceneMenu.css. */
 
+/* ── SSM PANEL ──────────────────────────────────────────────  */
 .ssm-panel {
-  right : calc(-270 * var(--s));
   width      : calc(270 * var(--s));
   max-height : 80vh;
   z-index    : 130;
 }
 
-.ssm-panel.open {
-  right : calc(40 * var(--s));
-}
-
-.ssm-row-body {
-  display        : none;
-  flex-direction : column;
-  overflow       : hidden;
-  flex-shrink    : 0;
-}
-.ssm-row-body.open { display: flex; }
-
+/* ── SCENE LIST ─────────────────────────────────────────────  */
 .ssm-scene-list {
   max-height : calc(240 * var(--s));
-  /* extends .slp-scroll-list */
 }
 
-.ssm-scene-row {
-  /* extends .slp-panel-row + .slp-panel-row--clickable */
-  font-size : calc(10 * var(--s));
-}
-.ssm-scene-row--active       { color: #70b870; cursor: default; }
+.ssm-scene-row { font-size: calc(10 * var(--s)); }
+.ssm-scene-row--active { color: #70b870; cursor: default; }
 .ssm-scene-row--active:hover { background: rgba(40,56,40,0.35); color: #88d488; }
 
+/* ── SEARCH AREA ────────────────────────────────────────────  */
 .ssm-search-area {
   display        : flex;
   flex-direction : column;
@@ -61,20 +46,23 @@
   justify-content : flex-end;
 }
 
+/* ── INFO CARD ──────────────────────────────────────────────  */
 .ssm-info-card {
-  display         : none;
+  visibility      : hidden;
   position        : fixed;
   z-index         : 160;
   width           : calc(190 * var(--s));
-  background      : rgba(16, 16, 18, 0.82);
+  background      : var(--bg-infocard);
   border          : 1px solid rgba(80, 80, 90, 0.35);
   border-radius   : calc(4 * var(--s));
   box-shadow      : calc(-3 * var(--s)) 0 calc(18 * var(--s)) rgba(0,0,0,0.55);
-  padding         : calc(8 * var(--s)) calc(10 * var(--s));
-  padding-left    : calc(14 * var(--s));
-  pointer-events  : auto;
+  padding         : calc(8 * var(--s)) calc(10 * var(--s)) calc(8 * var(--s)) calc(14 * var(--s));
+  pointer-events  : none;
   user-select     : none;
-  backdrop-filter : blur(4px);
+}
+.ssm-info-card.visible {
+  visibility     : visible;
+  pointer-events : auto;
 }
 
 .ssm-info-row {
@@ -139,8 +127,8 @@
   cursor          : text;
   user-select     : text;
   pointer-events  : auto;
-  transition      : border-color var(--transition), background var(--transition);
   line-height     : 1.4;
+  transition      : border-color var(--transition), background var(--transition);
 }
 .ssm-info-annot-value:empty::before {
   content : 'None — click to add…';

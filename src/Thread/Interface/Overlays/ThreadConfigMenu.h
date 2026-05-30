@@ -9,8 +9,8 @@ namespace Thread::PrismaUI
         static void Init();
         static void Destroy();
 
-        static void OnRandomScene([[maybe_unused]] const std::string& unused);
-        static void OnMoveScene([[maybe_unused]] const std::string& unused);
+        static void OnRandomScene();
+        static void OnMoveScene();
         static void OnAutoPlaySet(const std::string& data);
         static void OnNextPermutation(const std::string& data);
         static void OnSetExpression(const std::string& data);

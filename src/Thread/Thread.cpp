@@ -329,6 +329,8 @@ namespace Thread
         if (!activeScene || !activeStage) return;
         Registry::Library::GetSingleton()->EditScene(activeScene, [&](Registry::Scene* scene) {
             scene->furnitureOffset.ResetOffset();
+            baseCoordinates = center.offset.offset.ApplyReturn(center.GetRef());
+            scene->furnitureOffset.Apply(baseCoordinates);
             scene->ForEachStage([](Registry::Stage* stage) {
                 for (auto&& pos : stage->positions) {
                     pos.offset.ResetOffset();

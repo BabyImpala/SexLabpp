@@ -55,6 +55,18 @@ namespace Thread::PrismaUI
             PrismaSceneMenu::psm_callbackPtr, a_success ? 1 : 0);
     };
 
+    void EnjoymentBars::OnSelectPartner(const std::string& data)
+    {
+        uint32_t formId = 0;
+        try { formId = static_cast<uint32_t>(std::stoul(data)); } catch (...) { return; }
+        auto* actor = RE::TESForm::LookupByID<RE::Actor>(formId);
+        if (!actor || actor->IsPlayerRef()) return;
+
+        if (!PrismaSceneMenu::psm_threadScript) return;
+        Script::DispatchMethodCall(PrismaSceneMenu::psm_threadScript, "SelectTargetPartner",
+            PrismaSceneMenu::psm_callbackPtr, std::move(actor));
+    };
+
     // ── HELPERS
 
     std::string EnjoymentBars::BuildInitJson()

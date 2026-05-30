@@ -23,7 +23,7 @@ namespace Thread::PrismaUI
 
     // ── JS TO C++
 
-    void ThreadConfigMenu::OnRandomScene([[maybe_unused]] const std::string& unused)
+    void ThreadConfigMenu::OnRandomScene()
     {
         auto* instance = Instance::GetInstance(PrismaSceneMenu::psm_linkedThread);
         if (!instance) return;
@@ -46,7 +46,7 @@ namespace Thread::PrismaUI
             RE::BSFixedString{ sceneId.c_str() });
     };
 
-    void ThreadConfigMenu::OnMoveScene([[maybe_unused]] const std::string& unused)
+    void ThreadConfigMenu::OnMoveScene()
     {
         if (!PrismaSceneMenu::psm_threadScript) return;
         Script::DispatchMethodCall(PrismaSceneMenu::psm_threadScript, "TogglePrismaFocus", PrismaSceneMenu::psm_callbackPtr);

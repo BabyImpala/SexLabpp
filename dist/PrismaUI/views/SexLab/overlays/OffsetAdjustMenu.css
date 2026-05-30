@@ -1,54 +1,55 @@
-/* Panel specific tokens are declared in _shared.css. */
-/* Position tokens are declared in PrismaSceneMenu.css. */
+/* Tokens from _shared.css. Position config from PrismaSceneMenu.css. */
 
+/* ── OAM PICKER ─────────────────────────────────────────────  */
 .oam-picker {
-  position       : fixed;
-  right          : calc(-220 * var(--s));
-  top            : 50%;
-  transform      : translateY(-50%);
-  opacity        : 0;
-  pointer-events : none;
-  z-index        : 180;
-  display        : flex;
-  flex-direction : column;
-  align-items    : stretch;
-  width          : calc(200 * var(--s));
-  background     : rgba(14, 14, 16, 0.82);
-  border         : 1px solid rgba(58, 58, 58, 0.7);
-  border-right   : none;
-  border-radius  : var(--radius) 0 0 var(--radius);
-  box-shadow     : calc(-4 * var(--s)) 0 calc(24 * var(--s)) rgba(0,0,0,0.55);
-  overflow       : hidden;
-  backdrop-filter: blur(6px);
-  transition     : right 200ms cubic-bezier(0.22, 0.68, 0, 1.05),
-                   opacity 160ms ease;
+  position        : fixed;
+  right           : var(--slp-panel-offset);
+  top             : 50%;
+  transform       : translateY(-50%) translateX(calc(100% + var(--slp-panel-offset)));
+  opacity         : 0;
+  pointer-events  : none;
+  z-index         : 180;
+  display         : flex;
+  flex-direction  : column;
+  align-items     : stretch;
+  width           : calc(200 * var(--s));
+  background      : var(--bg-picker);
+  border          : 1px solid rgba(58, 58, 58, 0.7);
+  border-right    : none;
+  border-radius   : var(--radius) 0 0 var(--radius);
+  box-shadow      : calc(-4 * var(--s)) 0 calc(24 * var(--s)) rgba(0,0,0,0.55);
+  overflow        : hidden;
+  will-change     : transform;
+  transition      : transform var(--slp-panel-ease),
+                    opacity 160ms ease;
 }
 .oam-picker.open {
-  right          : calc(40 * var(--s));
+  transform      : translateY(-50%);
   opacity        : 1;
   pointer-events : auto;
 }
 
+/* ── OAM PANEL ──────────────────────────────────────────────  */
 .oam-panel {
-  position       : fixed;
-  top            : 50%;
-  transform      : translateY(-50%);
-  right          : calc(-320 * var(--s));
-  width          : calc(300 * var(--s));
-  overflow       : visible;
-  z-index        : 130;
-  opacity        : 0;
-  pointer-events : none;
-  display        : flex;
-  flex-direction : column;
-  transition     : right 200ms cubic-bezier(0.22, 0.68, 0, 1.05),
-                   opacity 160ms ease;
+  position        : fixed;
+  top             : 50%;
+  right           : var(--slp-panel-offset);
+  width           : calc(300 * var(--s));
+  overflow        : visible;
+  z-index         : 130;
+  opacity         : 0;
+  pointer-events  : none;
+  display         : flex;
+  flex-direction  : column;
+  transform       : translateY(-50%) translateX(calc(100% + var(--slp-panel-offset)));
+  will-change     : transform;
+  transition      : transform var(--slp-panel-ease),
+                    opacity 160ms ease;
 }
-
 .oam-panel.open {
-  right          : calc(40 * var(--s)) !important;
-  opacity        : 1 !important;
-  pointer-events : auto !important;
+  transform      : translateY(-50%);
+  opacity        : 1;
+  pointer-events : auto;
 }
 
 .oam-panel-title {
@@ -65,25 +66,7 @@
 
 .oam-panel-settings { flex-shrink: 0; }
 
-.oam-step-row {
-  display     : flex;
-  align-items : center;
-  gap         : calc(6 * var(--s));
-}
-.oam-step-slider {
-  width        : calc(90 * var(--s));
-  accent-color : var(--text-secondary);
-  cursor       : pointer;
-  height       : calc(3 * var(--s));
-}
-.oam-step-val {
-  font-size            : calc(10 * var(--s));
-  font-variant-numeric : tabular-nums;
-  color                : var(--text-secondary);
-  min-width            : calc(28 * var(--s));
-  text-align           : right;
-}
-
+/* ── OFFSET ROWS ────────────────────────────────────────────  */
 .oam-offsets {
   flex     : 1;
   overflow : visible;
@@ -103,6 +86,7 @@
   justify-content : space-between;
   align-items     : baseline;
 }
+
 .oam-offset-label {
   font-size      : calc(10 * var(--s));
   font-weight    : 600;
@@ -116,7 +100,6 @@
   font-variant-numeric : tabular-nums;
   color                : var(--text-muted);
   letter-spacing       : 0.03em;
-  transition           : color 80ms linear, background 80ms linear, border-color 80ms linear;
   background           : transparent;
   border               : 1px solid transparent;
   border-radius        : calc(2 * var(--s));
@@ -127,12 +110,13 @@
   cursor               : text;
   font-family          : inherit;
   user-select          : text;
+  transition           : color 80ms linear, background 80ms linear, border-color 80ms linear;
 }
-.oam-offset-val:hover  { border-color: rgba(58,58,58,0.7);  background: rgba(255,255,255,0.03); }
-.oam-offset-val:focus  { border-color: rgba(80,80,90,0.6);  background: rgba(255,255,255,0.05); color: var(--text-primary); }
+.oam-offset-val:hover   { border-color: rgba(58,58,58,0.7);  background: rgba(255,255,255,0.03); }
+.oam-offset-val:focus   { border-color: rgba(80,80,90,0.6);  background: rgba(255,255,255,0.05); color: var(--text-primary); }
 .oam-offset-val.nonzero { color: var(--text-secondary); }
 
-
+/* ── OFFSET TRACK ───────────────────────────────────────────  */
 .oam-offset-track {
   position      : relative;
   width         : 100%;
@@ -177,10 +161,7 @@
 
 .oam-offset-hitarea {
   position : absolute;
-  left     : 0;
-  right    : 0;
-  top      : calc(-10 * var(--s));
-  bottom   : calc(-10 * var(--s));
+  inset    : calc(-10 * var(--s)) 0;
   cursor   : ew-resize;
   z-index  : 10;
 }
@@ -194,7 +175,7 @@
   font-size            : calc(9 * var(--s));
   font-variant-numeric : tabular-nums;
   color                : var(--text-primary);
-  background           : rgba(10, 10, 12, 0.88);
+  background           : rgba(10, 10, 12, 0.96);
   border               : 1px solid rgba(58,58,58,0.7);
   border-radius        : calc(2 * var(--s));
   padding              : calc(1 * var(--s)) calc(5 * var(--s));
@@ -203,6 +184,7 @@
   z-index              : 300;
 }
 
+/* ── RESET ROW ──────────────────────────────────────────────  */
 .oam-reset-row {
   flex-shrink     : 0;
   display         : flex;
@@ -214,7 +196,7 @@
   color           : var(--text-muted);
   cursor          : pointer;
   border-top      : 1px solid rgba(50,50,55,0.9);
-  transition      : background var(--transition), color var(--transition);
   letter-spacing  : 0.06em;
+  transition      : background var(--transition), color var(--transition);
 }
-.oam-reset-row:hover { background:rgba(40,40,46,0.5); color:var(--text-secondary); }
+.oam-reset-row:hover { background: rgba(40,40,46,0.5); color: var(--text-secondary); }

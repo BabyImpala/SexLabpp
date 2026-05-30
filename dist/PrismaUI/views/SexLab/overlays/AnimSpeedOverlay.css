@@ -1,5 +1,4 @@
-/* Sizing tokens are declared in _shared.css. */
-/* Position tokens are declared in PrismaSceneMenu.css. */
+/* Tokens from _shared.css. Position config from PrismaSceneMenu.css. */
 
 body:has(.spd-root) {
   display         : block;
