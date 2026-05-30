@@ -1,7 +1,6 @@
 #include "ThreadConfigMenu.h"
 
 #include "Registry/Library.h"
-#include "SceneSelectorMenu.h"
 #include "SKSE/Translation.h"
 
 namespace Thread::PrismaUI
@@ -45,8 +44,6 @@ namespace Thread::PrismaUI
 
         Script::DispatchMethodCall(PrismaSceneMenu::psm_threadScript, "ResetScene", PrismaSceneMenu::psm_callbackPtr,
             RE::BSFixedString{ sceneId.c_str() });
-
-        SceneSelectorMenu::PopulateScenes();
     };
 
     void ThreadConfigMenu::OnMoveScene([[maybe_unused]] const std::string& unused)

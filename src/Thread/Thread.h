@@ -77,10 +77,6 @@ namespace Thread
         LegacyNiNode::NiInstance* GetNiInstanceLegacy() { return niInstanceLegacy.get(); }
         void UnregisterNiInstanceLegacy() { (LegacyNiNode::NiUpdate::Unregister(linkedQst->GetFormID()), niInstanceLegacy = nullptr); }
 
-        bool ControlsMenu();
-        bool TryOpenMenu();
-        bool TryCloseMenu();
-
         void AdvanceScene(const Registry::Stage* a_nextStage);
         bool SetActiveScene(const Registry::Scene* a_scene);
         const Registry::Scene* GetActiveScene() { return activeScene; }
@@ -102,13 +98,10 @@ namespace Thread
         void OffsetAdjustSet(uint32_t actorFormId, Registry::CoordinateType axis, float value);
         void OffsetAdjustReset();
 
-        void SetEnjoyment(RE::Actor* a_position, float a_enjoyment);
         const Registry::Expression* GetExpression(RE::Actor* a_position);
         void SetExpression(RE::Actor* a_position, const Registry::Expression* a_expression);
         const Registry::Voice* GetVoice(RE::Actor* a_position);
         void SetVoice(RE::Actor* a_position, const Registry::Voice* a_voice);
-        bool IsGhostMode(RE::Actor* a_position);
-        void SetGhostMode(RE::Actor* a_position, bool a_ghostMode);
         int32_t GetUniquePermutations(RE::Actor* a_position);
         int32_t GetCurrentPermutation(RE::Actor* a_position);
         bool SetNextPermutation(RE::Actor* a_position);

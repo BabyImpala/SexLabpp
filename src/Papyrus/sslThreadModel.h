@@ -31,8 +31,6 @@ namespace Papyrus::ThreadModel
         std::vector<RE::TESForm*> StripByData(ALIASARGS, int32_t a_stripdata, std::vector<uint32_t> a_defaults, std::vector<uint32_t> a_overwrite);
         std::vector<RE::TESForm*> StripByDataEx(ALIASARGS, int32_t a_stripdata, std::vector<uint32_t> a_defaults, std::vector<uint32_t> a_overwrite, std::vector<RE::TESForm*> a_mergewith);
 
-        void UpdateEnjoyment(ALIASARGS, float a_enjoyment);
-
         void EnjBarsUpdateSlider(ALIASARGS, float a_enjoyment, RE::BSFixedString a_interactions);
         void RegisterRaiseEnjAttempt(ALIASARGS, float a_nextTimeCycle);
 
@@ -49,8 +47,6 @@ namespace Papyrus::ThreadModel
 
             REGISTERFUNC(StripByData, "sslActorAlias", false);
             REGISTERFUNC(StripByDataEx, "sslActorAlias", false);
-
-            REGISTERFUNC(UpdateEnjoyment, "sslActorAlias", false);
 
             REGISTERFUNC(EnjBarsUpdateSlider, "sslActorAlias", false);
             REGISTERFUNC(RegisterRaiseEnjAttempt, "sslActorAlias", false);
@@ -91,10 +87,6 @@ namespace Papyrus::ThreadModel
 
     void AddExperience(QUESTARGS, std::vector<RE::Actor*> a_positions, RE::BSFixedString a_scene, std::vector<RE::BSFixedString> a_playedstages);
     void UpdateStatistics(QUESTARGS, RE::Actor* a_actor, std::vector<RE::Actor*> a_positions, RE::BSFixedString a_scene, std::vector<RE::BSFixedString> a_playedstages, float a_time);
-
-    bool IsOwningSceneMenu(QUESTARGS);
-    bool TryOpenSceneMenu(QUESTARGS);
-    bool TryCloseSceneMenu(QUESTARGS);
 
     // Prisma UI
     void PrismaOverlayInitImpl(QUESTARGS, int32_t aiOverlayIndex);
@@ -139,10 +131,6 @@ namespace Papyrus::ThreadModel
 
         REGISTERFUNC(AddExperience, "sslThreadModel", true);
         REGISTERFUNC(UpdateStatistics, "sslThreadModel", true);
-
-        REGISTERFUNC(IsOwningSceneMenu, "sslThreadModel", true);
-        REGISTERFUNC(TryOpenSceneMenu, "sslThreadModel", true);
-        REGISTERFUNC(TryCloseSceneMenu, "sslThreadModel", true);
 
         REGISTERFUNC(PrismaOverlayInitImpl, "sslThreadModel", true);
         REGISTERFUNC(PrismaOverlayDestroyImpl, "sslThreadModel", true);

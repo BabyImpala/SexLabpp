@@ -613,7 +613,7 @@ int Property POSITION_COUNT_MAX = 5 AutoReadOnly
 String Property STATE_IDLE 		= "Unlocked" AutoReadOnly
 String Property STATE_SETUP 	= "Making" AutoReadOnly
 String Property STATE_SETUP_M	= "Making_M" AutoReadOnly
-String Property STATE_PLAYING = "Animating" AutoReadOnly
+String Property STATE_PLAYING   = "Animating" AutoReadOnly
 String Property STATE_END 		= "Ending" AutoReadOnly
 
 ; ------------------------------------------------------- ;
@@ -632,10 +632,6 @@ int Function GetStatus()
 	Fatal("Undefined Status. Resetting thread...")
 	return STATUS_UNDEF
 EndFunction
-
-bool Function IsOwningSceneMenu() native
-bool Function TryOpenSceneMenu() native
-bool Function TryCloseSceneMenu() native
 
 ; ------------------------------------------------------- ;
 ; --- Thread Data                                     --- ;

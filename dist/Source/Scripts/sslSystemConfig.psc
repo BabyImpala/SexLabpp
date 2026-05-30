@@ -274,72 +274,6 @@ float property AdjustStepSize hidden
     SetSettingFlt("fAdjustStepSize", afSet)
   EndFunction
 EndProperty
-bool property UseSceneMenu hidden
-  bool Function Get()
-    return GetSettingBool("bUseSceneMenu")
-  EndFunction
-  Function Set(bool aSet)
-    SetSettingBool("bUseSceneMenu", aSet)
-  EndFunction
-EndProperty
-
-; UI Visibility
-bool property HideHUD hidden
-	bool Function Get()
-	  return GetSettingBool("bHideHUD")
-	EndFunction
-	Function Set(bool aSet)
-	  SetSettingBool("bHideHUD", aSet)
-	EndFunction
-EndProperty
-bool property OverlayAnimSpeed hidden
-	bool Function Get()
-	  return GetSettingBool("bOverlayAnimSpeed")
-	EndFunction
-	Function Set(bool aSet)
-	  SetSettingBool("bOverlayAnimSpeed", aSet)
-	EndFunction
-EndProperty
-bool property OverlayEnjBars hidden
-	bool Function Get()
-	  return GetSettingBool("bOverlayEnjBars")
-	EndFunction
-	Function Set(bool aSet)
-	  SetSettingBool("bOverlayEnjBars", aSet)
-	EndFunction
-EndProperty
-bool property OverlayOffsetAdjust hidden
-	bool Function Get()
-	  return GetSettingBool("bOverlayOffsetAdjust")
-	EndFunction
-	Function Set(bool aSet)
-	  SetSettingBool("bOverlayOffsetAdjust", aSet)
-	EndFunction
-EndProperty
-bool property OverlaySceneSelector hidden
-	bool Function Get()
-	  return GetSettingBool("bOverlaySceneSelector")
-	EndFunction
-	Function Set(bool aSet)
-	  SetSettingBool("bOverlaySceneSelector", aSet)
-	EndFunction
-EndProperty
-bool property OverlayThreadConfig hidden
-	bool Function Get()
-	  return GetSettingBool("bOverlayThreadConfig")
-	EndFunction
-	Function Set(bool aSet)
-	  SetSettingBool("bOverlayThreadConfig", aSet)
-	EndFunction
-EndProperty
-bool property OverlayVisibilityControl hidden
-	bool Function Get()
-	  return GetSettingBool("bOverlayVisibilityControl")
-	EndFunction
-	Function Set(bool aSet)
-	  SetSettingBool("bOverlayVisibilityControl", aSet)
-	EndFunction
-EndProperty
 
 ; Integers
 int property ClimaxType hidden
@@ -419,148 +353,6 @@ int property LipsSoundTime hidden
   EndFunction
 EndProperty
 
-; Prisma Menu
-float property MenuScaleMult hidden
-  float Function Get()
-    return GetSettingFlt("fMenuScaleMult")
-  EndFunction
-  Function Set(float afSet)
-    SetSettingFlt("fMenuScaleMult", afSet)
-  EndFunction
-EndProperty
-int property PrismaMenuKey hidden
-  int Function Get()
-    return GetSettingInt("iKeyPrismaMenu")
-  EndFunction
-  Function Set(int aiSet)
-    SetSettingInt("iKeyPrismaMenu", aiSet)
-  EndFunction
-EndProperty
-int property PrismaFocusKey hidden
-  int Function Get()
-    return GetSettingInt("iKeyPrismaFocus")
-  EndFunction
-  Function Set(int aiSet)
-    SetSettingInt("iKeyPrismaFocus", aiSet)
-  EndFunction
-EndProperty
-
-; Scene Control Keys
-int property ModifierKey hidden
-  int Function Get()
-    return GetSettingInt("iKeyMod")
-  EndFunction
-  Function Set(int aiSet)
-    SetSettingInt("iKeyMod", aiSet)
-  EndFunction
-EndProperty
-int property AdvanceAnimation hidden
-  int Function Get()
-    return GetSettingInt("iKeyAdvance")
-  EndFunction
-  Function Set(int aiSet)
-    SetSettingInt("iKeyAdvance", aiSet)
-  EndFunction
-EndProperty
-int property ChangeAnimation hidden
-  int Function Get()
-    return GetSettingInt("iChangeAnimation")
-  EndFunction
-  Function Set(int aiSet)
-    SetSettingInt("iChangeAnimation", aiSet)
-  EndFunction
-EndProperty
-int property ChangePositions hidden
-  int Function Get()
-    return GetSettingInt("iChangePositions")
-  EndFunction
-  Function Set(int aiSet)
-    SetSettingInt("iChangePositions", aiSet)
-  EndFunction
-EndProperty
-int property MoveScene hidden
-  int Function Get()
-    return GetSettingInt("iMoveScene")
-  EndFunction
-  Function Set(int aiSet)
-    SetSettingInt("iMoveScene", aiSet)
-  EndFunction
-EndProperty
-int property EndAnimation hidden
-  int Function Get()
-    return GetSettingInt("iKeyEnd")
-  EndFunction
-  Function Set(int aiSet)
-    SetSettingInt("iKeyEnd", aiSet)
-  EndFunction
-EndProperty
-int property SceneSelectorMenu hidden
-  int Function Get()
-    return GetSettingInt("iSceneSelectorMenu")
-  EndFunction
-  Function Set(int aiSet)
-    SetSettingInt("iSceneSelectorMenu", aiSet)
-  EndFunction
-EndProperty
-
-; Offset Adjustment Keys
-int property OffsetAdjustMode hidden
-  int Function Get()
-    return GetSettingInt("iOffsetAdjustMode")
-  EndFunction
-  Function Set(int aiSet)
-    SetSettingInt("iOffsetAdjustMode", aiSet)
-  EndFunction
-EndProperty
-int property ToggleAdjustStage hidden
-  int Function Get()
-    return GetSettingInt("iToggleAdjustStage")
-  EndFunction
-  Function Set(int aiSet)
-    SetSettingInt("iToggleAdjustStage", aiSet)
-  EndFunction
-EndProperty
-int property RestoreOffsets hidden
-  int Function Get()
-    return GetSettingInt("iRestoreOffsets")
-  EndFunction
-  Function Set(int aiSet)
-    SetSettingInt("iRestoreOffsets", aiSet)
-  EndFunction
-EndProperty
-int property DirectionUp hidden
-  int Function Get()
-    return GetSettingInt("iKeyUp")
-  EndFunction
-  Function Set(int aiSet)
-    SetSettingInt("iKeyUp", aiSet)
-  EndFunction
-EndProperty
-int property DirectionDown hidden
-  int Function Get()
-    return GetSettingInt("iKeyDown")
-  EndFunction
-  Function Set(int aiSet)
-    SetSettingInt("iKeyDown", aiSet)
-  EndFunction
-EndProperty
-int property DirectionLeft hidden
-  int Function Get()
-    return GetSettingInt("iKeyLeft")
-  EndFunction
-  Function Set(int aiSet)
-    SetSettingInt("iKeyLeft", aiSet)
-  EndFunction
-EndProperty
-int property DirectionRight hidden
-  int Function Get()
-    return GetSettingInt("iKeyRight")
-  EndFunction
-  Function Set(int aiSet)
-    SetSettingInt("iKeyRight", aiSet)
-  EndFunction
-EndProperty
-
 ; Global Keys
 int property ToggleFreeCamera hidden
   int Function Get()
@@ -585,6 +377,140 @@ int property TargetActor hidden
   Function Set(int aiSet)
     SetSettingInt("iTargetActor", aiSet)
   EndFunction
+EndProperty
+
+; Scene Control Keys
+int property ModifierKey hidden
+  int Function Get()
+    return GetSettingInt("iKeyMod")
+  EndFunction
+  Function Set(int aiSet)
+    SetSettingInt("iKeyMod", aiSet)
+  EndFunction
+EndProperty
+int property AdvanceAnimation hidden
+  int Function Get()
+    return GetSettingInt("iKeyAdvance")
+  EndFunction
+  Function Set(int aiSet)
+    SetSettingInt("iKeyAdvance", aiSet)
+  EndFunction
+EndProperty
+int property EndAnimation hidden
+  int Function Get()
+    return GetSettingInt("iKeyEnd")
+  EndFunction
+  Function Set(int aiSet)
+    SetSettingInt("iKeyEnd", aiSet)
+  EndFunction
+EndProperty
+int property ChangeAnimation hidden
+  int Function Get()
+    return GetSettingInt("iChangeAnimation")
+  EndFunction
+  Function Set(int aiSet)
+    SetSettingInt("iChangeAnimation", aiSet)
+  EndFunction
+EndProperty
+int property MoveScene hidden
+  int Function Get()
+    return GetSettingInt("iMoveScene")
+  EndFunction
+  Function Set(int aiSet)
+    SetSettingInt("iMoveScene", aiSet)
+  EndFunction
+EndProperty
+int property ChangePositions hidden
+  int Function Get()
+    return GetSettingInt("iChangePositions")
+  EndFunction
+  Function Set(int aiSet)
+    SetSettingInt("iChangePositions", aiSet)
+  EndFunction
+EndProperty
+
+; Prisma Menu
+int property PrismaMenuKey hidden
+  int Function Get()
+    return GetSettingInt("iKeyPrismaMenu")
+  EndFunction
+  Function Set(int aiSet)
+    SetSettingInt("iKeyPrismaMenu", aiSet)
+  EndFunction
+EndProperty
+int property PrismaFocusKey hidden
+  int Function Get()
+    return GetSettingInt("iKeyPrismaFocus")
+  EndFunction
+  Function Set(int aiSet)
+    SetSettingInt("iKeyPrismaFocus", aiSet)
+  EndFunction
+EndProperty
+float property MenuScaleMult hidden
+  float Function Get()
+    return GetSettingFlt("fMenuScaleMult")
+  EndFunction
+  Function Set(float afSet)
+    SetSettingFlt("fMenuScaleMult", afSet)
+  EndFunction
+EndProperty
+
+; UI Visibility
+bool property HideHUD hidden
+	bool Function Get()
+	  return GetSettingBool("bHideHUD")
+	EndFunction
+	Function Set(bool aSet)
+	  SetSettingBool("bHideHUD", aSet)
+	EndFunction
+EndProperty
+bool property OverlayAnimSpeed hidden
+	bool Function Get()
+	  return GetSettingBool("bOverlayAnimSpeed")
+	EndFunction
+	Function Set(bool aSet)
+	  SetSettingBool("bOverlayAnimSpeed", aSet)
+	EndFunction
+EndProperty
+bool property OverlayEnjBars hidden
+	bool Function Get()
+	  return GetSettingBool("bOverlayEnjBars")
+	EndFunction
+	Function Set(bool aSet)
+	  SetSettingBool("bOverlayEnjBars", aSet)
+	EndFunction
+EndProperty
+bool property OverlayOffsetAdjust hidden
+	bool Function Get()
+	  return GetSettingBool("bOverlayOffsetAdjust")
+	EndFunction
+	Function Set(bool aSet)
+	  SetSettingBool("bOverlayOffsetAdjust", aSet)
+	EndFunction
+EndProperty
+bool property OverlaySceneSelector hidden
+	bool Function Get()
+	  return GetSettingBool("bOverlaySceneSelector")
+	EndFunction
+	Function Set(bool aSet)
+	  SetSettingBool("bOverlaySceneSelector", aSet)
+	EndFunction
+EndProperty
+bool property OverlayThreadConfig hidden
+	bool Function Get()
+	  return GetSettingBool("bOverlayThreadConfig")
+	EndFunction
+	Function Set(bool aSet)
+	  SetSettingBool("bOverlayThreadConfig", aSet)
+	EndFunction
+EndProperty
+bool property OverlayVisibilityControl hidden
+	bool Function Get()
+	  return GetSettingBool("bOverlayVisibilityControl")
+	EndFunction
+	Function Set(bool aSet)
+	  SetSettingBool("bOverlayVisibilityControl", aSet)
+	EndFunction
 EndProperty
 
 ; Floats
@@ -806,9 +732,6 @@ Function ToggleThreadControl()
     If (TargetThread.HasPlayer() || TakeThreadControl.Show())
       GetThreadControl(TargetThread as sslThreadController)
       _ActiveControl.TryPrismaOverlaysStart()
-      If (UseSceneMenu) ;Comeback: Reasses need after UI update
-        _ActiveControl.RealignActors()
-      EndIf
     EndIf
   EndIf
 EndFunction
@@ -2438,16 +2361,15 @@ int property Backwards hidden
 EndProperty
 
 bool function BackwardsPressed()
-  return Input.GetNumKeysPressed() > 1 && MirrorPress(Backwards)
+  return ModifierPressed()
 endFunction
 
 bool function AdjustStagePressed()
-  return (!AdjustStage && Input.GetNumKeysPressed() > 1 && MirrorPress(ToggleAdjustStage)) \
-    || (AdjustStage && !(Input.GetNumKeysPressed() > 1 && MirrorPress(ToggleAdjustStage)))
+  return ModifierPressed()
 endFunction
 
 bool function IsAdjustStagePressed()
-  return Input.GetNumKeysPressed() > 1 && MirrorPress(ToggleAdjustStage)
+  return Input.GetNumKeysPressed() > 1 && ModifierPressed()
 endFunction
 
 bool function MirrorPress(int mirrorkey)

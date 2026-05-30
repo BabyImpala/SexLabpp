@@ -277,13 +277,6 @@ namespace Papyrus::ThreadModel
             return a_mergewith;
         }
 
-        void UpdateEnjoyment(ALIASARGS, float a_enjoyment)
-        {
-            const auto& a_qst = a_alias->owningQuest;
-            GET_INSTANCE();
-            instance->SetEnjoyment(a_alias->GetActorReference(), a_enjoyment);
-        }
-
         void EnjBarsUpdateSlider(ALIASARGS, float a_enjoyment, RE::BSFixedString a_interactions)
         {
             const auto& a_qst = a_alias->owningQuest;
@@ -974,24 +967,6 @@ namespace Papyrus::ThreadModel
             stats.AddStatistic(stats.TimesOral, 1);
             stats.AddStatistic(stats.XP_Oral, oral * 1.25f);
         }
-    }
-
-    bool IsOwningSceneMenu(QUESTARGS)
-    {
-        GET_INSTANCE(false);
-        return instance->ControlsMenu();
-    }
-
-    bool TryOpenSceneMenu(QUESTARGS)
-    {
-        GET_INSTANCE(false);
-        return instance->TryOpenMenu();
-    }
-
-    bool TryCloseSceneMenu(QUESTARGS)
-    {
-        GET_INSTANCE(false);
-        return instance->TryCloseMenu();
     }
 
     // ---------------------------------------------- //

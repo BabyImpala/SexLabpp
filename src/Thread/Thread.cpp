@@ -6,8 +6,8 @@
 #include "Thread/Interface/Overlays/AnimSpeedOverlay.h"
 #include "Thread/Interface/Overlays/EnjoymentBars.h"
 #include "Thread/Interface/Overlays/OffsetAdjustMenu.h"
+#include "Thread/Interface/Overlays/SceneSelectorMenu.h"
 #include "Thread/Interface/PrismaSceneMenu.h"
-#include "Thread/Interface/SceneMenu.h"
 #include "Util/Script.h"
 
 namespace Thread
@@ -80,27 +80,6 @@ namespace Thread
         details = Registry::Library::GetSingleton()->GetFurnitureDetails(a_ref);
     }
 
-    bool Instance::ControlsMenu()
-    {
-        return Interface::SceneMenu::IsInstance(this);
-    }
-
-    bool Instance::TryOpenMenu()
-    {
-        if (Interface::SceneMenu::IsOpen())
-            return false;
-        Interface::SceneMenu::Show(this);
-        return true;
-    }
-
-    bool Instance::TryCloseMenu()
-    {
-        if (!Interface::SceneMenu::IsOpen())
-            return false;
-        Interface::SceneMenu::Hide();
-        return true;
-    }
-
     void Instance::AdvanceScene(const Registry::Stage* a_nextStage)
     {
         assert(activeScene && activeScene->GetStageNodeType(a_nextStage) != Registry::Scene::NodeType::None);
@@ -126,9 +105,9 @@ namespace Thread
             actor->Update3DPosition(true);
             actor->NotifyAnimationGraph(animationEvent);
         }
-        if (ControlsMenu()) {
-            Interface::SceneMenu::UpdateStageInfo();
-        }
+        //if (ControlsMenu()) {
+        //    Interface::SceneMenu::UpdateStageInfo();
+        //}
     }
 
     bool Instance::SetActiveScene(const Registry::Scene* a_scene)
@@ -160,9 +139,8 @@ namespace Thread
         baseCoordinates = center.offset.offset.ApplyReturn(center.GetRef());
         activeScene->furnitureOffset.Apply(baseCoordinates);
         activeAssignment = assignments.begin();
-        if (ControlsMenu()) {
-            Interface::SceneMenu::UpdateActiveScene();
-        }
+
+        PrismaUI::SceneSelectorMenu::PopulateScenes();
         return true;
     }
 
@@ -361,14 +339,6 @@ namespace Thread
         AdvanceScene(activeStage);
     }
 
-    void Instance::SetEnjoyment(RE::Actor* a_position, float a_enjoyment)
-    {
-        // COMEBACK: If enjoyment is moved into backend, update this
-        if (ControlsMenu()) {
-            Interface::SceneMenu::UpdateSlider(a_position->GetFormID(), a_enjoyment);
-        }
-    }
-
     const Registry::Expression* Instance::GetExpression(RE::Actor* a_actor)
     {
         const auto position = GetPosition(a_actor);
@@ -407,38 +377,6 @@ namespace Thread
             return;
         }
         position->voice = a_voice;
-    }
-
-    bool Instance::IsGhostMode(RE::Actor* a_actor)
-    {
-        const auto position = GetPosition(a_actor);
-        if (!position) {
-            logger::warn("Actor {} is not part of the current scene.", a_actor->GetFormID());
-            return false;
-        }
-        return position->ghostAlpha.has_value();
-    }
-
-    void Instance::SetGhostMode(RE::Actor* a_actor, bool a_ghostMode)
-    {
-        const auto position = GetPosition(a_actor);
-        if (!position) {
-            logger::warn("Actor {} is not part of the current scene.", a_actor->GetFormID());
-            return;
-        }
-        if (a_ghostMode) {
-            if (!position->ghostAlpha.has_value())
-                position->ghostAlpha = a_actor->GetAlpha();
-            a_actor->SetAlpha(Settings::fGhostModeAlpha);
-        } else {
-            if (position->ghostAlpha.has_value()) {
-                a_actor->SetAlpha(position->ghostAlpha.value());
-                position->ghostAlpha.reset();
-            } else {
-                logger::warn("Actor {} is not in ghost mode.", a_actor->GetFormID());
-                a_actor->SetAlpha(1.0f);
-            }
-        }
     }
 
     int32_t Instance::GetUniquePermutations(RE::Actor* a_actor)

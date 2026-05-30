@@ -1487,57 +1487,26 @@ EndEvent
 ; ------------------------------------------------------- ;
 
 function PlayerHotkeys()
-	SetCursorFillMode(TOP_TO_BOTTOM)
+	SetCursorFillMode(LEFT_TO_RIGHT)
 
 	AddHeaderOption("$SSL_GlobalHotkeys")
+	AddEmptyOption()
 	AddStateOptionKey("iTargetActor", "$SSL_iTargetActor", needsRegister = true)
+	AddStateOptionKey("iToggleFreeCamera", "$SSL_iToggleFreeCamera", needsRegister = true)
 	AddStateOptionKey("iToggleThreadControl", "$SSL_iToggleThreadControl", needsRegister = true)
+	AddEmptyOption()
 
 	AddHeaderOption("$SSL_SceneManipulation")
-	AddStateOptionKey("iKeyUp", "$SSL_iKeyUp", true, true)
-	AddStateOptionKey("iKeyDown", "$SSL_iKeyDown", true, true)
-	AddStateOptionKey("iKeyLeft", "$SSL_iKeyLeft", true, true)
-	AddStateOptionKey("iKeyRight", "$SSL_iKeyRight", true, true)
-	AddStateOptionKey("iKeyAdvance", "$SSL_iKeyAdvance", true, true)
-	AddStateOptionKey("iKeyEnd", "$SSL_iKeyEnd", true, true)
-	AddStateOptionKey("iKeyExtra2", "$SSL_iKeyExtra2", true, true) ;open SL menu
-	AddStateOptionKey("iKeyMod", "$SSL_iKeyMod", true, true) ;modifier
-	AddStateOptionKey("iKeyReset", "$SSL_iKeyReset", true, true) ;inverse action
-	AddStateOptionKey("iKeyPrismaMenu", "$SSL_iKeyPrismaMenu", true, true) ;toggle prisma menu
-	AddStateOptionKey("iKeyPrismaFocus", "$SSL_iKeyPrismaFocus", true, true) ;toggle prisma focus
-
-	SetCursorPosition(1)
-
 	AddEmptyOption()
-	AddStateOptionKey("iToggleFreeCamera", "$SSL_iToggleFreeCamera", needsRegister = true)
-	AddToggleOptionST("UseSceneMenu", "$SSL_bUseSceneMenu", Config.UseSceneMenu)
-	bool menu_flag = Config.UseSceneMenu
-	
-	AddHeaderOption("$SSL_LegacyHotkeys")
+	AddStateOptionKey("iKeyPrismaMenu", "$SSL_iKeyPrismaMenu", true, true)
+	AddStateOptionKey("iKeyAdvance", "$SSL_iKeyAdvance", true, true)
+	AddStateOptionKey("iKeyPrismaFocus", "$SSL_iKeyPrismaFocus", true, true)
+	AddStateOptionKey("iKeyEnd", "$SSL_iKeyEnd", true, true)
+	AddStateOptionKey("iKeyMod", "$SSL_iKeyMod", true, true)
 	AddStateOptionKey("iChangeAnimation", "$SSL_iChangeAnimation", true, true)
 	AddStateOptionKey("iMoveScene", "$SSL_iMoveScene", true, true)
-	AddStateOptionKey("iSceneSelectorMenu", "$SSL_iSceneSelectorMenu", true, true, abDisable=menu_flag)
-	AddStateOptionKey("iChangePositions", "$SSL_iChangePositions", true, true, abDisable=menu_flag)
-	AddStateOptionKey("iOffsetAdjustMode", "$SSL_iOffsetAdjustMode", true, true, abDisable=menu_flag)
-	AddStateOptionKey("iToggleAdjustStage", "$SSL_iToggleAdjustStage", true, true, abDisable=menu_flag)
-	AddStateOptionKey("iRestoreOffsets", "$SSL_iRestoreOffsets", true, true, abDisable=menu_flag)
+	AddStateOptionKey("iChangePositions", "$SSL_iChangePositions", true, true)
 EndFunction
-
-State UseSceneMenu
-	Event OnSelectST()
-		Config.UseSceneMenu = !Config.UseSceneMenu
-		SetToggleOptionValueST(Config.UseSceneMenu)
-		ForcePageReset()
-	EndEvent
-	Event OnDefaultST()
-		Config.UseSceneMenu = True
-		SetToggleOptionValueST(Config.UseSceneMenu)
-		ForcePageReset()
-	EndEvent
-	Event OnHighlightST()
-		SetInfoText("$SSL_bUseSceneMenuHighlight")
-	EndEvent
-EndState
 
 ; ------------------------------------------------------- ;
 ; --- Misc Utilities                                  --- ;
