@@ -84,38 +84,6 @@ $SSL_Race_50	Wisp
 $SSL_Race_51	Wispmother
 $SSL_Race_52	Wolf
 
-# --------------- UI -----------------------------------------------------
-$SSL_Thread	Thread
-$SSL_Positions	Positions
-$SSL_Debug	Debug
-$SSL_SceneInfo	Scene Info
-$SSL_Offset	Offset
-$SSL_AlternateScenes	Scenes
-$SSL_PickRandom	Play Random Scene
-$SSL_ToggleAutoplay	Toggle Auto Play
-$SSL_Name	Name
-$SSL_Author	Author
-$SSL_Package	Package
-$SSL_Tags	Tags
-$SSL_CustomTags	Annotations
-$SSL_ActiveFurniture{}	Center: {}
-$SSL_StepSize	Step Size
-$SSL_StageOnly	Stage Only
-$SSL_ResetOffsets	Reset Offsets
-$SSL_Permutation	Permutation
-$SSL_Expression	Expression
-$SSL_Voice	Voice
-$SSL_GhostMode	Ghost Mode
-$SSL_ExitMenu	Exit Menu
-$SSL_PauseAnimation	Pause Animation
-$SSL_MoveScene	Move Scene
-$SSL_Speed	Speed
-$SSL_NextStage	Next Stage
-$SSL_EndScene	End Scene
-$SSL_HideHUD	Hide Game HUD
-$SSL_HideUI	Hide Scene HUD
-$SSL_None	None
-
 # --------------- Sex Journal (Sex Diary) -----------------------------------------------------
 $SSL_SexJournal	Sex Journal
 $SSL_SexDiary	Sex Diary
@@ -164,8 +132,6 @@ $SSL_Statistic_12	Times Masturbated
 $SSL_Statistic_13	Times Submissive
 $SSL_Statistic_14	Times Dominant
 $SSL_Statistic_15	Times Total
-
-
 
 # ----------------- Animation Settings ---------------------------------------------------
 $SSL_AnimationSettings	Animation Settings
@@ -316,9 +282,6 @@ $SSL_WolfVoice01	[SL] Wolf Default
 # ------------------Player Hotkeys--------------------------------------------------
 $SSL_PlayerHotkeys	Player Hotkeys
 
-$SSL_bUseSceneMenu	Use Scene Menu
-$SSL_bUseSceneMenuHighlight	Toggles the use of the native in-scene menu and enjoyment bars.\nDisabling this brings back support for some modernized legacy SL's hotkeys.
-
 # ------ Global SexLab Hotkeys
 $SSL_GlobalHotkeys	Global SexLab Hotkeys
 
@@ -330,38 +293,16 @@ $SSL_iToggleThreadControl	Toggle Thread Control
 
 # ------ Scene Manipulation
 $SSL_SceneManipulation	Scene Manipulation
-$SSL_iKeyUp	Select Branch / Up
-$SSL_iKeyDown	Select Branch / Down
-$SSL_iKeyLeft	Decrease Speed / Left
-$SSL_iKeyRight	Increase Speed / Right
-$SSL_iKeyAdvance	Advance Scene / Select
-$SSL_iKeyEnd	End Scene / Close Menu / Back
-$SSL_iKeyExtra2	Open Menu / Swap Menu Tab
-$SSL_iKeyMod	Modifier
-$SSL_iKeyModHighlight	Toggles alternative effect for other hotkeys.\nNext/Prev: ChangePartner, AdvanceStage, OffsetAdjustMode.\nAdjustTarget: EnjRaise, EnjHoldback, ChangePosition, OffsetDirections.\nThe hotkeys changing their mode to "AdjustTarget" with ModifierKey affect Player on their own.
-$SSL_iKeyReset	Inverse Action
+
 $SSL_iKeyPrismaMenu	Prisma Menu Key
 $SSL_iKeyPrismaFocus	Prisma Focus Key
-
-$SSL_LegacyHotkeys	Legacy Hotkeys
+$SSL_iKeyAdvance	Advance Scene
+$SSL_iKeyEnd	End Scene
+$SSL_iKeyMod	Modifier
+$SSL_iKeyModHighlight	Toggles alternative effect for other hotkeys.\nNext/Prev: ChangePartner, AdvanceStage.\nAdjustTarget: EnjRaise, EnjHoldback.\nThe hotkeys changing their mode to "AdjustTarget" with ModifierKey affect Player on their own.
 $SSL_iChangeAnimation	Change Animation
 $SSL_iMoveScene	Move Scene
 $SSL_iChangePositions	Change Positions
-$SSL_iOffsetAdjustMode	Cycle Offset Adjust Modes
-$SSL_iOffsetAdjustModeHighlight	Hotkey to switch between the 5 offset adjust modes when in scene.\nNone: Offset adjustments are disabled (default).\nPOS-XY: L/R keys adjust position's X, U/D adjust Y.\nPOS-RZ: L/R adjust pos's Rotation, U/D adjust Z.\nSCENE-XY: L/R adjust scene's X, U/D adjust Y (furniture scene only).\nSCENE-RZ: L/R adjust scene's Rotation, U/D adjust Z (furniture only).
-$SSL_iToggleAdjustStage	Toggle Adjust Stage
-$SSL_iRestoreOffsets	Reset Offset Adjustments
-$SSL_iSceneSelectorMenu	Scene Selector Menu
-
-# ------ Scene Selector Menu
-$SSL_SS_OffsetAdjustMode	Select Offset Adjust Mode
-$SSL_SS_ChangeCurrentScene	Change Current Scene
-$SSL_SS_ResetScenesByTagName	Search By Tag/Name
-$SSL_SS_AdjNone	Disable Offset Adjustments
-$SSL_SS_AdjPosXY	Ajust Position XY
-$SSL_SS_AdjPosRZ	Ajust Position RZ
-$SSL_SS_AdjSceneXY	Ajust Furniture XY
-$SSL_SS_AdjSceneRZ	Ajust Furniture RZ
 
 # ------------------- Timers & Stripping -------------------------------------------------
 $SSL_TimersStripping	Timers & Stripping

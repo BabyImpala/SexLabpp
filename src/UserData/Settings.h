@@ -14,15 +14,19 @@ struct Settings
     enum class KeyType
     {
         None,
-        Up,
-        Down,
-        Left,
-        Right,
-        Select,
+        Menu,
+        Focus,
+        Advance,
         End,
-        Extra2,
-        Modes,
-        Reset,
+        Modifier,
+        Scene,
+        Move,
+        Position,
+        Thread,
+        FreeCam,
+        Partner,
+        RaiseEnj,
+        Holdback,
     };
     static KeyType GetKeyType(uint32_t a_keyCode);
     static uint32_t GetKeyCode(KeyType a_keyType);

@@ -84,38 +84,6 @@ $SSL_Race_50	Дымок
 $SSL_Race_51	Мать-дымок
 $SSL_Race_52	Волк
 
-# --------------- UI -----------------------------------------------------
-$SSL_Thread	Поток
-$SSL_Positions	Позиции
-$SSL_Debug	Дебаг
-$SSL_SceneInfo	Информация о сцене
-$SSL_Offset	Смещение
-$SSL_AlternateScenes	Сцены
-$SSL_PickRandom	Запустить случайную сцену
-$SSL_ToggleAutoplay	Авто-воспроизведение
-$SSL_Name	Имя
-$SSL_Author	Автор
-$SSL_Package	Набор
-$SSL_Tags	Тэги
-$SSL_CustomTags	Примечания
-$SSL_ActiveFurniture{}	Центр: {}
-$SSL_StepSize	Величина шага
-$SSL_StageOnly	Только стадии
-$SSL_ResetOffsets	Сбросить смещение
-$SSL_Permutation	Перестановка
-$SSL_Expression	Эмоция
-$SSL_Voice	Голос
-$SSL_GhostMode	Режим призрака
-$SSL_ExitMenu	Выйти из меню
-$SSL_PauseAnimation	Анимация на паузу
-$SSL_MoveScene	Переместить сцену
-$SSL_Speed	Скорость
-$SSL_NextStage	Следующая стадия
-$SSL_EndScene	Завершение
-$SSL_HideHUD	Спрятать интерфейс игры
-$SSL_HideUI	Спрятать интерфейс сцены
-$SSL_None	Нет
-
 # --------------- Sex Journal (Sex Diary) -----------------------------------------------------
 $SSL_SexJournal	Секс Журнал
 $SSL_SexDiary	Секс Дневник
@@ -164,8 +132,6 @@ $SSL_Statistic_12	Число манстурбаций
 $SSL_Statistic_13	Число в роли жертвы
 $SSL_Statistic_14	Число в роли агрессора
 $SSL_Statistic_15	Число всего
-
-
 
 # ----------------- Animation Settings ---------------------------------------------------
 $SSL_AnimationSettings	Настройки сцены
@@ -316,9 +282,6 @@ $SSL_WolfVoice01	[SL] Волк Обычный
 # ------------------Player Hotkeys--------------------------------------------------
 $SSL_PlayerHotkeys	Горячие клавиши
 
-$SSL_bUseSceneMenu	Использовать меню сцены
-$SSL_bUseSceneMenuHighlight	Включает/выключает использование встроенного меню и индикаторов наслаждения. Отключение этой функции возвращает поддержку некоторых модернизированных горячих клавиш старой версии SexLab.
-
 # ------ Global SexLab Hotkeys
 $SSL_GlobalHotkeys	Глобальные горячие клавиши
 
@@ -330,36 +293,18 @@ $SSL_iToggleThreadControl	Контроль потоков
 
 # ------ Scene Manipulation
 $SSL_SceneManipulation	Управление сценой
-$SSL_iKeyUp	Выберите ветвь / Вверх
-$SSL_iKeyDown	Выберите ветвь / Вниз
-$SSL_iKeyLeft	Уменьшить скорость / Влево
-$SSL_iKeyRight	Увеличить скорость / Вправо
+
+# TODO: $SSL_iKeyPrismaMenu
+$SSL_iKeyPrismaMenu	Prisma Menu Key
+# TODO: $SSL_iKeyPrismaFocus
+$SSL_iKeyPrismaFocus	Prisma Focus Key
 $SSL_iKeyAdvance	Продолжить сцену / Выбрать
 $SSL_iKeyEnd	Закончить сцену / Закрыть меню / Назад
-$SSL_iKeyExtra2	Открыть меню / Переключить страницу меню
 $SSL_iKeyMod	Модификатор
 $SSL_iKeyModHighlight	Включает альтернативный эффект для других горячих клавиш.\nСледующий/Предыдущий: Сменить партнёра, сменить стадию, режим смещения.\nНастройка цели: Наслаждение, Сдерживатся, Сменить позицию, Направление смещения.\nГорячие клавиши, изменяющие свой режим на "Настройка цели" с помощью Модификатора, влияют на игрока по своему.
-$SSL_iKeyReset	Инвертирование действия
-
-$SSL_LegacyHotkeys	"Старые" горячие клавиши
 $SSL_iChangeAnimation	Сменить анимацию
 $SSL_iMoveScene	Переместить сцену
 $SSL_iChangePositions	Сменить позицию
-$SSL_iOffsetAdjustMode	Сменить режим смещения
-$SSL_iOffsetAdjustModeHighlight	Горячая клавиша для переключения между 5 режимами регулировки смещения в сцене.\nНет: Регулировка смещения отключена (по умолчанию).\nPOS-XY: клавиши L/R регулируют положение по оси X, U/D — по оси Y.\nPOS-RZ: клавиши L/R регулируют вращение положения, U/D — по оси Z.\nSCENE-XY: клавиши L/R регулируют положение по оси X, U/D — по оси Y (только для сцен с мебелью).\nSCENE-RZ: клавиши L/R регулируют вращение положения, U/D — по оси Z (только для сцен с мебелью).
-$SSL_iToggleAdjustStage	Переключить подстройку стадии
-$SSL_iRestoreOffsets	Сбросить настройки смещения
-$SSL_iSceneSelectorMenu	Меню выбора сцены
-
-# ------ Scene Selector Menu
-$SSL_SS_OffsetAdjustMode	Выбрать режим смещения
-$SSL_SS_ChangeCurrentScene	Сменить текущую сцену
-$SSL_SS_ResetScenesByTagName	Поиск по тегу/названию
-$SSL_SS_AdjNone	Отключить подстройку смещения
-$SSL_SS_AdjPosXY	Подстроить по оси XY
-$SSL_SS_AdjPosRZ	Подстроить по оси RZ
-$SSL_SS_AdjSceneXY	Подстроить мебель по XY
-$SSL_SS_AdjSceneRZ	Подстроить мебель по RZ
 
 # ------------------- Timers & Stripping -------------------------------------------------
 $SSL_TimersStripping	Таймеры/Раздевание

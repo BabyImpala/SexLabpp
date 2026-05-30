@@ -84,38 +84,6 @@ $SSL_Race_50	Wisp
 $SSL_Race_51	Madre de las wisps
 $SSL_Race_52	Lobo
 
-# --------------- UI -----------------------------------------------------
-$SSL_Thread	Hilo
-$SSL_Positions	Posiciones
-$SSL_Debug	Debug
-$SSL_SceneInfo	Información de escena
-$SSL_Offset	Desplazamiento
-$SSL_AlternateScenes	Escenas
-$SSL_PickRandom	Reproducir escena aleatoria
-$SSL_ToggleAutoplay	Activar reproducción automática
-$SSL_Name	Nombre
-$SSL_Author	Autor
-$SSL_Package	Paquete
-$SSL_Tags	Etiquetas
-$SSL_CustomTags	Anotaciones
-$SSL_ActiveFurniture{}	Centro: {}
-$SSL_StepSize	Tamaño del paso
-$SSL_StageOnly	Solo etapa
-$SSL_ResetOffsets	Restablecer desplazamientos
-$SSL_Permutation	Variación
-$SSL_Expression	Expresión
-$SSL_Voice	Voz
-$SSL_GhostMode	Modo fantasma
-$SSL_ExitMenu	Salir del menú
-$SSL_PauseAnimation	Pausar animación
-$SSL_MoveScene	Mover escena
-$SSL_Speed	Velocidad
-$SSL_NextStage	Siguiente etapa
-$SSL_EndScene	Finalizar escena
-$SSL_HideHUD	Ocultar HUD del juego
-$SSL_HideUI	Ocultar HUD de escena
-$SSL_None	Ninguno
-
 # --------------- Sex Journal (Sex Diary) -----------------------------------------------------
 $SSL_SexJournal	Diario sexual
 $SSL_SexDiary	Diario íntimo
@@ -164,8 +132,6 @@ $SSL_Statistic_12	Veces masturbado
 $SSL_Statistic_13	Veces sumiso
 $SSL_Statistic_14	Veces dominante
 $SSL_Statistic_15	Veces totales
-
-
 
 # ----------------- Animation Settings ---------------------------------------------------
 $SSL_AnimationSettings	Ajustes de animación
@@ -320,11 +286,6 @@ $SSL_WolfVoice01	[SL] Lobo (predeterminado)
 # ------------------Player Hotkeys--------------------------------------------------
 $SSL_PlayerHotkeys	Atajos del jugador
 
-# TODO: $SSL_bUseSceneMenu
-$SSL_bUseSceneMenu	Use Scene Menu
-# TODO: $SSL_bUseSceneMenuHighlight
-$SSL_bUseSceneMenuHighlight	Toggles the use of the native in-scene menu and enjoyment bars.\nDisabling this brings back support for some modernized legacy SL's hotkeys.
-
 # ------ Global SexLab Hotkeys
 $SSL_GlobalHotkeys	Atajos globales de SexLab
 
@@ -337,52 +298,20 @@ $SSL_iToggleThreadControl	Toggle Thread Control
 
 # ------ Scene Manipulation
 $SSL_SceneManipulation	Control de escena
-$SSL_iKeyUp	Seleccionar / Arriba
-$SSL_iKeyDown	Seleccionar / Abajo
-$SSL_iKeyLeft	Reducir velocidad / Izquierda
-$SSL_iKeyRight	Aumentar velocidad / Derecha
+
+# TODO: $SSL_iKeyPrismaMenu
+$SSL_iKeyPrismaMenu	Prisma Menu Key
+# TODO: $SSL_iKeyPrismaFocus
+$SSL_iKeyPrismaFocus	Prisma Focus Key
 $SSL_iKeyAdvance	Avanzar escena / Seleccionar
 $SSL_iKeyEnd	Finalizar escena / Atrás
-$SSL_iKeyExtra2	Abrir menú / Cambiar pestaña
 $SSL_iKeyMod	Modificador
 # TODO: $SSL_iKeyModHighlight
-$SSL_iKeyModHighlight	Toggles alternative effect for other hotkeys.\nNext/Prev: ChangePartner, AdvanceStage, OffsetAdjustMode.\nAdjustTarget: EnjRaise, EnjHoldback, ChangePosition, OffsetDirections.\nThe hotkeys changing their mode to "AdjustTarget" with ModifierKey affect Player on their own.
-$SSL_iKeyReset	Acción inversa
-
-# TODO: $SSL_LegacyHotkeys
-$SSL_LegacyHotkeys	Legacy Hotkeys
+$SSL_iKeyModHighlight	Toggles alternative effect for other hotkeys.\nNext/Prev: ChangePartner, AdvanceStage.\nAdjustTarget: EnjRaise, EnjHoldback.\nThe hotkeys changing their mode to "AdjustTarget" with ModifierKey affect Player on their own.
 $SSL_iChangeAnimation	Cambiar animación
 $SSL_iMoveScene	Mover escena
 # TODO: $SSL_iChangePositions
 $SSL_iChangePositions	Change Positions
-# TODO: $SSL_iOffsetAdjustMode
-$SSL_iOffsetAdjustMode	Cycle Offset Adjust Modes
-# TODO: $SSL_iOffsetAdjustModeHighlight
-$SSL_iOffsetAdjustModeHighlight	Hotkey to switch between the 5 offset adjust modes when in scene.\nNone: Offset adjustments are disabled (default).\nPOS-XY: L/R keys adjust position's X, U/D adjust Y.\nPOS-RZ: L/R adjust pos's Rotation, U/D adjust Z.\nSCENE-XY: L/R adjust scene's X, U/D adjust Y (furniture scene only).\nSCENE-RZ: L/R adjust scene's Rotation, U/D adjust Z (furniture only).
-# TODO: $SSL_iToggleAdjustStage
-$SSL_iToggleAdjustStage	Toggle Adjust Stage
-# TODO: $SSL_iRestoreOffsets
-$SSL_iRestoreOffsets	Reset Offset Adjustments
-# TODO: $SSL_iSceneSelectorMenu
-$SSL_iSceneSelectorMenu	Scene Selector Menu
-
-# ------ Scene Selector Menu
-# TODO: $SSL_SS_OffsetAdjustMode
-$SSL_SS_OffsetAdjustMode	Select Offset Adjust Mode
-# TODO: $SSL_SS_ChangeCurrentScene
-$SSL_SS_ChangeCurrentScene	Change Current Scene
-# TODO: $SSL_SS_ResetScenesByTagName
-$SSL_SS_ResetScenesByTagName	Search By Tag/Name
-# TODO: $SSL_SS_AdjNone
-$SSL_SS_AdjNone	Disable Offset Adjustments
-# TODO: $SSL_SS_AdjPosXY
-$SSL_SS_AdjPosXY	Ajust Position XY
-# TODO: $SSL_SS_AdjPosRZ
-$SSL_SS_AdjPosRZ	Ajust Position RZ
-# TODO: $SSL_SS_AdjSceneXY
-$SSL_SS_AdjSceneXY	Ajust Furniture XY
-# TODO: $SSL_SS_AdjSceneRZ
-$SSL_SS_AdjSceneRZ	Ajust Furniture RZ
 
 # ------------------- Timers & Stripping -------------------------------------------------
 $SSL_TimersStripping	Tiempos y desvestido

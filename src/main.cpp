@@ -4,7 +4,6 @@
 #include "Serialization.h"
 #include "Thread/Collision/CollisionHandler.h"
 #include "Thread/Interface/PrismaUtil.h"
-#include "Thread/Interface/SceneMenu.h"
 #include "Thread/NiNode/Legacy/LegacyNiUpdate.h"
 #include "Thread/NiNode/NiUpdate.h"
 #include "UserData/StripData.h"
@@ -122,7 +121,6 @@ extern "C" DLLEXPORT bool SKSEAPI SKSEPlugin_Load(const SKSE::LoadInterface* a_s
         return false;
     }
 
-    Thread::Interface::SceneMenu::Register();
     Thread::PrismaUI::RegisterPrismaViews();
 
     const auto serialization = SKSE::GetSerializationInterface();
