@@ -1,5 +1,4 @@
-/* Sizing tokens are declared in _shared.css. */
-/* Position tokens are declared in PrismaSceneMenu.css. */
+/* Tokens from _shared.css. Position config from PrismaSceneMenu.css. */
 
 :root {
   --enj-track              : #101012;
@@ -60,21 +59,22 @@ body:has(.enj-stack) {
 
 /* ── Label text ──────────────────────────────────────────── */
 .enj-name {
-  font-size      : calc(11 * var(--s));
+  font-size      : calc(8.5 * var(--s));
   font-weight    : 600;
   letter-spacing : 0.07em;
   text-transform : uppercase;
 }
 .enj-value {
-  font-size            : calc(10.5 * var(--s));
+  font-size            : calc(8.0 * var(--s));
   letter-spacing       : 0.04em;
   font-variant-numeric : tabular-nums;
   transition           : color var(--transition);
 }
 .enj-value--over { color: var(--enj-col-over-lo); }
 .enj-value--neg  { color: var(--enj-col-neg-hi);  }
+
 .enj-intr {
-  font-size      : calc(10 * var(--s));
+  font-size      : calc(7.5 * var(--s));
   font-style     : italic;
   letter-spacing : 0.03em;
   white-space    : nowrap;
@@ -88,7 +88,6 @@ body:has(.enj-stack) {
 }
 .enj-intr:empty { display: none; }
 
-/* for enhanced visibility — outlined text renders over any background */
 .enj-name, .enj-value, .enj-intr {
   color: #e0d8cc;
   text-shadow:

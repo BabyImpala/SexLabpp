@@ -25,6 +25,9 @@ namespace Thread::PrismaUI
             PrismaAPI->RegisterJSListener(psmView, "ebo_OnMissedAttempt", []([[maybe_unused]] const char*) {
                 EnjoymentBars::OnRaiseEnjAttemptResult(false);
             });
+            PrismaAPI->RegisterJSListener(psmView, "ebo_OnSelectPartner", [](const char* data) {
+                if (data && *data) EnjoymentBars::OnSelectPartner(data);
+            });
 
             // ── OffsetAdjustMenu
             PrismaAPI->RegisterJSListener(psmView, "oam_OnActorSelected", [](const char* data) {
@@ -53,10 +56,10 @@ namespace Thread::PrismaUI
 
             // ── ThreadConfigMenu
             PrismaAPI->RegisterJSListener(psmView, "tcm_OnRandomScene", []([[maybe_unused]] const char*) {
-                ThreadConfigMenu::OnRandomScene("");
+                ThreadConfigMenu::OnRandomScene();
             });
             PrismaAPI->RegisterJSListener(psmView, "tcm_OnMoveScene", []([[maybe_unused]] const char*) {
-                ThreadConfigMenu::OnMoveScene("");
+                ThreadConfigMenu::OnMoveScene();
             });
             PrismaAPI->RegisterJSListener(psmView, "tcm_OnAutoPlaySet", [](const char* data) {
                 if (data && *data) ThreadConfigMenu::OnAutoPlaySet(data);

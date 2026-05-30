@@ -14,6 +14,7 @@ namespace Thread::PrismaUI
         static void RegisterRaiseEnjAttempt(RE::Actor* a_actor, float a_nextTimeCycle);
 
         static void OnRaiseEnjAttemptResult(bool a_success);
+        static void OnSelectPartner(const std::string& data);
 
       private:
         inline static bool isOverlayVisible{ false };

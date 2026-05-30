@@ -78,14 +78,14 @@
         <span id="ssmChangeActive">Change Active Scene</span>
         <span style="font-size:calc(8*var(--s));opacity:0.5;flex-shrink:0" id="sceneList-arrow">▼</span>
       </div>
-      <div id="sceneList-body" class="ssm-row-body open">
+      <div id="sceneList-body" class="ssm-row-body slp-section-body open">
         <div id="ssmSceneList" class="ssm-scene-list slp-scroll-list"></div>
       </div>
       <div id="searchHeader" class="slp-section-header slp-section-header--clickable">
         <span id="ssmChangeBySearch">Change Scenes By Tag / Name</span>
         <span style="font-size:calc(8*var(--s));opacity:0.5;flex-shrink:0" id="search-arrow">▼</span>
       </div>
-      <div id="search-body" class="ssm-row-body open">
+      <div id="search-body" class="ssm-row-body slp-section-body open">
         <div class="ssm-search-area">
           <input
             type="text"
@@ -132,14 +132,15 @@
         <span id="tcmSectionThread">Thread</span>
         <span id="thread-arrow" class="tcm-arrow">▼</span>
       </div>
-      <div id="thread-body" class="tcm-section-body open">
+      
+      <div id="thread-body" class="slp-section-body open">
         <div id="randomSceneRow" class="slp-panel-row slp-panel-row--clickable">
           <span id="tcmRandomScene">Play Random Scene</span>
           <span class="tcm-action-icon">⟳</span>
         </div>
         <div id="moveSceneRow" class="slp-panel-row slp-panel-row--clickable">
           <span id="tcmMoveScene">Move Scene</span>
-          <span class="tcm-action-icon">⤢</span>
+          <span class="tcm-action-icon">⇄</span>
         </div>
         <div id="autoPlayRow" class="slp-panel-row slp-panel-row--clickable">
           <span id="tcmToggleAutoplay">Toggle Autoplay</span>
@@ -153,7 +154,7 @@
         <span id="tcmSectionActors">Actors</span>
         <span id="actors-arrow" class="tcm-arrow">▼</span>
       </div>
-      <div id="actors-body" class="tcm-section-body open tcm-actors-body slp-scroll-list"></div>
+      <div id="actors-body" class="slp-section-body open tcm-actors-body slp-scroll-list"></div>
     </div>
   
   </div>
@@ -177,8 +178,8 @@
         <span id="vcmScaleLabel" class="vcm-row-label">Scale</span>
         <span class="vcm-scale-wrap">
           <input type="range" id="vcmScaleSlider" class="vcm-scale-slider"
-                  min="0.5" max="3.0" step="any" value="1.5" />
-          <span id="vcmScaleVal" class="vcm-scale-val">1.50×</span>
+                  min="0.5" max="2.5" step="any" value="1.5" />
+          <span id="vcmScaleVal" class="vcm-scale-val">1.50x</span>
         </span>
       </div>
 
@@ -189,40 +190,44 @@
         <span id="vcm-overlays-arrow" class="vcm-arrow">▼</span>
       </div>
 
-      <div id="vcm-overlays-body" class="vcm-section-body open">
+      <div id="vcm-overlays-body" class="slp-section-body open">
+        <div class="vcm-scroll-list slp-scroll-list">
 
-        <div id="vcm-row--1" class="slp-panel-row slp-panel-row--clickable">
-          <span id="vcmGameHud" class="slp-panel-row-name">Game HUD</span>
-          <img src="overlays/icons/slp_toggle_on.png" id="vcm-icon--1" class="slp-toggle-icon" alt="●" />
+          <div id="vcm-row--1" class="slp-panel-row slp-panel-row--clickable">
+            <span id="vcmGameHud" class="slp-panel-row-name">Game HUD</span>
+            <img src="overlays/icons/slp_toggle_on.png" id="vcm-icon--1" class="slp-toggle-icon" alt="●" />
+          </div>
+
+          <div id="vcm-row-1" class="slp-panel-row slp-panel-row--clickable">
+            <span id="vcmAnimSpeed" class="slp-panel-row-name">Anim Speed Overlay</span>
+            <img src="overlays/icons/slp_toggle_on.png" id="vcm-icon-1" class="slp-toggle-icon" alt="●" />
+          </div>
+
+          <div id="vcm-row-2" class="slp-panel-row slp-panel-row--clickable">
+            <span id="vcmEnjBars" class="slp-panel-row-name">Enjoyment Bars</span>
+            <img src="overlays/icons/slp_toggle_on.png" id="vcm-icon-2" class="slp-toggle-icon" alt="●" />
+          </div>
+
+          <div id="vcm-row-3" class="slp-panel-row slp-panel-row--clickable">
+            <span id="vcmOffsetAdj" class="slp-panel-row-name">Offset Adjust Menu</span>
+            <img src="overlays/icons/slp_toggle_on.png" id="vcm-icon-3" class="slp-toggle-icon" alt="●" />
+          </div>
+
+          <div id="vcm-row-4" class="slp-panel-row slp-panel-row--clickable">
+            <span id="vcmSceneSelect" class="slp-panel-row-name">Scene Selector Menu</span>
+            <img src="overlays/icons/slp_toggle_on.png" id="vcm-icon-4" class="slp-toggle-icon" alt="●" />
+          </div>
+
+          <div id="vcm-row-5" class="slp-panel-row slp-panel-row--clickable">
+            <span id="vcmThreadCfg" class="slp-panel-row-name">Thread Config Menu</span>
+            <img src="overlays/icons/slp_toggle_on.png" id="vcm-icon-5" class="slp-toggle-icon" alt="●" />
+          </div>
+
         </div>
-
-        <div id="vcm-row-1" class="slp-panel-row slp-panel-row--clickable">
-          <span id="vcmAnimSpeed" class="slp-panel-row-name">Anim Speed Overlay</span>
-          <img src="overlays/icons/slp_toggle_on.png" id="vcm-icon-1" class="slp-toggle-icon" alt="●" />
-        </div>
-
-        <div id="vcm-row-2" class="slp-panel-row slp-panel-row--clickable">
-          <span id="vcmEnjBars" class="slp-panel-row-name">Enjoyment Bars</span>
-          <img src="overlays/icons/slp_toggle_on.png" id="vcm-icon-2" class="slp-toggle-icon" alt="●" />
-        </div>
-
-        <div id="vcm-row-3" class="slp-panel-row slp-panel-row--clickable">
-          <span id="vcmOffsetAdj" class="slp-panel-row-name">Offset Adjust Menu</span>
-          <img src="overlays/icons/slp_toggle_on.png" id="vcm-icon-3" class="slp-toggle-icon" alt="●" />
-        </div>
-
-        <div id="vcm-row-4" class="slp-panel-row slp-panel-row--clickable">
-          <span id="vcmSceneSelect" class="slp-panel-row-name">Scene Selector Menu</span>
-          <img src="overlays/icons/slp_toggle_on.png" id="vcm-icon-4" class="slp-toggle-icon" alt="●" />
-        </div>
-
-        <div id="vcm-row-5" class="slp-panel-row slp-panel-row--clickable">
-          <span id="vcmThreadCfg" class="slp-panel-row-name">Thread Config Menu</span>
-          <img src="overlays/icons/slp_toggle_on.png" id="vcm-icon-5" class="slp-toggle-icon" alt="●" />
-        </div>
-
       </div>
+
     </div>
+  
   </div>
 
   <!------------------- Load JS Scripts ------------------>

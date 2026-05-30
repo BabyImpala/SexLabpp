@@ -133,7 +133,7 @@ Event OnKeyDown(int aiKey)
 	ElseIf (aiKey == Hotkeys[kMoveScene])
 		MoveScene()
 	ElseIf (aiKey == Hotkeys[kChangePartner])
-		ChangeTargetPartner(abModifier)
+		CycleTargetPartner(abModifier)
 	ElseIf (aiKey == Hotkeys[kChangePositions])
 		ChangePositions(abAdjustTarget)
 	EndIf
@@ -299,20 +299,37 @@ Actor Function GetTargetPartner()
 	return _AdjustActor
 EndFunction
 
-Function ChangeTargetPartner(bool abBackwards = false)
+Function CycleTargetPartner(bool abBackwards = false)
 	int len = GetPositions().Length
 	If ((HasPlayer && len < 3) || (!HasPlayer && len < 2))
 		return
 	EndIf
 	int curIdx = GetAdjustPos()
 	int newIdx = IndexTravelComplex(curIdx, abBackwards, PlayerRef)
-	_AdjustActor = GetIdxPosition(newIdx)
+	UpdateTargetPartner(newIdx, abBackwards)
+EndFunction
+
+Function SelectTargetPartner(Actor akSelected)
+	int len = GetPositions().Length
+	If ((!akSelected) || (HasPlayer && len < 3) || (!HasPlayer && len < 2))
+		return
+	EndIf
+	int curIdx = GetAdjustPos()
+	int selectedIdx = GetPositionIdx(akSelected)
+	If (selectedIdx < 0) || (selectedIdx == curIdx)
+		return
+	EndIf
+	UpdateTargetPartner(selectedIdx)
+EndFunction
+
+Function UpdateTargetPartner(int targetIdx, bool abBackwards = false)
+	_AdjustActor = GetIdxPosition(targetIdx)
 	Config.SetTargetActor(_AdjustActor)
 	Config.SelectedSpell.Cast(_AdjustActor)	; SFX for visual feedback
 	EnjBarsChangeHighlightedPartner(_AdjustActor)
 	PlayHotkeyFX(0, !abBackwards)
 	Debug.Notification("SexLab partner selected: " + SexLabUtil.ActorName(_AdjustActor))
-	Log("ChangeTargetPartner(), currently focused partner: " + SexLabUtil.ActorName(_AdjustActor))
+	Log("UpdateTargetPartner(), currently focused partner: " + SexLabUtil.ActorName(_AdjustActor))
 EndFunction
 
 Function PlayHotkeyFX(int i, bool abBackwards)
@@ -494,9 +511,9 @@ Function VRHandleGesture(String asEventName, String Foobar, float Presses, Form 
 		EndIf
 	EndIf
 	If (asEvent == "L_Left")
-		ChangeTargetPartner(true)
+		CycleTargetPartner(true)
 	ElseIf (asEvent == "L_Right")
-		ChangeTargetPartner()
+		CycleTargetPartner()
 	ElseIf (asEvent == "L_Back")
 		SexLabUtil.ToggleFreeCamera()
 	ElseIf (asEvent == "L_Forward")
@@ -566,7 +583,7 @@ Function RotateScene(bool backwards = false)
 EndFunction
 
 Function AdjustChange(bool backwards = false)
-	ChangeTargetPartner(backwards)
+	CycleTargetPartner(backwards)
 EndFunction
 
 float Function GetAnimationRunTime()

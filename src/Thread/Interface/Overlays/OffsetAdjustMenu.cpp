@@ -140,10 +140,10 @@ namespace Thread::PrismaUI
         });
 
         std::string json = "{";
-        json += "\"hasFurniture\":"    + std::string(s_hasFurniture  ? "true" : "false") + ",";
-        json += "\"centerIsPlayer\":"  + std::string(centerIsPlayer  ? "true" : "false") + ",";
-        json += "\"adjustStageOnly\":" + std::string(adjustStageOnly ? "true" : "false") + ",";
-        json += "\"actors\":[";
+        json += "\"oam_hasFurniture\":"    + std::string(s_hasFurniture  ? "true" : "false") + ",";
+        json += "\"oam_centerIsPlayer\":"  + std::string(centerIsPlayer  ? "true" : "false") + ",";
+        json += "\"oam_adjustStageOnly\":" + std::string(adjustStageOnly ? "true" : "false") + ",";
+        json += "\"oam_actorsData\":[";
         
         for (size_t i = 0; i < s_slots.size(); ++i) {
             auto* actor = s_slots[i].actor;
