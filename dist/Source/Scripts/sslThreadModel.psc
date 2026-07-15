@@ -1054,6 +1054,9 @@ String[] Function GetCustomScenes() native
 
 float Property ANIMATING_UPDATE_INTERVAL = 0.5 AutoReadOnly
 int _animationSyncCount
+int _initialRealignTicks	; Placement is only asserted once per stage; if the first assert races with a busy
+							; actor (furniture exit, get-up, pathing) it silently fails until the next stage.
+							; Counts down OnUpdate ticks after AnimationStart to re-assert placement (see RealignActors)
 
 bool _QuickResetScenes		; reinits thread without actor/center changes (e.g. to get new playing scenes)
 bool _ForceAdvance		; Force fully auto advance (set by timed stages)
@@ -1102,6 +1105,7 @@ State Animating
 			AutoAdvance = true
 		EndIf
 		StartedAt = SexLabUtil.GetCurrentGameRealTime()
+		_initialRealignTicks = 4
 		StartStage(Utility.CreateStringArray(0), "")
 		SendThreadEvent("AnimationStart")
 		If(LeadIn)
@@ -1272,6 +1276,12 @@ State Animating
 	Endfunction
 	
 	Event OnUpdate()
+		If (_initialRealignTicks > 0)
+			_initialRealignTicks -= 1
+			If (_initialRealignTicks == 3 || _initialRealignTicks == 0)
+				RealignActors()
+			EndIf
+		EndIf
 		If (!_TimerPaused && (AutoAdvance || _ForceAdvance))
 			_StageTimer -= ANIMATING_UPDATE_INTERVAL
 			If (_StageTimer <= 0)
