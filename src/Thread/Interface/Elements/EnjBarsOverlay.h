@@ -1,18 +1,27 @@
 #pragma once
-#include "Thread/Interface/SceneHUD.h"
+#include "SKSEMenuFramework.h"
+
+namespace Thread
+{
+    class Instance;
+}
 
 namespace Thread::Interface
 {
-    class EnjBarsOverlay
+    class SceneHUD;
+    namespace UI
+    {
+        class Scale;
+    }
+
+    class EnjBarsOverlay final
     {
       public:
-        static void Init();
-        static void Destroy();
-        static void __stdcall Render();
-
-        static void UpdateSlider(RE::Actor* a_actor, float a_enjoyment, RE::BSFixedString a_interactions);
-        static void UpdateHighlightedPartner(RE::Actor* a_partner);
-        static void RegisterRaiseEnjAttempt(RE::Actor* a_actor, float a_nextTimeCycle);
+        void Init(Instance& a_instance);
+        void Render(SceneHUD& a_hud);
+        void UpdateSlider(RE::Actor* a_actor, float a_enjoyment, RE::BSFixedString a_interactions);
+        void UpdateHighlightedPartner(RE::Actor* a_partner);
+        void RegisterRaiseEnjAttempt(SceneHUD& a_hud, RE::Actor* a_actor, float a_nextTimeCycle);
 
       private:
         struct ActorEnjBar
@@ -25,37 +34,27 @@ namespace Thread::Interface
             bool isGameDpt{ false };
         };
 
-        static void OnSelectPartner(uint32_t formId);
+        void OnSelectPartner(SceneHUD& a_hud, std::uint32_t a_formId);
 
-        static float FillFraction(float enj);
-        static void FillGradient (float enj, ImGuiMCP::ImU32& lo, ImGuiMCP::ImU32& hi);
+        static float FillFraction(float a_enjoyment);
+        static void FillGradient(float a_enjoyment, ImGuiMCP::ImU32& a_low, ImGuiMCP::ImU32& a_high);
+        static float GreenZoneHalfWidth(float a_enjoyment);
 
-        inline static bool isVisible{ false };
+        std::vector<ActorEnjBar> _bars;
 
-        // s_mu protects s_bars only, ensuring that the game thread writes whereas D3D thread reads
-        inline static std::mutex s_mu;
-        inline static std::vector<ActorEnjBar> s_bars;
+        static constexpr float kGZoneDefault = 0.125f;
+        static constexpr float kGZoneMin = 0.02f;
+        static constexpr float kGameEnjThresh = 75.0f;
+        static constexpr float kGameEnjDrawMin = 80.0f;
+        static constexpr double kFeedbackSec = 0.6;
 
-        static constexpr float  kGZoneDefault   = 0.125f;
-        static constexpr float  kGZoneMin       = 0.02f;
-        static constexpr float  kGameEnjThresh  = 75.0f;
-        static constexpr float  kGameEnjDrawMin = 80.0f;
-        static constexpr double kFeedbackSec    = 0.6;
-
-        // Needle state uses atomics so that:
-        // (a) RegisterRaiseEnjAttempt can write s_needlePos/_needleDir/s_timeCycle without holding s_mu during Render()
-        // (b) so pusher calls from the game thread never race with the render thread's needle advance.
-        inline static std::atomic<bool> s_needleRunning{ false };
-        inline static std::atomic<float> s_needlePos{ 0.5f };
-        inline static std::atomic<float> s_needleDir{ 1.0f };
-        inline static std::atomic<float> s_timeCycle{ 0.0f };
-        inline static std::atomic<float> s_greenStart{ 0.5f - kGZoneDefault };
-        inline static std::atomic<float> s_greenEnd{ 0.5f + kGZoneDefault };
-        
-        // Feedback (written by RegisterRaiseEnjAttempt under s_mu, read by Render)
-        inline static std::atomic<uint32_t> s_fbActorId{ 0 };
-        inline static std::atomic<bool> s_fbHit{ false };
-        inline static std::atomic<double> s_fbUntil{ 0.0 };
+        bool _needleRunning{ false };
+        float _needlePosition{ 0.5f };
+        float _needleDirection{ 1.0f };
+        float _timeCycle{ 0.0f };
+        std::uint32_t _feedbackActorId{};
+        bool _feedbackHit{ false };
+        double _feedbackUntil{ 0.0 };
 
         // ── Layout cache
         struct LayoutCache
@@ -64,12 +63,13 @@ namespace Thread::Interface
             float nameFt, valFt, intrFt, fbFt;
             float edgeH, edgeV, lblRowH, unitH, winH;
         };
-        inline static LayoutCache s_layout{};
-        inline static float s_layoutForFactor{ -1.0f };
-        inline static float s_layoutForDw{ -1.0f };
-        inline static float s_layoutForDh{ -1.0f };
-        inline static size_t s_layoutForCount { SIZE_MAX };
+        LayoutCache _layout{};
+        float _layoutForFactor{ -1.0f };
+        float _layoutForTextFactor{ -1.0f };
+        float _layoutForWidth{ -1.0f };
+        float _layoutForHeight{ -1.0f };
+        std::size_t _layoutForCount{ SIZE_MAX };
 
-        static const LayoutCache& GetLayout(size_t actorCount);
+        const LayoutCache& GetLayout(UI::Scale& a_scale, std::size_t a_actorCount);
     };
 }

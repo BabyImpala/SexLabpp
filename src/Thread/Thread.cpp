@@ -1,9 +1,5 @@
 #include "Thread.h"
 
-#include "Thread/Interface/Elements/AnimSpeedOverlay.h"
-#include "Thread/Interface/Elements/EnjBarsOverlay.h"
-#include "Thread/Interface/Elements/OffsetAdjustPanel.h"
-#include "Thread/Interface/Elements/SceneSelectPanel.h"
 #include "Thread/Interface/SceneHUD.h"
 #include "Registry/Library.h"
 #include "Registry/Util/RayCast/Offsets.h"
@@ -127,21 +123,21 @@ namespace Thread
         }
         assignments = newAssignments;
         activeScene = a_scene;
-        std::map<RE::Actor*, uint8_t> positionCounts;
-        for (const auto& permutation : assignments) {
-            for (size_t i = 0; i < permutation.size(); i++) {
-                positionCounts[permutation[i]]++;
+        std::map<RE::Actor*, std::set<size_t>> uniquePositions;
+        for (const auto& assignment : assignments) {
+            for (size_t i = 0; i < assignment.size(); i++) {
+                uniquePositions[assignment[i]].insert(i);
             }
         }
         for (auto&& p : positions) {
-            p.uniquePermutations = positionCounts[p.data.GetActor()];
+            p.uniquePermutations = static_cast<uint8_t>(uniquePositions[p.data.GetActor()].size());
         }
         baseCoordinates = center.offset.offset.ApplyReturn(center.GetRef());
         activeScene->furnitureOffset.Apply(baseCoordinates);
         activeAssignment = assignments.begin();
 
-        Interface::SceneSelectPanel::RebuildEntries();
-        Interface::SceneSelectPanel::RebuildFilter();
+        if (auto* sceneHUD = Interface::SceneHUD::GetSingleton().GetForThread(linkedQst))
+            sceneHUD->RebuildSceneList();
         return true;
     }
 
@@ -399,15 +395,25 @@ namespace Thread
             logger::error("Actor {} is not part of the current scene.", a_actor->GetFormID());
             return 0;
         }
-        std::set<ptrdiff_t> seenPermutations;
-        for (auto it = assignments.begin(); it < assignments.end(); it++) {
-            const auto idx = std::distance(it->begin(), std::find(it->begin(), it->end(), a_actor));
-            seenPermutations.insert(idx);
-            if (it == activeAssignment) {
-                return static_cast<int32_t>(seenPermutations.size());
-            }
+
+        const auto currentPosition = std::distance(activeAssignment->begin(), std::find(activeAssignment->begin(), activeAssignment->end(), a_actor));
+        if (currentPosition < 0 || static_cast<size_t>(currentPosition) == activeAssignment->size()) {
+            logger::error("Actor {} is not part of the current assignment.", a_actor->GetFormID());
+            return 0;
         }
-        throw std::runtime_error("Failed to find current permutation for actor.");
+
+        std::set<ptrdiff_t> uniquePositions;
+        for (const auto& assignment : assignments) {
+            const auto actorIt = std::find(assignment.begin(), assignment.end(), a_actor);
+            if (actorIt == assignment.end()) {
+                logger::error("Actor {} is not part of a scene assignment.", a_actor->GetFormID());
+                return 0;
+            }
+            uniquePositions.insert(std::distance(assignment.begin(), actorIt));
+        }
+
+        const auto currentIt = uniquePositions.find(currentPosition);
+        return currentIt == uniquePositions.end() ? 0 : static_cast<int32_t>(std::distance(uniquePositions.begin(), currentIt) + 1);
     }
 
     bool Instance::SetNextPermutation(RE::Actor* a_actor)
@@ -421,24 +427,34 @@ namespace Thread
             logger::info("Actor {} has no alternative permutations.", a_actor->GetFormID());
             return false;
         }
-        auto targetPermutation = GetCurrentPermutation(a_actor) + 1;
-        if (targetPermutation > position->uniquePermutations) {
-            targetPermutation = 1;
-        }
-        std::set<ptrdiff_t> seenPermutations;
-        for (auto it = assignments.begin(); it < assignments.end(); it++) {
-            const auto idx = std::distance(it->begin(), std::find(it->begin(), it->end(), a_actor));
-            if (idx < 0 || static_cast<size_t>(idx) == it->size()) {
-                logger::warn("Actor {} is not part of the current assignment.", a_actor->GetFormID());
+
+        std::set<ptrdiff_t> uniquePositions;
+        for (const auto& assignment : assignments) {
+            const auto actorIt = std::find(assignment.begin(), assignment.end(), a_actor);
+            if (actorIt == assignment.end()) {
+                logger::error("Actor {} is not part of a scene assignment.", a_actor->GetFormID());
                 return false;
-            } else if (!seenPermutations.contains(idx)) {
-                seenPermutations.insert(idx);
-                if (seenPermutations.size() == targetPermutation) {
-                    activeAssignment = it;
-                    AdvanceScene(activeStage);
-                    logger::info("Actor {} changed to permutation {}.", a_actor->GetFormID(), targetPermutation);
-                    return true;
-                }
+            }
+            uniquePositions.insert(std::distance(assignment.begin(), actorIt));
+        }
+
+        const auto currentActorIt = std::find(activeAssignment->begin(), activeAssignment->end(), a_actor);
+        if (currentActorIt == activeAssignment->end()) {
+            logger::error("Actor {} is not part of the current assignment.", a_actor->GetFormID());
+            return false;
+        }
+        const auto currentPosition = std::distance(activeAssignment->begin(), currentActorIt);
+        auto targetPosition = uniquePositions.upper_bound(currentPosition);
+        if (targetPosition == uniquePositions.end())
+            targetPosition = uniquePositions.begin();
+
+        for (auto it = assignments.begin(); it < assignments.end(); it++) {
+            const auto actorIt = std::find(it->begin(), it->end(), a_actor);
+            if (std::distance(it->begin(), actorIt) == *targetPosition) {
+                activeAssignment = it;
+                AdvanceScene(activeStage);
+                logger::info("Actor {} changed to scene position {}.", a_actor->GetFormID(), *targetPosition + 1);
+                return true;
             }
         }
         logger::warn("Actor {} has no alternative permutations.", a_actor->GetFormID());
@@ -473,42 +489,51 @@ namespace Thread
 
     void Instance::InitSceneHUDImpl()
     {
-        Interface::SceneHUD::Init(linkedQst);
+        auto& sceneHUD = Interface::SceneHUD::GetSingleton();
+        if (!sceneHUD.IsActive() || sceneHUD.GetForThread(linkedQst))
+            sceneHUD.Init(linkedQst);
     }
 
     void Instance::DestroySceneHUDImpl()
     {
-         Interface::SceneHUD::Destroy();
+        if (auto* sceneHUD = Interface::SceneHUD::GetSingleton().GetForThread(linkedQst))
+            sceneHUD->Destroy();
     }
 
     void Instance::ToggleFocusSceneHUDImpl()
     {
-        return  Interface::SceneHUD::ToggleFocus();
+        if (auto* sceneHUD = Interface::SceneHUD::GetSingleton().GetForThread(linkedQst))
+            sceneHUD->ToggleFocus();
     }
 
     void Instance::UpdateMenuTimerDisplay(float a_duration, float a_left)
     {
-        Interface::AnimSpeedOverlay::UpdateStageTimerDisplay(a_duration, a_left);
+        if (auto* sceneHUD = Interface::SceneHUD::GetSingleton().GetForThread(linkedQst))
+            sceneHUD->UpdateStageTimer(a_duration, a_left);
     }
 
     void Instance::EnjBarsChangeHighlightedPartner(RE::Actor* a_partner)
     {
-        Interface::EnjBarsOverlay::UpdateHighlightedPartner(a_partner);
+        if (auto* sceneHUD = Interface::SceneHUD::GetSingleton().GetForThread(linkedQst))
+            sceneHUD->UpdateHighlightedPartner(a_partner);
     }
 
     void Instance::EnjBarsUpdateSlider(RE::Actor* a_position, float a_enjoyment, RE::BSFixedString a_interactions)
     {
-        Interface::EnjBarsOverlay::UpdateSlider(a_position, a_enjoyment, a_interactions);
+        if (auto* sceneHUD = Interface::SceneHUD::GetSingleton().GetForThread(linkedQst))
+            sceneHUD->UpdateEnjoyment(a_position, a_enjoyment, a_interactions);
     }
 
     void Instance::RegisterRaiseEnjAttempt(RE::Actor* a_position, float a_nextTimeCycle)
     {
-        Interface::EnjBarsOverlay::RegisterRaiseEnjAttempt(a_position, a_nextTimeCycle);
+        if (auto* sceneHUD = Interface::SceneHUD::GetSingleton().GetForThread(linkedQst))
+            sceneHUD->RegisterRaiseEnjoymentAttempt(a_position, a_nextTimeCycle);
     }
 
     void Instance::UpdateOffsetSlidersDisplay()
     {
-        Interface::OffsetAdjustPanel::OnStageChanged();
+        if (auto* sceneHUD = Interface::SceneHUD::GetSingleton().GetForThread(linkedQst))
+            sceneHUD->OnStageChanged();
     }
 
 }  // namespace Thread

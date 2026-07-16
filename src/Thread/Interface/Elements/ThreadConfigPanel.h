@@ -3,12 +3,12 @@
 
 namespace Thread::Interface
 {
-    class ThreadConfigPanel
+    class ThreadConfigPanel final
     {
       public:
-        static void Init();
-        static void Destroy();
-        static void __stdcall Render();
+        void Open(SceneHUD& a_hud);
+        void Close();
+        void Render(SceneHUD& a_hud);
 
       private:
         struct ActorState
@@ -17,21 +17,20 @@ namespace Thread::Interface
             bool cardOpen{ true };
         };
 
-        static void OnRandomScene();
-        static void OnMoveScene();
-        static void OnAutoPlaySet(bool state);
-        static void OnNextPermutation(RE::Actor* actor);
-        static void OnSetExpression(RE::Actor* actor, const Registry::Expression* expr);
-        static void OnSetVoice(RE::Actor* actor, const Registry::Voice* voice);
-        static void OnSetActorAlpha(RE::Actor* actor, int alphaInt);
+        void OnRandomScene(SceneHUD& a_hud);
+        void OnMoveScene(SceneHUD& a_hud);
+        void OnAutoPlaySet(SceneHUD& a_hud, bool a_state);
+        void OnNextPosition(SceneHUD& a_hud, RE::Actor* a_actor);
+        void OnSetExpression(SceneHUD& a_hud, RE::Actor* a_actor, const Registry::Expression* a_expression);
+        void OnSetVoice(SceneHUD& a_hud, RE::Actor* a_actor, const Registry::Voice* a_voice);
+        void OnSetActorAlpha(RE::Actor* a_actor, int a_alpha);
 
-        static void RenderActorCard(RE::Actor* actor, ActorState& state);
+        void RenderActorCard(SceneHUD& a_hud, RE::Actor* a_actor, ActorState& a_state);
 
-        inline static bool isVisible{ false };
-        inline static std::vector<ActorState> s_actorStates;
-        inline static std::vector<RE::Actor*> s_sortedActors;
+        std::vector<ActorState> _actorStates;
+        std::vector<RE::Actor*> _sortedActors;
 
-        inline static bool s_threadSectionOpen{ true };
-        inline static bool s_actorsSectionOpen{ true };
+        bool _threadSectionOpen{ true };
+        bool _actorsSectionOpen{ true };
     };
 }

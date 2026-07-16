@@ -1,17 +1,16 @@
 #pragma once
-#include "Thread/Interface/SceneHUD.h"
-
 namespace Thread::Interface
 {
-    class SceneSelectPanel
+    class SceneHUD;
+
+    class SceneSelectPanel final
     {
       public:
-        static void Init();
-        static void Destroy();
-        static void __stdcall Render();
-
-        static void RebuildEntries();
-        static void RebuildFilter();
+        void Open(SceneHUD& a_hud);
+        void Close();
+        void Render(SceneHUD& a_hud);
+        void RebuildEntries(SceneHUD& a_hud);
+        void RebuildFilter();
 
       private:
         struct SceneEntry
@@ -26,21 +25,21 @@ namespace Thread::Interface
             char annotBuf[256]{};
         };
 
-        static void OnSceneSelected(const std::string& sceneId);
-        static void OnConfirmSearch();
-        static void OnAnnotationSave(SceneEntry& e);
+        void OnSceneSelected(SceneHUD& a_hud, const std::string& a_sceneId);
+        void OnConfirmSearch(SceneHUD& a_hud);
+        void OnAnnotationSave(SceneEntry& a_entry);
 
-        static bool MatchesFilter(const SceneEntry& e, const std::string& filter);
-        
-        inline static bool isVisible{ false };
-        inline static std::vector<SceneEntry> s_entries;
-        inline static char s_searchBuf[128]{};
-        inline static int s_hoveredIdx{ -1 };
+        static bool MatchesFilter(const SceneEntry& a_entry, std::string_view a_filter);
 
-        inline static char s_lastSearch[128]{};
-        inline static std::vector<int> s_filteredIdx;
+        std::vector<SceneEntry> _entries;
+        char _searchBuffer[128]{};
+        int _hoveredIndex{ -1 };
+        float _infoCardY{ 0.0f };
 
-        inline static bool s_sceneListOpen{ true };
-        inline static bool s_searchBoxOpen{ true };
+        char _lastSearch[128]{};
+        std::vector<int> _filteredIndices;
+
+        bool _sceneListOpen{ true };
+        bool _searchBoxOpen{ true };
     };
 }

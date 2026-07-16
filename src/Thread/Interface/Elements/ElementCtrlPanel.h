@@ -1,19 +1,21 @@
 #pragma once
-#include "Thread/Interface/SceneHUD.h"
-
 namespace Thread::Interface
 {
-    class ElementCtrlPanel
+    class SceneHUD;
+
+    class ElementCtrlPanel final
     {
       public:
-        static void Init();
-        static void Destroy();
-        static void __stdcall Render();
+        void Open(SceneHUD& a_hud);
+        void Close();
+        void Render(SceneHUD& a_hud);
 
       private:
-        static void OnScaleChange(float val);
+        void OnScaleChange(SceneHUD& a_hud, float a_value);
+        void OnTextScaleChange(SceneHUD& a_hud, float a_value);
 
-        inline static bool isVisible{ false };
-        inline static bool s_elementSectionOpen{ true };
+        float _scaleAdjustment{ 1.5f };
+        float _textScaleAdjustment{ 1.0f };
+        bool _elementSectionOpen{ true };
     };
 }
