@@ -13,7 +13,6 @@ namespace Thread::Interface
             const float textScale = inst->GetThreadProperty<float>("VarUI_TextScaleMult");
             _textScaleAdjustment = textScale > 0.0f ? std::clamp(textScale, 0.75f, 2.0f) : 1.0f;
         }
-        _elementSectionOpen = true;
     }
     void ElementCtrlPanel::Close() {}
 
@@ -63,70 +62,99 @@ namespace Thread::Interface
             return;
         }
         SetWindowFontSize(scale.TextPx(UI::Theme::FontSize::body));
+        ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_Text, UI::Theme::ToVec4(UI::Theme::Color::textSecondary));
 
         ImGuiMCP::SetNextItemWidth(-1.0f);
         ImGuiMCP::SliderFloat("##slpp_ecmScale", &_scaleAdjustment, 0.5f, 2.5f, "UI Scale %.2fx");
         if (ImGuiMCP::IsItemDeactivatedAfterEdit())
             OnScaleChange(a_hud, _scaleAdjustment);
-
         ImGuiMCP::SetNextItemWidth(-1.0f);
-        ImGuiMCP::SliderFloat("##slpp_ecmTextScale", &_textScaleAdjustment, 0.75f, 2.0f, "Text Scale %.2fx");
+        ImGuiMCP::SliderFloat("##slpp_ecmTextScale", &_textScaleAdjustment, 0.5f, 2.5f, "Text Scale %.2fx");
         if (ImGuiMCP::IsItemDeactivatedAfterEdit())
             OnTextScaleChange(a_hud, _textScaleAdjustment);
 
+        ImGuiMCP::PopStyleColor();
         ImGuiMCP::Separator();
 
-        // "Elements" section
-        SetWindowFontSize(scale.TextPx(UI::Theme::FontSize::sectionHeader));
-        const float sectionH = std::max(scale.Px(22.0f),
-            scale.TextPx(UI::Theme::FontSize::sectionHeader) + scale.Px(UI::Theme::Spacing::xs));
-        if (UI::CollapsibleSectionHeader(
-                "TOGGLE HUD ELEMENTS", "##slpp_ecmElementsSection", _elementSectionOpen, { 0.0f, sectionH }))
-            _elementSectionOpen = !_elementSectionOpen;
+        // Elements
+        SetWindowFontSize(scale.TextPx(UI::Theme::FontSize::body));
+        UI::PushCheckboxStyle(scale.Factor());
+        ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_Text, UI::Theme::ToVec4(UI::Theme::Color::textSecondary));
+        
+        const float toggleRowH = scale.Px(24.0f);
+        const float rowPadH = scale.Px(12.0f);
+        const float availW = ImGuiMCP::GetContentRegionAvail().x - rowPadH * 2.0f;
+        const float cbSize = ImGuiMCP::GetFrameHeight();
 
-        if (_elementSectionOpen) {
-            SetWindowFontSize(scale.TextPx(UI::Theme::FontSize::body));
-            UI::PushCheckboxStyle(scale.Factor());
-
-            bool state_gameHud = inst->GetThreadProperty<bool>("ElementUI_GameHUD");
-            bool state_AnimSpeed = inst->GetThreadProperty<bool>("ElementUI_AnimSpeed");
-            bool state_EnjBars = inst->GetThreadProperty<bool>("ElementUI_EnjBars");
-
-            if (ImGuiMCP::Checkbox("Game HUD", &state_gameHud)) {
-                inst->SetThreadProperty<bool>("ElementUI_GameHUD", state_gameHud);
-                Papyrus::SexLabUtil::HideElementsGameHUD(nullptr, !state_gameHud);
-
-            } else if (ImGuiMCP::Checkbox("Anim Speed Overlay", &state_AnimSpeed)) {
-                inst->SetThreadProperty<bool>("ElementUI_AnimSpeed", state_AnimSpeed);
-
-            } else if (ImGuiMCP::Checkbox("Enj Bars Overlay", &state_EnjBars)) {
-                inst->SetThreadProperty<bool>("ElementUI_EnjBars", state_EnjBars);
+        auto DrawToggleRow = [&](const char* label, const char* id, bool& state, auto onChange) {
+            const ImGuiMCP::ImVec2 toggleRowMin = ImGuiMCP::GetCursorScreenPos();
+            
+            // Full row selectable button
+            ImGuiMCP::SetCursorScreenPos({ toggleRowMin.x + rowPadH, toggleRowMin.y });
+            ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_HeaderHovered, UI::Theme::ToVec4(UI::Theme::Color::transparent));
+            std::string rowId = std::string("##slpp_ecp_row_") + id;
+            if (UI::SelectableButton(rowId.c_str(), false, 0, ImGuiMCP::ImVec2{ availW, toggleRowH })) {
+                state = !state;
+                onChange(state);
             }
-
-            ImGuiMCP::Dummy({ 0.0f, scale.Px(UI::Theme::Spacing::xs) });
-
-            struct Row
-            {
-                const char* label;
-                const char* property;
-                PanelId panel;
-            };
-            constexpr std::array panelRows{
-                Row{ "Thread Config Panel", "ElementUI_ThreadConfig", PanelId::kThreadConfig },
-                Row{ "Scene Select Panel", "ElementUI_SceneSelect", PanelId::kSceneSelect },
-                Row{ "Offset Adjust Panel", "ElementUI_OffsetAdjust", PanelId::kOffsetAdjust },
-            };
-            for (const auto& row : panelRows) {
-                bool state = inst->GetThreadProperty<bool>(row.property);
-                if (ImGuiMCP::Checkbox(row.label, &state)) {
-                    inst->SetThreadProperty<bool>(row.property, state);
-                    if (!state && a_hud.IsPanelOpen(row.panel))
-                        a_hud.CloseAllPanels();
-                }
+            ImGuiMCP::PopStyleColor();
+            
+            // Checkbox on the right
+            const float cbX = toggleRowMin.x + rowPadH + availW - cbSize;
+            const float cbY = toggleRowMin.y + (toggleRowH - cbSize) * 0.5f;
+            ImGuiMCP::SetCursorScreenPos({ cbX, cbY });
+            std::string cbId = std::string("##slpp_ecp_cb_") + id;
+            if (ImGuiMCP::Checkbox(cbId.c_str(), &state)) {
+                onChange(state);
             }
-            UI::PopCheckboxStyle();
+            
+            // Label on the left
+            const ImGuiMCP::ImVec2 labelSize = ImGuiMCP::CalcTextSize(label);
+            const float labelY = toggleRowMin.y + (toggleRowH - labelSize.y) * 0.5f;
+            ImGuiMCP::SetCursorScreenPos({ toggleRowMin.x + rowPadH, labelY });
+            ImGuiMCP::TextUnformatted(label);
+
+            // Advance cursor for next item
+            ImGuiMCP::SetCursorScreenPos({ toggleRowMin.x, toggleRowMin.y + toggleRowH });
+        };
+
+        bool state_gameHud = inst->GetThreadProperty<bool>("ElementUI_GameHUD");
+        DrawToggleRow("Game HUD", "gameHud", state_gameHud, [&](bool val) {
+            inst->SetThreadProperty<bool>("ElementUI_GameHUD", val);
+            Papyrus::SexLabUtil::HideElementsGameHUD(nullptr, !val);
+        });
+        
+        bool state_AnimSpeed = inst->GetThreadProperty<bool>("ElementUI_AnimSpeed");
+        DrawToggleRow("Anim Speed Overlay", "animSpeed", state_AnimSpeed, [&](bool val) {
+            inst->SetThreadProperty<bool>("ElementUI_AnimSpeed", val);
+        });
+
+        bool state_EnjBars = inst->GetThreadProperty<bool>("ElementUI_EnjBars");
+        DrawToggleRow("Enj Bars Overlay", "enjBars", state_EnjBars, [&](bool val) {
+            inst->SetThreadProperty<bool>("ElementUI_EnjBars", val);
+        });
+
+        struct Row
+        {
+            const char* label;
+            const char* property;
+            PanelId panel;
+        };
+        constexpr std::array panelRows{
+            Row{ "Thread Config Panel", "ElementUI_ThreadConfig", PanelId::kThreadConfig },
+            Row{ "Scene Select Panel", "ElementUI_SceneSelect", PanelId::kSceneSelect },
+            Row{ "Offset Adjust Panel", "ElementUI_OffsetAdjust", PanelId::kOffsetAdjust },
+        };
+        for (const auto& row : panelRows) {
+            bool state = inst->GetThreadProperty<bool>(row.property);
+            DrawToggleRow(row.label, row.property, state, [&](bool val) {
+                inst->SetThreadProperty<bool>(row.property, val);
+                if (!val && a_hud.IsPanelOpen(row.panel))
+                    a_hud.CloseAllPanels();
+            });
         }
-
+        ImGuiMCP::PopStyleColor();
+        UI::PopCheckboxStyle();
         ImGuiMCP::SetWindowFontScale(1.0f);
         ImGuiMCP::End();
     }

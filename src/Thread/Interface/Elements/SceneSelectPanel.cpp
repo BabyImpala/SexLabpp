@@ -48,8 +48,6 @@ namespace Thread::Interface
         }
         query = query.substr(lo, query.find_last_not_of(' ') - lo + 1);
         _searchBuffer[0] = '\0';
-        if (query.empty())
-            return;
 
         Script::DispatchMethodCall(a_hud.GetThreadScript(), "OnSceneResetBySearch",
             a_hud.GetCallback(), RE::BSFixedString{ query.c_str() });
@@ -201,10 +199,8 @@ namespace Thread::Interface
 
         if (_sceneListOpen) {
             SetWindowFontSize(scale.TextPx(UI::Theme::FontSize::body));
-            ImGuiMCP::BeginChild("##slpp_smmSceneList", ImGuiMCP::ImVec2{ panelW, listMaxH }, false);
-
-            if (std::memcmp(_searchBuffer, _lastSearch, sizeof(_searchBuffer)) != 0)
-                RebuildFilter();  // rebuild filtered index only when search text changed since last frame
+            ImGuiMCP::BeginChild("##slpp_smmSceneList", ImGuiMCP::ImVec2{ panelW, listMaxH },
+                ImGuiMCP::ImGuiChildFlags_None, ImGuiMCP::ImGuiWindowFlags_None);
 
             std::optional<std::string> selectedScene;
             for (int i : _filteredIndices) {

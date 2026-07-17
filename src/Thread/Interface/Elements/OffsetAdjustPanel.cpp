@@ -170,41 +170,64 @@ namespace Thread::Interface
         bool changed = false;
         draggingOut = false;
 
-        const float rowPadV = a_scale.Px(4.0f);
         const float rowPadH = a_scale.Px(12.0f);
         const float trackH = a_scale.Px(4.0f);   // track thickness
         const float needleW = a_scale.Px(3.0f);  // needle thickness
         const float hitExt = a_scale.Px(10.0f);  // extends clickable/draggable area above and below visible track
-        const float valW = a_scale.Px(52.0f);    // width of the numeric value field
+        const float valW = a_scale.Px(40.0f);    // width of the numeric value field
+        const float labelW = a_scale.Px(20.0f);  // width for axis label
         const float labelFt = a_scale.TextPx(UI::Theme::FontSize::body);
         const float valFt = a_scale.TextPx(UI::Theme::FontSize::body);
-        const float trackW = ImGuiMCP::GetContentRegionAvail().x - rowPadH * 2.0f;
+        const float availW = ImGuiMCP::GetContentRegionAvail().x - rowPadH * 2.0f;
+        const float trackW = availW - labelW - valW - rowPadH * 2.0f;  // space between label and value
 
-        ImGuiMCP::SetCursorPosX(rowPadH);
+        const ImGuiMCP::ImVec2 rowOrigin = ImGuiMCP::GetCursorScreenPos();
+        const float rowH = hitExt * 2.0f + trackH + a_scale.Px(8.0f);
+        const float rowCenterY = rowOrigin.y + rowH * 0.5f;
 
-        // ── Label (double-click resets to baseline)
+        // ────── All on one line: Label | Track | Value
+
+        // Reserve full row height so ImGui advances the cursor correctly at the end
+        ImGuiMCP::Dummy(ImGuiMCP::ImVec2{ availW, rowH });
+        ImGuiMCP::SetCursorScreenPos(rowOrigin);  // rewind; we draw manually below
         SetWindowFontSize(labelFt);
-        const ImGuiMCP::ImVec2 lblMin = ImGuiMCP::GetCursorScreenPos();
+
+        // Label (double-click resets to baseline)
+        const float labelTextH = ImGuiMCP::CalcTextSize(axisLabel).y;
+        const ImGuiMCP::ImVec2 lblMin = { rowOrigin.x + rowPadH, rowCenterY - labelTextH * 0.5f };
+        ImGuiMCP::SetCursorScreenPos(lblMin);
         ImGuiMCP::TextColored(UI::Theme::ToVec4(UI::Theme::Color::textSecondary), "%s", axisLabel);
-        const ImGuiMCP::ImVec2 lblMax = ImGuiMCP::ImVec2{ lblMin.x + ImGuiMCP::CalcTextSize(axisLabel).x, lblMin.y + labelFt };
+        const ImGuiMCP::ImVec2 lblMax = ImGuiMCP::ImVec2{ lblMin.x + ImGuiMCP::CalcTextSize(axisLabel).x, lblMin.y + labelTextH };
         if (ImGuiMCP::IsMouseHoveringRect(lblMin, lblMax) &&
             ImGuiMCP::IsMouseDoubleClicked(ImGuiMCP::ImGuiMouseButton_Left)) {
             state.value = state.baseline;
             changed = true;
         }
 
-        // ── Value input field (flush right of header row)
-        ImGuiMCP::SameLine(rowPadH + trackW - valW);
+        // Track (+ needle + fill)
+        const ImGuiMCP::ImVec2 trackMin = { rowOrigin.x + rowPadH + labelW + rowPadH, rowCenterY - trackH * 0.5f };
+        const ImGuiMCP::ImVec2 trackMax = ImGuiMCP::ImVec2{ trackMin.x + trackW, trackMin.y + trackH };
+
+        // Invisible button with extended hit area
+        const ImGuiMCP::ImVec2 hitMin = ImGuiMCP::ImVec2{ trackMin.x, trackMin.y - hitExt };
+        const ImGuiMCP::ImVec2 hitMax = ImGuiMCP::ImVec2{ trackMax.x, trackMax.y + hitExt };
+        ImGuiMCP::SetCursorScreenPos(hitMin);
+        ImGuiMCP::InvisibleButton("##slpp_oamTrack", ImGuiMCP::ImVec2{ trackW, trackH + hitExt * 2.0f });
+        const bool hovered = ImGuiMCP::IsItemHovered();
+        const bool active = ImGuiMCP::IsItemActive();
+        
+        // Value (input field)
+        const float inputH = ImGuiMCP::GetFrameHeight();
+        ImGuiMCP::SetCursorScreenPos({ rowOrigin.x + rowPadH + labelW + rowPadH + trackW + rowPadH, rowCenterY - inputH * 0.5f });
         SetWindowFontSize(valFt);
         char valBuf[16];
         std::snprintf(valBuf, sizeof(valBuf),
-            "%+d", static_cast<int>(std::round(state.value)));
+            "%d", static_cast<int>(std::round(state.value)));
         ImGuiMCP::SetNextItemWidth(valW);
         ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_FrameBg, UI::Theme::Color::transparent);
-        const ImGuiMCP::ImU32 valTextCol = std::abs(state.value) >= 1.0f ?
-                                               UI::Theme::Color::textSecondary :
-                                               UI::Theme::Color::textMuted;
+        const ImGuiMCP::ImU32 valTextCol = UI::Theme::Color::textMuted;
         ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_Text, valTextCol);
+        ImGuiMCP::PushStyleVar(ImGuiMCP::ImGuiStyleVar_FrameRounding, a_scale.Px(UI::Theme::Geometry::roundingSmall));
         if (ImGuiMCP::InputText("##slpp_oamVal", valBuf, sizeof(valBuf),
                 ImGuiMCP::ImGuiInputTextFlags_EnterReturnsTrue | ImGuiMCP::ImGuiInputTextFlags_CharsDecimal)) {
             float v = std::round(std::strtof(valBuf, nullptr));
@@ -225,21 +248,6 @@ namespace Thread::Interface
             }
         }
         ImGuiMCP::PopStyleColor(2);
-
-        ImGuiMCP::Dummy(ImGuiMCP::ImVec2{ 0.0f, rowPadV });
-
-        // ── Track + needle + fill drawn on NEXT line
-        ImGuiMCP::SetCursorPosX(rowPadH);
-        const ImGuiMCP::ImVec2 trackMin = ImGuiMCP::GetCursorScreenPos();
-        const ImGuiMCP::ImVec2 trackMax = ImGuiMCP::ImVec2{ trackMin.x + trackW, trackMin.y + trackH };
-
-        // Invisible button with extended hit area
-        const ImGuiMCP::ImVec2 hitMin = ImGuiMCP::ImVec2{ trackMin.x, trackMin.y - hitExt };
-        const ImGuiMCP::ImVec2 hitMax = ImGuiMCP::ImVec2{ trackMax.x, trackMax.y + hitExt };
-        ImGuiMCP::SetCursorScreenPos(hitMin);
-        ImGuiMCP::InvisibleButton("##slpp_oamTrack", ImGuiMCP::ImVec2{ trackW, trackH + hitExt * 2.0f });
-        const bool hovered = ImGuiMCP::IsItemHovered();
-        const bool active = ImGuiMCP::IsItemActive();
 
         // Drag (activated on first frame, captures start value)
         if (ImGuiMCP::IsItemActivated()) {
@@ -311,13 +319,11 @@ namespace Thread::Interface
             ImGuiMCP::ImVec2{ needleX + needleW * 0.5f, nBot },
             nCol, a_scale.Px(1.5f), 0);
 
-        ImGuiMCP::SetCursorScreenPos(ImGuiMCP::ImVec2{ trackMin.x, trackMax.y + a_scale.Px(4.0f) });
-
         // Separator
-        ImGuiMCP::Dummy(ImGuiMCP::ImVec2{ trackW, rowPadV });
         const ImGuiMCP::ImVec2 sepPos = ImGuiMCP::GetCursorScreenPos();
         ImGuiMCP::ImDrawListManager::AddLine(dl,
-            ImGuiMCP::ImVec2{ sepPos.x, sepPos.y }, ImGuiMCP::ImVec2{ sepPos.x + trackW + rowPadH * 2.0f, sepPos.y },
+            ImGuiMCP::ImVec2{ rowOrigin.x + rowPadH, sepPos.y },
+            ImGuiMCP::ImVec2{ rowOrigin.x + rowPadH + availW, sepPos.y },
             UI::Theme::Offset::separator, 1.0f);
 
         return changed;
@@ -406,42 +412,48 @@ namespace Thread::Interface
                 ImGuiMCP::ImGuiWindowFlags_NoCollapse | ImGuiMCP::ImGuiWindowFlags_AlwaysAutoResize;
 
             if (ImGuiMCP::Begin("##slpp_OAMPanel", nullptr, panelFlags)) {
-                // Panel title: centered and uppercase
-                SetWindowFontSize(scale.TextPx(UI::Theme::FontSize::caption));
+
+                // ────── Title
+                SetWindowFontSize(scale.TextPx(UI::Theme::FontSize::sectionHeader));
                 const float titleW = ImGuiMCP::CalcTextSize(panelTitle.c_str()).x;
                 ImGuiMCP::SetCursorPosX((panelW - titleW) * 0.5f);
-                ImGuiMCP::TextColored(UI::Theme::ToVec4(UI::Theme::Color::textMuted), "%s", panelTitle.c_str());
+                ImGuiMCP::TextColored(UI::Theme::ToVec4(UI::Theme::Color::textPrimary), "%s", panelTitle.c_str());
                 ImGuiMCP::Separator();
 
-                // Stage-only toggle row
+                // ────── Stage Only
+                // toggle row
                 SetWindowFontSize(scale.TextPx(UI::Theme::FontSize::body));
-                ImGuiMCP::SetCursorPosX(scale.Px(12.0f));
-                ImGuiMCP::TextColored(UI::Theme::ToVec4(UI::Theme::Color::textSecondary), "Adjust Stage Only");
-                ImGuiMCP::SameLine(panelW - scale.Px(12.0f) - scale.Px(16.0f));
+                const float toggleRowH = scale.Px(24.0f);
+                const float rowPadH = scale.Px(12.0f);
+                const float availW = ImGuiMCP::GetContentRegionAvail().x - rowPadH * 2.0f;
+                const ImGuiMCP::ImVec2 toggleRowMin = ImGuiMCP::GetCursorScreenPos();
+                ImGuiMCP::SetCursorScreenPos({ toggleRowMin.x + rowPadH, toggleRowMin.y });
+                ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_HeaderHovered, UI::Theme::ToVec4(UI::Theme::Color::transparent));
+                if (UI::SelectableButton("##slpp_stageOnlyRow", false, 0, ImGuiMCP::ImVec2{ availW, toggleRowH })) { 
+                    OnSetAdjustStageOnly(a_hud, !_adjustStageOnly);
+                }
+                ImGuiMCP::PopStyleColor();
+                // checkbox
                 bool stageOnly = _adjustStageOnly;
+                const float cbSize = ImGuiMCP::GetFrameHeight();
+                const float cbX = toggleRowMin.x + rowPadH + availW - cbSize;
+                const float cbY = toggleRowMin.y + (toggleRowH - cbSize) * 0.5f;
+                ImGuiMCP::SetCursorScreenPos({ cbX, cbY });
                 UI::PushCheckboxStyle(scale.Factor());
                 if (ImGuiMCP::Checkbox("##slpp_oamStageOnly", &stageOnly))
                     OnSetAdjustStageOnly(a_hud, stageOnly);
                 UI::PopCheckboxStyle();
+                // label
+                const ImGuiMCP::ImVec2 labelSize = ImGuiMCP::CalcTextSize("Adjust Stage Only");
+                const float labelY = toggleRowMin.y + (toggleRowH - labelSize.y) * 0.5f;
+                ImGuiMCP::SetCursorScreenPos({ toggleRowMin.x + rowPadH, labelY });
+                ImGuiMCP::TextColored(UI::Theme::ToVec4(UI::Theme::Color::textSecondary), "Adjust Stage Only");
 
-                // Reset row
-                ImGuiMCP::SetCursorPosX(scale.Px(12.0f));
-                const ImGuiMCP::ImVec2 resetMin = ImGuiMCP::GetCursorScreenPos();
-                const ImGuiMCP::ImVec2 resetSize{ panelW - scale.Px(24.0f), scale.Px(28.0f) };
-                const bool resetOffsets = UI::SelectableButton("Reset Offsets", false, 0, resetSize);
-                const ImGuiMCP::ImVec2 cursorAfterReset = ImGuiMCP::GetCursorPos();
-                SKSEMenuFramework::PushFont(UI::Theme::Icon::solidFont);
-                const ImGuiMCP::ImVec2 resetIconSize = ImGuiMCP::CalcTextSize(UI::Theme::Icon::rotateLeft);
-                ImGuiMCP::SetCursorScreenPos({ resetMin.x + resetSize.x - resetIconSize.x - scale.Px(8.0f),
-                    resetMin.y + (resetSize.y - resetIconSize.y) * 0.5f });
-                ImGuiMCP::TextUnformatted(UI::Theme::Icon::rotateLeft);
-                FontAwesome::Pop();
-                ImGuiMCP::SetCursorPos(cursorAfterReset);
-                if (resetOffsets)
-                    OnResetOffsets(a_hud);
+                ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_Separator, UI::Theme::Offset::separator);
                 ImGuiMCP::Separator();
+                ImGuiMCP::PopStyleColor();
 
-                // ── Axis Sliders
+                // ────── Axis Sliders
                 static constexpr const char* kLabels[4] = { "X", "Y", "Z", "R" };
                 static constexpr Registry::CoordinateType kAxisEnums[4] = {
                     Registry::CoordinateType::X, Registry::CoordinateType::Y,
@@ -465,6 +477,27 @@ namespace Thread::Interface
                     }
                     ImGuiMCP::PopID();
                 }
+
+                // ────── Reset offsets button
+                ImGuiMCP::Dummy(ImGuiMCP::ImVec2{ 0.0f, scale.Px(6.0f) });
+                ImGuiMCP::SetCursorPosX(scale.Px(12.0f));
+
+                const ImGuiMCP::ImVec2 resetSize{ panelW - scale.Px(24.0f), scale.Px(32.0f) };
+                ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_Button, UI::Theme::ToVec4(UI::Theme::Color::surfacePanel));
+                ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_ButtonHovered, UI::Theme::ToVec4(UI::Theme::Color::surfaceHovered));
+                ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_ButtonActive, UI::Theme::ToVec4(UI::Theme::Color::surfacePressed));
+                ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_Text, UI::Theme::ToVec4(UI::Theme::Color::textSecondary));
+                ImGuiMCP::PushStyleVar(ImGuiMCP::ImGuiStyleVar_FrameBorderSize, 1.0f);
+                ImGuiMCP::PushStyleVar(ImGuiMCP::ImGuiStyleVar_FrameRounding, scale.Px(UI::Theme::Geometry::roundingSmall));
+                ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_Border, UI::Theme::ToVec4(UI::Theme::Color::borderSubtle));
+
+                if (UI::ActionButton("Reset Offsets", resetSize.x))
+                    OnResetOffsets(a_hud);
+
+                ImGuiMCP::PopStyleColor(5);
+                ImGuiMCP::PopStyleVar(2);
+                ImGuiMCP::Dummy(ImGuiMCP::ImVec2{ 0.0f, scale.Px(4.0f) });
+                
                 ImGuiMCP::SetWindowFontScale(1.0f);
             }
             ImGuiMCP::End();

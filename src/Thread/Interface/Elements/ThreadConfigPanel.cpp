@@ -15,7 +15,7 @@ namespace Thread::Interface
         for (auto* actor : inst->GetActors()) {
             if (!actor)
                 continue;
-            _actorStates.push_back({ actor->GetFormID(), true });
+            _actorStates.push_back({ actor->GetFormID(), actor->IsPlayerRef() });
         }
         // Render() preserves this actor ordering for the lifetime of the panel.
         _sortedActors.clear();
@@ -113,8 +113,8 @@ namespace Thread::Interface
         const float hdrPadV = scale.Px(5.0f);
         const float hdrPadH = scale.Px(10.0f);
         const float lblW = scale.Px(90.0f);
-        const float dropW = scale.Px(140.0f);
-        const float alphaW = scale.Px(100.0f);
+        const float dropW = panelW - rowPadH - lblW;
+        const float alphaW = panelW - rowPadH - lblW - scale.Px(32.0f);
 
         ImGuiMCP::PushID(static_cast<int>(actor->GetFormID()));
 
@@ -142,24 +142,35 @@ namespace Thread::Interface
         ImGuiMCP::SetCursorScreenPos(hdrMin);
         SetWindowFontSize(scale.TextPx(UI::Theme::FontSize::subsectionHeader));
 
-        // Collapse arrow
-        ImGuiMCP::SetCursorScreenPos(ImGuiMCP::ImVec2{ hdrMin.x + hdrPadH, hdrMin.y + hdrPadV });
-        SKSEMenuFramework::PushFont(UI::Theme::Icon::solidFont);
-        ImGuiMCP::TextColored(UI::Theme::ToVec4(UI::Theme::Color::textMuted),
-            "%s", state.cardOpen ? UI::Theme::Icon::chevronDown : UI::Theme::Icon::chevronUp);
-        FontAwesome::Pop();
+        // Left accent bar to distinguish actor cards from section headers
+        const float accentBarW = scale.Px(2.0f);
+        ImGuiMCP::ImDrawListManager::AddRectFilled(dl,
+            ImGuiMCP::ImVec2{ hdrMin.x, hdrMin.y },
+            ImGuiMCP::ImVec2{ hdrMin.x + accentBarW, hdrMin.y + hdrH },
+            hdrHov ? UI::Theme::Color::accent : UI::Theme::Color::borderSubtle, 0.0f, 0);
 
-        // Name, truncated
-        ImGuiMCP::SameLine(0.0f, scale.Px(6.0f));
+        // Name at left with padding
+        ImGuiMCP::SetCursorScreenPos(ImGuiMCP::ImVec2{ hdrMin.x + hdrPadH, hdrMin.y + hdrPadV });
         ImGuiMCP::TextColored(UI::Theme::ToVec4(hdrHov ? UI::Theme::Color::textSecondary : UI::Theme::Color::textMuted),
             "%s", actor->GetDisplayFullName());
 
-        // Badges flush-right: player / position
-        const float badgeX = hdrMin.x + panelW - hdrPadH - (actor->IsPlayerRef() ? scale.Px(40.0f) : 0.0f);
+        // Right side: PLAYER badge then chevron, both flush-right
+        SKSEMenuFramework::PushFont(UI::Theme::Icon::solidFont);
+        const char* chevron = state.cardOpen ? UI::Theme::Icon::chevronUp : UI::Theme::Icon::chevronDown;
+        const ImGuiMCP::ImVec2 chevronSize = ImGuiMCP::CalcTextSize(chevron);
+        FontAwesome::Pop();
+
+        const float chevronX = hdrMin.x + panelW - hdrPadH - chevronSize.x;
         if (actor->IsPlayerRef()) {
+            const ImGuiMCP::ImVec2 badgeSize = ImGuiMCP::CalcTextSize("PLAYER");
+            const float badgeX = chevronX - scale.Px(6.0f) - badgeSize.x;
             ImGuiMCP::SetCursorScreenPos(ImGuiMCP::ImVec2{ badgeX, hdrMin.y + hdrPadV });
             ImGuiMCP::TextColored(UI::Theme::ToVec4(UI::Theme::Color::accent), "PLAYER");
         }
+        SKSEMenuFramework::PushFont(UI::Theme::Icon::solidFont);
+        ImGuiMCP::SetCursorScreenPos(ImGuiMCP::ImVec2{ chevronX, hdrMin.y + hdrPadV });
+        ImGuiMCP::TextColored(UI::Theme::ToVec4(UI::Theme::Color::textMuted), "%s", chevron);
+        FontAwesome::Pop();
 
         ImGuiMCP::SetCursorScreenPos(ImGuiMCP::ImVec2{ hdrMin.x, hdrMin.y + hdrH });
 
@@ -170,37 +181,6 @@ namespace Thread::Interface
         }
         auto* inst = a_hud.GetThreadInstance();
         SetWindowFontSize(scale.TextPx(UI::Theme::FontSize::compact));
-
-        // ── Scene position row
-        {
-            const int32_t current = inst->GetCurrentPermutation(actor);
-            const int32_t total = inst->GetUniquePermutations(actor);
-            const bool canCycle = total > 1;
-
-            ImGuiMCP::SetCursorPosX(rowPadH);
-            SetWindowFontSize(scale.TextPx(UI::Theme::FontSize::caption));
-            ImGuiMCP::TextColored(UI::Theme::ToVec4(UI::Theme::Color::textMuted), "Scene Position");
-            ImGuiMCP::SameLine(lblW);
-
-            const float btnSize = std::max(scale.Px(18.0f),
-                scale.TextPx(UI::Theme::FontSize::caption) + scale.Px(UI::Theme::Spacing::xxs));
-            SetWindowFontSize(scale.TextPx(UI::Theme::FontSize::caption));
-            char permBuf[24];
-            std::snprintf(permBuf, sizeof(permBuf), "%d of %d", current, total);
-            ImGuiMCP::TextColored(UI::Theme::ToVec4(UI::Theme::Color::textSecondary), "%s", permBuf);
-
-            if (canCycle) {
-                ImGuiMCP::SameLine(0.0f, scale.Px(6.0f));
-                SKSEMenuFramework::PushFont(UI::Theme::Icon::solidFont);
-                const bool nextPosition = ImGuiMCP::Button(UI::Theme::Icon::chevronRight, ImGuiMCP::ImVec2{ btnSize, btnSize });
-                FontAwesome::Pop();
-                if (ImGuiMCP::IsItemHovered())
-                    ImGuiMCP::SetTooltip("Move actor to the next compatible scene position");
-                if (nextPosition)
-                    OnNextPosition(a_hud, actor);
-            }
-            ImGuiMCP::SetCursorPosY(ImGuiMCP::GetCursorPosY() + rowPadV);
-        }
 
         // ── Expression combo
         if (Registry::RaceKey(actor).Is(Registry::RaceKey::Value::Human)) {
@@ -215,6 +195,7 @@ namespace Thread::Interface
 
             SetWindowFontSize(scale.TextPx(UI::Theme::FontSize::caption));
             ImGuiMCP::SetNextItemWidth(dropW);
+            ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_PopupBg, UI::Theme::ToVec4(IM_COL32(14, 14, 18, 248)));
             if (ImGuiMCP::BeginCombo("##slpp_tcmExpr", curLabel.c_str())) {
                 lib->ForEachExpression([&](const auto& expr) {
                     if (!expr.enabled)
@@ -224,6 +205,7 @@ namespace Thread::Interface
                     const bool sel = curExpr && curExpr->GetId() == expr.GetId();
                     if (sel)
                         ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_Text, UI::Theme::Color::selectionText);
+                    SetWindowFontSize(scale.TextPx(UI::Theme::FontSize::caption));
                     if (ImGuiMCP::Selectable(label.c_str(), sel)) {
                         OnSetExpression(a_hud, actor, &expr);
                     }
@@ -233,6 +215,7 @@ namespace Thread::Interface
                 });
                 ImGuiMCP::EndCombo();
             }
+            ImGuiMCP::PopStyleColor();
             ImGuiMCP::SetCursorPosY(ImGuiMCP::GetCursorPosY() + rowPadV);
         }
 
@@ -250,6 +233,7 @@ namespace Thread::Interface
 
             SetWindowFontSize(scale.TextPx(UI::Theme::FontSize::caption));
             ImGuiMCP::SetNextItemWidth(dropW);
+            ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_PopupBg, UI::Theme::ToVec4(IM_COL32(14, 14, 18, 248)));
             if (ImGuiMCP::BeginCombo("##slpp_tcmVoice", curLabel.c_str())) {
                 lib->ForEachVoice([&](const auto& v) {
                     if (!v.HasRace(raceKey))
@@ -259,6 +243,7 @@ namespace Thread::Interface
                     const bool sel = curVoice && curVoice->GetId() == v.GetId();
                     if (sel)
                         ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_Text, UI::Theme::Color::selectionText);
+                    SetWindowFontSize(scale.TextPx(UI::Theme::FontSize::caption));
                     if (ImGuiMCP::Selectable(label.c_str(), sel)) {
                         OnSetVoice(a_hud, actor, &v);
                     }
@@ -268,6 +253,7 @@ namespace Thread::Interface
                 });
                 ImGuiMCP::EndCombo();
             }
+            ImGuiMCP::PopStyleColor();
             ImGuiMCP::SetCursorPosY(ImGuiMCP::GetCursorPosY() + rowPadV);
         }
 
@@ -289,6 +275,37 @@ namespace Thread::Interface
             ImGuiMCP::SameLine(0.0f, scale.Px(6.0f));
             SetWindowFontSize(scale.TextPx(UI::Theme::FontSize::caption));
             ImGuiMCP::TextColored(UI::Theme::ToVec4(UI::Theme::Color::textMuted), "%d%%", alphaInt);
+        }
+
+        // ── Scene position row
+        {
+            const int32_t current = inst->GetCurrentPermutation(actor);
+            const int32_t total = inst->GetUniquePermutations(actor);
+            const bool canCycle = total > 1;
+
+            if (canCycle) {
+                ImGuiMCP::SetCursorPosY(ImGuiMCP::GetCursorPosY() + rowPadV);
+                ImGuiMCP::SetCursorPosX(rowPadH);
+                SetWindowFontSize(scale.TextPx(UI::Theme::FontSize::caption));
+                ImGuiMCP::TextColored(UI::Theme::ToVec4(UI::Theme::Color::textMuted), "Scene Position");
+                ImGuiMCP::SameLine(lblW);
+
+                const float btnSize = std::max(scale.Px(18.0f),
+                    scale.TextPx(UI::Theme::FontSize::caption) + scale.Px(UI::Theme::Spacing::xxs));
+                SetWindowFontSize(scale.TextPx(UI::Theme::FontSize::caption));
+                char permBuf[24];
+                std::snprintf(permBuf, sizeof(permBuf), "%d of %d", current, total);
+                ImGuiMCP::TextColored(UI::Theme::ToVec4(UI::Theme::Color::textSecondary), "%s", permBuf);
+
+                ImGuiMCP::SameLine(0.0f, scale.Px(14.0f));
+                SKSEMenuFramework::PushFont(UI::Theme::Icon::solidFont);
+                const bool nextPosition = ImGuiMCP::Button(UI::Theme::Icon::nextPerm, ImGuiMCP::ImVec2{ btnSize, btnSize });
+                FontAwesome::Pop();
+                if (ImGuiMCP::IsItemHovered())
+                    ImGuiMCP::SetTooltip("Move actor to the next compatible scene position");
+                if (nextPosition)
+                    OnNextPosition(a_hud, actor);
+            }
         }
 
         ImGuiMCP::SetCursorPosY(ImGuiMCP::GetCursorPosY() + rowPadV);
@@ -374,9 +391,10 @@ namespace Thread::Interface
         ImGuiMCP::Separator();
 
         if (_actorsSectionOpen) {
-            ImGuiMCP::BeginChild("##slpp_tcmActors", ImGuiMCP::ImVec2{ panelW, maxBodyH }, false,
-                ImGuiMCP::ImGuiWindowFlags_NoScrollbar);
+            ImGuiMCP::BeginChild("##slpp_tcmActors", ImGuiMCP::ImVec2{ panelW, maxBodyH },
+                ImGuiMCP::ImGuiChildFlags_None, ImGuiMCP::ImGuiWindowFlags_None);
 
+            bool first = true;
             for (auto* actor : _sortedActors) {
                 const uint32_t fid = actor->GetFormID();
                 ActorState* st = nullptr;
@@ -389,6 +407,9 @@ namespace Thread::Interface
                     _actorStates.push_back({ fid, false });
                     st = &_actorStates.back();
                 }
+                if (!first)
+                    ImGuiMCP::Separator();
+                first = false;
                 RenderActorCard(a_hud, actor, *st);
             }
 

@@ -51,6 +51,7 @@ namespace Thread::Interface::UI::Theme
         static constexpr const char* chevronUp = "\xEF\x81\xB7";     // U+F077
         static constexpr const char* chevronDown = "\xEF\x81\xB8";   // U+F078
         static constexpr const char* rotateLeft = "\xEF\x8B\xAA";    // U+F2EA
+        static constexpr const char* nextPerm = "\xEE\x95\x92";      // U+E552
     };
 
     struct Spacing final
@@ -176,10 +177,11 @@ namespace Thread::Interface::UI
         ImGuiMCP::SetCursorScreenPos({ headerMin.x + horizontalPadding, headerMin.y + (a_size.y - labelSize.y) * 0.5f });
         ImGuiMCP::TextColored(color, "%s", a_label);
 
-        const char* icon = a_open ? Theme::Icon::chevronDown : Theme::Icon::chevronUp;
+        const char* icon = a_open ? Theme::Icon::chevronUp : Theme::Icon::chevronDown;
         SKSEMenuFramework::PushFont(Theme::Icon::solidFont);
         const ImGuiMCP::ImVec2 iconSize = ImGuiMCP::CalcTextSize(icon);
-        ImGuiMCP::SetCursorScreenPos({ headerMin.x + horizontalPadding + labelSize.x + iconGap,
+        const float availW = ImGuiMCP::GetContentRegionAvail().x;
+        ImGuiMCP::SetCursorScreenPos({ headerMin.x + availW - iconSize.x - horizontalPadding,
             headerMin.y + (a_size.y - iconSize.y) * 0.5f });
         ImGuiMCP::TextColored(color, "%s", icon);
         FontAwesome::Pop();
