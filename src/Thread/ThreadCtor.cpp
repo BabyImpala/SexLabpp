@@ -326,12 +326,14 @@ namespace Thread
     void Instance::InitializeCenterRefMenu(const FurnitureMapping& a_furnitures, RE::Actor* a_tmpCenter)
     {
         std::vector<Interface::FurnSelectMenu::Item> items;
-        const auto actName = std::format("{}, 0x{:X}", a_tmpCenter->GetDisplayFullName(), a_tmpCenter->GetFormID());
-        items.emplace_back(actName, "");
+        const auto actName = std::format("{}", a_tmpCenter->GetDisplayFullName());
+        const auto actID = std::format("0x{:X}", a_tmpCenter->GetFormID());
+        items.emplace_back(actName, "", actID);
         for (const auto& [ref, offset] : a_furnitures) {
-            const auto itemName = std::format("{}, 0x{:X}", ref->GetDisplayFullName(), ref->GetFormID());
-            const auto itemValue = std::format("{}", offset.type.ToString());
-            items.emplace_back(itemName, itemValue);
+            const auto itemName = std::format("{}", ref->GetDisplayFullName());
+            const auto itemType = std::format("{}", offset.type.ToString());
+            const auto itemID = std::format("0x{:X}", ref->GetFormID());
+            items.emplace_back(itemName, itemType, itemID);
         }
         Instance::pendingFurnitureMap = a_furnitures;
         Instance::pendingCenterAct = a_tmpCenter;

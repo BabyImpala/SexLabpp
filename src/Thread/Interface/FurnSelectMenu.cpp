@@ -55,13 +55,16 @@ namespace Thread::Interface
             return;
         auto& scale = SceneHUD::GetSingleton().GetScale();
 
-        const float btnW = scale.Px(260.0f);
+        const float panelW = scale.Px(300.0f);
+        const float padH = scale.Px(12.0f);
+        const float padV = scale.Px(5.0f);
+        const float rowH = scale.TextPx(UI::Theme::FontSize::body) + padV * 2.0f;
 
         // Centred on screen
         auto* vp = ImGuiMCP::GetMainViewport();
         const ImGuiMCP::ImVec2 centre = ImGuiMCP::ImGuiViewportManager::GetCenter(vp);
         ImGuiMCP::SetNextWindowPos(centre, ImGuiMCP::ImGuiCond_Always, ImGuiMCP::ImVec2{ 0.5f, 0.5f });
-        ImGuiMCP::SetNextWindowSize({ btnW + scale.Px(24.0f), 0.0f }, ImGuiMCP::ImGuiCond_Always);
+        ImGuiMCP::SetNextWindowSize({ panelW, 0.0f }, ImGuiMCP::ImGuiCond_Always);
         ImGuiMCP::SetNextWindowBgAlpha(0.97f);
 
         // Begin() needs a plain bool*, so mirror the window's atomic IsOpen through a local and write it back afterward.
@@ -78,24 +81,63 @@ namespace Thread::Interface
         }
 
         // Panel title
-        SetWindowFontSize(scale.TextPx(UI::Theme::FontSize::caption));
-        ImGuiMCP::TextColored(UI::Theme::ToVec4(UI::Theme::Color::textSecondary), "CENTER SELECTION");
+        SetWindowFontSize(scale.TextPx(UI::Theme::FontSize::sectionHeader));
+        const char* title = "SELECT SCENE CENTER";
+        ImGuiMCP::SetCursorPosX((panelW - ImGuiMCP::CalcTextSize(title).x) * 0.5f);
+        ImGuiMCP::TextColored(UI::Theme::ToVec4(UI::Theme::Color::textSecondary), "%s", title);
+        ImGuiMCP::Dummy(ImGuiMCP::ImVec2{ 0.0f, scale.Px(2.0f) });
         ImGuiMCP::Separator();
+        ImGuiMCP::Dummy(ImGuiMCP::ImVec2{ 0.0f, scale.Px(2.0f) });
 
         SetWindowFontSize(scale.TextPx(UI::Theme::FontSize::body));
         std::optional<std::size_t> selectedIndex;
+
         if (_items.empty()) {
+            ImGuiMCP::SetCursorPosX(padH);
             ImGuiMCP::TextColored(UI::Theme::ToVec4(UI::Theme::Color::textMuted), "No suitable scene center nearby.");
         } else {
+            const float innerW = panelW - padH * 2.0f;
+
             for (std::size_t i = 0; i < _items.size(); ++i) {
                 ImGuiMCP::PushID(static_cast<int>(i));
-                const auto label = std::format("{}  ({})", _items[i].name, _items[i].value);
-                if (ImGuiMCP::Button(label.c_str(), { btnW, scale.Px(28.0f) }))
+
+                const ImGuiMCP::ImVec2 rowMin = ImGuiMCP::GetCursorScreenPos();
+                ImGuiMCP::SetCursorPosX(padH);
+                if (UI::SelectableButton("##slpp_furn_row", false,
+                        ImGuiMCP::ImGuiSelectableFlags_AllowOverlap,
+                        ImGuiMCP::ImVec2{ innerW, rowH }))
                     selectedIndex = i;
+                const bool hov = ImGuiMCP::IsItemHovered();
+
+                const std::string& baseName = _items[i].name;
+                const std::string& subType = _items[i].type;
+                const std::string& formId = _items[i].formId;
+
+                std::string leftLabel;
+                if (!baseName.empty() && !subType.empty())
+                    leftLabel = baseName + " (" + subType + ")";
+                else if (!baseName.empty())
+                    leftLabel = baseName;
+                else
+                    leftLabel = subType;
+
+                ImGuiMCP::SetCursorScreenPos({ rowMin.x + padH, rowMin.y + padV });
+                ImGuiMCP::TextColored(
+                    UI::Theme::ToVec4(hov ? UI::Theme::Color::textPrimary : UI::Theme::Color::textSecondary),
+                    "%s", leftLabel.c_str());
+
+                if (!formId.empty()) {
+                    const float fW = ImGuiMCP::CalcTextSize(formId.c_str()).x;
+                    ImGuiMCP::SetCursorScreenPos({ rowMin.x + padH + innerW - fW - padH, rowMin.y + padV });
+                    ImGuiMCP::TextColored(UI::Theme::ToVec4(UI::Theme::Color::textMuted), "%s", formId.c_str());
+                }
+
+                ImGuiMCP::SetCursorScreenPos({ rowMin.x, rowMin.y + rowH });
                 ImGuiMCP::PopID();
             }
         }
 
+        ImGuiMCP::Dummy(ImGuiMCP::ImVec2{ 0.0f, scale.Px(2.0f) });
         ImGuiMCP::SetWindowFontScale(1.0f);
         ImGuiMCP::End();
         SetVisible(isOpen);

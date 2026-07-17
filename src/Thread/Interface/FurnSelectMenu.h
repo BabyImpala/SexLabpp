@@ -9,7 +9,8 @@ namespace Thread::Interface
         struct Item
         {
             std::string name;
-            std::string value;
+            std::string type;
+            std::string formId;
         };
 
         static FurnSelectMenu& GetSingleton();
