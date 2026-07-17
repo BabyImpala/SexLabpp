@@ -1849,7 +1849,7 @@ Function TryInitSceneHUD()
 		return
 	EndIf
 	RefreshPropertiesSceneHUD("Get")
-	If (!ElementUI_GameHUD)
+	If (HasPlayer && !ElementUI_GameHUD)
 		SexLabUtil.HideElementsGameHUD(true)
 	EndIf
 	InitSceneHUDImpl()
@@ -1858,7 +1858,7 @@ EndFunction
 Function TryCloseSceneHUD()
 	DestroySceneHUDImpl()
 	RefreshPropertiesSceneHUD("Set")
-	If (!ElementUI_GameHUD)
+	If (HasPlayer && !ElementUI_GameHUD)
 		SexLabUtil.HideElementsGameHUD(false)
 	EndIf
 EndFunction
