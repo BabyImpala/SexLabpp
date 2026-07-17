@@ -155,9 +155,7 @@ namespace Papyrus::ThreadModel
                 }
                 // actor->SetCollision(false);
             } else {
-                if (handler->HasActor(formID)) {
-                    handler->RemoveActor(formID);
-                }
+                handler->RemoveActor(formID);
                 // actor->SetCollision(true);
             }
         }
