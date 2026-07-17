@@ -150,9 +150,7 @@ namespace Papyrus::ThreadModel
             const auto handler = Thread::Collision::CollisionHandler::GetSingleton();
             const auto formID = actor->GetFormID();
             if (!a_enable) {
-                if (!handler->HasActor(formID)) {
-                    handler->AddActor(formID);
-                }
+                handler->AddActor(formID);
                 // actor->SetCollision(false);
             } else {
                 handler->RemoveActor(formID);
