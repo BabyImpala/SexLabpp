@@ -2,3 +2,4 @@
 dist/Interface/Translations/*.txt    text eol=crlf working-tree-encoding=UTF-16LE-BOM
 res/SexLab.esm/**/*.yaml  text eol=crlf
 res/SexLab.esm/**/*.json  text eol=crlf
+lib/ImGui/SKSEMenuFramework.h linguist-vendored
