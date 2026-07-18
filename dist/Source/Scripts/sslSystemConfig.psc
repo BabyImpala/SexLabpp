@@ -966,8 +966,6 @@ bool function CheckSystemPart(string CheckSystem)
     return SKSE.GetPluginVersion("mfgfix") > -1
   elseIf CheckSystem == "PPA"
     return SKSE.GetPluginVersion("AccuratePenetration") > -1
-  elseIf CheckSystem == "CrossHairRef"
-    return SKSE.GetPluginVersion("CrosshairRefEventsFix") > -1
   elseIf CheckSystem == "SKSEMenuFramework"
     return SKSE.GetPluginVersion("SKSEMenuFramework") > -1
   elseif CheckSystem == "VRIK"
@@ -989,9 +987,6 @@ bool function CheckSystem()
     ret = false
   ElseIf (!CheckSystemPart("PapyrusUtil"))
     CheckPapyrusUtil.Show(4.4)
-    ret = false
-  ElseIf (!CheckSystemPart("CrossHairRef"))
-    Debug.MessageBox("[SexLab]\nMissing 'CrosshairRefEvents Hang Fix'.\nThis mod is mandatory to avoid soft-locks during scene startup.")
     ret = false
   ElseIf (!CheckSystemPart("SKSEMenuFramework"))
     Debug.MessageBox("[SexLab]\nMissing 'SKSE Menu Framework'.\nThis mod is mandatory for the SceneHUD to work.")

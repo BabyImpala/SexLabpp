@@ -77,6 +77,19 @@ static void SKSEMessageHandler(SKSE::MessagingInterface::Message* message)
     }
 }
 
+// Prevent disabled activation controls from clearing the crosshair target every frame.
+// On SE/AE, skip this patch when CrosshairRefEventsFix is loaded; that fix does not support VR.
+static void PatchCrosshairBug()
+{
+    if (!REL::Module::IsVR() && REX::W32::GetModuleHandleA("CrosshairRefEventsFix.dll")) {
+        return;
+    }
+
+    // Credit to yeahhowaboutnooo for finding this workaround
+    const REL::Relocation<std::uintptr_t> branch{ REL::VariantID(39534, 40620, 0x6D2A30), REL::VariantOffset(0x60, 0x65, 0x26F) };
+    REL::safe_fill(branch.address(), REL::NOP, 6);
+}
+
 extern "C" DLLEXPORT bool SKSEAPI SKSEPlugin_Load(const SKSE::LoadInterface* a_skse)
 {
     constexpr auto PLUGIN_NAME = "SexLabUtil"sv;
@@ -111,6 +124,7 @@ extern "C" DLLEXPORT bool SKSEAPI SKSEPlugin_Load(const SKSE::LoadInterface* a_s
     }
 
     SKSE::Init(a_skse);
+    PatchCrosshairBug();
     logger::info("{} loaded", PLUGIN_NAME);
 
     const auto msging = SKSE::GetMessagingInterface();
