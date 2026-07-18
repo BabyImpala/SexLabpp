@@ -48,10 +48,9 @@ int Property kGameHoldback      = 5  AutoReadOnly
 int Property kChangeAnimation   = 6  AutoReadOnly
 int Property kMoveScene         = 7  AutoReadOnly
 int Property kChangePartner     = 8  AutoReadOnly
-int Property kChangePositions   = 9  AutoReadOnly
 
 Function InitHotkeys()
-	Hotkeys = new int[10]
+	Hotkeys = new int[9]
 	Hotkeys[kToggleSceneHUD]    = Config.ToggleSceneHUD
 	Hotkeys[kFocusSceneHUD]     = Config.FocusSceneHUD	
 	Hotkeys[kAdvanceAnimation]  = Config.AdvanceAnimation
@@ -61,7 +60,6 @@ Function InitHotkeys()
 	Hotkeys[kChangeAnimation]   = Config.ChangeAnimation
 	Hotkeys[kMoveScene]         = Config.MoveScene
 	Hotkeys[kChangePartner]     = Config.TargetActor
-	Hotkeys[kChangePositions]   = Config.ChangePositions
 EndFunction
 
 Function RegisterHotkeys()
@@ -81,7 +79,6 @@ Function RegisterHotkeys()
 	RegisterForKey(Hotkeys[kChangeAnimation])
 	RegisterForKey(Hotkeys[kMoveScene])
 	RegisterForKey(Hotkeys[kChangePartner])
-	RegisterForKey(Hotkeys[kChangePositions])
 EndFunction
 
 Function UnregisterHotkeys()
@@ -136,8 +133,6 @@ Event OnKeyDown(int aiKey)
 		MoveScene()
 	ElseIf (aiKey == Hotkeys[kChangePartner])
 		CycleTargetPartner(abModifier)
-	ElseIf (aiKey == Hotkeys[kChangePositions])
-		ChangePositions(abAdjustTarget)
 	EndIf
 	_SkipHotkeyEvents = false
 EndEvent
@@ -279,21 +274,6 @@ Function AdvanceStage(bool abBackwards = false)
 	ElseIf (Stage > 1)
 		GoToStage(Stage - 1)
 	EndIf
-EndFunction
-
-Function ChangePositions(bool abAdjustTarget = false)
-	If (GetPositions().Length < 2)
-		return
-	EndIf
-	Actor akAffectedActor = PlayerRef
-	If (abAdjustTarget)
-		akAffectedActor = GetTargetPartner()
-	EndIf
-	If (SetNextPermutation(akAffectedActor))
-		SendThreadEvent("PositionChange")
-		return
-	EndIf
-	Debug.Notification("Selected actor cannot switch positions")
 EndFunction
 
 int Function GetAdjustPos()
@@ -444,7 +424,7 @@ EndFunction
 ;#   R_Left    : StagePrev
 ;#   R_Right   : StageNext
 ;#   R_Back    : MoveScene
-;#   R_Forward : ChangePositions
+;#   R_Forward : ToggleVisibilitySceneHUD
 ;#--------------------------------------------------#;
 
 bool _SkipGestureEvents = False
@@ -507,6 +487,10 @@ Function VRHandleGesture(String asEventName, String Foobar, float Presses, Form 
 	EndIf
 	string asEvent = StringUtil.Substring(asEventName, 5)
 	; SceneHUD
+	If (asEvent == "R_Forward")
+		ToggleVisibilitySceneHUD()
+		return
+	EndIf
 	If (asEvent == "R_Tap")
 		ToggleFocusSceneHUD()
 		return
@@ -547,8 +531,6 @@ Function VRHandleGesture(String asEventName, String Foobar, float Presses, Form 
 		AdvanceStage()
 	ElseIf (asEvent == "R_Back")
 		MoveScene()
-	ElseIf (asEvent == "R_Forward")
-		ChangePositions(abAdjustTarget)
 	EndIf
 	_SkipGestureEvents = false
 EndFunction
@@ -582,6 +564,21 @@ EndFunction
 
 Function ChangeAnimation(bool backwards = false)
 	return PickRandomScene("")
+EndFunction
+
+Function ChangePositions(bool abAdjustTarget = false)
+	If (GetPositions().Length < 2)
+		return
+	EndIf
+	Actor akAffectedActor = PlayerRef
+	If (abAdjustTarget)
+		akAffectedActor = GetTargetPartner()
+	EndIf
+	If (SetNextPermutation(akAffectedActor))
+		SendThreadEvent("PositionChange")
+		return
+	EndIf
+	Debug.Notification("Selected actor cannot switch positions")
 EndFunction
 
 Function AdjustCoordinate(bool abBackwards, bool abStageOnly, float afValue, int aiKeyIdx, int aiOffsetType)

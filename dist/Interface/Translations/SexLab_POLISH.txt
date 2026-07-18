@@ -302,7 +302,6 @@ $SSL_iKeyMod	Modifier
 $SSL_iKeyModHighlight	Toggles alternative effect for other hotkeys.\nNext/Prev: ChangePartner, AdvanceStage.\nAdjustTarget: EnjRaise, EnjHoldback.\nThe hotkeys changing their mode to "AdjustTarget" with ModifierKey affect Player on their own.
 $SSL_iChangeAnimation	Change Animation
 $SSL_iMoveScene	Move Scene
-$SSL_iChangePositions	Change Positions
 
 # ------------------- Timers & Stripping -------------------------------------------------
 $SSL_TimersStripping	Timers & Stripping

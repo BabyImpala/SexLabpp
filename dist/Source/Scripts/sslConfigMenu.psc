@@ -1504,7 +1504,6 @@ function PlayerHotkeys()
 	AddStateOptionKey("iKeyMod", "$SSL_iKeyMod", true, true)
 	AddStateOptionKey("iChangeAnimation", "$SSL_iChangeAnimation", true, true)
 	AddStateOptionKey("iMoveScene", "$SSL_iMoveScene", true, true)
-	AddStateOptionKey("iChangePositions", "$SSL_iChangePositions", true, true)
 EndFunction
 
 ; ------------------------------------------------------- ;

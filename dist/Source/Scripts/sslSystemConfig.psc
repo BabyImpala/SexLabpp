@@ -420,14 +420,6 @@ int property MoveScene hidden
     SetSettingInt("iMoveScene", aiSet)
   EndFunction
 EndProperty
-int property ChangePositions hidden
-  int Function Get()
-    return GetSettingInt("iChangePositions")
-  EndFunction
-  Function Set(int aiSet)
-    SetSettingInt("iChangePositions", aiSet)
-  EndFunction
-EndProperty
 
 ; Scene Menu
 int property ToggleSceneHUD hidden

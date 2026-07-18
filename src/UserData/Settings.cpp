@@ -138,7 +138,6 @@ Settings::KeyType Settings::GetKeyType(uint32_t a_keyCode)
     if (a_keyCode == get(Settings::iKeyMod))              return KeyType::Modifier;
     if (a_keyCode == get(Settings::iChangeAnimation))     return KeyType::Scene;
     if (a_keyCode == get(Settings::iMoveScene))           return KeyType::Move;
-    if (a_keyCode == get(Settings::iChangePositions))     return KeyType::Position;
     if (a_keyCode == get(Settings::iToggleThreadControl)) return KeyType::Thread;
     if (a_keyCode == get(Settings::iToggleFreeCamera))    return KeyType::FreeCam;
     if (a_keyCode == get(Settings::iTargetActor))         return KeyType::Partner;
@@ -160,7 +159,6 @@ uint32_t Settings::GetKeyCode(KeyType a_keyType)
     case KeyType::Modifier:  return get(Settings::iKeyMod);
     case KeyType::Scene:     return get(Settings::iChangeAnimation);
     case KeyType::Move:      return get(Settings::iMoveScene);
-    case KeyType::Position:  return get(Settings::iChangePositions);
     case KeyType::Thread:    return get(Settings::iToggleThreadControl);
     case KeyType::FreeCam:   return get(Settings::iToggleFreeCamera);
     case KeyType::Partner:   return get(Settings::iTargetActor);

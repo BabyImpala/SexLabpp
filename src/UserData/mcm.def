@@ -74,7 +74,6 @@ MCM_SETTING(iKeyEnd, 0xCF)                 // End
 MCM_SETTING(iKeyMod, 0x2A)                 // Shift
 MCM_SETTING(iChangeAnimation, 0x18)        // O
 MCM_SETTING(iMoveScene, 0x25)              // K
-MCM_SETTING(iChangePositions, 0x0D)        // Numpad Enter
 
 // VRIK Related
 MCM_SETTING(bHasVRIK, false)
