@@ -418,9 +418,11 @@ namespace Thread::Interface
                 const float titleW = ImGuiMCP::CalcTextSize(panelTitle.c_str()).x;
                 ImGuiMCP::SetCursorPosX((panelW - titleW) * 0.5f);
                 ImGuiMCP::TextColored(UI::Theme::ToVec4(UI::Theme::Color::textPrimary), "%s", panelTitle.c_str());
+                ImGuiMCP::Dummy(ImGuiMCP::ImVec2{ 0.0f, scale.Px(4.0f) });
                 ImGuiMCP::Separator();
 
                 // ────── Stage Only
+                ImGuiMCP::Dummy(ImGuiMCP::ImVec2{ 0.0f, scale.Px(6.0f) });
                 // toggle row
                 SetWindowFontSize(scale.TextPx(UI::Theme::FontSize::body));
                 const float toggleRowH = scale.Px(24.0f);
@@ -437,19 +439,22 @@ namespace Thread::Interface
                 bool stageOnly = _adjustStageOnly;
                 const float cbSize = ImGuiMCP::GetFrameHeight();
                 const float cbX = toggleRowMin.x + rowPadH + availW - cbSize;
-                const float cbY = toggleRowMin.y + (toggleRowH - cbSize) * 0.5f;
+                const float cbY = toggleRowMin.y + (toggleRowH - cbSize) * 0.5f + scale.Px(3.0f);
                 ImGuiMCP::SetCursorScreenPos({ cbX, cbY });
                 UI::PushCheckboxStyle(scale.Factor());
-                if (ImGuiMCP::Checkbox("##slpp_oamStageOnly", &stageOnly))
-                    OnSetAdjustStageOnly(a_hud, stageOnly);
+                bool cbChanged = ImGuiMCP::Checkbox("##slpp_oamStageOnly", &stageOnly);
                 UI::PopCheckboxStyle();
+                if (cbChanged)
+                    OnSetAdjustStageOnly(a_hud, stageOnly);
                 // label
                 const ImGuiMCP::ImVec2 labelSize = ImGuiMCP::CalcTextSize("Adjust Stage Only");
                 const float labelY = toggleRowMin.y + (toggleRowH - labelSize.y) * 0.5f;
                 ImGuiMCP::SetCursorScreenPos({ toggleRowMin.x + rowPadH, labelY });
                 ImGuiMCP::TextColored(UI::Theme::ToVec4(UI::Theme::Color::textSecondary), "Adjust Stage Only");
+                ImGuiMCP::SetCursorScreenPos({ toggleRowMin.x, toggleRowMin.y + toggleRowH });
 
                 ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_Separator, UI::Theme::Offset::separator);
+                ImGuiMCP::Dummy(ImGuiMCP::ImVec2{ 0.0f, scale.Px(6.0f) });
                 ImGuiMCP::Separator();
                 ImGuiMCP::PopStyleColor();
 
@@ -480,23 +485,11 @@ namespace Thread::Interface
 
                 // ────── Reset offsets button
                 ImGuiMCP::Dummy(ImGuiMCP::ImVec2{ 0.0f, scale.Px(6.0f) });
+                const float btnW = panelW - scale.Px(24.0f);
                 ImGuiMCP::SetCursorPosX(scale.Px(12.0f));
-
-                const ImGuiMCP::ImVec2 resetSize{ panelW - scale.Px(24.0f), scale.Px(32.0f) };
-                ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_Button, UI::Theme::ToVec4(UI::Theme::Color::surfacePanel));
-                ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_ButtonHovered, UI::Theme::ToVec4(UI::Theme::Color::surfaceHovered));
-                ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_ButtonActive, UI::Theme::ToVec4(UI::Theme::Color::surfacePressed));
-                ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_Text, UI::Theme::ToVec4(UI::Theme::Color::textSecondary));
-                ImGuiMCP::PushStyleVar(ImGuiMCP::ImGuiStyleVar_FrameBorderSize, 1.0f);
-                ImGuiMCP::PushStyleVar(ImGuiMCP::ImGuiStyleVar_FrameRounding, scale.Px(UI::Theme::Geometry::roundingSmall));
-                ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_Border, UI::Theme::ToVec4(UI::Theme::Color::borderSubtle));
-
-                if (UI::ActionButton("Reset Offsets", resetSize.x))
+                if (UI::ActionButton("Reset Offsets", btnW))
                     OnResetOffsets(a_hud);
-
-                ImGuiMCP::PopStyleColor(5);
-                ImGuiMCP::PopStyleVar(2);
-                ImGuiMCP::Dummy(ImGuiMCP::ImVec2{ 0.0f, scale.Px(4.0f) });
+                ImGuiMCP::Dummy(ImGuiMCP::ImVec2{ 0.0f, scale.Px(6.0f) });
                 
                 ImGuiMCP::SetWindowFontScale(1.0f);
             }
