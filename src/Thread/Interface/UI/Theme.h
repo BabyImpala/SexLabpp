@@ -21,8 +21,14 @@ namespace Thread::Interface::UI::Theme
         static constexpr ImGuiMCP::ImU32 transparent = IM_COL32(0, 0, 0, 0);
         static constexpr ImGuiMCP::ImU32 selectionText = IM_COL32(144, 176, 200, 255);
         static constexpr ImGuiMCP::ImU32 selectionFill = IM_COL32(30, 40, 30, 128);
-        static constexpr ImGuiMCP::ImU32 cardHeader = IM_COL32(24, 24, 30, 140);
-        static constexpr ImGuiMCP::ImU32 cardIdle = IM_COL32(10, 10, 14, 89);
+        static constexpr ImGuiMCP::ImU32 nestedSurface = IM_COL32(10, 10, 10, 110);
+        static constexpr ImGuiMCP::ImU32 nestedHeader = IM_COL32(18, 18, 18, 180);
+        static constexpr ImGuiMCP::ImU32 nestedHeaderHovered = IM_COL32(30, 30, 30, 220);
+        static constexpr ImGuiMCP::ImU32 nestedControl = IM_COL32(10, 10, 10, 190);
+        static constexpr ImGuiMCP::ImU32 nestedControlHovered = IM_COL32(30, 30, 30, 225);
+        static constexpr ImGuiMCP::ImU32 nestedControlActive = IM_COL32(24, 24, 24, 235);
+        static constexpr ImGuiMCP::ImU32 nestedPopup = IM_COL32(14, 14, 14, 248);
+        static constexpr ImGuiMCP::ImU32 nestedSeparator = IM_COL32(92, 90, 86, 58);
 
         static constexpr ImGuiMCP::ImU32 borderSubtle = IM_COL32(92, 90, 86, 105);
         static constexpr ImGuiMCP::ImU32 borderHovered = IM_COL32(145, 142, 136, 150);
@@ -50,6 +56,8 @@ namespace Thread::Interface::UI::Theme
         static constexpr const char* chevronRight = "\xEF\x81\x94";  // U+F054
         static constexpr const char* chevronUp = "\xEF\x81\xB7";     // U+F077
         static constexpr const char* chevronDown = "\xEF\x81\xB8";   // U+F078
+        static constexpr const char* plus = "\xEF\x81\xA7";          // U+F067
+        static constexpr const char* minus = "\xEF\x81\xA8";         // U+F068
         static constexpr const char* rotateLeft = "\xEF\x8B\xAA";    // U+F2EA
         static constexpr const char* nextPerm = "\xEE\x95\x92";      // U+E552
     };
@@ -72,6 +80,7 @@ namespace Thread::Interface::UI::Theme
         static constexpr float checkboxPaddingY = 0.5f;
         static constexpr float panelTabWidth = 78.0f;
         static constexpr float panelTabGap = 8.0f;
+        static constexpr float nestedMenuScale = 0.90f;
     };
 
     struct Enjoyment final
@@ -172,7 +181,6 @@ namespace Thread::Interface::UI
         const ImGuiMCP::ImVec2 labelSize = ImGuiMCP::CalcTextSize(a_label);
         const ImGuiMCP::ImVec4 color = Theme::ToVec4(hovered ? Theme::Color::textPrimary : Theme::Color::textSecondary);
         const float horizontalPadding = a_size.y * 0.5f;
-        const float iconGap = a_size.y * 0.25f;
 
         ImGuiMCP::SetCursorScreenPos({ headerMin.x + horizontalPadding, headerMin.y + (a_size.y - labelSize.y) * 0.5f });
         ImGuiMCP::TextColored(color, "%s", a_label);
