@@ -91,7 +91,7 @@ namespace Papyrus::ThreadModel
     // SCENE HUD
     void InitSceneHUDImpl(QUESTARGS);
     void DestroySceneHUDImpl(QUESTARGS);
-    void ToggleFocusSceneHUDImpl(QUESTARGS);
+    void SetFocusSceneHUDImpl(QUESTARGS, bool a_focused);
 
     void UpdateMenuTimerDisplay(QUESTARGS, float a_duration, float a_time);
     void UpdateOffsetSlidersDisplay(QUESTARGS);
@@ -134,7 +134,7 @@ namespace Papyrus::ThreadModel
 
         REGISTERFUNC(InitSceneHUDImpl, "sslThreadModel", true);
         REGISTERFUNC(DestroySceneHUDImpl, "sslThreadModel", true);
-        REGISTERFUNC(ToggleFocusSceneHUDImpl, "sslThreadModel", true);
+        REGISTERFUNC(SetFocusSceneHUDImpl, "sslThreadModel", true);
 
         REGISTERFUNC(UpdateMenuTimerDisplay, "sslThreadModel", true);
         REGISTERFUNC(UpdateOffsetSlidersDisplay, "sslThreadModel", true);

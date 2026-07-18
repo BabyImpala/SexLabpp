@@ -114,7 +114,7 @@ namespace Thread
         // SceneHUD
         void InitSceneHUDImpl();
         void DestroySceneHUDImpl();
-        void ToggleFocusSceneHUDImpl();
+        void SetFocusSceneHUDImpl(bool a_focused);
 
         void UpdateMenuTimerDisplay(float a_duration, float a_timer);
         void EnjBarsChangeHighlightedPartner(RE::Actor* a_target);

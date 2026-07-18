@@ -500,10 +500,10 @@ namespace Thread
             sceneHUD->Destroy();
     }
 
-    void Instance::ToggleFocusSceneHUDImpl()
+    void Instance::SetFocusSceneHUDImpl(bool a_focused)
     {
         if (auto* sceneHUD = Interface::SceneHUD::GetSingleton().GetForThread(linkedQst))
-            sceneHUD->ToggleFocus();
+            sceneHUD->SetFocus(a_focused);
     }
 
     void Instance::UpdateMenuTimerDisplay(float a_duration, float a_left)

@@ -1890,7 +1890,7 @@ EndFunction
 
 Function InitSceneHUDImpl() native
 Function DestroySceneHUDImpl() native
-Function ToggleFocusSceneHUDImpl() native
+Function SetFocusSceneHUDImpl(bool abFocused) native
 
 Function UpdateMenuTimerDisplay(float afDuration, float afTime) native
 Function UpdateOffsetSlidersDisplay() native ;call on stage change

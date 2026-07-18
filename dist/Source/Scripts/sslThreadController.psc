@@ -150,7 +150,7 @@ Function ToggleVisibilitySceneHUD(int aiForceState = 0)
 	;[-1:ForceClose, 0:Toggle, 1:ForceOpen]
 	If (aiForceState == -1 || (aiForceState == 0 && _bOpenedSceneHUD))
 		If (_bFocusedSceneHUD)
-			ToggleFocusSceneHUD()
+			ToggleFocusSceneHUD(-1)
 		EndIf
 		TryCloseSceneHUD()
 		_bOpenedSceneHUD = false
@@ -160,15 +160,17 @@ Function ToggleVisibilitySceneHUD(int aiForceState = 0)
 	EndIf
 EndFunction
 
-Function ToggleFocusSceneHUD()
+Function ToggleFocusSceneHUD(int aiForceState = 0)
+	;[-1:ForceUnfocus, 0:Toggle, 1:ForceFocus]
 	If (!_bOpenedSceneHUD)
 		return
 	EndIf
-	ToggleFocusSceneHUDImpl()
-	If (_bFocusedSceneHUD)
+	If (aiForceState == -1 || (aiForceState == 0 && _bFocusedSceneHUD))
+		SetFocusSceneHUDImpl(false)
 		_bFocusedSceneHUD = false
 		PauseTimer(false)
-	Else
+	ElseIf (aiForceState == 1 || (aiForceState == 0 && !_bFocusedSceneHUD))
+		SetFocusSceneHUDImpl(true)
 		_bFocusedSceneHUD = true
 		PauseTimer(true)
 	EndIf

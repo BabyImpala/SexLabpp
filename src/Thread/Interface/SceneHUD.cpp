@@ -95,7 +95,6 @@ namespace Thread::Interface
         if (!IsActive() && !_elements)
             return;
 
-        SetFocus(false);
         _window.SetBlocksInput(false);
         _window.Close();
         _elements.reset();

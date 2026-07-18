@@ -980,10 +980,10 @@ namespace Papyrus::ThreadModel
         return instance->DestroySceneHUDImpl();
     }
 
-    void ToggleFocusSceneHUDImpl(QUESTARGS)
+    void SetFocusSceneHUDImpl(QUESTARGS, bool a_focused)
     {
         GET_INSTANCE();
-        return instance->ToggleFocusSceneHUDImpl();
+        return instance->SetFocusSceneHUDImpl(a_focused);
     }
 
     void UpdateMenuTimerDisplay(QUESTARGS, float a_duration, float a_time)

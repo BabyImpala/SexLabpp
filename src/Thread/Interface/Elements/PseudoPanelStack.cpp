@@ -147,7 +147,7 @@ namespace Thread::Interface
             closeFocus = true;
         // (Hotkey bug workaround) Use the controller path so Papyrus hotkey gating and timer state stay synchronized with C++ focus
         if (closeFocus)
-            Script::DispatchMethodCall(a_hud.GetThreadScript(), "ToggleFocusSceneHUD", a_hud.GetCallback());
+            Script::DispatchMethodCall(a_hud.GetThreadScript(), "ToggleFocusSceneHUD", a_hud.GetCallback(), -1);
     }
 
 }  // namespace Thread::Interface

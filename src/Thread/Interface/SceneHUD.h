@@ -31,7 +31,6 @@ namespace Thread::Interface
         void Destroy();
 
         void SetFocus(bool a_focused);
-        void ToggleFocus() { SetFocus(!_focused); }
         void OpenPanel(PanelId a_panel);
         void CloseAllPanels();
 
