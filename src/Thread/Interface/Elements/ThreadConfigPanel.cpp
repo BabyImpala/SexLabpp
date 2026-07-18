@@ -423,14 +423,14 @@ namespace Thread::Interface
         const float availW = ImGuiMCP::GetContentRegionAvail().x - rowPadH * 2.0f;
         const ImGuiMCP::ImVec2 toggleRowMin = ImGuiMCP::GetCursorScreenPos();
         ImGuiMCP::SetCursorScreenPos({ toggleRowMin.x + rowPadH, toggleRowMin.y });
-        
+
         ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_HeaderHovered, UI::Theme::ToVec4(UI::Theme::Color::transparent));
         if (UI::SelectableButton("##slpp_autoAdvanceRow", false, 0, ImGuiMCP::ImVec2{ availW, toggleRowH })) {
             bool autoPlay = inst->GetThreadProperty<bool>("AutoAdvance");
             OnAutoPlaySet(a_hud, !autoPlay);
         }
         ImGuiMCP::PopStyleColor();
-        
+
         bool autoPlay = inst->GetThreadProperty<bool>("AutoAdvance");
         const float cbSize = ImGuiMCP::GetFrameHeight();
         const float cbX = toggleRowMin.x + rowPadH + availW - cbSize;
@@ -441,7 +441,7 @@ namespace Thread::Interface
         UI::PopCheckboxStyle();
         if (cbChanged)
             OnAutoPlaySet(a_hud, autoPlay);
-        
+
         const ImGuiMCP::ImVec2 labelSize = ImGuiMCP::CalcTextSize("Auto Advance");
         const float labelY = toggleRowMin.y + (toggleRowH - labelSize.y) * 0.5f;
         ImGuiMCP::SetCursorScreenPos({ toggleRowMin.x + rowPadH, labelY });
@@ -470,7 +470,7 @@ namespace Thread::Interface
 
         // ── Actors list with scrolling
         ImGuiMCP::Dummy(ImGuiMCP::ImVec2{ 0.0f, scale.Px(UI::Theme::Spacing::xs) });
-        
+
         ImGuiMCP::PushStyleVar(ImGuiMCP::ImGuiStyleVar_ScrollbarSize, scale.Px(6.0f));
         ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_ScrollbarBg, UI::Theme::Color::surfacePanel);
         ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_ScrollbarGrab, UI::Theme::ToVec4(UI::Theme::Color::borderSubtle));
@@ -504,7 +504,7 @@ namespace Thread::Interface
 
         ImGuiMCP::PopStyleColor();
         ImGuiMCP::EndChild();
-        
+
         ImGuiMCP::PopStyleColor(4);
         ImGuiMCP::PopStyleVar();
 

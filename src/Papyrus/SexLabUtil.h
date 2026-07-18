@@ -10,12 +10,12 @@ namespace Papyrus::SexLabUtil
     int IntMinMaxValue(RE::StaticFunctionTag*, std::vector<int> arr, bool findHighestValue);
     int FloatMinMaxIndex(RE::StaticFunctionTag*, std::vector<float> arr, bool findHighestValue);
     float FloatMinMaxValue(RE::StaticFunctionTag*, std::vector<float> arr, bool findHighestValue);
-    
+
     std::vector<RE::Actor*> MakeActorArray(RE::StaticFunctionTag*, RE::Actor* a1, RE::Actor* a2, RE::Actor* a3, RE::Actor* a4, RE::Actor* a5);
     float GetCurrentGameRealTime(RE::StaticFunctionTag*);
     std::string GetTranslation(RE::StaticFunctionTag*, std::string a_str);
     bool IsGodModeEnabled(RE::StaticFunctionTag*);
-    
+
     std::vector<RE::BSFixedString> ShuffleStringArray(RE::StaticFunctionTag*, std::vector<RE::BSFixedString> arr, RE::BSFixedString asFirst, int aiMaxLen);
     void HideElementsGameHUD(RE::StaticFunctionTag*, bool a_hide);
 
@@ -44,4 +44,4 @@ namespace Papyrus::SexLabUtil
         return true;
     };
 
-} // namespace Papyrus::SexLabUtil
+}  // namespace Papyrus::SexLabUtil
