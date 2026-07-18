@@ -65,7 +65,7 @@ namespace Thread::Interface
         const ImGuiMCP::ImVec2 centre = ImGuiMCP::ImGuiViewportManager::GetCenter(vp);
         ImGuiMCP::SetNextWindowPos(centre, ImGuiMCP::ImGuiCond_Always, ImGuiMCP::ImVec2{ 0.5f, 0.5f });
         ImGuiMCP::SetNextWindowSize({ panelW, 0.0f }, ImGuiMCP::ImGuiCond_Always);
-        ImGuiMCP::SetNextWindowBgAlpha(0.97f);
+        ImGuiMCP::SetNextWindowBgAlpha(0.6f);
 
         // Begin() needs a plain bool*, so mirror the window's atomic IsOpen through a local and write it back afterward.
         bool isOpen = true;
