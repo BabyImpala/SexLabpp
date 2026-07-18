@@ -38,8 +38,5 @@ namespace Thread::Interface
 
         char _lastSearch[128]{};
         std::vector<int> _filteredIndices;
-
-        bool _sceneListOpen{ true };
-        bool _searchBoxOpen{ true };
     };
 }

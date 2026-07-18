@@ -13,8 +13,6 @@ namespace Thread::Interface
         _lastSearch[0] = '\0';
         _filteredIndices.clear();
         _hoveredIndex = -1;
-        _sceneListOpen = true;
-        _searchBoxOpen = true;
         RebuildFilter();
     }
 
@@ -38,15 +36,14 @@ namespace Thread::Interface
 
     void SceneSelectPanel::OnConfirmSearch(SceneHUD& a_hud)
     {
-        // Trims the search text, clears the field, and if anything was
-        // actually typed, runs the search and closes the panel.
+        // Trims the search text, clears the field, and passes it to the script
         std::string query{ _searchBuffer };
         const auto lo = query.find_first_not_of(' ');
-        if (lo == std::string::npos) {
-            _searchBuffer[0] = '\0';
-            return;
+        if (lo != std::string::npos) {
+            query = query.substr(lo, query.find_last_not_of(' ') - lo + 1);
+        } else { // Empty or whitespace-only: use empty string
+            query.clear();
         }
-        query = query.substr(lo, query.find_last_not_of(' ') - lo + 1);
         _searchBuffer[0] = '\0';
 
         Script::DispatchMethodCall(a_hud.GetThreadScript(), "OnSceneResetBySearch",
@@ -163,13 +160,15 @@ namespace Thread::Interface
         const float dw = io->DisplaySize.x;
         const float dh = io->DisplaySize.y;
 
-        const float panelW = scale.Px(270.0f);
+        const float panelW = scale.Px(240.0f);
         const float offset = scale.Px(UI::Theme::Geometry::panelTabWidth + UI::Theme::Geometry::panelTabGap);
         const float maxH = dh * 0.8f;
-        const float listMaxH = scale.Px(200.0f);
-        const float rowH = scale.TextPx(UI::Theme::FontSize::body) + scale.Px(UI::Theme::Spacing::sm) * 2.0f;
-        const float sectionH = std::max(scale.Px(20.0f),
-            scale.TextPx(UI::Theme::FontSize::sectionHeader) + scale.Px(UI::Theme::Spacing::xs));
+        const float rowH = scale.TextPx(UI::Theme::FontSize::body) + scale.Px(UI::Theme::Spacing::xs);
+        const float panelPadding = scale.Px(10.0f);
+        
+        // Calculate dynamic list height based on number of entries
+        const float maxListH = scale.Px(280.0f);
+        const float calculatedListH = std::min(static_cast<float>(_filteredIndices.size()) * rowH, maxListH);
 
         ImGuiMCP::SetNextWindowPos(
             ImGuiMCP::ImVec2{ dw - offset, dh * 0.5f }, ImGuiMCP::ImGuiCond_Always, ImGuiMCP::ImVec2{ 1.0f, 0.5f });
@@ -188,72 +187,94 @@ namespace Thread::Interface
 
         const ImGuiMCP::ImVec2 winPos = ImGuiMCP::GetWindowPos();
 
-        // ── Section: Scenes List
-        SetWindowFontSize(scale.TextPx(UI::Theme::FontSize::sectionHeader));
-        if (UI::CollapsibleSectionHeader("CHANGE ACTIVE SCENE", "##slpp_ssmSceneListSection", _sceneListOpen,
-                { 0.0f, sectionH }))
-            _sceneListOpen = !_sceneListOpen;
-        ImGuiMCP::Separator();
+        // ── Scene List with padding
+        ImGuiMCP::Dummy(ImGuiMCP::ImVec2{ 0.0f, scale.Px(4.0f) });
+        ImGuiMCP::SetCursorPosX(panelPadding);
+        
+        SetWindowFontSize(scale.TextPx(UI::Theme::FontSize::compact));
+        
+        // Modern scrollbar styling
+        ImGuiMCP::PushStyleVar(ImGuiMCP::ImGuiStyleVar_ScrollbarSize, scale.Px(6.0f));
+        ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_ScrollbarBg, UI::Theme::Color::surfacePanel);
+        ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_ScrollbarGrab, UI::Theme::ToVec4(UI::Theme::Color::borderSubtle));
+        ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_ScrollbarGrabHovered, UI::Theme::ToVec4(UI::Theme::Color::borderHovered));
+        ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_ScrollbarGrabActive, UI::Theme::ToVec4(UI::Theme::Color::borderActive));
+        
+        ImGuiMCP::BeginChild("##slpp_smmSceneList", ImGuiMCP::ImVec2{ panelW - panelPadding * 2.0f, calculatedListH },
+            ImGuiMCP::ImGuiChildFlags_None, ImGuiMCP::ImGuiWindowFlags_None);
 
         int hoveredRowIndex = -1;
+        std::optional<std::string> selectedScene;
+        for (int i : _filteredIndices) {
+            auto& e = _entries[i];
+            ImGuiMCP::PushID(i);
 
-        if (_sceneListOpen) {
-            SetWindowFontSize(scale.TextPx(UI::Theme::FontSize::body));
-            ImGuiMCP::BeginChild("##slpp_smmSceneList", ImGuiMCP::ImVec2{ panelW, listMaxH },
-                ImGuiMCP::ImGuiChildFlags_None, ImGuiMCP::ImGuiWindowFlags_None);
+            if (e.isActive)
+                ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_Text, UI::Theme::Color::accent);
+            else
+                ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_Text, UI::Theme::ToVec4(UI::Theme::Color::textSecondary));
+            
+            ImGuiMCP::SetCursorPosX(ImGuiMCP::GetCursorPosX() + scale.Px(8.0f));
+            const bool clicked = UI::SelectableButton(e.name.c_str(), e.isActive,
+                ImGuiMCP::ImGuiSelectableFlags_AllowOverlap, ImGuiMCP::ImVec2{ 0.0f, rowH });
+            ImGuiMCP::PopStyleColor();
 
-            std::optional<std::string> selectedScene;
-            for (int i : _filteredIndices) {
-                auto& e = _entries[i];
-                ImGuiMCP::PushID(i);
-
-                if (e.isActive)
-                    ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_Text, UI::Theme::Color::accent);
-                const bool clicked = UI::SelectableButton(e.name.c_str(), e.isActive,
-                    ImGuiMCP::ImGuiSelectableFlags_AllowOverlap, ImGuiMCP::ImVec2{ 0.0f, rowH });
-                if (e.isActive)
-                    ImGuiMCP::PopStyleColor();
-
-                if (ImGuiMCP::IsItemHovered())
-                    hoveredRowIndex = i;
-                if (clicked && !e.isActive)
-                    selectedScene = e.id;
-                ImGuiMCP::PopID();
-            }
-
-            ImGuiMCP::EndChild();
-            if (selectedScene)
-                OnSceneSelected(a_hud, *selectedScene);
+            if (ImGuiMCP::IsItemHovered())
+                hoveredRowIndex = i;
+            if (clicked && !e.isActive)
+                selectedScene = e.id;
+            ImGuiMCP::PopID();
         }
 
-        ImGuiMCP::Separator();
+        ImGuiMCP::EndChild();
+        
+        // Restore scrollbar styles
+        ImGuiMCP::PopStyleColor(4);
+        ImGuiMCP::PopStyleVar();
+        
+        if (selectedScene)
+            OnSceneSelected(a_hud, *selectedScene);
 
-        // ── Section: Search Scenes
-        SetWindowFontSize(scale.TextPx(UI::Theme::FontSize::sectionHeader));
-        if (UI::CollapsibleSectionHeader("CHANGE SCENES BY TAG / NAME", "##slpp_ssmSearchSection", _searchBoxOpen,
-                { 0.0f, sectionH }))
-            _searchBoxOpen = !_searchBoxOpen;
-        ImGuiMCP::Separator();
+        ImGuiMCP::Dummy(ImGuiMCP::ImVec2{ 0.0f, scale.Px(8.0f) });
 
-        if (_searchBoxOpen) {
-            SetWindowFontSize(scale.TextPx(UI::Theme::FontSize::body));
-            ImGuiMCP::SetNextItemWidth(panelW - scale.Px(20.0f));
-            ImGuiMCP::InputTextWithHint("##slpp_smmSearch", "Tag or scene name...",
-                _searchBuffer, sizeof(_searchBuffer));
-
-            ImGuiMCP::Dummy(ImGuiMCP::ImVec2{ 0.0f, scale.Px(4.0f) });
-            const float btnW = (panelW - scale.Px(20.0f) - scale.Px(6.0f)) * 0.5f;
-            // Cancel closes the whole panel rather than just clearing the text box.
-            if (UI::ActionButton("Cancel##slpp_smmCancel", btnW)) {
-                _searchBuffer[0] = '\0';
-                a_hud.CloseAllPanels();
-            }
-            ImGuiMCP::SameLine(0.0f, scale.Px(6.0f));
-            if (UI::ActionButton("Search##slpp_smmConfirm", btnW))
-                OnConfirmSearch(a_hud);
+        // ── Search Section with padding
+        SetWindowFontSize(scale.TextPx(UI::Theme::FontSize::body));
+        ImGuiMCP::SetCursorPosX(panelPadding);
+        
+        const float searchAreaW = panelW - panelPadding * 2.0f;
+        const float btnTextW = ImGuiMCP::CalcTextSize("Search").x + scale.Px(12.0f);
+        const float inputW = searchAreaW - btnTextW - scale.Px(8.0f);
+        
+        // Style search input
+        ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_Text, UI::Theme::ToVec4(UI::Theme::Color::textSecondary));
+        SetWindowFontSize(scale.TextPx(UI::Theme::FontSize::caption));
+        
+        ImGuiMCP::SetNextItemWidth(inputW);
+        ImGuiMCP::InputTextWithHint("##slpp_smmSearch", "Tag or scene name...",
+            _searchBuffer, sizeof(_searchBuffer));
+        
+        const bool searchInputHasFocus = ImGuiMCP::IsItemFocused();
+        
+        ImGuiMCP::PopStyleColor();
+        SetWindowFontSize(scale.TextPx(UI::Theme::FontSize::body));
+        
+        if (searchInputHasFocus && ImGuiMCP::IsKeyPressed(ImGuiMCP::ImGuiKey_Enter, false)) {
+            OnConfirmSearch(a_hud); // Handle Enter key to search
         }
+        if (searchInputHasFocus && ImGuiMCP::IsKeyPressed(ImGuiMCP::ImGuiKey_Escape, false)) {
+            _searchBuffer[0] = '\0'; // Handle Escape key to cancel
+        }
+
+        ImGuiMCP::SameLine(0.0f, scale.Px(8.0f));
+        
+        // Rounded button styling
+        ImGuiMCP::PushStyleVar(ImGuiMCP::ImGuiStyleVar_FrameRounding, scale.Px(4.0f));
+        if (UI::ActionButton("Search##slpp_smmConfirm", btnTextW))
+            OnConfirmSearch(a_hud);
+        ImGuiMCP::PopStyleVar();
 
         ImGuiMCP::SetWindowFontScale(1.0f);
+        ImGuiMCP::Dummy(ImGuiMCP::ImVec2{ 0.0f, scale.Px(4.0f) });
         ImGuiMCP::End();
 
         // ── Info card, retained while hovering it or editing annotations
@@ -276,7 +297,7 @@ namespace Thread::Interface
 
             ImGuiMCP::SetNextWindowPos(ImGuiMCP::ImVec2{ cardX, _infoCardY }, ImGuiMCP::ImGuiCond_Always, ImGuiMCP::ImVec2{ 0.0f, 0.0f });
             ImGuiMCP::SetNextWindowSize(ImGuiMCP::ImVec2{ cardW, 0.0f }, ImGuiMCP::ImGuiCond_Always);
-            ImGuiMCP::SetNextWindowBgAlpha(0.97f);
+            ImGuiMCP::SetNextWindowBgAlpha(0.4f);
 
             constexpr auto cardFlags =
                 ImGuiMCP::ImGuiWindowFlags_NoTitleBar | ImGuiMCP::ImGuiWindowFlags_NoResize |
@@ -299,34 +320,36 @@ namespace Thread::Interface
                 SetWindowFontSize(keyFont);
 
                 auto infoRow = [&](const char* key, const std::string& val, float valFont) {
-                    ImGuiMCP::TextColored(UI::Theme::ToVec4(UI::Theme::Color::textMuted), "%s", key);
+                    ImGuiMCP::TextColored(UI::Theme::ToVec4(UI::Theme::Color::textSecondary), "%s", key);
                     ImGuiMCP::SameLine(keyW);
                     SetWindowFontSize(valFont);
-                    ImGuiMCP::TextColored(UI::Theme::ToVec4(UI::Theme::Color::textSecondary), "%s",
+                    ImGuiMCP::TextColored(UI::Theme::ToVec4(UI::Theme::Color::textMuted), "%s",
                         val.empty() ? "\xE2\x80\x94" : val.c_str());
                     SetWindowFontSize(keyFont);
                     ImGuiMCP::Dummy(ImGuiMCP::ImVec2{ 0.0f, rowGap });
                 };
 
-                infoRow("PACK", e.packageName, rowFont);
-                infoRow("AUTHOR", e.author, rowFont);
+                infoRow("PACK:", e.packageName, rowFont);
+                infoRow("AUTHOR:", e.author, rowFont);
 
-                ImGuiMCP::TextColored(UI::Theme::ToVec4(UI::Theme::Color::textMuted), "TAGS");
+                ImGuiMCP::TextColored(UI::Theme::ToVec4(UI::Theme::Color::textSecondary), "TAGS:");
                 ImGuiMCP::SameLine(keyW);
                 SetWindowFontSize(tagFont);
+                ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_Text, UI::Theme::ToVec4(UI::Theme::Color::textMuted));
                 ImGuiMCP::TextWrapped("%s", e.tags.empty() ? "\xE2\x80\x94" : e.tags.c_str());
+                ImGuiMCP::PopStyleColor();
                 SetWindowFontSize(keyFont);
                 ImGuiMCP::Dummy(ImGuiMCP::ImVec2{ 0.0f, rowGap });
 
-                ImGuiMCP::Separator();
-                ImGuiMCP::Dummy(ImGuiMCP::ImVec2{ 0.0f, scale.Px(5.0f) });
-
-                ImGuiMCP::TextColored(UI::Theme::ToVec4(UI::Theme::Color::textMuted), "ANNOTATIONS");
+                ImGuiMCP::TextColored(UI::Theme::ToVec4(UI::Theme::Color::textSecondary), "ANNOTATIONS");
                 SetWindowFontSize(rowFont);
-                const float fieldW = cardW - scale.Px(24.0f);
+                const float fieldW = cardW - scale.Px(12.0f);
                 const ImGuiMCP::ImVec2 annotSz{ fieldW,
                     std::clamp(ImGuiMCP::CalcTextSize(e.annotBuf, nullptr, false, fieldW).y + scale.Px(10.0f),
                         scale.Px(26.0f), scale.Px(60.0f)) };
+                
+                const float annotCenterX = (cardW - fieldW) * 0.5f;
+                ImGuiMCP::SetCursorPosX(annotCenterX);
                 if (ImGuiMCP::InputTextMultiline("##slpp_annot", e.annotBuf, sizeof(e.annotBuf), annotSz,
                         ImGuiMCP::ImGuiInputTextFlags_EnterReturnsTrue)) {
                     OnAnnotationSave(e);  // Save on Enter
@@ -337,7 +360,9 @@ namespace Thread::Interface
             }
             ImGuiMCP::End();
         }
-        if (!keepInfoCardOpen)
+        bool isHoveringList = ImGuiMCP::IsWindowHovered(ImGuiMCP::ImGuiHoveredFlags_RootAndChildWindows);
+        if (!keepInfoCardOpen && !isHoveringList) {
             _hoveredIndex = -1;
+        }
     }
 }
