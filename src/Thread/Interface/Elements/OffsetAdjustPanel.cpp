@@ -151,8 +151,8 @@ namespace Thread::Interface
         auto* inst = a_hud.GetThreadInstance();
         if (!inst || !_selectedId)
             return;
-        inst->OffsetAdjustReset();
-        _axes.erase(*_selectedId);
+        inst->OffsetAdjustReset(_hasFurniture);
+        _axes.clear();
         RefreshValues(a_hud, *_selectedId);
     }
 

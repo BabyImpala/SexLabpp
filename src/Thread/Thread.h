@@ -96,7 +96,7 @@ namespace Thread
 
         void SetAnimationPlaybackSpeed(float playbackSpeed);
         void OffsetAdjustSet(uint32_t actorFormId, Registry::CoordinateType axis, float value);
-        void OffsetAdjustReset();
+        void OffsetAdjustReset(bool hasFurn);
 
         const Registry::Expression* GetExpression(RE::Actor* a_position);
         void SetExpression(RE::Actor* a_position, const Registry::Expression* a_expression);
