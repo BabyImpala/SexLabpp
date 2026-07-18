@@ -1204,8 +1204,6 @@ EndFunction
 ; *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-* ;
 ; COMEBACK: This is probably better off moved into the C++ instance. Prbly wanna do this when the enjoyment is considered complete.
 
-Function UpdateEnjoyment(float afEnjoyment) native
-
 Function EnjBarsUpdateSlider(float afEnjoyment, string asInteractions) native
 Function RegisterRaiseEnjAttempt(float afNextTimeCycle) native
 
@@ -1291,7 +1289,6 @@ Function UpdateEffectiveEnjoymentCalculations()
 	_LoopEnjoymentDelay = 0.0
 	_InterFactor = _Thread.CalculateInteractionFactor(_ActorRef, _CurrentInteractions)
 	_FullEnjoyment = CalcEffectiveEnjoyment() as int
-	UpdateEnjoyment(_FullEnjoyment as float)
 	UpdateArousalStat()
 	If (_Config.DebugMode)
 		DebugEffectiveCalcVariables()
