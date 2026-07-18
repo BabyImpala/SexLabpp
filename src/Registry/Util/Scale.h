@@ -35,9 +35,9 @@ namespace Registry
             virtual bool VisitScaleMode(const char* node, const char* key, uint32_t scaleMode) override;
         };
 
-        SKEE::INiTransformInterface* transformInterface = []() {
+        SKEE::IPluginInterface* transformInterface = []() {
             const auto intfc = SKEE::GetInterfaceMap();
-            return intfc ? SKEE::GetNiTransformInterface(intfc) : nullptr;
+            return intfc ? intfc->QueryInterface("NiTransform") : nullptr;
         }();
     };
 
