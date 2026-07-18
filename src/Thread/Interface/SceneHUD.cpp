@@ -120,7 +120,8 @@ namespace Thread::Interface
         if (instance->GetThreadProperty<bool>("ElementUI_AnimSpeed"))
             _elements->animSpeedOverlay.Render(*this);
         if (instance->GetThreadProperty<bool>("ElementUI_EnjBars") &&
-            instance->GetThreadProperty<bool>("VarUI_SeparateOrgasm")) {
+            instance->GetThreadProperty<bool>("VarUI_SeparateOrgasm") &&
+            instance->GetThreadProperty<bool>("VarUI_HasPlayer")) {
             _elements->enjoymentBarsOverlay.Render(*this);
         }
 
