@@ -396,11 +396,8 @@ namespace Thread::Interface
         const float panelW = scale.Px(280.0f);
         const float offset = scale.Px(UI::Theme::Geometry::panelTabWidth + UI::Theme::Geometry::panelTabGap);
         const float rowMinH = scale.Px(28.0f);
-        const float rowPadV = scale.Px(6.0f);
         const float rowPadH = scale.Px(12.0f);
         const float maxBodyH = scale.Px(340.0f);  // before scrolling
-        const float sectionH = std::max(scale.Px(20.0f),
-            scale.TextPx(UI::Theme::FontSize::sectionHeader) + scale.Px(UI::Theme::Spacing::xs));
 
         ImGuiMCP::SetNextWindowPos(
             ImGuiMCP::ImVec2{ io->DisplaySize.x - offset, io->DisplaySize.y * 0.5f },

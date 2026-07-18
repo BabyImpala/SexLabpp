@@ -23,7 +23,7 @@ namespace Registry
           if (node.IsScalar())
               return { RaceKey{ node.as<std::string>() } };
           return std::ranges::fold_left(node, decltype(races){}, [](auto acc, auto&& it) {
-              acc.emplace_back(it.as<std::string>());
+              acc.emplace_back(it.template as<std::string>());
               return acc;
           });
       }()),

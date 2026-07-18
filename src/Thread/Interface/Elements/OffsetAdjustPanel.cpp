@@ -342,8 +342,6 @@ namespace Thread::Interface
         const float offset = scale.Px(UI::Theme::Geometry::panelTabWidth + UI::Theme::Geometry::panelTabGap);
         const float pickerW = scale.Px(200.0f);
         const float panelW = scale.Px(300.0f);
-        const float sectionH = std::max(scale.Px(20.0f),
-            scale.TextPx(UI::Theme::FontSize::sectionHeader) + scale.Px(UI::Theme::Spacing::xs));
 
         // ── Target picker
         if (!_panelOpen && !_items.empty()) {
