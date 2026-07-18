@@ -357,9 +357,10 @@ namespace Thread::Interface
 
             if (ImGuiMCP::Begin("##slpp_OAMPicker", nullptr, pFlags)) {
                 SetWindowFontSize(scale.TextPx(UI::Theme::FontSize::sectionHeader));
-                if (UI::CollapsibleSectionHeader(
-                        "PICK TARGET", "##slpp_oamTargetSection", _pickerOpen, { 0.0f, sectionH }))
-                    _pickerOpen = !_pickerOpen;
+                const float titleW = ImGuiMCP::CalcTextSize("PICK TARGET").x;
+                ImGuiMCP::SetCursorPosX((pickerW - titleW) * 0.5f);
+                ImGuiMCP::TextColored(UI::Theme::ToVec4(UI::Theme::Color::textPrimary), "PICK TARGET");
+                ImGuiMCP::Dummy(ImGuiMCP::ImVec2{ 0.0f, scale.Px(4.0f) });
                 ImGuiMCP::Separator();
 
                 if (_pickerOpen) {
