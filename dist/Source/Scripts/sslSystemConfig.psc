@@ -712,7 +712,6 @@ EndFunction
 
 Function ToggleThreadControl()
   If (_ActiveControl)
-    _ActiveControl.ToggleVisibilitySceneHUD(-1)
     DisableThreadControl(_ActiveControl)
     return
   EndIf
@@ -731,7 +730,6 @@ Function ToggleThreadControl()
     Log("AttemptThreadControl(), Attempting thread control for actor: " + SexLabUtil.ActorName(akTarget))
     If (TargetThread.HasPlayer() || TakeThreadControl.Show())
       GetThreadControl(TargetThread as sslThreadController)
-      _ActiveControl.ToggleVisibilitySceneHUD(1)
     EndIf
   EndIf
 EndFunction

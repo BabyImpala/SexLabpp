@@ -211,10 +211,20 @@ Function MoveScene()
 		return
 	EndIf
 	UnregisterForUpdate()
+	bool abClosedSceneHUD = false
+	If (_bOpenedSceneHUD)
+		ToggleVisibilitySceneHUD(-1)
+		abClosedSceneHUD = true
+		_bFocusedSceneHUD = true ; blocks hotkeys/gestures
+	EndIf
 	If (StorageUtil.GetIntValue(none, "SEXLAB_REPOSITIONMSG_INFO", 0) == 0)
 		; "You have 30 secs to position yourself to a new center location.\nHold down the 'Move Scene' hotkey to relocate the center instantly to your current position"
 		int choice = RepositionInfoMsg.Show()
 		If (choice == 1)
+			If (abClosedSceneHUD)
+				ToggleVisibilitySceneHUD(1)
+				_bFocusedSceneHUD = false
+			EndIf
 			return
 		ElseIf (choice == 2)
 			StorageUtil.SetIntValue(none, "SEXLAB_REPOSITIONMSG_INFO", 1)
@@ -252,9 +262,12 @@ Function MoveScene()
 		j += 1
 	EndWhile
 	CenterOnObject(PlayerRef)
+	_bFocusedSceneHUD = false ; allows hotkeys/gestures
 	If (!HasPlayer)
 		MoveActorsAwayFromPlayer(true)
 		Config.DisableThreadControl(self)
+	ElseIf (abClosedSceneHUD)
+		ToggleVisibilitySceneHUD(1)
 	EndIf
 EndFunction
 

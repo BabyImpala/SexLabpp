@@ -60,7 +60,6 @@ namespace Thread::Interface
     {
         if (!a_hud.GetThreadScript())
             return;
-        Script::DispatchMethodCall(a_hud.GetThreadScript(), "ToggleFocusSceneHUD", a_hud.GetCallback(), -1 );
         Script::DispatchMethodCall(a_hud.GetThreadScript(), "MoveScene", a_hud.GetCallback());
     }
 
