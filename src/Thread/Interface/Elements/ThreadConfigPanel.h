@@ -29,8 +29,5 @@ namespace Thread::Interface
 
         std::vector<ActorState> _actorStates;
         std::vector<RE::Actor*> _sortedActors;
-
-        bool _threadSectionOpen{ true };
-        bool _actorsSectionOpen{ true };
     };
 }
