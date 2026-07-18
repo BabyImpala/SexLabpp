@@ -61,7 +61,7 @@ namespace Thread::Interface
 
     void EnjBarsOverlay::UpdateHighlightedPartner(RE::Actor* a_partner)
     {
-        if (!a_partner)
+        if (!a_partner || a_partner->IsPlayerRef())
             return;
         const uint32_t actorID = a_partner->GetFormID();
         for (auto& b : _bars) b.isTarget = (b.formId == actorID);
