@@ -1092,7 +1092,6 @@ State Animating
 			Else
 				AutoAdvance = Config.AutoAdvance
 				Config.GetThreadControl(self as sslThreadController)
-				(self as sslThreadController).ToggleVisibilitySceneHUD(1)
 			EndIf
 		Else
 			AutoAdvance = true
@@ -1526,7 +1525,6 @@ State Ending
 			return
 		EndIf
 		Config.DisableThreadControl(self as sslThreadController)
-		(self as sslThreadController).ToggleVisibilitySceneHUD(-1)
 		SendModEvent("SSL_CLEAR_Thread" + tid, "", 1.0)
 		MoveActorsAwayFromPlayer()
 		UnregisterCollision()
@@ -1849,7 +1847,7 @@ Function TryInitSceneHUD()
 		return
 	EndIf
 	RefreshPropertiesSceneHUD("Get")
-	If (HasPlayer && !ElementUI_GameHUD)
+	If (!ElementUI_GameHUD)
 		SexLabUtil.HideElementsGameHUD(true)
 	EndIf
 	InitSceneHUDImpl()
@@ -1858,7 +1856,7 @@ EndFunction
 Function TryCloseSceneHUD()
 	DestroySceneHUDImpl()
 	RefreshPropertiesSceneHUD("Set")
-	If (HasPlayer && !ElementUI_GameHUD)
+	If (!ElementUI_GameHUD)
 		SexLabUtil.HideElementsGameHUD(false)
 	EndIf
 EndFunction
