@@ -774,7 +774,7 @@ State Animating
 		EndIf
 		_CurrentInteractions = _Thread.ListDetectedInteractionsInternal(_ActorRef)
 		UpdateEffectiveEnjoymentCalculations()
-		If (_bEnjEnabled && _Config.ElementEnjBars)
+		If (_bEnjEnabled && !_Thread.EnjoymentPaused && _Thread.ElementUI_EnjBars)
 			EnjBarsUpdateSlider(_FullEnjoyment as float, _Thread.GetCurrentInteractionString(_ActorRef))
 		EndIf
 		int strength = CalcReaction()
@@ -1274,7 +1274,7 @@ Function UpdateBaseEnjoymentCalculations()
 EndFunction
 
 Function UpdateEffectiveEnjoymentCalculations()
-	If ((!_bEnjEnabled) || (_LoopEnjoymentDelay < _EnjoymentDelay))
+	If ((!_bEnjEnabled) || (_Thread.EnjoymentPaused) || (_LoopEnjoymentDelay < _EnjoymentDelay))
 		return
 	EndIf
 	If (_FullEnjoyment >= 100)

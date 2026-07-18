@@ -170,10 +170,12 @@ Function ToggleFocusSceneHUD(int aiForceState = 0)
 	If (aiForceState == -1 || (aiForceState == 0 && _bFocusedSceneHUD))
 		SetFocusSceneHUDImpl(false)
 		_bFocusedSceneHUD = false
+		EnjoymentPaused = false
 		PauseTimer(false)
 	ElseIf (aiForceState == 1 || (aiForceState == 0 && !_bFocusedSceneHUD))
 		SetFocusSceneHUDImpl(true)
 		_bFocusedSceneHUD = true
+		EnjoymentPaused = true
 		PauseTimer(true)
 	EndIf
 EndFunction

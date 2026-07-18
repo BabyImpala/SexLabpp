@@ -2090,6 +2090,7 @@ Function Initialize()
 	_AnimationSpeedBase = 1.0
 	_TimerPaused = false
 	_QuickResetScenes = false
+	EnjoymentPaused = false
 	; Enter thread selection pool
 	DestroyInstance()
 	GoToState(STATE_IDLE)
@@ -2137,6 +2138,7 @@ Int Property CONSENT_NONCONNONSUB 	= 1 AutoReadOnly Hidden
 Int Property CONSENT_CONSUB 		= 2 AutoReadOnly Hidden
 Int Property CONSENT_NONCONSUB 		= 3 AutoReadOnly Hidden
 
+bool Property EnjoymentPaused Auto Hidden
 AssociationType Property SpouseAssocation Auto
 Faction Property PlayerMarriedFaction Auto
 
