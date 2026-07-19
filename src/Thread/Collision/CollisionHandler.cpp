@@ -305,7 +305,9 @@ namespace Thread::Collision
     void CollisionHandler::RemoveActor(RE::FormID a_actor)
     {
         const std::unique_lock lock{ _mutex };
-        std::erase(_cache, a_actor);
+        if (std::erase(_cache, a_actor) == 0) {
+            return;
+        }
 
         auto* actor = RE::TESForm::LookupByID<RE::Actor>(a_actor);
         if (!actor)

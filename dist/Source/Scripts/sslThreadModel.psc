@@ -1492,8 +1492,29 @@ Function PlayStageAnimations()
 	RealignActors()
 EndFunction
 
+Function OnAnimationSyncFailed()
+	If (GetStatus() != STATUS_INSCENE)
+		return
+	EndIf
+	Log("Animation synchronization failed; ending thread", "OnAnimationSyncFailed()")
+	EndAnimation()
+EndFunction
+
+Function LockActorsForAnimation()
+	If (GetStatus() != STATUS_INSCENE)
+		return
+	EndIf
+	int i = 0
+	While (i < _Positions.Length)
+		ActorAlias[i].LockActorForAnimation()
+		i += 1
+	EndWhile
+	ContinueStartAnimations()
+EndFunction
+
 ; Set location for all _Positions on CenterAlias, incl offset, and play their respected animation. _Positions are assumed to be sorted by scene
 String[] Function AdvanceScene(String[] asHistory, String asNextStageId) native
+Function ContinueStartAnimations() native
 int Function SelectNextStage(String[] asThreadTags) native
 bool Function SetActiveScene(String asScene) native
 bool Function ReassignCenter(ObjectReference CenterOn) native

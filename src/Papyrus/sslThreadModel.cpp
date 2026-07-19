@@ -108,15 +108,6 @@ namespace Papyrus::ThreadModel
                     delete script;
                 }
             }
-
-            actor->StopCombat();
-            actor->EndDialogue();
-            actor->InterruptCast(false);
-            actor->StopInteractingQuick(true);
-
-            if (const auto process = actor->GetActorRuntimeData().currentProcess) {
-                process->ClearMuzzleFlashes();
-            }
         }
 
         void EndSetActorInterrupts(ALIASARGS)
@@ -420,6 +411,12 @@ namespace Papyrus::ThreadModel
         instance->AdvanceScene(stage);
         a_history.push_back(a_nextStage);
         return a_history;
+    }
+
+    void ContinueStartAnimations(QUESTARGS)
+    {
+        GET_INSTANCE();
+        instance->ContinueStartAnimations();
     }
 
     int SelectNextStage(QUESTARGS, std::vector<RE::BSFixedString> a_tags)

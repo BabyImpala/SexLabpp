@@ -155,7 +155,6 @@ Function SetStripping(int aiSlots, bool abStripWeapons, bool abApplyNow)
 	If (abApplyNow && GetState() == STATE_PLAYING)
 		int[] set
 		_equipment = StripByDataEx(0x80, set, _stripCstm, _equipment)
-		_ActorRef.QueueNiNodeUpdate()
 	EndIf
 EndFunction
 
@@ -286,6 +285,7 @@ int _AnimVarIsNPC
 bool _AnimVarbHumanoidFootIKDisable
 
 bool _ActorLocked
+bool _ActorInterruptsSet
 
 ; Orgasms
 int _OrgasmCount
@@ -384,15 +384,16 @@ Auto State Empty
 		_sex = SexLabRegistry.GetSex(_ActorRef, true)
 		_raceID = SexLabRegistry.GetRaceID(_ActorRef)
 		_ActorRef.SetFactionRank(_AnimatingFaction, 1)
-		SexLabUtil.UpdateAnimatingActorMovement(_ActorRef) ;MOVEMENT_LOCK
-		StartSetActorInterrupts()
 		TrackedEvent(TRACK_ADDED)
 		GoToState(STATE_SETUP)
 		return true
 	EndFunction
 
 	Function Clear()
-		EndSetActorInterrupts()
+		If (_ActorInterruptsSet)
+			EndSetActorInterrupts()
+			_ActorInterruptsSet = false
+		EndIf
 		If (GetIsDead())
 			If (_ActorRef.IsEssential())
 				_ActorRef.GetActorBase().SetEssential(false)
@@ -420,10 +421,33 @@ bool Function SetActor(Actor ProspectRef)
 	return false
 EndFunction
 
-; Take this actor out of combat and clear all actor states, return true if the actor was the player
+; Apply persistent life-state and weapon-state changes
 Function StartSetActorInterrupts() native
 ; Undo "StartSetActorInterrupts()" persistent changes
 Function EndSetActorInterrupts() native
+
+Function LockActorForAnimation()
+	If (_ActorLocked)
+		return
+	EndIf
+	_ActorRef.SetActorValue("Paralysis", 0.0)
+	_ActorRef.SetFactionRank(_AnimatingFaction, 1)
+	SexLabUtil.UpdateAnimatingActorMovement(_ActorRef) ;MOVEMENT_LOCK
+	If (!_ActorInterruptsSet)
+		StartSetActorInterrupts()
+		_ActorInterruptsSet = true
+	EndIf
+	If (_ActorRef == _PlayerRef)
+		_Config.ToggleVRIK(true, _Config.VRIK_FPP_HMD)
+		If(_Config.AutoTFC)
+			SexLabUtil.ToggleFreeCamera(1) ;TFC_ON
+		EndIf
+	EndIf
+	_ActorRef.SetAnimationVariableInt("IsNPC", 0)
+	_ActorRef.SetAnimationVariableBool("bHumanoidFootIKDisable", 1)
+	Log("Locked Actor: " + GetActorName())
+	_ActorLocked = True
+EndFunction
 
 ; ------------------------------------------------------- ;
 ; --- Alias SETUP                                     --- ;
@@ -450,7 +474,6 @@ State Ready
 
 	Event OnDoPrepare(string asEventName, string asStringArg, float afNumArg, form akPathTo)
 		UnregisterForModEvent("SSL_PREPARE_Thread" + _Thread.tid)
-		_ActorRef.SetActorValue("Paralysis", 0.0)
 		WaitForPathToCenter(akPathTo)
 		If (_sex <= 2)
 			_AnimVarIsNPC = _ActorRef.GetAnimationVariableInt("IsNPC")
@@ -553,26 +576,10 @@ EndFunction
 State Paused
 	Event OnRequestLock(string asEventName, string asStringArg, float afNumArg, form akSender)
 		UnregisterForModEvent("SSL_LOCK_Thread" + _Thread.tid)
-		LockActor()
 		_Thread.AliasLockDone()
 	EndEvent
 	Function LockActor()
-		_ActorRef.SetFactionRank(_AnimatingFaction, 1)
-		SexLabUtil.UpdateAnimatingActorMovement(_ActorRef) ;MOVEMENT_LOCK
-		Debug.SendAnimationEvent(_ActorRef, "IdleFurnitureExit")
-		Debug.SendAnimationEvent(_ActorRef, "AnimObjectUnequip")
-		Debug.SendAnimationEvent(_ActorRef, "IdleStop")
-		If (_ActorRef == _PlayerRef)
-			_Config.ToggleVRIK(true, _Config.VRIK_FPP_HMD)
-			If(_Config.AutoTFC)
-				SexLabUtil.ToggleFreeCamera(1) ;TFC_ON
-			EndIf
-		EndIf
-		_ActorRef.SetAnimationVariableInt("IsNPC", 0)
-		_ActorRef.SetAnimationVariableBool("bHumanoidFootIKDisable", 1)
-		SendDefaultAnimEvent()
-		Log("Locked Actor: " + GetActorName())
-		_ActorLocked = True
+		LockActorForAnimation()
 	EndFunction
 	Function TryLockAndUnpause()
 		LockActor()
@@ -598,7 +605,6 @@ State Paused
 		If (_sex <= 2)
 			_equipment = StripByData(_stripData, GetStripSettings(), _stripCstm)
 			ResolveStrapon()
-			_ActorRef.QueueNiNodeUpdate()
 		EndIf
 		Debug.SendAnimationEvent(_ActorRef, "SOSBend0")
 		RegisterForModEvent("SSL_READY_Thread" + _Thread.tid, "OnStartPlaying")
@@ -752,7 +758,6 @@ State Animating
 		If (_stripData != aiStripData)
 			_stripData = aiStripData
 			_equipment = StripByDataEx(_stripData, GetStripSettings(), _stripCstm, _equipment)
-			_ActorRef.QueueNiNodeUpdate()
 		EndIf
 		_VoiceDelay -= Utility.RandomFloat(0.1, 0.3)
 		if _VoiceDelay < 0.8
@@ -961,7 +966,6 @@ State Animating
 		_equipment = StripByDataEx(_stripData, GetStripSettings(), _stripCstm, _equipment)
 		_useStrapon = _sex == 1 && Math.LogicalAnd(aiPositionGenders, 0x2) == 0
 		ResolveStrapon()
-		_ActorRef.QueueNiNodeUpdate()
 	EndFunction
 
 	Function TryPauseAndUnlock()
@@ -1133,6 +1137,7 @@ Function Initialize()
 	_AllowRedress = true
 	ForceOpenMouth = false
 	_ActorLocked = false
+	_ActorInterruptsSet = false
 	; Integers
 	_sex = -1
 	_raceID = -1
@@ -1656,7 +1661,6 @@ endFunction
 
 Function Strip()
 	_equipment = StripByDataEx(0x80, GetStripSettings(), _stripCstm, _equipment)
-	_ActorRef.QueueNiNodeUpdate()
 EndFunction
 Function UnStrip()
 	Redress()

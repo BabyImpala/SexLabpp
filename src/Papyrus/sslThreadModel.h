@@ -68,6 +68,7 @@ namespace Papyrus::ThreadModel
     std::vector<RE::BSFixedString> GetPrimaryScenes(QUESTARGS);
     std::vector<RE::BSFixedString> GetCustomScenes(QUESTARGS);
     std::vector<RE::BSFixedString> AdvanceScene(QUESTARGS, std::vector<RE::BSFixedString> a_history, RE::BSFixedString a_nextStage);
+    void ContinueStartAnimations(QUESTARGS);
     int SelectNextStage(QUESTARGS, std::vector<RE::BSFixedString> a_tags);
     bool SetActiveScene(QUESTARGS, RE::BSFixedString a_sceneid);
     bool ReassignCenter(QUESTARGS, RE::TESObjectREFR* a_centeron);
@@ -113,6 +114,7 @@ namespace Papyrus::ThreadModel
         REGISTERFUNC(GetPrimaryScenes, "sslThreadModel", true);
         REGISTERFUNC(GetCustomScenes, "sslThreadModel", true);
         REGISTERFUNC(AdvanceScene, "sslThreadModel", false);
+        REGISTERFUNC(ContinueStartAnimations, "sslThreadModel", false);
         REGISTERFUNC(SelectNextStage, "sslThreadModel", true);
         REGISTERFUNC(SetActiveScene, "sslThreadModel", false);
         REGISTERFUNC(ReassignCenter, "sslThreadModel", false);

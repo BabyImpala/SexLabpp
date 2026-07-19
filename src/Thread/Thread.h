@@ -80,6 +80,7 @@ namespace Thread
         void UnregisterNiInstanceLegacy() { (LegacyNiNode::NiUpdate::Unregister(linkedQst->GetFormID()), niInstanceLegacy = nullptr); }
 
         void AdvanceScene(const Registry::Stage* a_nextStage);
+        void ContinueStartAnimations();
         void RealignActors();
         bool SetActiveScene(const Registry::Scene* a_scene);
         const Registry::Scene* GetActiveScene() { return activeScene; }
@@ -164,6 +165,9 @@ namespace Thread
         const Registry::Stage* activeStage{ nullptr };
         SceneMapping scenes{};
         std::vector<PendingAnimation> pendingAnimations{};
+        bool actorPreparationApplied{ false };
+        bool actorLockRequested{ false };
+        bool actorLockAcknowledged{ false };
         float animationPlaybackSpeed{ 1.0f };
 
         // used during center selection through menu

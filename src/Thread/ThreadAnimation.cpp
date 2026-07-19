@@ -2,11 +2,19 @@
 
 #include "Registry/Util/Scale.h"
 #include "Thread/Collision/CollisionHandler.h"
+#include "Util/Script.h"
 
 #include <bit>
 
 namespace Thread
 {
+    void Instance::ContinueStartAnimations()
+    {
+        actorLockRequested = false;
+        actorLockAcknowledged = true;
+        logger::info("Papyrus actor locks acknowledged for thread {:X}.", linkedQst->GetFormID());
+    }
+
     void Instance::CancelPendingAnimations(RE::TESQuest* a_linkedQst)
     {
         std::unique_lock lock{ _mInstances };
@@ -84,7 +92,7 @@ namespace Thread
     {
         std::vector<std::vector<ActiveClip>> activeClips(pendingAnimations.size());
 
-        // Wait until every pending actor is safe to move and animate
+        // Wait until every pending actor is loaded and out of ragdoll
         for (size_t i = 0; i < pendingAnimations.size(); i++) {
             auto& pending = pendingAnimations[i];
             if (pending.transitionAcknowledged || pending.retryDelay > 0.0f) {
@@ -95,7 +103,45 @@ namespace Thread
             if (!actor || !actor->Is3DLoaded() || actor->IsInRagdollState()) {
                 return;
             }
-            const auto actorState = actor->AsActorState();
+        }
+
+        // Exit furniture and other active states once before waiting for stability
+        if (!actorPreparationApplied) {
+            for (auto& pending : pendingAnimations) {
+                if (pending.transitionAcknowledged || pending.retryDelay > 0.0f) {
+                    continue;
+                }
+                pending.actor->StopCombat();
+                pending.actor->EndDialogue();
+                pending.actor->InterruptCast(false);
+                pending.actor->StopInteractingQuick(true);
+                pending.actor->NotifyAnimationGraph("IdleFurnitureExit");
+                pending.actor->NotifyAnimationGraph("AnimObjectUnequip");
+                pending.actor->NotifyAnimationGraph("IdleStop");
+                pending.actor->NotifyAnimationGraph("IdleForceDefaultState");
+                if (const auto position = GetPosition(pending.actor); position && !position->data.IsHuman()) {
+                    pending.actor->NotifyAnimationGraph("ReturnDefaultState");
+                    pending.actor->NotifyAnimationGraph("ReturnToDefault");
+                    pending.actor->NotifyAnimationGraph("FNISDefault");
+                    pending.actor->NotifyAnimationGraph("IdleReturnToDefault");
+                    pending.actor->NotifyAnimationGraph("ForceFurnExit");
+                    pending.actor->NotifyAnimationGraph("Reset");
+                }
+                if (const auto process = pending.actor->GetActorRuntimeData().currentProcess) {
+                    process->ClearMuzzleFlashes();
+                }
+            }
+            actorPreparationApplied = true;
+            return;
+        }
+
+        // Wait for requested activity exits to reach stable actor states
+        for (size_t i = 0; i < pendingAnimations.size(); i++) {
+            const auto& pending = pendingAnimations[i];
+            if (pending.transitionAcknowledged || pending.retryDelay > 0.0f) {
+                continue;
+            }
+            const auto actorState = pending.actor->AsActorState();
             if (actorState->GetSitSleepState() != RE::SIT_SLEEP_STATE::kNormal || actorState->GetKnockState() != RE::KNOCK_STATE_ENUM::kNormal) {
                 return;
             }
@@ -112,7 +158,20 @@ namespace Thread
             }
         }
 
-        // Lock, scale, and place each actor before dispatching its animation event
+        // Ask Papyrus to apply actor locks, then continue after its acknowledgement
+        if (!actorLockAcknowledged) {
+            if (!actorLockRequested) {
+                const auto scriptObject = Script::GetScriptObject(linkedQst, "sslThreadModel");
+                Script::CallbackPtr callbackPtr{};
+                actorLockRequested = scriptObject && Script::DispatchMethodCall(scriptObject, "LockActorsForAnimation", callbackPtr);
+                if (!actorLockRequested) {
+                    logger::error("Failed to request Papyrus actor locks for thread {:X}.", linkedQst->GetFormID());
+                }
+            }
+            return;
+        }
+
+        // Apply native locks and placement before dispatching each animation event
         for (size_t i = 0; i < pendingAnimations.size(); i++) {
             auto& pending = pendingAnimations[i];
             if (pending.transitionAcknowledged || pending.retryDelay > 0.0f) {
@@ -238,7 +297,7 @@ namespace Thread
 
     void Instance::UpdatePendingAnimations(float a_delta)
     {
-        constexpr float retryTimeout = 5.0f;
+        constexpr float retryTimeout = 15.0f;
         constexpr float playbackTimeout = 2.0f;
         constexpr float minimumClipWeight = 0.01f;
         constexpr float minimumTimeChange = 0.0001f;
@@ -300,6 +359,11 @@ namespace Thread
         if (synchronizationFailed) {
             ReleaseAnimations();
             pendingAnimations.clear();
+            const auto scriptObject = Script::GetScriptObject(linkedQst, "sslThreadModel");
+            Script::CallbackPtr callbackPtr{};
+            if (!scriptObject || !Script::DispatchMethodCall(scriptObject, "OnAnimationSyncFailed", callbackPtr)) {
+                logger::error("Failed to notify Papyrus of animation synchronization failure for thread {:X}.", linkedQst->GetFormID());
+            }
             return;
         }
         if (!pendingAnimations.empty() && std::ranges::all_of(pendingAnimations, &PendingAnimation::playbackHeld)) {
