@@ -34,6 +34,41 @@
 // 	}
 // };
 
+// This is a clean fix for the CrosshairRefEvent papyrus spam without changing vanilla behavior..
+// It's basically SKSE's pending fix: https://github.com/ianpatt/skse64/commit/a1a9746cabb68879edf0fb22ceae0973a240102d
+class CrosshairEventFilter final :
+    public Singleton<CrosshairEventFilter>,
+    public RE::BSTEventSink<SKSE::CrosshairRefEvent>
+{
+    using EventResult = RE::BSEventNotifyControl;
+
+  public:
+    void Register()
+    {
+        const auto eventSource = SKSE::GetCrosshairRefEventSource();
+        if (!eventSource) {
+            logger::error("Unable to install crosshair event filter");
+            return;
+        }
+
+        eventSource->PrependEventSink(this);
+        logger::info("Installed crosshair event filter");
+    }
+
+    EventResult ProcessEvent(const SKSE::CrosshairRefEvent* a_event, RE::BSTEventSource<SKSE::CrosshairRefEvent>*) override
+    {
+        if (!a_event)
+            return EventResult::kContinue;
+
+        const bool sendEvent = a_event->crosshairRef || _hasCrosshairRef;
+        _hasCrosshairRef = static_cast<bool>(a_event->crosshairRef);
+        return sendEvent ? EventResult::kContinue : EventResult::kStop;
+    }
+
+  private:
+    bool _hasCrosshairRef{ false };
+};
+
 static void SKSEMessageHandler(SKSE::MessagingInterface::Message* message)
 {
     switch (message->type) {
@@ -77,19 +112,6 @@ static void SKSEMessageHandler(SKSE::MessagingInterface::Message* message)
     }
 }
 
-// Prevent disabled activation controls from clearing the crosshair target every frame.
-// On SE/AE, skip this patch when CrosshairRefEventsFix is loaded; that fix does not support VR.
-static void PatchCrosshairBug()
-{
-    if (!REL::Module::IsVR() && REX::W32::GetModuleHandleA("CrosshairRefEventsFix.dll")) {
-        return;
-    }
-
-    // Credit to yeahhowaboutnooo for finding this workaround
-    const REL::Relocation<std::uintptr_t> branch{ REL::VariantID(39534, 40620, 0x6D2A30), REL::VariantOffset(0x60, 0x65, 0x26F) };
-    REL::safe_fill(branch.address(), REL::NOP, 6);
-}
-
 extern "C" DLLEXPORT bool SKSEAPI SKSEPlugin_Load(const SKSE::LoadInterface* a_skse)
 {
     constexpr auto PLUGIN_NAME = "SexLabUtil"sv;
@@ -124,7 +146,7 @@ extern "C" DLLEXPORT bool SKSEAPI SKSEPlugin_Load(const SKSE::LoadInterface* a_s
     }
 
     SKSE::Init(a_skse);
-    PatchCrosshairBug();
+    CrosshairEventFilter::GetSingleton()->Register();
     logger::info("{} loaded", PLUGIN_NAME);
 
     const auto msging = SKSE::GetMessagingInterface();
