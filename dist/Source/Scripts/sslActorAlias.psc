@@ -155,6 +155,7 @@ Function SetStripping(int aiSlots, bool abStripWeapons, bool abApplyNow)
 	If (abApplyNow && GetState() == STATE_PLAYING)
 		int[] set
 		_equipment = StripByDataEx(0x80, set, _stripCstm, _equipment)
+		_ActorRef.QueueNiNodeUpdate()
 	EndIf
 EndFunction
 
@@ -605,6 +606,7 @@ State Paused
 		If (_sex <= 2)
 			_equipment = StripByData(_stripData, GetStripSettings(), _stripCstm)
 			ResolveStrapon()
+			_ActorRef.QueueNiNodeUpdate()
 		EndIf
 		Debug.SendAnimationEvent(_ActorRef, "SOSBend0")
 		RegisterForModEvent("SSL_READY_Thread" + _Thread.tid, "OnStartPlaying")
@@ -758,6 +760,7 @@ State Animating
 		If (_stripData != aiStripData)
 			_stripData = aiStripData
 			_equipment = StripByDataEx(_stripData, GetStripSettings(), _stripCstm, _equipment)
+			_ActorRef.QueueNiNodeUpdate()
 		EndIf
 		_VoiceDelay -= Utility.RandomFloat(0.1, 0.3)
 		if _VoiceDelay < 0.8
@@ -966,6 +969,7 @@ State Animating
 		_equipment = StripByDataEx(_stripData, GetStripSettings(), _stripCstm, _equipment)
 		_useStrapon = _sex == 1 && Math.LogicalAnd(aiPositionGenders, 0x2) == 0
 		ResolveStrapon()
+		_ActorRef.QueueNiNodeUpdate()
 	EndFunction
 
 	Function TryPauseAndUnlock()
@@ -1661,6 +1665,7 @@ endFunction
 
 Function Strip()
 	_equipment = StripByDataEx(0x80, GetStripSettings(), _stripCstm, _equipment)
+	_ActorRef.QueueNiNodeUpdate()
 EndFunction
 Function UnStrip()
 	Redress()
