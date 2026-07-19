@@ -78,11 +78,16 @@ namespace Papyrus::SexLabUtil
     {
         std::vector<RE::Actor*> ret{};
         ret.reserve(5);
-        if (a1) ret.push_back(a1);
-        if (a2) ret.push_back(a2);
-        if (a3) ret.push_back(a3);
-        if (a4) ret.push_back(a4);
-        if (a5) ret.push_back(a5);
+        if (a1)
+            ret.push_back(a1);
+        if (a2)
+            ret.push_back(a2);
+        if (a3)
+            ret.push_back(a3);
+        if (a4)
+            ret.push_back(a4);
+        if (a5)
+            ret.push_back(a5);
         return ret;
     };
 
@@ -128,8 +133,10 @@ namespace Papyrus::SexLabUtil
         }
         const int total = static_cast<int>(arr.size());
         int pickLen = aiMaxLen;
-        if (pickLen < 1) pickLen = 1;
-        if (pickLen > total) pickLen = total;
+        if (pickLen < 1)
+            pickLen = 1;
+        if (pickLen > total)
+            pickLen = total;
         thread_local std::mt19937 rng{ std::random_device{}() };
         const int shuffleStart = bFirstSet ? 1 : 0;
         for (int j = shuffleStart; j < pickLen; j++) {
@@ -154,4 +161,4 @@ namespace Papyrus::SexLabUtil
         });
     };
 
-} // namespace Papyrus::SexLabUtil
+}  // namespace Papyrus::SexLabUtil

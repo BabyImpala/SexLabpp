@@ -278,11 +278,15 @@ EndFunction
 
 int Function GetAdjustPos()
 	If (_AdjustActor)
-		return GetPositionIdx(_AdjustActor)
+		int cachedIdx = GetPositionIdx(_AdjustActor)
+		If (cachedIdx >= 0)
+			return cachedIdx
+		EndIf
+		_AdjustActor = None
 	EndIf
 	int AdjustIdx = -1
 	If (HasPlayer)
-		AdjustIdx = IndexTravelComplex(GetPositionIdx(PlayerRef))
+		AdjustIdx = IndexTravelComplex(GetPositionIdx(PlayerRef), false, PlayerRef)
 	Else
 		AdjustIdx = (GetPositions().Length > 1) as int
 	EndIf

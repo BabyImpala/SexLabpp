@@ -215,7 +215,7 @@ namespace Thread::Interface
         ImGuiMCP::InvisibleButton("##slpp_oamTrack", ImGuiMCP::ImVec2{ trackW, trackH + hitExt * 2.0f });
         const bool hovered = ImGuiMCP::IsItemHovered();
         const bool active = ImGuiMCP::IsItemActive();
-        
+
         // Value (input field)
         const float inputH = ImGuiMCP::GetFrameHeight();
         ImGuiMCP::SetCursorScreenPos({ rowOrigin.x + rowPadH + labelW + rowPadH + trackW + rowPadH, rowCenterY - inputH * 0.5f });
@@ -342,8 +342,6 @@ namespace Thread::Interface
         const float offset = scale.Px(UI::Theme::Geometry::panelTabWidth + UI::Theme::Geometry::panelTabGap);
         const float pickerW = scale.Px(200.0f);
         const float panelW = scale.Px(300.0f);
-        const float sectionH = std::max(scale.Px(20.0f),
-            scale.TextPx(UI::Theme::FontSize::sectionHeader) + scale.Px(UI::Theme::Spacing::xs));
 
         // ── Target picker
         if (!_panelOpen && !_items.empty()) {
@@ -413,7 +411,6 @@ namespace Thread::Interface
                 ImGuiMCP::ImGuiWindowFlags_NoCollapse | ImGuiMCP::ImGuiWindowFlags_AlwaysAutoResize;
 
             if (ImGuiMCP::Begin("##slpp_OAMPanel", nullptr, panelFlags)) {
-
                 // ────── Title
                 SetWindowFontSize(scale.TextPx(UI::Theme::FontSize::sectionHeader));
                 const float titleW = ImGuiMCP::CalcTextSize(panelTitle.c_str()).x;
@@ -432,7 +429,7 @@ namespace Thread::Interface
                 const ImGuiMCP::ImVec2 toggleRowMin = ImGuiMCP::GetCursorScreenPos();
                 ImGuiMCP::SetCursorScreenPos({ toggleRowMin.x + rowPadH, toggleRowMin.y });
                 ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_HeaderHovered, UI::Theme::ToVec4(UI::Theme::Color::transparent));
-                if (UI::SelectableButton("##slpp_stageOnlyRow", false, 0, ImGuiMCP::ImVec2{ availW, toggleRowH })) { 
+                if (UI::SelectableButton("##slpp_stageOnlyRow", false, 0, ImGuiMCP::ImVec2{ availW, toggleRowH })) {
                     OnSetAdjustStageOnly(a_hud, !_adjustStageOnly);
                 }
                 ImGuiMCP::PopStyleColor();
@@ -491,7 +488,7 @@ namespace Thread::Interface
                 if (UI::ActionButton("Reset Offsets", btnW))
                     OnResetOffsets(a_hud);
                 ImGuiMCP::Dummy(ImGuiMCP::ImVec2{ 0.0f, scale.Px(6.0f) });
-                
+
                 ImGuiMCP::SetWindowFontScale(1.0f);
             }
             ImGuiMCP::End();

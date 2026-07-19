@@ -1,9 +1,9 @@
 #include "Thread.h"
 
-#include "Thread/Interface/SceneHUD.h"
 #include "Registry/Library.h"
 #include "Registry/Util/RayCast/Offsets.h"
 #include "Registry/Util/Scale.h"
+#include "Thread/Interface/SceneHUD.h"
 #include "Util/Script.h"
 
 namespace Thread
@@ -263,7 +263,8 @@ namespace Thread
 
     void Instance::OffsetAdjustSet(uint32_t actorFormId, Registry::CoordinateType axis, float value)
     {
-        if (!activeScene || !activeStage) return;
+        if (!activeScene || !activeStage)
+            return;
 
         // scene/furniture offset
         if (actorFormId == 0) {
@@ -274,11 +275,12 @@ namespace Thread
             activeScene->furnitureOffset.Apply(baseCoordinates);
             AdvanceScene(activeStage);
 
-        // position offset 
+            // position offset
         } else {
             const auto it = std::find_if(activeAssignment->begin(), activeAssignment->end(),
                 [&](RE::Actor* a) { return a && a->GetFormID() == actorFormId; });
-            if (it == activeAssignment->end()) return;
+            if (it == activeAssignment->end())
+                return;
             const auto posIdx = static_cast<size_t>(std::distance(activeAssignment->begin(), it));
 
             Registry::Library::GetSingleton()->EditScene(activeScene, [&](Registry::Scene* scene) {
@@ -300,7 +302,8 @@ namespace Thread
 
     void Instance::OffsetAdjustReset(bool hasFurn)
     {
-        if (!activeScene || !activeStage) return;
+        if (!activeScene || !activeStage)
+            return;
         Registry::Library::GetSingleton()->EditScene(activeScene, [&](Registry::Scene* scene) {
             if (hasFurn) {
                 scene->furnitureOffset.ResetOffset();
@@ -446,7 +449,8 @@ namespace Thread
     T Instance::GetThreadProperty(const std::string& a_property)
     {
         const auto scriptObj = Script::GetScriptObject(linkedQst, "sslThreadModel");
-        if (!scriptObj) return T{};
+        if (!scriptObj)
+            return T{};
         return Script::GetTrivialProperty<T>(scriptObj, a_property);
     }
     template bool Instance::GetThreadProperty<bool>(const std::string&);
@@ -457,7 +461,8 @@ namespace Thread
     void Instance::SetThreadProperty(const std::string& a_property, T a_val)
     {
         const auto scriptObj = Script::GetScriptObject(linkedQst, "sslThreadModel");
-        if (!scriptObj) return;
+        if (!scriptObj)
+            return;
         Script::SetProperty<T>(scriptObj, a_property, a_val);
     }
     template void Instance::SetThreadProperty<bool>(const std::string&, bool);

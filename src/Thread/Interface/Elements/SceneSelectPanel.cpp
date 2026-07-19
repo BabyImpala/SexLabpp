@@ -41,7 +41,7 @@ namespace Thread::Interface
         const auto lo = query.find_first_not_of(' ');
         if (lo != std::string::npos) {
             query = query.substr(lo, query.find_last_not_of(' ') - lo + 1);
-        } else { // Empty or whitespace-only: use empty string
+        } else {  // Empty or whitespace-only: use empty string
             query.clear();
         }
         _searchBuffer[0] = '\0';
@@ -165,7 +165,7 @@ namespace Thread::Interface
         const float maxH = dh * 0.8f;
         const float rowH = scale.TextPx(UI::Theme::FontSize::body) + scale.Px(UI::Theme::Spacing::xs);
         const float panelPadding = scale.Px(10.0f);
-        
+
         // Calculate dynamic list height based on number of entries
         const float maxListH = scale.Px(280.0f);
         const float calculatedListH = std::min(static_cast<float>(_filteredIndices.size()) * rowH, maxListH);
@@ -190,16 +190,16 @@ namespace Thread::Interface
         // ── Scene List with padding
         ImGuiMCP::Dummy(ImGuiMCP::ImVec2{ 0.0f, scale.Px(4.0f) });
         ImGuiMCP::SetCursorPosX(panelPadding);
-        
+
         SetWindowFontSize(scale.TextPx(UI::Theme::FontSize::compact));
-        
+
         // Modern scrollbar styling
         ImGuiMCP::PushStyleVar(ImGuiMCP::ImGuiStyleVar_ScrollbarSize, scale.Px(6.0f));
         ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_ScrollbarBg, UI::Theme::Color::surfacePanel);
         ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_ScrollbarGrab, UI::Theme::ToVec4(UI::Theme::Color::borderSubtle));
         ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_ScrollbarGrabHovered, UI::Theme::ToVec4(UI::Theme::Color::borderHovered));
         ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_ScrollbarGrabActive, UI::Theme::ToVec4(UI::Theme::Color::borderActive));
-        
+
         ImGuiMCP::BeginChild("##slpp_smmSceneList", ImGuiMCP::ImVec2{ panelW - panelPadding * 2.0f, calculatedListH },
             ImGuiMCP::ImGuiChildFlags_None, ImGuiMCP::ImGuiWindowFlags_None);
 
@@ -213,7 +213,7 @@ namespace Thread::Interface
                 ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_Text, UI::Theme::Color::accent);
             else
                 ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_Text, UI::Theme::ToVec4(UI::Theme::Color::textSecondary));
-            
+
             ImGuiMCP::SetCursorPosX(ImGuiMCP::GetCursorPosX() + scale.Px(8.0f));
             const bool clicked = UI::SelectableButton(e.name.c_str(), e.isActive,
                 ImGuiMCP::ImGuiSelectableFlags_AllowOverlap, ImGuiMCP::ImVec2{ 0.0f, rowH });
@@ -227,11 +227,11 @@ namespace Thread::Interface
         }
 
         ImGuiMCP::EndChild();
-        
+
         // Restore scrollbar styles
         ImGuiMCP::PopStyleColor(4);
         ImGuiMCP::PopStyleVar();
-        
+
         if (selectedScene)
             OnSceneSelected(a_hud, *selectedScene);
 
@@ -240,33 +240,33 @@ namespace Thread::Interface
         // ── Search Section with padding
         SetWindowFontSize(scale.TextPx(UI::Theme::FontSize::body));
         ImGuiMCP::SetCursorPosX(panelPadding);
-        
+
         const float searchAreaW = panelW - panelPadding * 2.0f;
         const float btnTextW = ImGuiMCP::CalcTextSize("Search").x + scale.Px(12.0f);
         const float inputW = searchAreaW - btnTextW - scale.Px(8.0f);
-        
+
         // Style search input
         ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_Text, UI::Theme::ToVec4(UI::Theme::Color::textSecondary));
         SetWindowFontSize(scale.TextPx(UI::Theme::FontSize::caption));
-        
+
         ImGuiMCP::SetNextItemWidth(inputW);
         ImGuiMCP::InputTextWithHint("##slpp_smmSearch", "Tag or scene name...",
             _searchBuffer, sizeof(_searchBuffer));
-        
+
         const bool searchInputHasFocus = ImGuiMCP::IsItemFocused();
-        
+
         ImGuiMCP::PopStyleColor();
         SetWindowFontSize(scale.TextPx(UI::Theme::FontSize::body));
-        
+
         if (searchInputHasFocus && ImGuiMCP::IsKeyPressed(ImGuiMCP::ImGuiKey_Enter, false)) {
-            OnConfirmSearch(a_hud); // Handle Enter key to search
+            OnConfirmSearch(a_hud);  // Handle Enter key to search
         }
         if (searchInputHasFocus && ImGuiMCP::IsKeyPressed(ImGuiMCP::ImGuiKey_Escape, false)) {
-            _searchBuffer[0] = '\0'; // Handle Escape key to cancel
+            _searchBuffer[0] = '\0';  // Handle Escape key to cancel
         }
 
         ImGuiMCP::SameLine(0.0f, scale.Px(8.0f));
-        
+
         // Rounded button styling
         ImGuiMCP::PushStyleVar(ImGuiMCP::ImGuiStyleVar_FrameRounding, scale.Px(4.0f));
         if (UI::ActionButton("Search##slpp_smmConfirm", btnTextW))
@@ -347,7 +347,7 @@ namespace Thread::Interface
                 const ImGuiMCP::ImVec2 annotSz{ fieldW,
                     std::clamp(ImGuiMCP::CalcTextSize(e.annotBuf, nullptr, false, fieldW).y + scale.Px(10.0f),
                         scale.Px(26.0f), scale.Px(60.0f)) };
-                
+
                 const float annotCenterX = (cardW - fieldW) * 0.5f;
                 ImGuiMCP::SetCursorPosX(annotCenterX);
                 if (ImGuiMCP::InputTextMultiline("##slpp_annot", e.annotBuf, sizeof(e.annotBuf), annotSz,

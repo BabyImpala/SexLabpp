@@ -80,7 +80,7 @@ namespace Thread::Interface
         SetWindowFontSize(scale.TextPx(UI::Theme::FontSize::body));
         UI::PushCheckboxStyle(scale.Factor());
         ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_Text, UI::Theme::ToVec4(UI::Theme::Color::textSecondary));
-        
+
         const float toggleRowH = scale.Px(24.0f);
         const float rowPadH = scale.Px(12.0f);
         const float availW = ImGuiMCP::GetContentRegionAvail().x - rowPadH * 2.0f;
@@ -88,7 +88,7 @@ namespace Thread::Interface
 
         auto DrawToggleRow = [&](const char* label, const char* id, bool& state, auto onChange) {
             const ImGuiMCP::ImVec2 toggleRowMin = ImGuiMCP::GetCursorScreenPos();
-            
+
             // Full row selectable button
             ImGuiMCP::SetCursorScreenPos({ toggleRowMin.x + rowPadH, toggleRowMin.y });
             ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_HeaderHovered, UI::Theme::ToVec4(UI::Theme::Color::transparent));
@@ -98,7 +98,7 @@ namespace Thread::Interface
                 onChange(state);
             }
             ImGuiMCP::PopStyleColor();
-            
+
             // Checkbox on the right
             const float cbX = toggleRowMin.x + rowPadH + availW - cbSize;
             const float cbY = toggleRowMin.y + (toggleRowH - cbSize) * 0.5f;
@@ -107,7 +107,7 @@ namespace Thread::Interface
             if (ImGuiMCP::Checkbox(cbId.c_str(), &state)) {
                 onChange(state);
             }
-            
+
             // Label on the left
             const ImGuiMCP::ImVec2 labelSize = ImGuiMCP::CalcTextSize(label);
             const float labelY = toggleRowMin.y + (toggleRowH - labelSize.y) * 0.5f;
@@ -123,7 +123,7 @@ namespace Thread::Interface
             inst->SetThreadProperty<bool>("ElementUI_GameHUD", val);
             Papyrus::SexLabUtil::HideElementsGameHUD(nullptr, !val);
         });
-        
+
         bool state_AnimSpeed = inst->GetThreadProperty<bool>("ElementUI_AnimSpeed");
         DrawToggleRow("Anim Speed Overlay", "animSpeed", state_AnimSpeed, [&](bool val) {
             inst->SetThreadProperty<bool>("ElementUI_AnimSpeed", val);
