@@ -2,7 +2,6 @@
 
 #include "Registry/Library.h"
 #include "Registry/Util/RayCast/Offsets.h"
-#include "Registry/Util/Scale.h"
 #include "Thread/Interface/SceneHUD.h"
 #include "Util/Script.h"
 
@@ -96,14 +95,10 @@ namespace Thread
         ReleaseAnimations();
         pendingAnimations.clear();
         pendingAnimations.reserve(activeAssignment->size());
-        const auto scaling = Registry::Scale::GetSingleton();
         for (size_t i = 0; i < activeAssignment->size(); i++) {
             const auto& actor = activeAssignment->at(i);
-            const auto& positionInfo = activeScene->GetNthPosition(i);
             const auto& animationEvent = activeScene->GetNthAnimationEvent(a_nextStage, i);
 
-            scaling->SetScale(actor, positionInfo->data.GetRace(), positionInfo->data.GetScale());
-            ReassertPlacement(i, true);
             pendingAnimations.emplace_back(actor, animationEvent, std::vector<ActiveClip>{}, nullptr, std::string{}, 0.0f, 0.0f, 0.0f, i);
         }
         TryStartAnimations();

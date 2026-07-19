@@ -1,5 +1,8 @@
 #include "Thread.h"
 
+#include "Registry/Util/Scale.h"
+#include "Thread/Collision/CollisionHandler.h"
+
 #include <bit>
 
 namespace Thread
@@ -80,6 +83,8 @@ namespace Thread
     void Instance::TryStartAnimations()
     {
         std::vector<std::vector<ActiveClip>> activeClips(pendingAnimations.size());
+
+        // Wait until every pending actor is safe to move and animate
         for (size_t i = 0; i < pendingAnimations.size(); i++) {
             auto& pending = pendingAnimations[i];
             if (pending.transitionAcknowledged || pending.retryDelay > 0.0f) {
@@ -96,6 +101,7 @@ namespace Thread
             }
         }
 
+        // Snapshot active clips so later updates can verify each transition
         for (size_t i = 0; i < pendingAnimations.size(); i++) {
             const auto& pending = pendingAnimations[i];
             if (pending.transitionAcknowledged || pending.retryDelay > 0.0f) {
@@ -106,12 +112,19 @@ namespace Thread
             }
         }
 
+        // Lock, scale, and place each actor before dispatching its animation event
         for (size_t i = 0; i < pendingAnimations.size(); i++) {
             auto& pending = pendingAnimations[i];
             if (pending.transitionAcknowledged || pending.retryDelay > 0.0f) {
                 continue;
             }
-            ReassertPlacement(pending.position, false);
+            const bool firstDispatch = pending.dispatchAttempts == 0;
+            if (firstDispatch) {
+                const auto& positionInfo = activeScene->GetNthPosition(pending.position);
+                Collision::CollisionHandler::AddActor(pending.actor->GetFormID());
+                Registry::Scale::GetSingleton()->SetScale(pending.actor, positionInfo->data.GetRace(), positionInfo->data.GetScale());
+            }
+            ReassertPlacement(pending.position, firstDispatch);
             pending.dispatchAttempts++;
             if (!pending.actor->NotifyAnimationGraph(pending.event)) {
                 pending.retryDelay = 0.1f;

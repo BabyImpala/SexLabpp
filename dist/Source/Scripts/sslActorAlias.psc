@@ -562,7 +562,6 @@ State Paused
 		Debug.SendAnimationEvent(_ActorRef, "IdleFurnitureExit")
 		Debug.SendAnimationEvent(_ActorRef, "AnimObjectUnequip")
 		Debug.SendAnimationEvent(_ActorRef, "IdleStop")
-		SetActorCollisions(false)
 		If (_ActorRef == _PlayerRef)
 			_Config.ToggleVRIK(true, _Config.VRIK_FPP_HMD)
 			If(_Config.AutoTFC)
