@@ -36,7 +36,13 @@ namespace Thread
     void Instance::DestroyInstance(RE::TESQuest* a_linkedQst)
     {
         std::unique_lock lock{ _mInstances };
-        std::erase_if(instances, [&](const auto& instance) { return instance->linkedQst == a_linkedQst; });
+        std::erase_if(instances, [&](const auto& instance) {
+            if (instance->linkedQst != a_linkedQst) {
+                return false;
+            }
+            instance->ReleaseAnimations();
+            return true;
+        });
     }
 
     Instance* Instance::GetInstance(RE::TESQuest* a_linkedQst)
@@ -87,23 +93,30 @@ namespace Thread
             niInstance = NiNode::NiUpdate::Register(linkedQst->formID, *activeAssignment, activeScene);
         }
         activeStage = a_nextStage;
+        ReleaseAnimations();
+        pendingAnimations.clear();
+        pendingAnimations.reserve(activeAssignment->size());
         const auto scaling = Registry::Scale::GetSingleton();
         for (size_t i = 0; i < activeAssignment->size(); i++) {
             const auto& actor = activeAssignment->at(i);
-            const auto& position = a_nextStage->positions[i];
-            const auto& coordinate = position.offset.ApplyReturn(baseCoordinates);
             const auto& positionInfo = activeScene->GetNthPosition(i);
             const auto& animationEvent = activeScene->GetNthAnimationEvent(a_nextStage, i);
 
             scaling->SetScale(actor, positionInfo->data.GetRace(), positionInfo->data.GetScale());
-            actor->SetAngle({ 0.0f, 0.0f, coordinate.rotation });
-            actor->SetPosition(coordinate.AsNiPoint(), true);
-            actor->Update3DPosition(true);
-            actor->NotifyAnimationGraph(animationEvent);
+            ReassertPlacement(i, true);
+            pendingAnimations.emplace_back(actor, animationEvent, std::vector<ActiveClip>{}, nullptr, std::string{}, 0.0f, 0.0f, 0.0f, i);
         }
+        TryStartAnimations();
         //if (ControlsMenu()) {
         //    Interface::SceneMenu::UpdateStageInfo();
         //}
+    }
+
+    void Instance::RealignActors()
+    {
+        for (size_t i = 0; i < activeAssignment->size(); i++) {
+            ReassertPlacement(i, false);
+        }
     }
 
     bool Instance::SetActiveScene(const Registry::Scene* a_scene)
@@ -123,6 +136,8 @@ namespace Thread
         }
         assignments = newAssignments;
         activeScene = a_scene;
+        ReleaseAnimations();
+        pendingAnimations.clear();
         std::map<RE::Actor*, std::set<size_t>> uniquePositions;
         for (const auto& assignment : assignments) {
             for (size_t i = 0; i < assignment.size(); i++) {
@@ -195,11 +210,23 @@ namespace Thread
             logger::warn("Actor {} is not part of the current scene.", a_actor->GetFormID());
             return;
         }
-        const auto& position = activeStage->positions[i];
+        ReassertPlacement(static_cast<size_t>(i), true);
+    }
+
+    void Instance::ReassertPlacement(size_t a_position, bool a_force)
+    {
+        const auto actor = activeAssignment->at(a_position);
+        const auto& position = activeStage->positions[a_position];
         const auto& coordinate = position.offset.ApplyReturn(baseCoordinates);
-        a_actor->SetAngle({ 0.0f, 0.0f, coordinate.rotation });
-        a_actor->SetPosition(coordinate.AsNiPoint(), true);
-        a_actor->Update3DPosition(true);
+        constexpr float positionToleranceSquared = 0.25f;
+        constexpr float rotationTolerance = 0.008726646f;
+        constexpr float fullRotation = 6.283185307f;
+        if (!a_force && actor->GetPosition().GetSquaredDistance(coordinate.AsNiPoint()) <= positionToleranceSquared && std::abs(std::remainder(actor->GetAngleZ() - coordinate.rotation, fullRotation)) <= rotationTolerance) {
+            return;
+        }
+        actor->SetAngle({ 0.0f, 0.0f, coordinate.rotation });
+        actor->SetPosition(coordinate.AsNiPoint(), true);
+        actor->Update3DPosition(true);
     }
 
     bool Instance::ReplaceCenterRef(RE::TESObjectREFR* a_ref)
@@ -232,56 +259,6 @@ namespace Thread
         activeScene->furnitureOffset.Apply(baseCoordinates);
         AdvanceScene(activeStage);
         return true;
-    }
-
-    void Instance::SetAnimationPlaybackSpeed(float playbackSpeed)
-    {
-        std::vector<std::pair<RE::BSAnimationGraphManagerPtr, std::unique_ptr<RE::BSSpinLockGuard>>> lockedGraphs;
-
-        for (auto& position : positions) {
-            const auto* actor = position.data.GetActor();
-            if (!actor) {
-                continue;
-            }
-
-            RE::BSAnimationGraphManagerPtr graphMgr;
-            if (!actor->GetAnimationGraphManager(graphMgr) || !graphMgr) {
-                continue;
-            }
-
-            auto& runtime = graphMgr->GetRuntimeData();
-            lockedGraphs.emplace_back(
-                graphMgr,
-                std::make_unique<RE::BSSpinLockGuard>(runtime.updateLock));
-        }
-
-        for (auto& [graphMgr, lock] : lockedGraphs) {
-            auto& runtime = graphMgr->GetRuntimeData();
-            auto activeGraph = runtime.activeGraph;
-
-            RE::BShkbAnimationGraph* animationGraph = graphMgr->graphs[activeGraph].get();
-            if (!animationGraph || !animationGraph->behaviorGraph) {
-                continue;
-            }
-
-            auto* activeNodes = *reinterpret_cast<RE::hkArray<RE::hkbNodeInfo>**>(
-                &animationGraph->behaviorGraph->activeNodes);
-            if (!activeNodes) {
-                continue;
-            }
-
-            for (const RE::hkbNodeInfo& activeNode : *activeNodes) {
-                if (!activeNode.nodeClone) {
-                    continue;
-                }
-                if (auto* clip = skyrim_cast<RE::hkbClipGenerator*>(activeNode.nodeClone)) {
-                    clip->playbackSpeed = playbackSpeed;
-                    if (clip->animationControl) {
-                        clip->animationControl->playbackSpeed = playbackSpeed;
-                    }
-                }
-            }
-        }
     }
 
     void Instance::OffsetAdjustSet(uint32_t actorFormId, Registry::CoordinateType axis, float value)

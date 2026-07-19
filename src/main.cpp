@@ -3,6 +3,7 @@
 #include "Registry/Stats.h"
 #include "Serialization.h"
 #include "Thread/Collision/CollisionHandler.h"
+#include "Thread/FrameUpdateHook.h"
 #include "Thread/Interface/FurnSelectMenu.h"
 #include "Thread/Interface/SceneHUD.h"
 #include "Thread/NiNode/Legacy/LegacyNiUpdate.h"
@@ -53,7 +54,8 @@ static void SKSEMessageHandler(SKSE::MessagingInterface::Message* message)
                 std::_Exit(EXIT_FAILURE);
             return;
         }
-        SKSE::AllocTrampoline(static_cast<size_t>(1) << 5);
+        SKSE::AllocTrampoline(static_cast<size_t>(1) << 6);
+        Thread::FrameUpdateHook::Install();
         Thread::Collision::CollisionHandler::Install();
         if (Settings::bUseLegacyNiType) {
             Thread::LegacyNiNode::NiUpdate::Install();

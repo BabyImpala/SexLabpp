@@ -1524,6 +1524,7 @@ State Ending
 		If (_QuickResetScenes)
 			return
 		EndIf
+		CancelPendingAnimations()
 		Config.DisableThreadControl(self as sslThreadController)
 		SendModEvent("SSL_CLEAR_Thread" + tid, "", 1.0)
 		MoveActorsAwayFromPlayer()
@@ -2097,6 +2098,7 @@ Function Initialize()
 EndFunction
 
 Function DestroyInstance() native
+Function CancelPendingAnimations() native
 
 ; ------------------------------------------------------- ;
 ; --- Logging                                         --- ;

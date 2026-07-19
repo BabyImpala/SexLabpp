@@ -373,6 +373,11 @@ namespace Papyrus::ThreadModel
         Thread::Instance::DestroyInstance(a_qst);
     }
 
+    void CancelPendingAnimations(RE::TESQuest* a_qst)
+    {
+        Thread::Instance::CancelPendingAnimations(a_qst);
+    }
+
     std::vector<RE::BSFixedString> GetLeadInScenes(QUESTARGS)
     {
         GET_INSTANCE({});
@@ -406,6 +411,10 @@ namespace Papyrus::ThreadModel
         auto stage = instance->GetActiveScene()->GetStageByID(a_nextStage);
         if (!stage) {
             a_vm->TraceStack("Invalid stage id", a_stackID);
+            return a_history;
+        }
+        if (instance->GetActiveStage() == stage && !a_history.empty()) {
+            instance->RealignActors();
             return a_history;
         }
         instance->AdvanceScene(stage);
