@@ -2,6 +2,7 @@
 
 #include "Registry/Library.h"
 #include "Registry/Util/RayCast/Offsets.h"
+#include "Thread/Hooks.h"
 #include "Thread/Interface/SceneHUD.h"
 #include "Util/Script.h"
 
@@ -39,6 +40,9 @@ namespace Thread
             std::erase_if(instances, [&](const auto& instance) {
                 if (instance->linkedQst != a_linkedQst) {
                     return false;
+                }
+                if (!a_preservePreparedActors && instance->GetPosition(RE::PlayerCharacter::GetSingleton())) {
+                    Hooks::SetWeaponDrawBlocked(false);
                 }
                 instance->ReleaseAnimations();
                 return true;

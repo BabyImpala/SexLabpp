@@ -3,6 +3,7 @@
 #include "GameForms.h"
 #include "Registry/Util/Scale.h"
 #include "Thread/Collision/CollisionHandler.h"
+#include "Thread/Hooks.h"
 #include "Util/Script.h"
 
 #include <bit>
@@ -95,6 +96,7 @@ namespace Thread
         void RestorePreparedActorState(RE::TESQuest* a_owner)
         {
             std::vector<ActorPreparation> restore;
+            bool restorePlayer = false;
             {
                 std::scoped_lock lock{ actorPreparationLock };
                 for (auto actor = actorPreparations.begin(); actor != actorPreparations.end();) {
@@ -111,6 +113,7 @@ namespace Thread
                 if (!actor) {
                     continue;
                 }
+                restorePlayer |= actor->IsPlayerRef();
                 Registry::Scale::GetSingleton()->RemoveScale(actor);
                 if (preparation.hasIsNPC) {
                     actor->SetGraphVariableInt("IsNPC", preparation.isNPC);
@@ -122,6 +125,9 @@ namespace Thread
                 if (!actor->IsPlayerRef()) {
                     actor->AsActorValueOwner()->SetActorValue(RE::ActorValue::kVariable05, 0.0f);
                 }
+            }
+            if (restorePlayer) {
+                Hooks::SetWeaponDrawBlocked(false);
             }
             if (!restore.empty()) {
                 logger::info("Restored {} natively prepared actor(s) for thread {:X}.", restore.size(), a_owner->GetFormID());
@@ -153,6 +159,9 @@ namespace Thread
                 instance->playerSheatheElapsed = 0.0f;
                 instance->playerSheathePreviousState = RE::WEAPON_STATE::kSheathed;
                 instance->playerSheatheActionSubmitted = false;
+                if (instance->GetPosition(RE::PlayerCharacter::GetSingleton())) {
+                    Hooks::SetWeaponDrawBlocked(false);
+                }
                 break;
             }
         }
@@ -279,6 +288,8 @@ namespace Thread
         if (!player || !GetPosition(player)) {
             return true;
         }
+        Hooks::SetWeaponDrawBlocked(true);
+
         const auto weaponState = player->AsActorState()->GetWeaponState();
         if (weaponState == RE::WEAPON_STATE::kSheathed) {
             return true;
@@ -560,8 +571,6 @@ namespace Thread
             return;
         }
 
-		// Bug: For whatever reason you can click your attack button while in a scene, and it queues a weapon draw animation which causes the sword to be drawn
-		// at the end of the scene. Only possible fix I can think of is hooking the native function and avoiding the unsheathe from starting. kAttack control flag does not fix it
         if (playerSheathePending) {
             playerSheatheElapsed += a_delta;
             const auto player = RE::PlayerCharacter::GetSingleton();
