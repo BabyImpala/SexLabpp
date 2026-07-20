@@ -4,7 +4,6 @@
 #include "Registry/Stats.h"
 #include "Registry/Util/RayCast.h"
 #include "Registry/Util/RayCast/ObjectBound.h"
-#include "Registry/Util/Scale.h"
 #include "Thread/Collision/CollisionHandler.h"
 #include "Thread/NiNode/Node.h"
 #include "Thread/Thread.h"
@@ -63,72 +62,6 @@ namespace Papyrus::ThreadModel
         {
             GET_POSITION();
             position->expression = Registry::Library::GetSingleton()->GetExpressionById(a_expression);
-        }
-
-        void StartSetActorInterrupts(ALIASARGS)
-        {
-            const auto actor = a_alias->GetActorReference();
-            if (!actor) {
-                a_vm->TraceStack("Reference is empty or not an actor", a_stackID);
-                return;
-            }
-            if (actor->IsPlayerRef()) {
-                const auto ui = RE::UI::GetSingleton();
-                const auto interfacestr = RE::InterfaceStrings::GetSingleton();
-                if (ui->IsMenuOpen(interfacestr->dialogueMenu)) {
-                    if (auto view = ui->GetMovieView(interfacestr->dialogueMenu)) {
-                        RE::GFxValue arg{ interfacestr->dialogueMenu };
-                        view->InvokeNoReturn("_global.skse.CloseMenu", &arg, 1);
-                    }
-                }
-                actor->AsActorState()->actorState1.lifeState = RE::ACTOR_LIFE_STATE::kAlive;
-            } else {
-                switch (actor->AsActorState()->actorState1.lifeState) {
-                case RE::ACTOR_LIFE_STATE::kUnconcious:
-                    actor->AsActorValueOwner()->SetActorValue(RE::ActorValue::kVariable05, STATUS05::Unconscious);
-                    break;
-                case RE::ACTOR_LIFE_STATE::kDying:
-                case RE::ACTOR_LIFE_STATE::kDead:
-                    actor->AsActorValueOwner()->SetActorValue(RE::ActorValue::kVariable05, STATUS05::Dying);
-                    actor->Resurrect(false, true);
-                    break;
-                }
-                actor->AsActorState()->actorState1.lifeState = RE::ACTOR_LIFE_STATE::kRestrained;
-            }
-
-            if (actor->AsActorState()->IsWeaponDrawn()) {
-                const auto factory = RE::IFormFactory::GetConcreteFormFactoryByType<RE::Script>();
-                if (const auto script = factory ? factory->Create() : nullptr) {
-                    script->SetCommand("rae weaponsheathe");
-                    script->CompileAndRun(actor);
-                    if (!actor->IsPlayerRef() && actor->IsSneaking()) {
-                        script->SetCommand("setforcesneak 0");
-                        script->CompileAndRun(actor);
-                    }
-                    delete script;
-                }
-            }
-        }
-
-        void EndSetActorInterrupts(ALIASARGS)
-        {
-            const auto actor = a_alias->GetActorReference();
-            if (!actor) {
-                a_vm->TraceStack("Reference is empty or not an actor", a_stackID);
-                return;
-            }
-            Registry::Scale::GetSingleton()->RemoveScale(actor);
-            switch (static_cast<int32_t>(actor->AsActorValueOwner()->GetActorValue(RE::ActorValue::kVariable05))) {
-            case STATUS05::Unconscious:
-                actor->AsActorState()->actorState1.lifeState = RE::ACTOR_LIFE_STATE::kUnconcious;
-                break;
-            default:
-                actor->AsActorState()->actorState1.lifeState = RE::ACTOR_LIFE_STATE::kAlive;
-                break;
-            }
-            if (!actor->IsPlayerRef()) {
-                actor->AsActorValueOwner()->SetActorValue(RE::ActorValue::kVariable05, 0.0f);
-            }
         }
 
         void SetActorCollisions(ALIASARGS, bool a_enable)
@@ -359,14 +292,26 @@ namespace Papyrus::ThreadModel
         }).detach();
     }
 
-    void DestroyInstance(RE::TESQuest* a_qst)
+    void DestroyInstance(RE::TESQuest* a_qst, bool a_preservePreparedActors)
     {
-        Thread::Instance::DestroyInstance(a_qst);
+        Thread::Instance::DestroyInstance(a_qst, a_preservePreparedActors);
     }
 
     void CancelPendingAnimations(RE::TESQuest* a_qst)
     {
         Thread::Instance::CancelPendingAnimations(a_qst);
+    }
+
+    bool BeginActorRecovery(QUESTARGS)
+    {
+        GET_INSTANCE(false);
+        return instance->BeginActorRecovery();
+    }
+
+    bool BeginPlayerSheatheWait(QUESTARGS)
+    {
+        GET_INSTANCE(false);
+        return instance->BeginPlayerSheatheWait();
     }
 
     std::vector<RE::BSFixedString> GetLeadInScenes(QUESTARGS)
@@ -411,12 +356,6 @@ namespace Papyrus::ThreadModel
         instance->AdvanceScene(stage);
         a_history.push_back(a_nextStage);
         return a_history;
-    }
-
-    void ContinueStartAnimations(QUESTARGS)
-    {
-        GET_INSTANCE();
-        instance->ContinueStartAnimations();
     }
 
     int SelectNextStage(QUESTARGS, std::vector<RE::BSFixedString> a_tags)

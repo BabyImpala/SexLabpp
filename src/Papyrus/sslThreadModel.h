@@ -13,19 +13,11 @@ namespace Papyrus::ThreadModel
 
     namespace ActorAlias
     {
-        enum STATUS05
-        {
-            Unconscious = -5,
-            Dying = -10,
-        };
-
         RE::BSFixedString GetActorVoice(ALIASARGS);
         RE::BSFixedString GetActorExpression(ALIASARGS);
         void SetActorVoiceImpl(ALIASARGS, RE::BSFixedString a_voice);
         void SetActorExpressionImpl(ALIASARGS, RE::BSFixedString a_expression);
 
-        void StartSetActorInterrupts(ALIASARGS);
-        void EndSetActorInterrupts(ALIASARGS);
         void SetActorCollisions(ALIASARGS, bool a_enable);
 
         std::vector<RE::TESForm*> StripByData(ALIASARGS, int32_t a_stripdata, std::vector<uint32_t> a_defaults, std::vector<uint32_t> a_overwrite);
@@ -41,8 +33,6 @@ namespace Papyrus::ThreadModel
             REGISTERFUNC(SetActorVoiceImpl, "sslActorAlias", false);
             REGISTERFUNC(SetActorExpressionImpl, "sslActorAlias", false);
 
-            REGISTERFUNC(StartSetActorInterrupts, "sslActorAlias", false);
-            REGISTERFUNC(EndSetActorInterrupts, "sslActorAlias", false);
             REGISTERFUNC(SetActorCollisions, "sslActorAlias", false);
 
             REGISTERFUNC(StripByData, "sslActorAlias", false);
@@ -62,13 +52,14 @@ namespace Papyrus::ThreadModel
     std::vector<RE::BSFixedString> AddContextExImpl(RE::TESQuest*, std::vector<RE::BSFixedString> a_oldcontext, std::string a_newcontext);
 
     void CreateInstance(QUESTARGS, std::vector<RE::Actor*> a_submissives, std::vector<RE::BSFixedString> a_scenesPrimary, std::vector<RE::BSFixedString> a_scenesLeadIn, std::vector<RE::BSFixedString> a_scenesCustom, int a_furniturepref);
-    void DestroyInstance(RE::TESQuest* a_qst);
+    void DestroyInstance(RE::TESQuest* a_qst, bool a_preservePreparedActors);
     void CancelPendingAnimations(RE::TESQuest* a_qst);
+    bool BeginActorRecovery(QUESTARGS);
+    bool BeginPlayerSheatheWait(QUESTARGS);
     std::vector<RE::BSFixedString> GetLeadInScenes(QUESTARGS);
     std::vector<RE::BSFixedString> GetPrimaryScenes(QUESTARGS);
     std::vector<RE::BSFixedString> GetCustomScenes(QUESTARGS);
     std::vector<RE::BSFixedString> AdvanceScene(QUESTARGS, std::vector<RE::BSFixedString> a_history, RE::BSFixedString a_nextStage);
-    void ContinueStartAnimations(QUESTARGS);
     int SelectNextStage(QUESTARGS, std::vector<RE::BSFixedString> a_tags);
     bool SetActiveScene(QUESTARGS, RE::BSFixedString a_sceneid);
     bool ReassignCenter(QUESTARGS, RE::TESObjectREFR* a_centeron);
@@ -110,11 +101,12 @@ namespace Papyrus::ThreadModel
         REGISTERFUNC(CreateInstance, "sslThreadModel", true);
         REGISTERFUNC(DestroyInstance, "sslThreadModel", true);
         REGISTERFUNC(CancelPendingAnimations, "sslThreadModel", true);
+        REGISTERFUNC(BeginActorRecovery, "sslThreadModel", false);
+        REGISTERFUNC(BeginPlayerSheatheWait, "sslThreadModel", false);
         REGISTERFUNC(GetLeadInScenes, "sslThreadModel", true);
         REGISTERFUNC(GetPrimaryScenes, "sslThreadModel", true);
         REGISTERFUNC(GetCustomScenes, "sslThreadModel", true);
         REGISTERFUNC(AdvanceScene, "sslThreadModel", false);
-        REGISTERFUNC(ContinueStartAnimations, "sslThreadModel", false);
         REGISTERFUNC(SelectNextStage, "sslThreadModel", true);
         REGISTERFUNC(SetActiveScene, "sslThreadModel", false);
         REGISTERFUNC(ReassignCenter, "sslThreadModel", false);

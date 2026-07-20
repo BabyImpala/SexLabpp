@@ -32,16 +32,21 @@ namespace Thread
         }
     }
 
-    void Instance::DestroyInstance(RE::TESQuest* a_linkedQst)
+    void Instance::DestroyInstance(RE::TESQuest* a_linkedQst, bool a_preservePreparedActors)
     {
-        std::unique_lock lock{ _mInstances };
-        std::erase_if(instances, [&](const auto& instance) {
-            if (instance->linkedQst != a_linkedQst) {
-                return false;
-            }
-            instance->ReleaseAnimations();
-            return true;
-        });
+        {
+            std::unique_lock lock{ _mInstances };
+            std::erase_if(instances, [&](const auto& instance) {
+                if (instance->linkedQst != a_linkedQst) {
+                    return false;
+                }
+                instance->ReleaseAnimations();
+                return true;
+            });
+        }
+        if (!a_preservePreparedActors) {
+            RestorePreparedActors(a_linkedQst);
+        }
     }
 
     Instance* Instance::GetInstance(RE::TESQuest* a_linkedQst)
@@ -101,7 +106,6 @@ namespace Thread
 
             pendingAnimations.emplace_back(actor, animationEvent, std::vector<ActiveClip>{}, nullptr, std::string{}, 0.0f, 0.0f, 0.0f, i);
         }
-        TryStartAnimations();
         //if (ControlsMenu()) {
         //    Interface::SceneMenu::UpdateStageInfo();
         //}

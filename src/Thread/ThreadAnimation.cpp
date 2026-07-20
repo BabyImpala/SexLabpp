@@ -1,5 +1,6 @@
 #include "Thread.h"
 
+#include "GameForms.h"
 #include "Registry/Util/Scale.h"
 #include "Thread/Collision/CollisionHandler.h"
 #include "Util/Script.h"
@@ -8,27 +9,286 @@
 
 namespace Thread
 {
-    void Instance::ContinueStartAnimations()
+    namespace
     {
-        actorLockRequested = false;
-        actorLockAcknowledged = true;
-        logger::info("Papyrus actor locks acknowledged for thread {:X}.", linkedQst->GetFormID());
+        enum ActorStatus : int32_t
+        {
+            Unconscious = -5,
+            Dying = -10,
+        };
+
+        struct ActorPreparation
+        {
+            RE::TESQuest* owner;
+            RE::Actor* actor;
+            RE::ACTOR_LIFE_STATE lifeState;
+            int32_t isNPC{ 0 };
+            bool humanoidFootIKDisabled{ false };
+            bool hasIsNPC{ false };
+            bool hasHumanoidFootIKDisabled{ false };
+        };
+
+        std::mutex actorPreparationLock;
+        std::unordered_map<RE::FormID, ActorPreparation> actorPreparations;
+
+        bool PrepareActorForAnimation(RE::TESQuest* a_owner, RE::Actor* a_actor, bool a_human)
+        {
+            std::scoped_lock lock{ actorPreparationLock };
+            const auto actorID = a_actor->GetFormID();
+            const auto existing = actorPreparations.find(actorID);
+            if (existing != actorPreparations.end() && existing->second.owner != a_owner) {
+                logger::error("Actor {:X} is already prepared by another thread.", actorID);
+                return false;
+            }
+
+            const auto [entry, inserted] = actorPreparations.try_emplace(actorID, ActorPreparation{ a_owner, a_actor, a_actor->AsActorState()->GetLifeState() });
+            auto& preparation = entry->second;
+            if (inserted && a_human) {
+                preparation.hasIsNPC = a_actor->GetGraphVariableInt("IsNPC", preparation.isNPC);
+                preparation.hasHumanoidFootIKDisabled = a_actor->GetGraphVariableBool("bHumanoidFootIKDisable", preparation.humanoidFootIKDisabled);
+            }
+
+            a_actor->AsActorValueOwner()->SetActorValue(RE::ActorValue::kParalysis, 0.0f);
+            a_actor->AddToFaction(const_cast<RE::TESFaction*>(GameForms::AnimatingFaction), 1);
+            a_actor->EvaluatePackage();
+            if (a_actor->IsPlayerRef()) {
+                if (const auto ui = RE::UI::GetSingleton(); ui) {
+                    const auto interfaceStrings = RE::InterfaceStrings::GetSingleton();
+                    if (interfaceStrings && ui->IsMenuOpen(interfaceStrings->dialogueMenu)) {
+                        if (auto view = ui->GetMovieView(interfaceStrings->dialogueMenu)) {
+                            RE::GFxValue argument{ interfaceStrings->dialogueMenu };
+                            view->InvokeNoReturn("_global.skse.CloseMenu", &argument, 1);
+                        }
+                    }
+                }
+                a_actor->AsActorState()->actorState1.lifeState = RE::ACTOR_LIFE_STATE::kAlive;
+            } else {
+                if (inserted) {
+                    switch (preparation.lifeState) {
+                    case RE::ACTOR_LIFE_STATE::kUnconcious:
+                        a_actor->AsActorValueOwner()->SetActorValue(RE::ActorValue::kVariable05, ActorStatus::Unconscious);
+                        break;
+                    case RE::ACTOR_LIFE_STATE::kDying:
+                    case RE::ACTOR_LIFE_STATE::kDead:
+                        a_actor->AsActorValueOwner()->SetActorValue(RE::ActorValue::kVariable05, ActorStatus::Dying);
+                        a_actor->Resurrect(false, true);
+                        break;
+                    default:
+                        break;
+                    }
+                }
+                a_actor->AsActorState()->actorState1.lifeState = RE::ACTOR_LIFE_STATE::kRestrained;
+            }
+            if (!a_actor->IsPlayerRef() && a_actor->AsActorState()->IsWeaponDrawn()) {
+                a_actor->DrawWeaponMagicHands(false);
+                if (a_actor->IsSneaking()) {
+                    a_actor->AsActorState()->actorState2.forceSneak = false;
+                }
+            }
+            if (a_human) {
+                a_actor->SetGraphVariableInt("IsNPC", 0);
+                a_actor->SetGraphVariableBool("bHumanoidFootIKDisable", true);
+            }
+            return true;
+        }
+
+        void RestorePreparedActorState(RE::TESQuest* a_owner)
+        {
+            std::vector<ActorPreparation> restore;
+            {
+                std::scoped_lock lock{ actorPreparationLock };
+                for (auto actor = actorPreparations.begin(); actor != actorPreparations.end();) {
+                    if (actor->second.owner != a_owner) {
+                        ++actor;
+                        continue;
+                    }
+                    restore.push_back(actor->second);
+                    actor = actorPreparations.erase(actor);
+                }
+            }
+            for (const auto& preparation : restore) {
+                const auto actor = preparation.actor;
+                if (!actor) {
+                    continue;
+                }
+                Registry::Scale::GetSingleton()->RemoveScale(actor);
+                if (preparation.hasIsNPC) {
+                    actor->SetGraphVariableInt("IsNPC", preparation.isNPC);
+                }
+                if (preparation.hasHumanoidFootIKDisabled) {
+                    actor->SetGraphVariableBool("bHumanoidFootIKDisable", preparation.humanoidFootIKDisabled);
+                }
+                actor->AsActorState()->actorState1.lifeState = preparation.lifeState == RE::ACTOR_LIFE_STATE::kUnconcious ? RE::ACTOR_LIFE_STATE::kUnconcious : RE::ACTOR_LIFE_STATE::kAlive;
+                if (!actor->IsPlayerRef()) {
+                    actor->AsActorValueOwner()->SetActorValue(RE::ActorValue::kVariable05, 0.0f);
+                }
+            }
+            if (!restore.empty()) {
+                logger::info("Restored {} natively prepared actor(s) for thread {:X}.", restore.size(), a_owner->GetFormID());
+            }
+        }
+    }
+
+    void Instance::RestorePreparedActors(RE::TESQuest* a_linkedQst)
+    {
+        RestorePreparedActorState(a_linkedQst);
     }
 
     void Instance::CancelPendingAnimations(RE::TESQuest* a_linkedQst)
     {
-        std::unique_lock lock{ _mInstances };
-        for (auto&& instance : instances) {
-            if (instance->linkedQst != a_linkedQst) {
+        {
+            std::unique_lock lock{ _mInstances };
+            for (auto&& instance : instances) {
+                if (instance->linkedQst != a_linkedQst) {
+                    continue;
+                }
+                instance->ReleaseAnimations();
+                if (!instance->pendingAnimations.empty()) {
+                    logger::info("Cancelled {} pending animation synchronization(s).", instance->pendingAnimations.size());
+                    instance->pendingAnimations.clear();
+                }
+                instance->pendingRecoveries.clear();
+                instance->actorRecoveryPreparationBarrier = false;
+                instance->playerSheathePending = false;
+                instance->playerSheatheElapsed = 0.0f;
+                instance->playerSheathePreviousState = RE::WEAPON_STATE::kSheathed;
+                instance->playerSheatheActionSubmitted = false;
+                break;
+            }
+        }
+        RestorePreparedActorState(a_linkedQst);
+    }
+
+    bool Instance::BeginActorRecovery()
+    {
+        return !QueueActorRecoveries(true);
+    }
+
+    bool Instance::QueueActorRecoveries(bool a_preparationBarrier)
+    {
+        if (!pendingRecoveries.empty()) {
+            actorRecoveryPreparationBarrier |= a_preparationBarrier;
+            return true;
+        }
+        actorRecoveryPreparationBarrier = a_preparationBarrier;
+        for (const auto actor : GetActors()) {
+            if (!actor) {
                 continue;
             }
-            instance->ReleaseAnimations();
-            if (!instance->pendingAnimations.empty()) {
-                logger::info("Cancelled {} pending animation synchronization(s).", instance->pendingAnimations.size());
-                instance->pendingAnimations.clear();
+            const auto actorState = actor->AsActorState();
+            if (actorState->GetKnockState() == RE::KNOCK_STATE_ENUM::kNormal && !actor->IsInRagdollState()) {
+                continue;
             }
+            pendingRecoveries.emplace_back(actor);
+        }
+        if (pendingRecoveries.empty()) {
+            actorRecoveryPreparationBarrier = false;
+            return false;
+        }
+        logger::info("Queued native recovery for {} actor(s) before {}.", pendingRecoveries.size(), a_preparationBarrier ? "Papyrus preparation" : "animation dispatch");
+        return true;
+    }
+
+    void Instance::UpdatePendingRecoveries(float a_delta)
+    {
+        constexpr float recoveryTimeout = 15.0f;
+        bool recoveryFailed = false;
+        for (auto recovery = pendingRecoveries.begin(); recovery != pendingRecoveries.end();) {
+            recovery->elapsed += a_delta;
+            const auto actor = recovery->actor;
+            if (!actor || !actor->Is3DLoaded() || actor->IsDead() || actor->IsOnMount()) {
+                if (actor) {
+                    logger::error("Actor {:X} recovery prerequisites failed: loaded={}, dead={}, mounted={}.", actor->GetFormID(), actor->Is3DLoaded(), actor->IsDead(), actor->IsOnMount());
+                } else {
+                    logger::error("Actor recovery failed because the actor is unavailable.");
+                }
+                recoveryFailed = true;
+                break;
+            }
+            const auto actorState = actor->AsActorState();
+            const auto knockState = actorState->GetKnockState();
+            if (knockState == RE::KNOCK_STATE_ENUM::kNormal && !actor->IsInRagdollState()) {
+                logger::info("Completed native recovery for actor {:X} after {:.3f}s.", actor->GetFormID(), recovery->elapsed);
+                recovery = pendingRecoveries.erase(recovery);
+                continue;
+            }
+            if (recovery->elapsed >= recoveryTimeout) {
+                logger::error("Actor {:X} did not complete native recovery after {:.3f}s.", actor->GetFormID(), recovery->elapsed);
+                recoveryFailed = true;
+                break;
+            }
+            if (!recovery->getUpEndQueued && knockState == RE::KNOCK_STATE_ENUM::kGetUp) {
+                const auto process = actor->GetActorRuntimeData().currentProcess;
+                if (!process || !process->InHighProcess() || !actor->GetActorRuntimeData().movementController) {
+                    logger::error("Actor {:X} cannot queue native get-up completion without high process and a movement controller.", actor->GetFormID());
+                    recoveryFailed = true;
+                    break;
+                }
+                using GetUpEndHandler = bool (*)(void*, RE::Actor*);
+                static REL::Relocation<GetUpEndHandler> getUpEndHandler{ REL::VariantID(41799, 42880, 0x722DC0) };
+                static_cast<void>(getUpEndHandler(nullptr, actor));
+                recovery->getUpRequested = true;
+                recovery->getUpEndQueued = true;
+                logger::info("Queued native get-up completion for actor {:X}.", actor->GetFormID());
+            } else if (!recovery->getUpRequested && actor->IsInRagdollState()) {
+                const auto process = actor->GetActorRuntimeData().currentProcess;
+                if (!process || !process->InHighProcess() || !actor->GetActorRuntimeData().movementController) {
+                    logger::error("Actor {:X} cannot begin native get-up without high process and a movement controller.", actor->GetFormID());
+                    recoveryFailed = true;
+                    break;
+                }
+                if (RE::SourceActionMap::DoAction(actor, RE::DEFAULT_OBJECT::kActionGetUp)) {
+                    recovery->getUpRequested = true;
+                    logger::info("Requested get-up for ragdolled actor {:X}.", actor->GetFormID());
+                }
+            }
+            ++recovery;
+        }
+
+        if (!recoveryFailed && !pendingRecoveries.empty()) {
             return;
         }
+        const bool preparationBarrier = actorRecoveryPreparationBarrier;
+        pendingRecoveries.clear();
+        actorRecoveryPreparationBarrier = false;
+        if (preparationBarrier) {
+            const auto scriptObject = Script::GetScriptObject(linkedQst, "sslThreadModel");
+            Script::CallbackPtr callbackPtr{};
+            if (!scriptObject || !Script::DispatchMethodCall(scriptObject, "OnNativeActorRecoveryComplete", callbackPtr, bool{ !recoveryFailed })) {
+                logger::error("Failed to notify Papyrus of native actor recovery completion for thread {:X}.", linkedQst->GetFormID());
+            }
+        } else if (recoveryFailed) {
+            ReleaseAnimations();
+            pendingAnimations.clear();
+            const auto scriptObject = Script::GetScriptObject(linkedQst, "sslThreadModel");
+            Script::CallbackPtr callbackPtr{};
+            if (!scriptObject || !Script::DispatchMethodCall(scriptObject, "OnAnimationSyncFailed", callbackPtr)) {
+                logger::error("Failed to notify Papyrus of actor recovery failure for thread {:X}.", linkedQst->GetFormID());
+            }
+        }
+    }
+
+	// The player's weapon MUST be sheathed before we unequip the weapon, and proceed with the scene.
+	// Otherwise you'll run into the annoying sword sheathe skyrim bug
+    bool Instance::BeginPlayerSheatheWait()
+    {
+        if (playerSheathePending) {
+            return false;
+        }
+        const auto player = RE::PlayerCharacter::GetSingleton();
+        if (!player || !GetPosition(player)) {
+            return true;
+        }
+        const auto weaponState = player->AsActorState()->GetWeaponState();
+        if (weaponState == RE::WEAPON_STATE::kSheathed) {
+            return true;
+        }
+        playerSheatheElapsed = 0.0f;
+        playerSheathePreviousState = weaponState;
+        playerSheatheActionSubmitted = false;
+        playerSheathePending = true;
+        logger::info("Waiting for the player weapon sheath animation to finish before stripping.");
+        return false;
     }
 
     void Instance::UpdateAnimations(float a_delta)
@@ -92,47 +352,12 @@ namespace Thread
     {
         std::vector<std::vector<ActiveClip>> activeClips(pendingAnimations.size());
 
-        // Recover ragdolled actors through the engine get-up path before checking readiness
-        for (size_t i = 0; i < pendingAnimations.size(); i++) {
-            auto& pending = pendingAnimations[i];
-            if (pending.transitionAcknowledged || pending.retryDelay > 0.0f) {
-                continue;
+        for (auto& pending : pendingAnimations) {
+            if (!pending.transitionAcknowledged && pending.retryDelay <= 0.0f) {
+                pending.readinessChecks++;
             }
-            pending.readinessChecks++;
-            const auto actor = pending.actor;
-            if (!actor || !actor->Is3DLoaded()) {
-                return;
-            }
-            const auto actorState = actor->AsActorState();
-            const auto knockState = actorState->GetKnockState();
-            if (pending.getUpRequested) {
-                if (knockState == RE::KNOCK_STATE_ENUM::kNormal && !actor->IsInRagdollState()) {
-                    continue;
-                }
-                if (!pending.getUpEndQueued && knockState == RE::KNOCK_STATE_ENUM::kGetUp) {
-                    const auto process = actor->GetActorRuntimeData().currentProcess;
-                    if (actor->IsDead() || actor->IsOnMount() || !process || !process->InHighProcess() || !actor->GetActorRuntimeData().movementController) {
-                        return;
-                    }
-                    using GetUpEndHandler = bool (*)(void*, RE::Actor*);
-                    static REL::Relocation<GetUpEndHandler> getUpEndHandler{ REL::VariantID(41799, 42880, 0x722DC0) };
-                    static_cast<void>(getUpEndHandler(nullptr, actor));
-                    pending.getUpEndQueued = true;
-                    logger::info("Queued native get-up completion for actor {:X}.", actor->GetFormID());
-                }
-                return;
-            }
-            if (!actor->IsInRagdollState()) {
-                continue;
-            }
-            const auto process = actor->GetActorRuntimeData().currentProcess;
-            if (actor->IsDead() || actor->IsOnMount() || !process || !process->InHighProcess() || !actor->GetActorRuntimeData().movementController) {
-                return;
-            }
-            if (RE::SourceActionMap::DoAction(actor, RE::DEFAULT_OBJECT::kActionGetUp)) {
-                pending.getUpRequested = true;
-                logger::info("Requested get-up for ragdolled actor {:X}.", actor->GetFormID());
-            }
+        }
+        if (QueueActorRecoveries(false)) {
             return;
         }
 
@@ -161,8 +386,17 @@ namespace Thread
                 if (const auto process = pending.actor->GetActorRuntimeData().currentProcess) {
                     process->ClearMuzzleFlashes();
                 }
+                const auto position = GetPosition(pending.actor);
+                if (!position || !PrepareActorForAnimation(linkedQst, pending.actor, position->data.IsHuman())) {
+                    return;
+                }
             }
             actorPreparationApplied = true;
+            const auto scriptObject = Script::GetScriptObject(linkedQst, "sslThreadModel");
+            Script::CallbackPtr callbackPtr{};
+            if (!scriptObject || !Script::DispatchMethodCall(scriptObject, "OnNativeActorsPrepared", callbackPtr)) {
+                logger::warn("Failed to notify Papyrus of native actor preparation for thread {:X}.", linkedQst->GetFormID());
+            }
             return;
         }
 
@@ -187,19 +421,6 @@ namespace Thread
             if (!GetActiveClips(pending.actor, activeClips[i])) {
                 return;
             }
-        }
-
-        // Ask Papyrus to apply actor locks, then continue after its acknowledgement
-        if (!actorLockAcknowledged) {
-            if (!actorLockRequested) {
-                const auto scriptObject = Script::GetScriptObject(linkedQst, "sslThreadModel");
-                Script::CallbackPtr callbackPtr{};
-                actorLockRequested = scriptObject && Script::DispatchMethodCall(scriptObject, "LockActorsForAnimation", callbackPtr);
-                if (!actorLockRequested) {
-                    logger::error("Failed to request Papyrus actor locks for thread {:X}.", linkedQst->GetFormID());
-                }
-            }
-            return;
         }
 
         // Apply native locks and placement before dispatching each animation event
@@ -328,10 +549,63 @@ namespace Thread
 
     void Instance::UpdatePendingAnimations(float a_delta)
     {
+        constexpr float playerSheatheTimeout = 15.0f;
         constexpr float retryTimeout = 15.0f;
         constexpr float playbackTimeout = 2.0f;
         constexpr float minimumClipWeight = 0.01f;
         constexpr float minimumTimeChange = 0.0001f;
+
+        if (!pendingRecoveries.empty()) {
+            UpdatePendingRecoveries(a_delta);
+            return;
+        }
+
+		// Bug: For whatever reason you can click your attack button while in a scene, and it queues a weapon draw animation which causes the sword to be drawn
+		// at the end of the scene. Only possible fix I can think of is hooking the native function and avoiding the unsheathe from starting. kAttack control flag does not fix it
+        if (playerSheathePending) {
+            playerSheatheElapsed += a_delta;
+            const auto player = RE::PlayerCharacter::GetSingleton();
+            const auto weaponState = player ? player->AsActorState()->GetWeaponState() : RE::WEAPON_STATE::kSheathed;
+            const bool sheathed = player && weaponState == RE::WEAPON_STATE::kSheathed;
+            const bool timedOut = playerSheatheElapsed >= playerSheatheTimeout;
+            if (!sheathed && !timedOut && player) {
+                switch (weaponState) {
+                case RE::WEAPON_STATE::kDrawn:
+                    if (!playerSheatheActionSubmitted || playerSheathePreviousState != RE::WEAPON_STATE::kDrawn) {
+                        playerSheatheActionSubmitted = RE::SourceActionMap::DoAction(player, RE::DEFAULT_OBJECT::kActionSheath);
+                        if (playerSheatheActionSubmitted) {
+                            logger::info("Requested native weapon sheathing for the player.");
+                        }
+                    }
+                    break;
+                case RE::WEAPON_STATE::kWantToSheathe:
+                case RE::WEAPON_STATE::kSheathing:
+                    playerSheatheActionSubmitted = true;
+                    break;
+                case RE::WEAPON_STATE::kWantToDraw:
+                case RE::WEAPON_STATE::kDrawing:
+                    playerSheatheActionSubmitted = false;
+                    break;
+                default:
+                    break;
+                }
+                playerSheathePreviousState = weaponState;
+            }
+            if (sheathed || timedOut) {
+
+                playerSheathePending = false;
+                playerSheatheActionSubmitted = false;
+                playerSheathePreviousState = RE::WEAPON_STATE::kSheathed;
+                if (!sheathed && timedOut) {
+                    logger::error("Player weapon did not finish sheathing after {:.3f}s; cancelling animation startup.", playerSheatheElapsed);
+                }
+                const auto scriptObject = Script::GetScriptObject(linkedQst, "sslThreadModel");
+                Script::CallbackPtr callbackPtr{};
+                if (!scriptObject || !Script::DispatchMethodCall(scriptObject, "OnPlayerSheatheComplete", callbackPtr, bool{ sheathed })) {
+                    logger::error("Failed to notify Papyrus of player weapon sheath completion for thread {:X}.", linkedQst->GetFormID());
+                }
+            }
+        }
 
         bool retryStart = false;
         for (auto& pending : pendingAnimations) {
@@ -404,6 +678,11 @@ namespace Thread
             ReleaseAnimations();
             logger::info("Released {} synchronized animation clips.", pendingAnimations.size());
             pendingAnimations.clear();
+            const auto scriptObject = Script::GetScriptObject(linkedQst, "sslThreadModel");
+            Script::CallbackPtr callbackPtr{};
+            if (!scriptObject || !Script::DispatchMethodCall(scriptObject, "OnAnimationSynchronized", callbackPtr)) {
+                logger::error("Failed to notify Papyrus of animation synchronization completion for thread {:X}.", linkedQst->GetFormID());
+            }
         }
     }
 
