@@ -92,7 +92,7 @@ namespace Thread
     {
         std::vector<std::vector<ActiveClip>> activeClips(pendingAnimations.size());
 
-        // Wait until every pending actor is loaded and out of ragdoll
+        // Recover ragdolled actors through the engine get-up path before checking readiness
         for (size_t i = 0; i < pendingAnimations.size(); i++) {
             auto& pending = pendingAnimations[i];
             if (pending.transitionAcknowledged || pending.retryDelay > 0.0f) {
@@ -100,9 +100,40 @@ namespace Thread
             }
             pending.readinessChecks++;
             const auto actor = pending.actor;
-            if (!actor || !actor->Is3DLoaded() || actor->IsInRagdollState()) {
+            if (!actor || !actor->Is3DLoaded()) {
                 return;
             }
+            const auto actorState = actor->AsActorState();
+            const auto knockState = actorState->GetKnockState();
+            if (pending.getUpRequested) {
+                if (knockState == RE::KNOCK_STATE_ENUM::kNormal && !actor->IsInRagdollState()) {
+                    continue;
+                }
+                if (!pending.getUpEndQueued && knockState == RE::KNOCK_STATE_ENUM::kGetUp) {
+                    const auto process = actor->GetActorRuntimeData().currentProcess;
+                    if (actor->IsDead() || actor->IsOnMount() || !process || !process->InHighProcess() || !actor->GetActorRuntimeData().movementController) {
+                        return;
+                    }
+                    using GetUpEndHandler = bool (*)(void*, RE::Actor*);
+                    static REL::Relocation<GetUpEndHandler> getUpEndHandler{ REL::VariantID(41799, 42880, 0x722DC0) };
+                    static_cast<void>(getUpEndHandler(nullptr, actor));
+                    pending.getUpEndQueued = true;
+                    logger::info("Queued native get-up completion for actor {:X}.", actor->GetFormID());
+                }
+                return;
+            }
+            if (!actor->IsInRagdollState()) {
+                continue;
+            }
+            const auto process = actor->GetActorRuntimeData().currentProcess;
+            if (actor->IsDead() || actor->IsOnMount() || !process || !process->InHighProcess() || !actor->GetActorRuntimeData().movementController) {
+                return;
+            }
+            if (RE::SourceActionMap::DoAction(actor, RE::DEFAULT_OBJECT::kActionGetUp)) {
+                pending.getUpRequested = true;
+                logger::info("Requested get-up for ragdolled actor {:X}.", actor->GetFormID());
+            }
+            return;
         }
 
         // Exit furniture and other active states once before waiting for stability

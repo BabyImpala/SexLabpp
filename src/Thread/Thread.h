@@ -150,6 +150,8 @@ namespace Thread
             uint8_t dispatchAttempts{ 0 };
             bool transitionAcknowledged{ false };
             bool playbackHeld{ false };
+            bool getUpRequested{ false };
+            bool getUpEndQueued{ false };
         };
 
         RE::TESQuest* linkedQst;
