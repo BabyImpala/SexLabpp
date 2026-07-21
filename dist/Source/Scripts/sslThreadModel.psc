@@ -1078,6 +1078,8 @@ String[] Function GetCustomScenes() native
 float Property ANIMATING_UPDATE_INTERVAL = 0.5 AutoReadOnly
 int _animationSyncCount
 bool _animationStarted
+bool _animationSyncPending
+String _queuedSceneReset
 int _initialRealignTicks	; Placement is only asserted once per stage; if the first assert races with a busy
 							; actor (furniture exit, get-up, pathing) it silently fails until the next stage.
 							; Counts down OnUpdate ticks after AnimationStart to re-assert placement (see RealignActors)
@@ -1106,6 +1108,8 @@ State Animating
 	Event OnBeginState()
 		SetFurnitureIgnored(true)
 		_SFXTimer = Config.SFXDelay
+		_animationSyncPending = false
+		_queuedSceneReset = ""
 		If (!_QuickResetScenes)
 			_animationSyncCount = 0
 			_animationStarted = false
@@ -1136,18 +1140,26 @@ State Animating
 	EndFunction
 
 	bool Function ResetScene(String asNewScene)
+		If (_animationSyncPending)
+			_queuedSceneReset = asNewScene
+			return true
+		EndIf
+		_animationSyncPending = true
 		UnregisterForUpdate()
 		String currentScene = GetActiveScene()
 		AddExperience(_Positions, currentScene, _StageHistory)
 		If (asNewScene != currentScene)
 			If (!SetActiveScene(asNewScene))
 				Log("Unable to reset scene. New scene is invalid for this thread")
+				_animationSyncPending = false
+				_queuedSceneReset = ""
 				return false
 			EndIf
 			SortAliasesToPositions()
 		EndIf
-		int[] strips_ = SexLabRegistry.GetStripDataA(currentScene, "")
-		int[] sex_ = SexLabRegistry.GetPositionSexA(currentScene)
+		String activeScene = GetActiveScene()
+		int[] strips_ = SexLabRegistry.GetStripDataA(activeScene, "")
+		int[] sex_ = SexLabRegistry.GetPositionSexA(activeScene)
 		int i = 0
 		While (i < _Positions.Length)
 			ActorAlias[i].TryLockAndUnpause()
@@ -1210,6 +1222,9 @@ State Animating
 	EndFunction
 
 	Function StartStage(String[] asHistory, String asNextStageId)
+		If (GetActiveStage() != asNextStageId || !asHistory.Length)
+			_animationSyncPending = true
+		EndIf
 		Log("Starting stage " + asNextStageId + " with history: " + asHistory, "StartStage()")
 		SendThreadEvent("StageStart")
 		RunHook(Config.HOOKID_STAGESTART)
@@ -1524,6 +1539,8 @@ Function OnAnimationSyncFailed()
 	If (GetStatus() != STATUS_INSCENE)
 		return
 	EndIf
+	_animationSyncPending = false
+	_queuedSceneReset = ""
 	Log("Animation synchronization failed; ending thread", "OnAnimationSyncFailed()")
 	EndAnimation()
 EndFunction
@@ -1541,6 +1558,13 @@ EndFunction
 
 Function OnAnimationSynchronized()
 	If (GetStatus() != STATUS_INSCENE)
+		return
+	EndIf
+	_animationSyncPending = false
+	String queuedScene = _queuedSceneReset
+	_queuedSceneReset = ""
+	If (queuedScene && queuedScene != GetActiveScene())
+		ResetScene(queuedScene)
 		return
 	EndIf
 	UpdateOffsetSlidersDisplay()
@@ -2163,6 +2187,8 @@ Function Initialize()
 	_TimerPaused = false
 	_QuickResetScenes = false
 	_animationStarted = false
+	_animationSyncPending = false
+	_queuedSceneReset = ""
 	EnjoymentPaused = false
 	; Enter thread selection pool
 	DestroyInstance()
