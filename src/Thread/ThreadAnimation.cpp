@@ -304,9 +304,13 @@ namespace Thread
 
     void Instance::UpdateAnimations(float a_delta)
     {
+		// Todo: Update Commonlib for the correct memory address
+        const bool freezeTime = *reinterpret_cast<const bool*>(reinterpret_cast<const std::byte*>(RE::Main::GetSingleton()) + (REL::Module::IsVR() ? 0x0E : 0x16));
+        const auto gamePaused = RE::UI::GetSingleton()->GameIsPaused() || freezeTime;
+        const auto timeoutDelta = gamePaused ? 0.0f : a_delta;
         std::shared_lock lock{ _mInstances };
         for (auto&& instance : instances) {
-            instance->UpdatePendingAnimations(a_delta);
+            instance->UpdatePendingAnimations(timeoutDelta);
         }
     }
 
