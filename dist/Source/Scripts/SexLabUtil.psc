@@ -192,13 +192,9 @@ Function SetActorMovement(Actor akActor, int aiMovement) global
 		return
 	EndIf
 	If (akActor != Game.GetPlayer())
-		If (aiMovement == 0) ;RELEASE
-			akActor.SetDontMove(false)
-			akActor.SetRestrained(false)
-		Else
-			akActor.SetDontMove(true)
-			akActor.SetRestrained(true)
-		EndIf
+		bool bLockMovement = aiMovement == 2
+		akActor.SetDontMove(bLockMovement)
+		akActor.SetRestrained(bLockMovement)
 		return
 	EndIf
 	bool bVRMode = GetConfig().HasVRIK

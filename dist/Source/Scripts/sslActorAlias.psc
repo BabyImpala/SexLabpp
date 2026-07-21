@@ -503,6 +503,8 @@ State Ready
 
 	Function WaitForPathToCenter(form akPathTo)	
 		If(_ActorRef == _PlayerRef)
+			bool bVRTPP = _Config.HasVRIK && (_Config.POVModeVR == 2)
+			Game.DisablePlayerControls(abMovement=!bVRTPP, abFighting=false, abCamSwitch=false, abLooking=false, abSneaking=false, abMenu=false, abActivate=false, abJournalTabs=false)
 			return
 		EndIf
 		_Config.CheckBardAudience(_ActorRef, true)
