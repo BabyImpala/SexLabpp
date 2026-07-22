@@ -99,6 +99,11 @@ namespace Papyrus::SexLabUtil
         return (calendar->GetCurrentGameTime() / timescale) * seconds_per_day;
     };
 
+    bool IsGamePausedOrFrozen(RE::StaticFunctionTag*)
+    {
+        return Util::IsGamePausedOrFrozen();
+    }
+
     std::string GetTranslation(RE::StaticFunctionTag*, std::string a_str)
     {
         std::string ret;

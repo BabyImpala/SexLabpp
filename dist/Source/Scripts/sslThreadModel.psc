@@ -717,7 +717,6 @@ EndFunction
 
 int _instanceCreationWaitLock
 int _prepareAsyncCount
-int _lockAsyncCount
 String[] _CustomScenes
 String[] _PrimaryScenes
 String[] _LeadInScenes
@@ -750,7 +749,7 @@ State Making
 			Fatal("Failed to add actor -- They have been already added to this thread", "AddActor(" + ActorRef.GetLeveledActorBase().GetName() + ")")
 			return -1
 		EndIf
-		int ERRC = sslActorLibrary.ValidateActorImpl(ActorRef)
+		int ERRC = ActorLib.ValidateActor(ActorRef)
 		If(ERRC < 0)
 			Fatal("Failed to add actor -- They are not a valid target for animation | Error Code: " + ERRC, "AddActor(" + ActorRef.GetLeveledActorBase().GetName() + ")")
 			return -1
@@ -887,6 +886,22 @@ EndState
 ; An immediate state to disallow setting additional data while aliases process setup
 State Making_M
 	Event OnBeginState()
+		If (!BeginActorRecovery())
+			return
+		EndIf
+		BeginAliasPreparation()
+	EndEvent
+
+	Function OnNativeActorRecoveryComplete(bool abSucceeded)
+		If (!abSucceeded)
+			Log("Native actor recovery failed", "OnNativeActorRecoveryComplete()")
+			EndAnimation()
+			return
+		EndIf
+		BeginAliasPreparation()
+	EndFunction
+
+	Function BeginAliasPreparation()
 		; Event to all active aliases, resync via PrepareDone() to continue startup
 		_prepareAsyncCount = 0
 		CenterRef.SendModEvent("SSL_PREPARE_Thread" + tid)
@@ -900,7 +915,7 @@ State Making_M
 		Else
 			_ThreadTags = SexLabRegistry.GetCommonTags(_PrimaryScenes)
 		EndIf
-	EndEvent
+	EndFunction
 
 	; Invoked n times by Aliases and once by StartThread, then continue to next state
 	Function PrepareDone()
@@ -909,21 +924,36 @@ State Making_M
 		If (_prepareAsyncCount < (_Positions.Length + 1))
 			return
 		EndIf
-		_lockAsyncCount = 0
-		CenterRef.SendModEvent("SSL_LOCK_Thread" + tid)
+		If (HasPlayer)
+			If (!BeginPlayerSheatheWait())
+				return
+			EndIf
+			sslActorAlias playerAlias = ActorAlias(PlayerRef)
+			If (playerAlias)
+				playerAlias.NativeActorLockApplied()
+			EndIf
+		EndIf
+		FinishPreparation()
+	EndFunction
+
+	Function OnPlayerSheatheComplete(bool abSucceeded)
+		If (!abSucceeded)
+			Log("Player weapon sheathing timed out", "OnPlayerSheatheComplete()")
+			EndAnimation()
+			return
+		EndIf
+		sslActorAlias playerAlias = ActorAlias(PlayerRef)
+		If (playerAlias)
+			playerAlias.NativeActorLockApplied()
+		EndIf
+		FinishPreparation()
+	EndFunction
+
+	Function FinishPreparation()
 		String activeScene = GetActiveScene()
 		LeadIn = LeadIn && _LeadInScenes.Find(activeScene) > -1
 		Log("Thread validated, playing animation: " + activeScene + ", " + SexLabRegistry.GetSceneName(activeScene), "StartThread()")
 		SendThreadEvent("AnimationStarting")
-		AliasLockDone()
-	EndFunction
-
-	Function AliasLockDone()
-		_lockAsyncCount += 1
-		Log("AliasLockDone() called " + _lockAsyncCount + "/" + (_Positions.Length + 1) + " times")
-		If (_lockAsyncCount < (_Positions.Length + 1))
-			return
-		EndIf
 		UndressAndStripActors()
 	EndFunction
 
@@ -1024,6 +1054,8 @@ Function UndressAndStripActors()
 EndFunction
 
 Function CreateInstance(Actor[] akSubmissives, String[] asPrimaryScenes, String[] asLeadInScenes, String[] asCustomScenes, int aiFurnitureStatus) native
+bool Function BeginActorRecovery() native
+bool Function BeginPlayerSheatheWait() native
 String[] Function GetLeadInScenes() native
 String[] Function GetPrimaryScenes() native
 String[] Function GetCustomScenes() native
@@ -1038,6 +1070,9 @@ String[] Function GetCustomScenes() native
 
 float Property ANIMATING_UPDATE_INTERVAL = 0.5 AutoReadOnly
 int _animationSyncCount
+bool _animationStarted
+bool _animationSyncPending
+String _queuedSceneReset
 int _initialRealignTicks	; Placement is only asserted once per stage; if the first assert races with a busy
 							; actor (furniture exit, get-up, pathing) it silently fails until the next stage.
 							; Counts down OnUpdate ticks after AnimationStart to re-assert placement (see RealignActors)
@@ -1066,8 +1101,11 @@ State Animating
 	Event OnBeginState()
 		SetFurnitureIgnored(true)
 		_SFXTimer = Config.SFXDelay
+		_animationSyncPending = false
+		_queuedSceneReset = ""
 		If (!_QuickResetScenes)
 			_animationSyncCount = 0
+			_animationStarted = false
 			SendModEvent("SSL_READY_Thread" + tid)
 			AnimationStart()
 		EndIf
@@ -1092,25 +1130,29 @@ State Animating
 		StartedAt = SexLabUtil.GetCurrentGameRealTime()
 		_initialRealignTicks = 4
 		StartStage(Utility.CreateStringArray(0), "")
-		SendThreadEvent("AnimationStart")
-		If(LeadIn)
-			SendThreadEvent("LeadInStart")
-		EndIf
 	EndFunction
 
 	bool Function ResetScene(String asNewScene)
+		If (_animationSyncPending)
+			_queuedSceneReset = asNewScene
+			return true
+		EndIf
+		_animationSyncPending = true
 		UnregisterForUpdate()
 		String currentScene = GetActiveScene()
 		AddExperience(_Positions, currentScene, _StageHistory)
 		If (asNewScene != currentScene)
 			If (!SetActiveScene(asNewScene))
 				Log("Unable to reset scene. New scene is invalid for this thread")
+				_animationSyncPending = false
+				_queuedSceneReset = ""
 				return false
 			EndIf
 			SortAliasesToPositions()
 		EndIf
-		int[] strips_ = SexLabRegistry.GetStripDataA(currentScene, "")
-		int[] sex_ = SexLabRegistry.GetPositionSexA(currentScene)
+		String activeScene = GetActiveScene()
+		int[] strips_ = SexLabRegistry.GetStripDataA(activeScene, "")
+		int[] sex_ = SexLabRegistry.GetPositionSexA(activeScene)
 		int i = 0
 		While (i < _Positions.Length)
 			ActorAlias[i].TryLockAndUnpause()
@@ -1173,12 +1215,13 @@ State Animating
 	EndFunction
 
 	Function StartStage(String[] asHistory, String asNextStageId)
+		If (GetActiveStage() != asNextStageId || !asHistory.Length)
+			_animationSyncPending = true
+		EndIf
 		Log("Starting stage " + asNextStageId + " with history: " + asHistory, "StartStage()")
 		SendThreadEvent("StageStart")
 		RunHook(Config.HOOKID_STAGESTART)
 		_StageHistory = AdvanceScene(asHistory, asNextStageId)
-		UpdateOffsetSlidersDisplay()
-		ReStartTimer()
 	EndFunction
 
 	; NOTE: This here counts from 1 instead of 0
@@ -1260,6 +1303,10 @@ State Animating
 	Endfunction
 	
 	Event OnUpdate()
+		If (SexLabUtil.IsGamePausedOrFrozen())
+			RegisterForSingleUpdate(ANIMATING_UPDATE_INTERVAL)
+			return
+		EndIf
 		If (_initialRealignTicks > 0)
 			_initialRealignTicks -= 1
 			If (_initialRealignTicks == 3 || _initialRealignTicks == 0)
@@ -1410,6 +1457,40 @@ State Animating
 		EndIf
 	EndFunction
 
+	Function OnAnimationSyncFailed()
+		_animationSyncPending = false
+		_queuedSceneReset = ""
+		Log("Animation synchronization failed; ending thread", "OnAnimationSyncFailed()")
+		EndAnimation()
+	EndFunction
+
+	Function OnNativeActorsPrepared()
+		int i = 0
+		While (i < _Positions.Length)
+			ActorAlias[i].NativeActorLockApplied()
+			i += 1
+		EndWhile
+	EndFunction
+
+	Function OnAnimationSynchronized()
+		_animationSyncPending = false
+		String queuedScene = _queuedSceneReset
+		_queuedSceneReset = ""
+		If (queuedScene && queuedScene != GetActiveScene())
+			ResetScene(queuedScene)
+			return
+		EndIf
+		UpdateOffsetSlidersDisplay()
+		ReStartTimer()
+		If (!_animationStarted)
+			_animationStarted = true
+			SendThreadEvent("AnimationStart")
+			If (LeadIn)
+				SendThreadEvent("LeadInStart")
+			EndIf
+		EndIf
+	EndFunction
+
 	int Function GetStatus()
 		return STATUS_INSCENE
 	EndFunction
@@ -1485,7 +1566,19 @@ Function PlayStageAnimations()
 	RealignActors()
 EndFunction
 
-; Set location for all _Positions on CenterAlias, incl offset, and play their respected animation. _Positions are assumed to be sorted by scene
+Function OnAnimationSyncFailed()
+	Log("OnAnimationSyncFailed(), Function called from invalid state: " + GetState())
+EndFunction
+
+Function OnNativeActorsPrepared()
+	Log("OnNativeActorsPrepared(), Function called from invalid state: " + GetState())
+EndFunction
+
+Function OnAnimationSynchronized()
+	Log("OnAnimationSynchronized(), Function called from invalid state: " + GetState())
+EndFunction
+
+; Set location for all _Positions on CenterAlias, incl offset, and queue their respective animations. _Positions are assumed to be sorted by scene
 String[] Function AdvanceScene(String[] asHistory, String asNextStageId) native
 int Function SelectNextStage(String[] asThreadTags) native
 bool Function SetActiveScene(String asScene) native
@@ -1517,6 +1610,7 @@ State Ending
 		If (_QuickResetScenes)
 			return
 		EndIf
+		CancelPendingAnimations()
 		Config.DisableThreadControl(self as sslThreadController)
 		SendModEvent("SSL_CLEAR_Thread" + tid, "", 1.0)
 		MoveActorsAwayFromPlayer()
@@ -1576,7 +1670,7 @@ State Ending
 		UnregisterForUpdateGameTime()
 		(self as sslThreadController).ToggleVisibilitySceneHUD(-1)
 		String[] validScenes = SexLabRegistry.LookupScenesA(_Positions, asTagString, GetSubmissives(), _furniStatus, CenterRef)
-		DestroyInstance()
+		DestroyInstance(true)
 		GoToState(STATE_SETUP)
 		SetScenes(validScenes)
 		If (!StartThread())
@@ -1686,8 +1780,17 @@ EndFunction
 Function PrepareDone()
 	Log("PrepareDone(), Function called from invalid state: " + GetState())
 EndFunction
-Function AliasLockDone()
-	Log("AliasLockDone(), Function called from invalid state: " + GetState())
+Function OnNativeActorRecoveryComplete(bool abSucceeded)
+	Log("OnNativeActorRecoveryComplete(), Function called from invalid state: " + GetState())
+EndFunction
+Function BeginAliasPreparation()
+	Log("BeginAliasPreparation(), Function called from invalid state: " + GetState())
+EndFunction
+Function OnPlayerSheatheComplete(bool abSucceeded)
+	Log("OnPlayerSheatheComplete(), Function called from invalid state: " + GetState())
+EndFunction
+Function FinishPreparation()
+	Log("FinishPreparation(), Function called from invalid state: " + GetState())
 EndFunction
 Function AnimationStart()
 	Log("AnimationStart(), Function called from invalid state: " + GetState())
@@ -2116,13 +2219,17 @@ Function Initialize()
 	_AnimationSpeedBase = 1.0
 	_TimerPaused = false
 	_QuickResetScenes = false
+	_animationStarted = false
+	_animationSyncPending = false
+	_queuedSceneReset = ""
 	EnjoymentPaused = false
 	; Enter thread selection pool
 	DestroyInstance()
 	GoToState(STATE_IDLE)
 EndFunction
 
-Function DestroyInstance() native
+Function DestroyInstance(bool abPreservePreparedActors = false) native
+Function CancelPendingAnimations() native
 
 ; ------------------------------------------------------- ;
 ; --- Logging                                         --- ;

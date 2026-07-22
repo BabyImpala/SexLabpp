@@ -62,11 +62,13 @@ namespace Thread
         ~Instance() = default;
 
         static void CreateInstance(RE::TESQuest* a_linkedQst, const std::vector<RE::Actor*> a_submissives, const SceneMapping& a_scenes, FurniturePreference a_furniturePreference);
-        static void DestroyInstance(RE::TESQuest* a_linkedQst);
+        static void DestroyInstance(RE::TESQuest* a_linkedQst, bool a_preservePreparedActors = false);
+        static void CancelPendingAnimations(RE::TESQuest* a_linkedQst);
         static Instance* GetInstance(RE::TESQuest* a_linkedQst);
         static Instance* GetPendingInstance(RE::TESQuest* a_linkedQst);
         static void FinalizeCenterRefSelection(RE::TESQuest* a_linkedQst);
         static void DispatchContinueSetup(RE::TESQuest* a_linkedQst, bool a_result);
+        static void UpdateAnimations(float a_delta);
 
       public:
         bool HasNiInstance() const { return niInstance != nullptr; }
@@ -78,6 +80,9 @@ namespace Thread
         void UnregisterNiInstanceLegacy() { (LegacyNiNode::NiUpdate::Unregister(linkedQst->GetFormID()), niInstanceLegacy = nullptr); }
 
         void AdvanceScene(const Registry::Stage* a_nextStage);
+        bool BeginActorRecovery();
+        bool BeginPlayerSheatheWait();
+        void RealignActors();
         bool SetActiveScene(const Registry::Scene* a_scene);
         const Registry::Scene* GetActiveScene() { return activeScene; }
         const Registry::Stage* GetActiveStage() { return activeStage; }
@@ -123,6 +128,39 @@ namespace Thread
         void UpdateOffsetSlidersDisplay();
 
       private:
+        struct ActiveClip
+        {
+            const RE::hkbClipGenerator* generator;
+            std::string animationName;
+            float localTime;
+            float weight;
+        };
+
+        struct PendingAnimation
+        {
+            RE::Actor* actor;
+            RE::BSFixedString event;
+            std::vector<ActiveClip> previousClips;
+            const RE::hkbClipGenerator* observedGenerator{ nullptr };
+            std::string observedAnimation{};
+            float observedLocalTime{ 0.0f };
+            float elapsed{ 0.0f };
+            float retryDelay{ 0.0f };
+            size_t position;
+            uint32_t readinessChecks{ 0 };
+            uint8_t dispatchAttempts{ 0 };
+            bool transitionAcknowledged{ false };
+            bool playbackHeld{ false };
+        };
+
+        struct PendingRecovery
+        {
+            RE::Actor* actor;
+            float elapsed{ 0.0f };
+            bool getUpRequested{ false };
+            bool getUpEndQueued{ false };
+        };
+
         RE::TESQuest* linkedQst;
         std::shared_ptr<NiNode::NiInstance> niInstance{ nullptr };
         std::shared_ptr<LegacyNiNode::NiInstance> niInstanceLegacy{ nullptr };
@@ -135,6 +173,15 @@ namespace Thread
         const Registry::Scene* activeScene{ nullptr };
         const Registry::Stage* activeStage{ nullptr };
         SceneMapping scenes{};
+        std::vector<PendingAnimation> pendingAnimations{};
+        std::vector<PendingRecovery> pendingRecoveries{};
+        float playerSheatheElapsed{ 0.0f };
+        RE::WEAPON_STATE playerSheathePreviousState{ RE::WEAPON_STATE::kSheathed };
+        bool actorPreparationApplied{ false };
+        bool actorRecoveryPreparationBarrier{ false };
+        bool playerSheatheActionSubmitted{ false };
+        bool playerSheathePending{ false };
+        float animationPlaybackSpeed{ 1.0f };
 
         // used during center selection through menu
         RE::TESQuest* pendingQst{ nullptr };
@@ -157,6 +204,15 @@ namespace Thread
         CenterSelection GetSelectionMethod(FurniturePreference furniturePreference);
         void InitializeCenterRefMenu(const FurnitureMapping& a_furnitures, RE::Actor* a_tmpCenter);
         FurnitureMapping GetUniqueFurnituesOfTypeInBound(RE::Actor* a_centerAct, REX::EnumSet<Registry::FurnitureType::Value> a_furnitureTypes);
+        bool GetActiveClips(RE::Actor* a_actor, std::vector<ActiveClip>& a_clips) const;
+        bool QueueActorRecoveries(bool a_preparationBarrier);
+        void TryStartAnimations();
+        bool HoldAnimation(PendingAnimation& a_pending);
+        void ReleaseAnimations();
+        void UpdatePendingAnimations(float a_delta);
+        void UpdatePendingRecoveries(float a_delta);
+        void ReassertPlacement(size_t a_position, bool a_force);
+        static void RestorePreparedActors(RE::TESQuest* a_linkedQst);
 
       private:
         static inline std::shared_mutex _mInstances{};

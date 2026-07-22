@@ -83,6 +83,7 @@ bool function HasKeywordSub(form ObjRef, string LookFor) global native
 function PrintConsole(string output) global native
 Actor[] function MakeActorArray(Actor Actor1 = none, Actor Actor2 = none, Actor Actor3 = none, Actor Actor4 = none, Actor Actor5 = none) global native
 float function GetCurrentGameRealTime() global native
+bool Function IsGamePausedOrFrozen() native global
 bool Function IsGodModeEnabled() global native
 String Function GetTranslation(String asStr) global native
 String[] Function ShuffleStringArray(String[] asArray, String asSetFirst = "", int aiMaxLen = 128) native global
@@ -177,13 +178,9 @@ Function SetActorMovement(Actor akActor, int aiMovement) global
 		return
 	EndIf
 	If (akActor != Game.GetPlayer())
-		If (aiMovement == 0) ;RELEASE
-			akActor.SetDontMove(false)
-			akActor.SetRestrained(false)
-		Else
-			akActor.SetDontMove(true)
-			akActor.SetRestrained(true)
-		EndIf
+		bool bLockMovement = aiMovement == 2
+		akActor.SetDontMove(bLockMovement)
+		akActor.SetRestrained(bLockMovement)
 		return
 	EndIf
 	bool bVRMode = GetConfig().HasVRIK

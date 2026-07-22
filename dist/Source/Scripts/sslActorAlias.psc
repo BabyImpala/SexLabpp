@@ -384,15 +384,12 @@ Auto State Empty
 		_sex = SexLabRegistry.GetSex(_ActorRef, true)
 		_raceID = SexLabRegistry.GetRaceID(_ActorRef)
 		_ActorRef.SetFactionRank(_AnimatingFaction, 1)
-		_Thread.UpdateAnimatingActorMovement(_ActorRef) ;MOVEMENT_LOCK
-		StartSetActorInterrupts()
 		TrackedEvent(TRACK_ADDED)
 		GoToState(STATE_SETUP)
 		return true
 	EndFunction
 
 	Function Clear()
-		EndSetActorInterrupts()
 		If (GetIsDead())
 			If (_ActorRef.IsEssential())
 				_ActorRef.GetActorBase().SetEssential(false)
@@ -420,10 +417,20 @@ bool Function SetActor(Actor ProspectRef)
 	return false
 EndFunction
 
-; Take this actor out of combat and clear all actor states
-Function StartSetActorInterrupts() native
-; Undo "StartSetActorInterrupts()" persistent changes
-Function EndSetActorInterrupts() native
+Function NativeActorLockApplied()
+	If (_ActorLocked)
+		return
+	EndIf
+	_Thread.UpdateAnimatingActorMovement(_ActorRef) ;MOVEMENT_LOCK
+	If (_ActorRef == _PlayerRef)
+		_Config.ToggleVRIK(true, _Config.VRIK_FPP_HMD)
+		If(_Config.AutoTFC)
+			SexLabUtil.ToggleFreeCamera(1) ;TFC_ON
+		EndIf
+	EndIf
+	Log("Locked Actor: " + GetActorName())
+	_ActorLocked = True
+EndFunction
 
 ; ------------------------------------------------------- ;
 ; --- Alias SETUP                                     --- ;
@@ -450,16 +457,12 @@ State Ready
 
 	Event OnDoPrepare(string asEventName, string asStringArg, float afNumArg, form akPathTo)
 		UnregisterForModEvent("SSL_PREPARE_Thread" + _Thread.tid)
-		_ActorRef.SetActorValue("Paralysis", 0.0)
 		WaitForPathToCenter(akPathTo)
 		If (_sex <= 2)
 			_AnimVarIsNPC = _ActorRef.GetAnimationVariableInt("IsNPC")
 			_AnimVarbHumanoidFootIKDisable = _ActorRef.GetAnimationVariableBool("bHumanoidFootIKDisable")
 		EndIf		
 		GoToState(STATE_PAUSED)
-		If (asStringArg != "skip")
-			_Thread.PrepareDone()
-		EndIf
 		; Delayed Initialization
 		If (_sex <= 2)
 			If (_sex == 0)
@@ -482,10 +485,15 @@ State Ready
 		If (_Config.DebugMode)
 			Log("Strapon[" + _Strapon + "] Voice[" + GetActorVoice() + "] Expression[" + GetActorExpression() + "]")
 		EndIf
+		If (asStringArg != "skip")
+			_Thread.PrepareDone()
+		EndIf
 	EndEvent
 
 	Function WaitForPathToCenter(form akPathTo)	
 		If(_ActorRef == _PlayerRef)
+			bool bVRTPP = _Config.HasVRIK && (_Config.POVModeVR == 2)
+			Game.DisablePlayerControls(abMovement=!bVRTPP, abFighting=false, abCamSwitch=false, abLooking=false, abSneaking=false, abMenu=false, abActivate=false, abJournalTabs=false)
 			return
 		EndIf
 		_Config.CheckBardAudience(_ActorRef, true)
@@ -520,9 +528,6 @@ State Ready
 		Initialize()
 	EndFunction
 
-	Event OnEndState()
-		RegisterForModEvent("SSL_LOCK_Thread" + _Thread.tid, "OnRequestLock")
-	EndEvent
 EndState
 
 Event OnDoPrepare(string asEventName, string asStringArg, float afNumArg, form akPathTo)
@@ -551,27 +556,21 @@ EndFunction
 /;
 
 State Paused
-	Event OnRequestLock(string asEventName, string asStringArg, float afNumArg, form akSender)
-		UnregisterForModEvent("SSL_LOCK_Thread" + _Thread.tid)
-		LockActor()
-		_Thread.AliasLockDone()
-	EndEvent
 	Function LockActor()
+		If (_ActorLocked)
+			return
+		EndIf
+		_ActorRef.SetActorValue("Paralysis", 0.0)
 		_ActorRef.SetFactionRank(_AnimatingFaction, 1)
+		_ActorRef.SetAnimationVariableInt("IsNPC", 0)
+		_ActorRef.SetAnimationVariableBool("bHumanoidFootIKDisable", 1)
 		_Thread.UpdateAnimatingActorMovement(_ActorRef) ;MOVEMENT_LOCK
-		Debug.SendAnimationEvent(_ActorRef, "IdleFurnitureExit")
-		Debug.SendAnimationEvent(_ActorRef, "AnimObjectUnequip")
-		Debug.SendAnimationEvent(_ActorRef, "IdleStop")
-		SetActorCollisions(false)
 		If (_ActorRef == _PlayerRef)
 			_Config.ToggleVRIK(true, _Config.VRIK_FPP_HMD)
 			If(_Config.AutoTFC)
 				SexLabUtil.ToggleFreeCamera(1) ;TFC_ON
 			EndIf
 		EndIf
-		_ActorRef.SetAnimationVariableInt("IsNPC", 0)
-		_ActorRef.SetAnimationVariableBool("bHumanoidFootIKDisable", 1)
-		SendDefaultAnimEvent()
 		Log("Locked Actor: " + GetActorName())
 		_ActorLocked = True
 	EndFunction
@@ -608,10 +607,10 @@ State Paused
 	Event OnStartPlaying(string asEventName, string asStringArg, float afNumArg, form akSender)
 		UnregisterForModEvent("SSL_READY_Thread" + _Thread.tid)
 		GoToState(STATE_PLAYING)
-		_Thread.AnimationStart()
 		TrackedEvent(TRACK_START)
 		_StartedAt = SexLabUtil.GetCurrentGameRealTime()
 		_LastOrgasm = _StartedAt
+		_Thread.AnimationStart()
 		If (_sex != 1 && _sex != 4)
 			Utility.Wait(0.5)	; extra async call to ensure erection
 			Debug.SendAnimationEvent(_ActorRef, "SOSBend0")
@@ -693,9 +692,6 @@ Function RemoveStrapon()
 EndFunction
 
 ;	Lock/Unlock actor if in idling state, otherwise do nothing
-Event OnRequestLock(string asEventName, string asStringArg, float afNumArg, form akSender)
-	Error("Lock request outside a valid state", "OnRequestLock()")
-EndEvent
 Function LockActor()
 	Error("Cannot lock actor outside of paused state", "LockActor()")
 EndFunction
@@ -768,6 +764,10 @@ State Animating
 
 	Event OnUpdate()
 		If ((_Thread.GetStatus() != _Thread.STATUS_INSCENE) || (GetState() != STATE_PLAYING))
+			return
+		EndIf
+		If (SexLabUtil.IsGamePausedOrFrozen())
+			RegisterForSingleUpdate(UPDATE_INTERVAL)
 			return
 		EndIf
 		_CurrentInteractions = _Thread.ListDetectedInteractionsInternal(_ActorRef)
