@@ -163,7 +163,12 @@ Faction property ForbiddenFaction auto
 
 int Function ValidateActorImpl(Actor akActor) native global
 int function ValidateActor(Actor ActorRef)
-	return ValidateActorImpl(ActorRef)
+	int result = ValidateActorImpl(ActorRef)
+	If (result == -10 && ThreadSlots && ThreadSlots.FindActorController(ActorRef) == -1)
+		ActorRef.RemoveFromFaction(AnimatingFaction)
+		result = ValidateActorImpl(ActorRef)
+	EndIf
+	return result
 EndFunction
 bool function IsValidActor(Actor ActorRef)
 	return ValidateActor(ActorRef) > 0

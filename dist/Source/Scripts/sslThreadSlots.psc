@@ -52,7 +52,7 @@ int Function FindActorController(Actor ActorRef)
     If (Threads[i].FindSlot(ActorRef) != -1)
       ; An actor may be recognized in multiple threads if it is thrown into multiple scenes back to back
       ; To ensure this returns the most recent scene, check for active State or start time 
-      String status = Threads[i].GetStatus()
+      int status = Threads[i].GetStatus()
       If ((status == Threads[i].STATUS_INSCENE || status == Threads[i].STATUS_SETUP) && \
             (ret == -1 || Threads[i].StartedAt > f))
         f = Threads[i].StartedAt

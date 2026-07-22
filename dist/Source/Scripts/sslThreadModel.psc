@@ -749,7 +749,7 @@ State Making
 			Fatal("Failed to add actor -- They have been already added to this thread", "AddActor(" + ActorRef.GetLeveledActorBase().GetName() + ")")
 			return -1
 		EndIf
-		int ERRC = sslActorLibrary.ValidateActorImpl(ActorRef)
+		int ERRC = ActorLib.ValidateActor(ActorRef)
 		If(ERRC < 0)
 			Fatal("Failed to add actor -- They are not a valid target for animation | Error Code: " + ERRC, "AddActor(" + ActorRef.GetLeveledActorBase().GetName() + ")")
 			return -1
