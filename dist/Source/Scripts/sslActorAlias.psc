@@ -610,13 +610,13 @@ State Paused
 		TrackedEvent(TRACK_START)
 		_StartedAt = SexLabUtil.GetCurrentGameRealTime()
 		_LastOrgasm = _StartedAt
+		_Thread.AnimationStart()
 		If (_sex != 1 && _sex != 4)
 			Utility.Wait(0.5)	; extra async call to ensure erection
 			Debug.SendAnimationEvent(_ActorRef, "SOSBend0")
 		EndIf
 		_HomoTypes = _Thread.CheckActiveHomoTypes()
 		UpdateBaseEnjoymentCalculations()
-		_Thread.AnimationStart()
 	EndEvent
 
 	Function SetStrapon(Form ToStrapon)
