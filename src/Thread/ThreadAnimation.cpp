@@ -277,8 +277,8 @@ namespace Thread
         }
     }
 
-	// The player's weapon MUST be sheathed before we unequip the weapon, and proceed with the scene.
-	// Otherwise you'll run into the annoying sword sheathe skyrim bug
+    // The player's weapon MUST be sheathed before we unequip the weapon, and proceed with the scene.
+    // Otherwise you'll run into the annoying sword sheathe skyrim bug
     bool Instance::BeginPlayerSheatheWait()
     {
         if (playerSheathePending) {
@@ -304,10 +304,7 @@ namespace Thread
 
     void Instance::UpdateAnimations(float a_delta)
     {
-		// Todo: Update Commonlib for the correct memory address
-        const bool freezeTime = *reinterpret_cast<const bool*>(reinterpret_cast<const std::byte*>(RE::Main::GetSingleton()) + (REL::Module::IsVR() ? 0x0E : 0x16));
-        const auto gamePaused = RE::UI::GetSingleton()->GameIsPaused() || freezeTime;
-        const auto timeoutDelta = gamePaused ? 0.0f : a_delta;
+        const auto timeoutDelta = Util::IsGamePausedOrFrozen() ? 0.0f : a_delta;
         std::shared_lock lock{ _mInstances };
         for (auto&& instance : instances) {
             instance->UpdatePendingAnimations(timeoutDelta);
@@ -605,7 +602,6 @@ namespace Thread
                 playerSheathePreviousState = weaponState;
             }
             if (sheathed || timedOut) {
-
                 playerSheathePending = false;
                 playerSheatheActionSubmitted = false;
                 playerSheathePreviousState = RE::WEAPON_STATE::kSheathed;

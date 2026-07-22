@@ -1310,6 +1310,10 @@ State Animating
 	Endfunction
 	
 	Event OnUpdate()
+		If (SexLabUtil.IsGamePausedOrFrozen())
+			RegisterForSingleUpdate(ANIMATING_UPDATE_INTERVAL)
+			return
+		EndIf
 		If (_initialRealignTicks > 0)
 			_initialRealignTicks -= 1
 			If (_initialRealignTicks == 3 || _initialRealignTicks == 0)

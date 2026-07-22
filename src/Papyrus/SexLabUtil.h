@@ -13,6 +13,7 @@ namespace Papyrus::SexLabUtil
 
     std::vector<RE::Actor*> MakeActorArray(RE::StaticFunctionTag*, RE::Actor* a1, RE::Actor* a2, RE::Actor* a3, RE::Actor* a4, RE::Actor* a5);
     float GetCurrentGameRealTime(RE::StaticFunctionTag*);
+    bool IsGamePausedOrFrozen(RE::StaticFunctionTag*);
     std::string GetTranslation(RE::StaticFunctionTag*, std::string a_str);
     bool IsGodModeEnabled(RE::StaticFunctionTag*);
 
@@ -36,6 +37,7 @@ namespace Papyrus::SexLabUtil
         REGISTERFUNC(FloatMinMaxValue, "SexLabUtil", true);
         REGISTERFUNC(MakeActorArray, "SexLabUtil", true);
         REGISTERFUNC(GetCurrentGameRealTime, "SexLabUtil", true);
+        REGISTERFUNC(IsGamePausedOrFrozen, "SexLabUtil", true);
         REGISTERFUNC(GetTranslation, "SexLabUtil", true);
         REGISTERFUNC(IsGodModeEnabled, "SexLabUtil", true);
         REGISTERFUNC(ShuffleStringArray, "SexLabUtil", true);

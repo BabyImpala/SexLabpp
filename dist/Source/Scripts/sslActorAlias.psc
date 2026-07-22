@@ -764,6 +764,10 @@ State Animating
 		If ((_Thread.GetStatus() != _Thread.STATUS_INSCENE) || (GetState() != STATE_PLAYING))
 			return
 		EndIf
+		If (SexLabUtil.IsGamePausedOrFrozen())
+			RegisterForSingleUpdate(UPDATE_INTERVAL)
+			return
+		EndIf
 		_CurrentInteractions = _Thread.ListDetectedInteractionsInternal(_ActorRef)
 		UpdateEffectiveEnjoymentCalculations()
 		If (_bEnjEnabled && !_Thread.EnjoymentPaused && _Thread.ElementUI_EnjBars)

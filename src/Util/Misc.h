@@ -2,6 +2,12 @@
 
 namespace Util
 {
+    inline bool IsGamePausedOrFrozen()
+    {
+        const bool freezeTime = *reinterpret_cast<const bool*>(reinterpret_cast<const std::byte*>(RE::Main::GetSingleton()) + (REL::Module::IsVR() ? 0x0E : 0x16));
+        return RE::UI::GetSingleton()->GameIsPaused() || freezeTime;
+    }
+
     inline void PrintConsole(const std::string& a_str)
     {
         const auto console = RE::ConsoleLog::GetSingleton();
