@@ -758,7 +758,7 @@ Function GetThreadControl(sslThreadController TargetThread)
       player.SheatheWeapon()
     endIf
     player.SetFactionRank(AnimatingFaction, 1)
-    SexLabUtil.UpdateAnimatingActorMovement(player) ;MOVEMENT_LOCK
+    _ActiveControl.UpdateAnimatingActorMovement(player) ;MOVEMENT_LOCK
   EndIf
   _ActiveControl.EnableHotkeys(true)
 EndFunction
@@ -775,7 +775,7 @@ Function DisableThreadControl(sslThreadController TargetThread)
   If (!_ActiveControl.HasPlayer)
     Actor player = Game.GetPlayer()
     player.SetFactionRank(AnimatingFaction, -1)
-    SexLabUtil.UpdateAnimatingActorMovement(player) ;MOVEMENT_RELEASE
+    _ActiveControl.UpdateAnimatingActorMovement(player) ;MOVEMENT_RELEASE
   EndIf
   _ActiveControl = none
 Endfunction
@@ -966,8 +966,6 @@ bool function CheckSystemPart(string CheckSystem)
     return SKSE.GetPluginVersion("mfgfix") > -1
   elseIf CheckSystem == "PPA"
     return SKSE.GetPluginVersion("AccuratePenetration") > -1
-  elseIf CheckSystem == "CrossHairRef"
-    return SKSE.GetPluginVersion("CrosshairRefEventsFix") > -1
   elseIf CheckSystem == "SKSEMenuFramework"
     return SKSE.GetPluginVersion("SKSEMenuFramework") > -1
   elseif CheckSystem == "VRIK"
@@ -989,9 +987,6 @@ bool function CheckSystem()
     ret = false
   ElseIf (!CheckSystemPart("PapyrusUtil"))
     CheckPapyrusUtil.Show(4.4)
-    ret = false
-  ElseIf (!CheckSystemPart("CrossHairRef"))
-    Debug.MessageBox("[SexLab]\nMissing 'CrosshairRefEvents Hang Fix'.\nThis mod is mandatory to avoid soft-locks during scene startup.")
     ret = false
   ElseIf (!CheckSystemPart("SKSEMenuFramework"))
     Debug.MessageBox("[SexLab]\nMissing 'SKSE Menu Framework'.\nThis mod is mandatory for the SceneHUD to work.")
@@ -1481,7 +1476,6 @@ Function ApplyConfigsVRIK(bool abEnabled)
     VRIK.VrikRestoreSettings()
     _AudioCategoryFST.Unmute()
     _AudioCategoryNPCFST.Unmute()
-    SexLabUtil.UpdateAnimatingActorMovement(Game.GetPlayer())
     return
   EndIf
   float afScaleBody = Game.GetPlayer().GetScale()
@@ -1524,7 +1518,6 @@ Function ApplyConfigsVRIK(bool abEnabled)
   _bAnimatingVR = true
   _AudioCategoryFST.Mute()
   _AudioCategoryNPCFST.Mute()
-  SexLabUtil.UpdateAnimatingActorMovement(Game.GetPlayer())
 EndFunction
 
 int Function UpdatePositioningVRIK(int VRIKRestoreInTicks)

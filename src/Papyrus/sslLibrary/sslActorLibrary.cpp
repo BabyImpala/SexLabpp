@@ -83,7 +83,7 @@ namespace Papyrus::ActorLibrary
             }
             const auto& biped = form->As<RE::BGSBipedObjectForm>();
             if (biped) {
-                const auto& slots = static_cast<uint32_t>(biped->GetSlotMask().underlying());
+                const auto& slots = biped->GetSlotMask().underlying();
                 if (slots & a_slotmask) {
                     strip();
                     continue;

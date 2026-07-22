@@ -164,7 +164,7 @@ namespace Papyrus::ThreadModel
                     if (form->IsWeapon() && !weapon) {
                         continue;
                     } else if (const auto biped = form->As<RE::BGSBipedObjectForm>()) {
-                        const auto biped_slots = static_cast<uint32_t>(biped->GetSlotMask().underlying());
+                        const auto biped_slots = biped->GetSlotMask().underlying();
                         if ((biped_slots & slots) == 0) {
                             continue;
                         }

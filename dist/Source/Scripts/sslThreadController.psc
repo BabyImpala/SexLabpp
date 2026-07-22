@@ -290,7 +290,7 @@ int Function GetAdjustPos()
 	Else
 		AdjustIdx = (GetPositions().Length > 1) as int
 	EndIf
-	_AdjustActor = GetIdxPosition(AdjustIdx)
+	_AdjustActor = GetNthPosition(AdjustIdx)
 	Config.SetTargetActor(_AdjustActor)
 	return AdjustIdx
 EndFunction
@@ -326,7 +326,7 @@ Function SelectTargetPartner(Actor akSelected)
 EndFunction
 
 Function UpdateTargetPartner(int targetIdx, bool abBackwards = false)
-	_AdjustActor = GetIdxPosition(targetIdx)
+	_AdjustActor = GetNthPosition(targetIdx)
 	Config.SetTargetActor(_AdjustActor)
 	Config.SelectedSpell.Cast(_AdjustActor)	; SFX for visual feedback
 	EnjBarsChangeHighlightedPartner(_AdjustActor)
