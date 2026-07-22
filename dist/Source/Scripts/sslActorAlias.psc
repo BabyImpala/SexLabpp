@@ -417,17 +417,6 @@ bool Function SetActor(Actor ProspectRef)
 	return false
 EndFunction
 
-Function LockActorForAnimation()
-	If (_ActorLocked)
-		return
-	EndIf
-	_ActorRef.SetActorValue("Paralysis", 0.0)
-	_ActorRef.SetFactionRank(_AnimatingFaction, 1)
-	_ActorRef.SetAnimationVariableInt("IsNPC", 0)
-	_ActorRef.SetAnimationVariableBool("bHumanoidFootIKDisable", 1)
-	NativeActorLockApplied()
-EndFunction
-
 Function NativeActorLockApplied()
 	If (_ActorLocked)
 		return
@@ -568,7 +557,22 @@ EndFunction
 
 State Paused
 	Function LockActor()
-		LockActorForAnimation()
+		If (_ActorLocked)
+			return
+		EndIf
+		_ActorRef.SetActorValue("Paralysis", 0.0)
+		_ActorRef.SetFactionRank(_AnimatingFaction, 1)
+		_ActorRef.SetAnimationVariableInt("IsNPC", 0)
+		_ActorRef.SetAnimationVariableBool("bHumanoidFootIKDisable", 1)
+		_Thread.UpdateAnimatingActorMovement(_ActorRef) ;MOVEMENT_LOCK
+		If (_ActorRef == _PlayerRef)
+			_Config.ToggleVRIK(true, _Config.VRIK_FPP_HMD)
+			If(_Config.AutoTFC)
+				SexLabUtil.ToggleFreeCamera(1) ;TFC_ON
+			EndIf
+		EndIf
+		Log("Locked Actor: " + GetActorName())
+		_ActorLocked = True
 	EndFunction
 	Function TryLockAndUnpause()
 		LockActor()

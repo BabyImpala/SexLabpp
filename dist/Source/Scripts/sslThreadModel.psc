@@ -1457,6 +1457,40 @@ State Animating
 		EndIf
 	EndFunction
 
+	Function OnAnimationSyncFailed()
+		_animationSyncPending = false
+		_queuedSceneReset = ""
+		Log("Animation synchronization failed; ending thread", "OnAnimationSyncFailed()")
+		EndAnimation()
+	EndFunction
+
+	Function OnNativeActorsPrepared()
+		int i = 0
+		While (i < _Positions.Length)
+			ActorAlias[i].NativeActorLockApplied()
+			i += 1
+		EndWhile
+	EndFunction
+
+	Function OnAnimationSynchronized()
+		_animationSyncPending = false
+		String queuedScene = _queuedSceneReset
+		_queuedSceneReset = ""
+		If (queuedScene && queuedScene != GetActiveScene())
+			ResetScene(queuedScene)
+			return
+		EndIf
+		UpdateOffsetSlidersDisplay()
+		ReStartTimer()
+		If (!_animationStarted)
+			_animationStarted = true
+			SendThreadEvent("AnimationStart")
+			If (LeadIn)
+				SendThreadEvent("LeadInStart")
+			EndIf
+		EndIf
+	EndFunction
+
 	int Function GetStatus()
 		return STATUS_INSCENE
 	EndFunction
@@ -1533,46 +1567,15 @@ Function PlayStageAnimations()
 EndFunction
 
 Function OnAnimationSyncFailed()
-	If (GetStatus() != STATUS_INSCENE)
-		return
-	EndIf
-	_animationSyncPending = false
-	_queuedSceneReset = ""
-	Log("Animation synchronization failed; ending thread", "OnAnimationSyncFailed()")
-	EndAnimation()
+	Log("OnAnimationSyncFailed(), Function called from invalid state: " + GetState())
 EndFunction
 
 Function OnNativeActorsPrepared()
-	If (GetStatus() != STATUS_INSCENE)
-		return
-	EndIf
-	int i = 0
-	While (i < _Positions.Length)
-		ActorAlias[i].NativeActorLockApplied()
-		i += 1
-	EndWhile
+	Log("OnNativeActorsPrepared(), Function called from invalid state: " + GetState())
 EndFunction
 
 Function OnAnimationSynchronized()
-	If (GetStatus() != STATUS_INSCENE)
-		return
-	EndIf
-	_animationSyncPending = false
-	String queuedScene = _queuedSceneReset
-	_queuedSceneReset = ""
-	If (queuedScene && queuedScene != GetActiveScene())
-		ResetScene(queuedScene)
-		return
-	EndIf
-	UpdateOffsetSlidersDisplay()
-	ReStartTimer()
-	If (!_animationStarted)
-		_animationStarted = true
-		SendThreadEvent("AnimationStart")
-		If (LeadIn)
-			SendThreadEvent("LeadInStart")
-		EndIf
-	EndIf
+	Log("OnAnimationSynchronized(), Function called from invalid state: " + GetState())
 EndFunction
 
 ; Set location for all _Positions on CenterAlias, incl offset, and queue their respective animations. _Positions are assumed to be sorted by scene
