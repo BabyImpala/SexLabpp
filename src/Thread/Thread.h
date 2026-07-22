@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Registry/Library.h"
+#include "Thread/NiNode/Legacy/LegacyNiUpdate.h"
 #include "Thread/NiNode/NiUpdate.h"
 
 namespace Thread
@@ -60,19 +61,21 @@ namespace Thread
         Instance(RE::TESQuest* a_linkedQst, const std::vector<RE::Actor*>& a_submissives, const SceneMapping& a_scenes, FurniturePreference a_furniturePreference);
         ~Instance() = default;
 
-        static bool CreateInstance(RE::TESQuest* a_linkedQst, const std::vector<RE::Actor*> a_submissives, const SceneMapping& a_scenes, FurniturePreference a_furniturePreference);
+        static void CreateInstance(RE::TESQuest* a_linkedQst, const std::vector<RE::Actor*> a_submissives, const SceneMapping& a_scenes, FurniturePreference a_furniturePreference);
         static void DestroyInstance(RE::TESQuest* a_linkedQst);
         static Instance* GetInstance(RE::TESQuest* a_linkedQst);
+        static Instance* GetPendingInstance(RE::TESQuest* a_linkedQst);
+        static void FinalizeCenterRefSelection(RE::TESQuest* a_linkedQst);
+        static void DispatchContinueSetup(RE::TESQuest* a_linkedQst, bool a_result);
 
       public:
         bool HasNiInstance() const { return niInstance != nullptr; }
         NiNode::NiInstance* GetNiInstance() { return niInstance.get(); }
         void UnregisterNiInstance() { (NiNode::NiUpdate::Unregister(linkedQst->GetFormID()), niInstance = nullptr); }
 
-        bool ControlsMenu();
-        bool TryOpenMenu();
-        bool TryCloseMenu();
-        void UpdateTimer(float a_timer);
+        bool HasNiInstanceLegacy() const { return niInstanceLegacy != nullptr; }
+        LegacyNiNode::NiInstance* GetNiInstanceLegacy() { return niInstanceLegacy.get(); }
+        void UnregisterNiInstanceLegacy() { (LegacyNiNode::NiUpdate::Unregister(linkedQst->GetFormID()), niInstanceLegacy = nullptr); }
 
         void AdvanceScene(const Registry::Stage* a_nextStage);
         bool SetActiveScene(const Registry::Scene* a_scene);
@@ -89,25 +92,40 @@ namespace Thread
         RE::TESObjectREFR* GetCenterRef() { return center.GetRef(); }
         Registry::FurnitureType GetFurnitureType() { return center.offset.type; }
         bool ReplaceCenterRef(RE::TESObjectREFR* a_ref);
+        void SetCenterRefSelected(size_t a_index);
 
-        bool GetAutoplayEnabled();
-        void SetAutoplayEnabled(bool a_enabled);
         void SetAnimationPlaybackSpeed(float playbackSpeed);
+        void OffsetAdjustSet(uint32_t actorFormId, Registry::CoordinateType axis, float value);
+        void OffsetAdjustReset(bool hasFurn);
 
-        void SetEnjoyment(RE::Actor* a_position, float a_enjoyment);
         const Registry::Expression* GetExpression(RE::Actor* a_position);
         void SetExpression(RE::Actor* a_position, const Registry::Expression* a_expression);
         const Registry::Voice* GetVoice(RE::Actor* a_position);
         void SetVoice(RE::Actor* a_position, const Registry::Voice* a_voice);
-        bool IsGhostMode(RE::Actor* a_position);
-        void SetGhostMode(RE::Actor* a_position, bool a_ghostMode);
         int32_t GetUniquePermutations(RE::Actor* a_position);
         int32_t GetCurrentPermutation(RE::Actor* a_position);
-        void SetNextPermutation(RE::Actor* a_position);
+        bool SetNextPermutation(RE::Actor* a_position);
+
+        template <typename T>
+        T GetThreadProperty(const std::string& a_property);
+        template <typename T>
+        void SetThreadProperty(const std::string& a_property, T a_val);
+
+        // SceneHUD
+        void InitSceneHUDImpl();
+        void DestroySceneHUDImpl();
+        void SetFocusSceneHUDImpl(bool a_focused);
+
+        void UpdateMenuTimerDisplay(float a_duration, float a_timer);
+        void EnjBarsChangeHighlightedPartner(RE::Actor* a_target);
+        void EnjBarsUpdateSlider(RE::Actor* a_position, float a_enjoyment, RE::BSFixedString a_interactions);
+        void RegisterRaiseEnjAttempt(RE::Actor* a_position, float a_nextTimeCycle);
+        void UpdateOffsetSlidersDisplay();
 
       private:
         RE::TESQuest* linkedQst;
         std::shared_ptr<NiNode::NiInstance> niInstance{ nullptr };
+        std::shared_ptr<LegacyNiNode::NiInstance> niInstanceLegacy{ nullptr };
 
         Center center;
         std::vector<Position> positions;
@@ -118,6 +136,11 @@ namespace Thread
         const Registry::Stage* activeStage{ nullptr };
         SceneMapping scenes{};
 
+        // used during center selection through menu
+        RE::TESQuest* pendingQst{ nullptr };
+        FurnitureMapping pendingFurnitureMap{};
+        RE::Actor* pendingCenterAct{ nullptr };
+
       private:
         enum class CenterSelection
         {
@@ -126,17 +149,19 @@ namespace Thread
             SelectionMenu,
         };
 
+        void FinalizeInstanceMake();
         RE::Actor* InitializeReferences(const std::vector<RE::Actor*>& a_submissives);
         std::vector<Registry::ActorFragment> InitializeScenes(const SceneMapping& a_scenes, FurniturePreference a_furniturePreference);
         std::vector<const Registry::Scene*>& InitializeCenter(RE::Actor* centerAct, FurniturePreference furniturePreference);
         bool InitializeFixedCenter(RE::Actor* centerAct, std::vector<const Registry::Scene*>& prioScenes, REX::EnumSet<Registry::FurnitureType::Value> sceneTypes);
         CenterSelection GetSelectionMethod(FurniturePreference furniturePreference);
-        FurnitureMapping::value_type SelectCenterRefMenu(const FurnitureMapping& a_furnitures, RE::Actor* a_tmpCenter);
+        void InitializeCenterRefMenu(const FurnitureMapping& a_furnitures, RE::Actor* a_tmpCenter);
         FurnitureMapping GetUniqueFurnituesOfTypeInBound(RE::Actor* a_centerAct, REX::EnumSet<Registry::FurnitureType::Value> a_furnitureTypes);
 
       private:
         static inline std::shared_mutex _mInstances{};
         static inline std::vector<std::unique_ptr<Instance>> instances{};
+        static inline std::vector<std::unique_ptr<Instance>> pendingInstances{};
     };
 
 }  // namespace Thread

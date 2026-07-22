@@ -369,6 +369,8 @@ Function AnimationSettings()
 	AddStateOptionBool("bDisableTeleport", "$SSL_bDisableTeleport")
 	AddStateOptionBool("bShowInMap", "$SSL_bShowInMap")
 	AddStateOptionBool("bSetAnimSpeedByEnjoyment", "$SSL_bSetAnimSpeedByEnjoyment")
+	AddStateOptionBool("bAdjustStage", "$SSL_AdjustStage")
+	AddStateOptionSlider("fAdjustStepSize", "$SSL_fAdjustStepSize", 0.5, 0, 5, 0.1, "{1}")
 	AddMenuOptionST("FurnitureNPC", "$SSL_FurnitureNPC", _NPCFurnOpt[sslSystemConfig.GetSettingInt("iNPCBed")])
 	AddMenuOptionST("FurniturePlayer", "$SSL_FurniturePlayer", _PlFurnOpt[sslSystemConfig.GetSettingInt("iAskBed")])
 EndFunction
@@ -776,7 +778,7 @@ Function TestApply(Actor ActorRef)
 	sslLog.Log("Testing Expression: " + _expression[_expressionIdx] + ". Low? " + testlow +", OpenMouth? " + testOpenMouth)
 	Utility.Wait(0.1)
 	If (ActorRef == PlayerRef)
-		Game.ForceThirdPerson()
+		SexLabUtil.ForceThirdPerson()
 	EndIf
 	If (testOpenMouth)
 		sslBaseExpression.OpenMouth(ActorRef)
@@ -805,45 +807,43 @@ Function EnjoymentSettings()
 	bool game_flag = !Config.GameEnabled || !Config.InternalEnjoymentEnabled
 	int game_header = DoDisable(game_flag)
 
-	AddHeaderOption("Primary Settings")
+	AddHeaderOption("$SSL_EnjPrimarySettings")
 	AddToggleOptionST("InternalEnjoymentEnabled", "$SSL_bInternalEnjoymentEnabled", Config.InternalEnjoymentEnabled)
 
-	AddHeaderOption("General Configs", enj_header)
+	AddHeaderOption("$SSL_EnjGeneralConfigs", enj_header)
+	AddStateOptionSlider("fEnjRaiseMultInter", "$SSL_fEnjRaiseMultInter", 1.2, 0, 3, 0.1, "{1}", enj_flag)	
 	AddStateOptionBool("bFallbackToTagsForDetection", "$SSL_bFallbackToTagsForDetection", enj_flag)
 	AddStateOptionBool("bNoStaminaEndsScene", "$SSL_bNoStaminaEndsScene", enj_flag)
 	AddStateOptionBool("bMaleOrgasmEndsScene", "$SSL_bMaleOrgasmEndsScene", enj_flag)
 	AddStateOptionBool("bDomMustOrgasm", "$SSL_bDomMustOrgasm", enj_flag)
 	AddStateOptionBool("bPlayerMustOrgasm", "$SSL_bPlayerMustOrgasm", enj_flag)
 	AddStateOptionBool("bHighEnjOrgasmWait", "$SSL_bHighEnjOrgasmWait", enj_flag)
+
+	AddHeaderOption("$SSL_EnjPainConfigs", enj_header)
 	AddStateOptionSlider("iMaxNoPainOrgasmMale", "$SSL_iMaxNoPainOrgasmMale", 1, 1, 4, 1, "{0}", enj_flag)
 	AddStateOptionSlider("iMaxNoPainOrgasmFemale", "$SSL_iMaxNoPainOrgasmFemale", 2, 1, 5, 1, "{0}", enj_flag)
 	AddStateOptionSlider("iNoPainRequiredTime", "$SSL_iNoPainRequiredTime", 50, 0, 180, 10, "{0}", enj_flag)
 	AddStateOptionSlider("iNoPainRequiredXP", "$SSL_iNoPainRequiredXP", 50, 0, 100, 5, "{0}", enj_flag)
-
-	AddHeaderOption("Rate Multipliers", enj_header)
-	AddStateOptionSlider("fEnjRaiseMultInter", "$SSL_fEnjRaiseMultInter", 1.2, 0, 3, 0.1, "{1}", enj_flag)
-	AddStateOptionSlider("fEnjMultVictim", "$SSL_fEnjMultVictim", 0.8, 0, 2, 0.1, "{1}", enj_flag)
-	AddStateOptionSlider("fEnjMultSub", "$SSL_fEnjMultSub", 0.8, 0, 2, 0.1, "{1}", enj_flag)
+	AddStateOptionSlider("fPainHugePPMult", "$SSL_fPainHugePPMult", 0.5, 0, 2, 0.1, "{1}", enj_flag)
 
 	SetCursorPosition(1)
 	AddEmptyOption()
 	AddToggleOptionST("GameEnabled", "$SSL_bGameEnabled", Config.GameEnabled, enj_header)
 
-	AddHeaderOption("Game Configs", game_header)
+	AddHeaderOption("$SSL_EnjGameConfigs", game_header)
 	AddStateOptionSlider("iEnjGameStaminaCost", "$SSL_iEnjGameStaminaCost", 10, 0, 50, 1, "{0}", game_flag)
 	AddStateOptionSlider("iEnjGameMagickaCost", "$SSL_iEnjGameMagickaCost", 10, 0, 50, 1, "{0}", game_flag)
+	AddStateOptionSlider("iGameEnjAdjAmount", "$SSL_iGameEnjAdjAmount", 1, 0, 10, 1, "{0}", game_flag)
 	AddStateOptionBool("bGameRequiredOnHighEnj", "$SSL_bGameRequiredOnHighEnj", game_flag)
 	AddStateOptionBool("bGameSpamDelayPenalty", "$SSL_bGameSpamDelayPenalty", game_flag)
 
-	AddHeaderOption("Game Hotkeys", game_header)
-	AddStateOptionKey("iGameUtilityKey", "$SSL_iGameUtilityKey", true, true, abDisable=game_flag)
-	AddStateOptionKey("iGamePauseKey", "$SSL_iGamePauseKey", true, true, abDisable=game_flag)
+	AddHeaderOption("$SSL_EnjGameHotkeys", game_header)
 	AddStateOptionKey("iGameRaiseEnjKey", "$SSL_iGameRaiseEnjKey", true, true, abDisable=game_flag)
 	AddStateOptionKey("iGameHoldbackKey", "$SSL_iGameHoldbackKey", true, true, abDisable=game_flag)
-	AddStateOptionKey("iGameSelectNextPos", "$SSL_iGameSelectNextPos", true, true, abDisable=game_flag)
 
-	AddEmptyOption()
-	AddStateOptionSlider("fPainHugePPMult", "$SSL_fPainHugePPMult", 0.5, 0, 2, 0.1, "{1}", enj_flag)
+	AddHeaderOption("$SSL_EnjMiscRateMult", enj_header)
+	AddStateOptionSlider("fEnjMultVictim", "$SSL_fEnjMultVictim", 0.8, 0, 2, 0.1, "{1}", enj_flag)
+	AddStateOptionSlider("fEnjMultSub", "$SSL_fEnjMultSub", 0.8, 0, 2, 0.1, "{1}", enj_flag)
 	AddStateOptionSlider("fEnjMultAggressor", "$SSL_fEnjMultAggressor", 1.2, 0, 2, 0.1, "{1}", enj_flag)
 	AddStateOptionSlider("fEnjMultDom", "$SSL_fEnjMultDom", 1.2, 0, 2, 0.1, "{1}", enj_flag)
 EndFunction
@@ -892,10 +892,7 @@ Function RebuildClean()
 	AddTextOptionST("ResetStripOverrides","$SSL_ResetStripOverrides", "$SSL_ClickHere")
 	AddTextOptionST("CleanSystem","$SSL_CleanSystem", "$SSL_ClickHere")
 	AddTextOptionST("ForceRegisterVoices", "$SSL_ForceRegisterVoices", "$SSL_ClickHere")
-	AddHeaderOption("System Requirements")
-	SystemCheckOptions()
-
-	SetCursorPosition(1)
+	
 	AddHeaderOption("Registry Info")
 	; IDEA: Allow clicking on this for more info, custom swf mayhaps?
 	AddTextOption("$SSL_Animations", sslSystemConfig.GetAnimationCount(), OPTION_FLAG_DISABLED)
@@ -909,6 +906,10 @@ Function RebuildClean()
 		String Name = Config.Strapons[i].GetName()
 		AddTextOptionST("toggleStrapon_" + i, Name, "$SSL_Remove")
 	EndWhile
+
+	SetCursorPosition(1)
+	AddHeaderOption("System Requirements")
+	SystemCheckOptions()
 EndFunction
 
 Function InstallMenu()
@@ -932,10 +933,15 @@ Function SystemCheckOptions()
 	okOrFail[1] = "<font color='#00FF00'>ok</font>"
 
 	AddTextOption("Skyrim Script Extender", okOrFail[Config.CheckSystemPart("SKSE") as int], OPTION_FLAG_DISABLED)
-	AddTextOption("SexLab.dll", okOrFail[Config.CheckSystemPart("SexLabP+") as int], OPTION_FLAG_DISABLED)
+	AddTextOption("SexLabUtil.dll", okOrFail[Config.CheckSystemPart("SexLabUtil") as int], OPTION_FLAG_DISABLED)
 	AddTextOption("PapyrusUtil.dll", okOrFail[Config.CheckSystemPart("PapyrusUtil") as int], OPTION_FLAG_DISABLED)
-	AddTextOption("RaceMenu", okOrFail[Config.CheckSystemPart("NiOverride") as int], OPTION_FLAG_DISABLED)
-	AddTextOption("MfgFix NG", okOrFail[Config.CheckSystemPart("MfgFix") as int], OPTION_FLAG_DISABLED)
+	AddTextOption("RaceMenu", okOrFail[Config.CheckSystemPart("RaceMenu") as int], OPTION_FLAG_DISABLED)
+	AddTextOption("MfgFix NG", okOrFail[Config.CheckSystemPart("MfgFixNG") as int], OPTION_FLAG_DISABLED)
+	AddTextOption("SKSE Menu Framework", okOrFail[Config.CheckSystemPart("SKSEMenuFramework") as int], OPTION_FLAG_DISABLED)
+	AddTextOption("Procedural Penis Animations", okOrFail[Config.CheckSystemPart("PPA") as int], OPTION_FLAG_DISABLED)
+	If (sslSystemConfig.CheckForSkyrimVR())
+		AddTextOption("VRIK Player Avatar", okOrFail[Config.CheckSystemPart("VRIK") as int], OPTION_FLAG_DISABLED)
+	EndIf
 EndFunction
 
 State ResetStripOverrides
@@ -957,6 +963,17 @@ State CleanSystem
 		SystemAlias.SetupSystem()
 		ModEvent.Send(ModEvent.Create("SexLabReset"))
 		Config.CleanSystemFinish.Show()
+	EndEvent
+EndState
+
+State ForceRegisterVoices
+  Event OnSelectST()
+    ModEvent.Send(ModEvent.Create("SexLabSlotVoices"))
+		ModEvent.Send(ModEvent.Create("SexLabSlotExpressions"))
+		SetOptionFlagsST(OPTION_FLAG_DISABLED)
+  EndEvent
+	Event OnHighlightST()
+		SetInfoText("$SSL_ForceRegisterVoicesHighlight")
 	EndEvent
 EndState
 
@@ -1325,7 +1342,7 @@ Event OnMenuAcceptST(int aiIndex)
 		sslSystemConfig.SetSettingInt("iAskBed", aiIndex)
 		SetMenuOptionValueST(_PlFurnOpt[aiIndex])
 	ElseIf (s[0] == "FurnitureNPC")
-		sslSystemConfig.SetSettingInt("iAskBedNPC", aiIndex)
+		sslSystemConfig.SetSettingInt("iNPCBed", aiIndex)
 		SetMenuOptionValueST(_NpcFurnOpt[aiIndex])
 	EndIf
 EndEvent
@@ -1474,33 +1491,19 @@ function PlayerHotkeys()
 	AddEmptyOption()
 	AddStateOptionKey("iTargetActor", "$SSL_iTargetActor", needsRegister = true)
 	AddStateOptionKey("iToggleFreeCamera", "$SSL_iToggleFreeCamera", needsRegister = true)
-	;AddStateOptionBool("bHideHUD", "$SSL_bHideHUD")
+	AddStateOptionKey("iToggleThreadControl", "$SSL_iToggleThreadControl", needsRegister = true)
+	AddEmptyOption()
 
 	AddHeaderOption("$SSL_SceneManipulation")
 	AddEmptyOption()
-	AddStateOptionKey("iKeyUp", "$SSL_iKeyUp", true, true)
-	AddStateOptionKey("iKeyExtra2", "$SSL_iKeyExtra2", true, true) ;open SL menu
-	AddStateOptionKey("iKeyDown", "$SSL_iKeyDown", true, true)
-	AddStateOptionKey("iKeyMod", "$SSL_iKeyMod", true, true) ;modifier
-	AddStateOptionKey("iKeyLeft", "$SSL_iKeyLeft", true, true)
-	AddStateOptionKey("iKeyReset", "$SSL_iKeyReset", true, true) ;inverse action
-	AddStateOptionKey("iKeyRight", "$SSL_iKeyRight", true, true)
-	AddStateOptionKey("iMoveScene", "$SSL_iMoveScene", true, true)
+	AddStateOptionKey("iToggleSceneHUD", "$SSL_iToggleSceneHUD", true, true)
 	AddStateOptionKey("iKeyAdvance", "$SSL_iKeyAdvance", true, true)
-	AddStateOptionKey("iChangeAnimation", "$SSL_iChangeAnimation", true, true)
+	AddStateOptionKey("iFocusSceneHUD", "$SSL_iFocusSceneHUD", true, true)
 	AddStateOptionKey("iKeyEnd", "$SSL_iKeyEnd", true, true)
-endFunction
-
-State ForceRegisterVoices
-  Event OnSelectST()
-    ModEvent.Send(ModEvent.Create("SexLabSlotVoices"))
-		ModEvent.Send(ModEvent.Create("SexLabSlotExpressions"))
-		SetOptionFlagsST(OPTION_FLAG_DISABLED)
-  EndEvent
-	Event OnHighlightST()
-		SetInfoText("$SSL_ForceRegisterVoicesHighlight")
-	EndEvent
-EndState
+	AddStateOptionKey("iKeyMod", "$SSL_iKeyMod", true, true)
+	AddStateOptionKey("iChangeAnimation", "$SSL_iChangeAnimation", true, true)
+	AddStateOptionKey("iMoveScene", "$SSL_iMoveScene", true, true)
+EndFunction
 
 ; ------------------------------------------------------- ;
 ; --- Misc Utilities                                  --- ;

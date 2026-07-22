@@ -3,8 +3,9 @@
 #include "Registry/Stats.h"
 #include "Serialization.h"
 #include "Thread/Collision/CollisionHandler.h"
-#include "Thread/Interface/SceneMenu.h"
-#include "Thread/Interface/SelectionMenu.h"
+#include "Thread/Interface/FurnSelectMenu.h"
+#include "Thread/Interface/SceneHUD.h"
+#include "Thread/NiNode/Legacy/LegacyNiUpdate.h"
 #include "Thread/NiNode/NiUpdate.h"
 #include "UserData/StripData.h"
 
@@ -33,10 +34,47 @@
 // 	}
 // };
 
+// This is a clean fix for the CrosshairRefEvent papyrus spam without changing vanilla behavior..
+// It's basically SKSE's pending fix: https://github.com/ianpatt/skse64/commit/a1a9746cabb68879edf0fb22ceae0973a240102d
+class CrosshairEventFilter final :
+    public Singleton<CrosshairEventFilter>,
+    public RE::BSTEventSink<SKSE::CrosshairRefEvent>
+{
+    using EventResult = RE::BSEventNotifyControl;
+
+  public:
+    void Register()
+    {
+        const auto eventSource = SKSE::GetCrosshairRefEventSource();
+        if (!eventSource) {
+            logger::error("Unable to install crosshair event filter");
+            return;
+        }
+
+        eventSource->PrependEventSink(this);
+        logger::info("Installed crosshair event filter");
+    }
+
+    EventResult ProcessEvent(const SKSE::CrosshairRefEvent* a_event, RE::BSTEventSource<SKSE::CrosshairRefEvent>*) override
+    {
+        if (!a_event)
+            return EventResult::kContinue;
+
+        const bool sendEvent = a_event->crosshairRef || _hasCrosshairRef;
+        _hasCrosshairRef = static_cast<bool>(a_event->crosshairRef);
+        return sendEvent ? EventResult::kContinue : EventResult::kStop;
+    }
+
+  private:
+    bool _hasCrosshairRef{ false };
+};
+
 static void SKSEMessageHandler(SKSE::MessagingInterface::Message* message)
 {
     switch (message->type) {
     case SKSE::MessagingInterface::kPostLoad:
+        if (Thread::Interface::SceneHUD::GetSingleton().Register())
+            Thread::Interface::FurnSelectMenu::GetSingleton().Register();
         break;
     case SKSE::MessagingInterface::kDataLoaded:
         Settings::Initialize();
@@ -52,7 +90,11 @@ static void SKSEMessageHandler(SKSE::MessagingInterface::Message* message)
         }
         SKSE::AllocTrampoline(static_cast<size_t>(1) << 5);
         Thread::Collision::CollisionHandler::Install();
-        Thread::NiNode::NiUpdate::Install();
+        if (Settings::bUseLegacyNiType) {
+            Thread::LegacyNiNode::NiUpdate::Install();
+        } else {
+            Thread::NiNode::NiUpdate::Install();
+        }
         Registry::Library::GetSingleton()->Initialize();
         Registry::Statistics::StatisticsData::GetSingleton()->Register();
         UserData::StripData::GetSingleton()->Load();
@@ -104,6 +146,7 @@ extern "C" DLLEXPORT bool SKSEAPI SKSEPlugin_Load(const SKSE::LoadInterface* a_s
     }
 
     SKSE::Init(a_skse);
+    CrosshairEventFilter::GetSingleton()->Register();
     logger::info("{} loaded", PLUGIN_NAME);
 
     const auto msging = SKSE::GetMessagingInterface();
@@ -116,9 +159,6 @@ extern "C" DLLEXPORT bool SKSEAPI SKSEPlugin_Load(const SKSE::LoadInterface* a_s
         logger::critical("Failed to register papyrus functions");
         return false;
     }
-
-    Thread::Interface::SceneMenu::Register();
-    Thread::Interface::SelectionMenu::Register();
 
     const auto serialization = SKSE::GetSerializationInterface();
     serialization->SetUniqueID('slpp');

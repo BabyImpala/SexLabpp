@@ -2,17 +2,24 @@
 A high performance and stability patch for SexLab for Skyrim SE.
 
 ## Requirements
+* [python](https://www.python.org/downloads/)
 * [xmake](https://xmake.io/#/)
 	* Add this to your `PATH`
-* [python](https://www.python.org/downloads/)
+* [Spriggit CLI](https://github.com/Mutagen-Modding/Spriggit/)
+	* Requires [Microsoft .NET SDK](https://dotnet.microsoft.com/en-us/download/dotnet/)
 * [Visual Studio Community 2022](https://visualstudio.microsoft.com/)
 	* Desktop development with C++
+	* On VS Community 2026, use this command first:
+		```sh
+		xmake f --cxflags="/Wv:18"
+		```
 * Papyrus Sources:
 	* PapyrusUtil SE: [Nexus][PU-Nexus] | [GitHub][PU-GitHub]
 	* SkyUI SDK 5.1: [GitHub][SUI-GitHub]
 	* Race Menu (Modders Package): [Nexus][RM-Nexus]
 	* MfgFix NG: [Nexus][MFG-Nexus] | [GitHub][MFG-GitHub]
 	* SkyrimLovense: [Nexus][SL-Nexus] | [GitHub][SL-GitHub]
+	* VRIK Player Avatar: [Nexus][VR-Nexus]
 
 ## Building
 
@@ -94,3 +101,6 @@ This project primarily falls under the [Apache License Version 2.0](./LICENSE). 
 [MFG-GitHub]: https://github.com/KrisV-777/Mfg-Fix-NG
 [SL-Nexus]: https://www.nexusmods.com/skyrimspecialedition/mods/133698
 [SL-GitHub]: https://github.com/KrisV-777/Skyrim-Lovense
+[UIX-Nexus]: https://www.nexusmods.com/skyrimspecialedition/mods/17561
+[BAE-Nexus]: https://www.nexusmods.com/skyrimspecialedition/mods/974
+[VR-Nexus]: https://www.nexusmods.com/skyrimspecialedition/mods/23416

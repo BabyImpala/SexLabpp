@@ -57,6 +57,9 @@ EndFunction
 int Function GetPositionIdx(Actor akActor)
 	return _Positions.Find(akActor)
 EndFunction
+Actor Function GetNthPosition(int n)
+	return _Positions[n]
+EndFunction
 
 int Function GetActorSex(Actor akActor)
 	return GetNthPositionSex(GetPositionIdx(akActor))
@@ -560,6 +563,22 @@ string[] Function GetHooks()
 	return PapyrusUtil.ClearEmpty(_Hooks)
 EndFunction
 
+; ------------------------------------------------------- ;
+; --- VRIK Configs + Init                             --- ;
+; ------------------------------------------------------- ;
+
+Function SetConfigsVRIK(bool abEnabled=true, bool abOverrideConfig=false, int aiPOVMode=-1, \
+	int abLockHeight=-1, float afHeightAdjSpeed=-1.0, int abTrackHead=-1, int aiTrackHands=-1, \
+	float afDistHideHead=-1.0, float afDistNearClip=-1.0, int aiLockHmdToBody=-1, \
+	float afLockHmdDistance=-1.0, float afLockHmdTolerance=-1.0, float afLockHmdSpeed=-1.0)
+	If (abEnabled)
+		Config.RefreshConfigsVRIK(abOverrideConfig, aiPOVMode, abLockHeight, afHeightAdjSpeed, \
+			abTrackHead, aiTrackHands, afDistHideHead, afDistNearClip, aiLockHmdToBody, \
+			afLockHmdDistance, afLockHmdTolerance, afLockHmdSpeed)
+	EndIf
+	Config.ApplyConfigsVRIK(abEnabled)
+EndFunction
+
 ; *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-* ;
 ; ----------------------------------------------------------------------------- ;
 ;        ██╗███╗   ██╗████████╗███████╗██████╗ ███╗   ██╗ █████╗ ██╗            ;
@@ -594,7 +613,7 @@ int Property POSITION_COUNT_MAX = 5 AutoReadOnly
 String Property STATE_IDLE 		= "Unlocked" AutoReadOnly
 String Property STATE_SETUP 	= "Making" AutoReadOnly
 String Property STATE_SETUP_M	= "Making_M" AutoReadOnly
-String Property STATE_PLAYING = "Animating" AutoReadOnly
+String Property STATE_PLAYING   = "Animating" AutoReadOnly
 String Property STATE_END 		= "Ending" AutoReadOnly
 
 ; ------------------------------------------------------- ;
@@ -613,11 +632,6 @@ int Function GetStatus()
 	Fatal("Undefined Status. Resetting thread...")
 	return STATUS_UNDEF
 EndFunction
-
-bool Function IsOwningSceneMenu() native
-bool Function TryOpenSceneMenu() native
-bool Function TryCloseSceneMenu() native
-Function TryUpdateMenuTimer(float afTime) native
 
 ; ------------------------------------------------------- ;
 ; --- Thread Data                                     --- ;
@@ -703,6 +717,7 @@ EndFunction
 
 int _instanceCreationWaitLock
 int _prepareAsyncCount
+int _lockAsyncCount
 String[] _CustomScenes
 String[] _PrimaryScenes
 String[] _LeadInScenes
@@ -717,6 +732,10 @@ State Making
 	EndEvent
 	Event OnUpdate()
 		Fatal("Thread has timed out during setup. Resetting thread...")
+		If (_QuickResetScenes)
+			_QuickResetScenes = false
+			GoToState(STATE_END)
+		EndIf
 		Initialize()
 	EndEvent
 
@@ -754,7 +773,7 @@ State Making
 			EndIf
 			i += 1
 		EndWhile
-    	Log("Added " + SexLabUtil.ActorNames(ActorList) + " to thread", "AddActors()")
+		Log("Added " + SexLabUtil.ActorNames(ActorList) + " to thread", "AddActors()")
 		return true
 	EndFunction
 	bool Function AddActorsA(Actor[] ActorList, Actor[] akVictims)
@@ -765,7 +784,7 @@ State Making
 			EndIf
 			i += 1
 		EndWhile
-    	Log("Added " + SexLabUtil.ActorNames(ActorList) + " to thread", "AddActorsA()")
+		Log("Added " + SexLabUtil.ActorNames(ActorList) + " to thread", "AddActorsA()")
 		return true
 	EndFunction
 
@@ -775,19 +794,19 @@ State Making
 	Function ClearScenes()
 		_PrimaryScenes = Utility.CreateStringArray(0)
 	EndFunction
-  Function SetForcedScenes(String[] asScenes)
-    _CustomScenes = SexLabRegistry.SceneExistA(asScenes)
-  EndFunction
+	Function SetForcedScenes(String[] asScenes)
+		_CustomScenes = SexLabRegistry.SceneExistA(asScenes)
+	EndFunction
 	Function ClearForcedScenes()
 		_CustomScenes = Utility.CreateStringArray(0)
 	EndFunction
-  Function SetLeadInScenes(String[] asScenes)
-    _LeadInScenes = SexLabRegistry.SceneExistA(asScenes)
-    LeadIn = _LeadInScenes.Length > 0
-  EndFunction
+	Function SetLeadInScenes(String[] asScenes)
+		_LeadInScenes = SexLabRegistry.SceneExistA(asScenes)
+		LeadIn = _LeadInScenes.Length > 0
+	EndFunction
 	Function ClearLeadInScenes()
 		_LeadInScenes = Utility.CreateStringArray(0)
-    LeadIn = false
+	LeadIn = false
 	EndFunction
 	Function AddScene(String asSceneID)
 		If (!asSceneID || !SexLabRegistry.SceneExists(asSceneID))
@@ -821,7 +840,7 @@ State Making
 		EndIf
 	EndFunction
 
-  sslThreadController Function StartThread()
+	sslThreadController Function StartThread()
 		UnregisterForUpdate()
 		_Positions = PapyrusUtil.RemoveActor(_Positions, none)
 		If(_Positions.Length <= 0 || _Positions.Length > POSITION_COUNT_MAX)
@@ -845,8 +864,10 @@ State Making
 			Initialize()
 			return none
 		EndIf
-		GoToState(STATE_SETUP_M)
-    return self as sslThreadController
+		If (!_QuickResetScenes)
+			GoToState(STATE_SETUP_M)
+		EndIf
+	return self as sslThreadController
 	EndFunction
 	; Called after CreateInstance() terminates (maybe async due to center selection)
 	Function ContinueSetup(bool abContinue)
@@ -884,29 +905,64 @@ State Making_M
 	; Invoked n times by Aliases and once by StartThread, then continue to next state
 	Function PrepareDone()
 		_prepareAsyncCount += 1
-		Log("Prepare done called " + _prepareAsyncCount + "/" + (_Positions.Length + 1) + " times")
+		Log("PrepareDone() called " + _prepareAsyncCount + "/" + (_Positions.Length + 1) + " times")
 		If (_prepareAsyncCount < (_Positions.Length + 1))
 			return
 		EndIf
+		_lockAsyncCount = 0
+		CenterRef.SendModEvent("SSL_LOCK_Thread" + tid)
 		String activeScene = GetActiveScene()
 		LeadIn = LeadIn && _LeadInScenes.Find(activeScene) > -1
 		Log("Thread validated, playing animation: " + activeScene + ", " + SexLabRegistry.GetSceneName(activeScene), "StartThread()")
 		SendThreadEvent("AnimationStarting")
+		AliasLockDone()
+	EndFunction
+
+	Function AliasLockDone()
+		_lockAsyncCount += 1
+		Log("AliasLockDone() called " + _lockAsyncCount + "/" + (_Positions.Length + 1) + " times")
+		If (_lockAsyncCount < (_Positions.Length + 1))
+			return
+		EndIf
+		UndressAndStripActors()
+	EndFunction
+
+	Function UndressAndStripActors()
+		bool WaitForUndress = false
+		int i = 0
+		While (i < _Positions.Length)
+			WaitForUndress= (ActorAlias[i].InitiateUndressing() || WaitForUndress)
+			i += 1
+		EndWhile
+		If (WaitForUndress)
+			Utility.Wait(2.5)
+		EndIf
 		If (HasPlayer)
 			If (sslSystemConfig.GetSettingInt("iUseFade") > 0)
 				Config.ApplyFade()
 			EndIf
 		Else
 			If (Config.ShowInMap && PlayerRef.GetDistance(CenterRef) > 750)
-				SetObjectiveDisplayed(0, True)
+				SetObjectiveDisplayed(0, true)
 			EndIf
+		EndIf
+		string activeScene = GetActiveScene()
+		int[] strips_ = SexLabRegistry.GetStripDataA(activeScene, "")
+		int[] sex_ = SexLabRegistry.GetPositionSexA(activeScene)
+		int j = 0
+		While (j < _Positions.Length)
+			ActorAlias[j].ReadyActor(strips_[j], sex_[j])
+			j += 1
+		EndWhile
+		If (WaitForUndress)
+			Utility.Wait(1.5)
 		EndIf
 		GoToState(STATE_PLAYING)
 	EndFunction
 	
 	Function EndAnimation(bool Quickly = false)
 		_prepareAsyncCount = -2147483648
-		Initialize()
+		GoToState(STATE_END)
 	EndFunction
 
 	int Function GetStatus()
@@ -963,6 +1019,9 @@ EndFunction
 Function ContinueSetup(bool abContinue)
 	Log("ContinueSetup() can only be called during setup", "ContinueSetup()")
 EndFunction
+Function UndressAndStripActors()
+	Log("Actors can be undressed only during setup", "UndressAndStripActors()")
+EndFunction
 
 Function CreateInstance(Actor[] akSubmissives, String[] asPrimaryScenes, String[] asLeadInScenes, String[] asCustomScenes, int aiFurnitureStatus) native
 String[] Function GetLeadInScenes() native
@@ -979,9 +1038,15 @@ String[] Function GetCustomScenes() native
 
 float Property ANIMATING_UPDATE_INTERVAL = 0.5 AutoReadOnly
 int _animationSyncCount
+int _initialRealignTicks	; Placement is only asserted once per stage; if the first assert races with a busy
+							; actor (furniture exit, get-up, pathing) it silently fails until the next stage.
+							; Counts down OnUpdate ticks after AnimationStart to re-assert placement (see RealignActors)
 
+bool _QuickResetScenes		; reinits thread without actor/center changes (e.g. to get new playing scenes)
 bool _ForceAdvance		; Force fully auto advance (set by timed stages)
 float _StageTimer			; timer for the current stage
+float _StageDuration		; duration of the current stage
+bool _TimerPaused		; whether timer drain for current stage should be paused
 float _SFXTimer				; so long until new SFX effect
 float[] _CustomTimers	; Custom set of timers to use for this animation
 float[] Property Timers hidden
@@ -1000,18 +1065,12 @@ EndProperty
 State Animating
 	Event OnBeginState()
 		SetFurnitureIgnored(true)
-		String activeScene = GetActiveScene()
-		int[] strips_ = SexLabRegistry.GetStripDataA(activeScene, "")
-		int[] sex_ = SexLabRegistry.GetPositionSexA(activeScene)
-		int i = 0
-		While (i < _Positions.Length)
-			ActorAlias[i].ReadyActor(strips_[i], sex_[i])
-			i += 1
-		EndWhile
 		_SFXTimer = Config.SFXDelay
-		_animationSyncCount = 0
-		SendModEvent("SSL_READY_Thread" + tid)
-		AnimationStart()
+		If (!_QuickResetScenes)
+			_animationSyncCount = 0
+			SendModEvent("SSL_READY_Thread" + tid)
+			AnimationStart()
+		EndIf
 	EndEvent
 	Function AnimationStart()
 		_animationSyncCount += 1
@@ -1031,6 +1090,7 @@ State Animating
 			AutoAdvance = true
 		EndIf
 		StartedAt = SexLabUtil.GetCurrentGameRealTime()
+		_initialRealignTicks = 4
 		StartStage(Utility.CreateStringArray(0), "")
 		SendThreadEvent("AnimationStart")
 		If(LeadIn)
@@ -1083,7 +1143,7 @@ State Animating
 					SendThreadEvent("OrgasmStart")
 					TriggerOrgasm()
 				EndIf
-			ElseIf (ctype == Config.CLIMAXTYPE_SCENE)
+			ElseIf ((ctype == Config.CLIMAXTYPE_SCENE) || (!HasPlayer))
 				int[] cactors = SexLabRegistry.GetClimaxingActors(GetActiveScene(), asNewStage)
 				If (cactors.Length > 0)
 					SendThreadEvent("OrgasmStart")
@@ -1117,6 +1177,7 @@ State Animating
 		SendThreadEvent("StageStart")
 		RunHook(Config.HOOKID_STAGESTART)
 		_StageHistory = AdvanceScene(asHistory, asNextStageId)
+		UpdateOffsetSlidersDisplay()
 		ReStartTimer()
 	EndFunction
 
@@ -1147,11 +1208,12 @@ State Animating
 
 	Function ReStartTimer()
 		_ForceAdvance = false
-		_StageTimer = GetTimer()
+		_StageDuration = GetTimer()
+		_StageTimer = _StageDuration
 		If (!_ForceAdvance && !AutoAdvance)
-			TryUpdateMenuTimer(0.0)
+			UpdateMenuTimerDisplay(0.0, 0.0)
 		Else
-			TryUpdateMenuTimer(_StageTimer)
+			UpdateMenuTimerDisplay(_StageDuration, _StageTimer)
 		EndIf
 		RegisterForSingleUpdate(ANIMATING_UPDATE_INTERVAL)
 	EndFunction
@@ -1159,7 +1221,11 @@ State Animating
 	Function UpdateTimer(float AddSeconds = 0.0)
 		_StageTimer += AddSeconds
 		_ForceAdvance = true
-		TryUpdateMenuTimer(_StageTimer)
+		UpdateMenuTimerDisplay(_StageDuration, _StageTimer)
+	EndFunction
+
+	Function PauseTimer(bool abEnable)
+		_TimerPaused = abEnable
 	EndFunction
 
 	Function SetTimers(float[] SetTimers)
@@ -1194,8 +1260,15 @@ State Animating
 	Endfunction
 	
 	Event OnUpdate()
-		If (AutoAdvance || _ForceAdvance)
+		If (_initialRealignTicks > 0)
+			_initialRealignTicks -= 1
+			If (_initialRealignTicks == 3 || _initialRealignTicks == 0)
+				RealignActors()
+			EndIf
+		EndIf
+		If (!_TimerPaused && (AutoAdvance || _ForceAdvance))
 			_StageTimer -= ANIMATING_UPDATE_INTERVAL
+			UpdateMenuTimerDisplay(_StageDuration, _StageTimer)
 			If (_StageTimer <= 0)
 				If !ThreadWaitsForOrgasm()
 					GoToStage(_StageHistory.Length + 1)
@@ -1302,7 +1375,7 @@ State Animating
 	EndFunction
 	Function EndAnimation(bool Quickly = false)
 		UnregisterForUpdate()
-		If (sslSystemConfig.GetSettingInt("iClimaxType") == Config.CLIMAXTYPE_LEGACY)
+		If ((sslSystemConfig.GetSettingInt("iClimaxType") == Config.CLIMAXTYPE_LEGACY) && (!_QuickResetScenes))
 			If (SexLabRegistry.GetNodeType(GetActiveScene(), GetActiveStage()) == 2)
 				SendThreadEvent("OrgasmEnd")
 			EndIf
@@ -1315,13 +1388,34 @@ State Animating
 		return ResetAnimation(akNewPositions, akSubmissives, akCenter)
 	EndFunction
 
+	bool Function ResetAnimationQuick(String asTagString = "")
+		UnregisterForUpdate()
+		String[] validScenes = SexLabRegistry.LookupScenesA(_Positions, asTagString, GetSubmissives(), _furniStatus, CenterRef)
+		If ((validScenes.Length < 1) || (validScenes[0] == ""))
+			ReStartTimer()
+			return false
+		EndIf
+		_QuickResetScenes = true
+		EndAnimation()
+		return ResetAnimationQuick(asTagString)
+	EndFunction
+
+	Function OnSceneResetBySearch(String asQuerry)
+		bool aiNewScenes = ResetAnimationQuick(asQuerry)
+		If (!aiNewScenes)
+			string asSelectedScene = SexLabRegistry.GetSceneByName(asQuerry)
+			If (asSelectedScene)
+				ResetScene(asSelectedScene)
+			EndIf
+		EndIf
+	EndFunction
+
 	int Function GetStatus()
 		return STATUS_INSCENE
 	EndFunction
 
 	Event OnEndState()
 		UnregisterForUpdate()
-		UnregisterCollision()
 		SetFurnitureIgnored(false)
 	EndEvent
 EndState
@@ -1361,7 +1455,10 @@ Function ReStartTimer()
 	Log("Cannot re/start timers outside of playing state", "ReStartTimer()")
 EndFunction
 Function UpdateTimer(float AddSeconds = 0.0)
-	Log("Cannot upate timers outside of playing state", "UpdateTimer()")
+	Log("Cannot update timers outside of playing state", "UpdateTimer()")
+EndFunction
+Function PauseTimer(bool abEnable)
+	Log("Cannot pause timers outside of playing state", "PauseTimer()")
 EndFunction
 Function SetTimers(float[] SetTimers)
 	Log("Cannot set timers outside of playing state", "SetTimers()")
@@ -1380,6 +1477,9 @@ EndFunction
 Function SkipTo(String asNextStage)
 	Log("Cannot skip to another stage while scene is not playing", "SkipTo()")
 EndFunction
+Function OnSceneResetBySearch(String asQuerry)
+	Log("Cannot reset scenes by search outside of playing state", "OnSceneResetBySearch()")
+EndFunction
 
 Function PlayStageAnimations()
 	RealignActors()
@@ -1390,6 +1490,7 @@ String[] Function AdvanceScene(String[] asHistory, String asNextStageId) native
 int Function SelectNextStage(String[] asThreadTags) native
 bool Function SetActiveScene(String asScene) native
 bool Function ReassignCenter(ObjectReference CenterOn) native
+bool Function SetNextPermutation(Actor akActor) native
 Function UpdatePlacement(Actor akActor) native
 ; Physics/SFX Related
 bool Function IsCollisionRegistered() native
@@ -1413,8 +1514,13 @@ float Function GetActionVelocity(Actor akPosition, Actor akPartner, int aiType) 
 
 State Ending
 	Event OnBeginState()
+		If (_QuickResetScenes)
+			return
+		EndIf
 		Config.DisableThreadControl(self as sslThreadController)
 		SendModEvent("SSL_CLEAR_Thread" + tid, "", 1.0)
+		MoveActorsAwayFromPlayer()
+		UnregisterCollision()
 		If(IsObjectiveDisplayed(0))
 			SetObjectiveDisplayed(0, False)
 		EndIf
@@ -1460,9 +1566,33 @@ State Ending
 			i += 1
 		EndWhile
 		_Positions = PapyrusUtil.ActorArray(0)
+		DestroyInstance()
 		GoToState(STATE_SETUP)
 		SetScenes(validScenes)
 		return AddActorsA(akNewPositions, akSubmissives) && StartThread()
+	EndFunction
+
+	bool Function ResetAnimationQuick(String asTagString = "")
+		UnregisterForUpdateGameTime()
+		(self as sslThreadController).ToggleVisibilitySceneHUD(-1)
+		String[] validScenes = SexLabRegistry.LookupScenesA(_Positions, asTagString, GetSubmissives(), _furniStatus, CenterRef)
+		DestroyInstance()
+		GoToState(STATE_SETUP)
+		SetScenes(validScenes)
+		If (!StartThread())
+			_QuickResetScenes = false
+			GoToState(STATE_END)
+			return false
+		EndIf
+		GoToState(STATE_PLAYING)
+		_PrimaryScenes = GetPrimaryScenes()
+		_ThreadTags = SexLabRegistry.GetCommonTags(_PrimaryScenes)
+		string activeScene = GetActiveScene()
+		Log("Thread validated, playing animation: " + activeScene + ", " + SexLabRegistry.GetSceneName(activeScene), "StartThread()")
+		(self as sslThreadController).ToggleVisibilitySceneHUD(1)
+		StartStage(Utility.CreateStringArray(0), "")
+		_QuickResetScenes = false
+		return true
 	EndFunction
 
 	Event OnUpdateGameTime()
@@ -1505,6 +1635,31 @@ Function SetFurnitureIgnored(bool disabling = true)
 	CenterRef.SetNoFavorAllowed(disabling)
 EndFunction
 
+int Function IndexTravelComplex(int curIdx, bool abReverse = false, Actor akSkip = None)
+	int posLen = _Positions.Length
+	If (posLen > 1)
+		int step = 1
+		If (abReverse)
+			step = -1
+		EndIf
+		int newIdx = (curIdx + step)
+		int i = 0
+		While (i < posLen)
+			If (newIdx >= posLen)
+				newIdx = 0
+			ElseIf (newIdx < 0)
+				newIdx = (posLen - 1)
+			EndIf
+			If (newIdx != curIdx) && (akSkip == None || _Positions[newIdx] != akSkip)
+				return newIdx
+			EndIf
+			newIdx += step
+			i += 1
+		EndWhile
+	EndIf
+	return curIdx
+EndFunction
+
 ; ------------------------------------------------------- ;
 ; --- Function Declarations                           --- ;
 ; ------------------------------------------------------- ;
@@ -1515,20 +1670,27 @@ EndFunction
 /;
 
 Function CenterOnObject(ObjectReference CenterOn, bool resync = true)
-	Log("Invalid State", "CenterOnObject()")
+	Log("CenterOnObject(), Function called from invalid state: " + GetState())
 EndFunction
 Function EndAnimation(bool Quickly = false)
-	Log("Invalid state", "EndAnimation()")
+	Log("EndAnimation(), Function called from invalid state: " + GetState())
 EndFunction
 bool Function ResetAnimation(Actor[] akNewPositions, Actor[] akSubmissives, ObjectReference akCenter)
-	Log("Invalid state", "ResetAnimation()")
+	Log("ResetAnimation(), Function called from invalid state: " + GetState())
+	return false
+EndFunction
+bool Function ResetAnimationQuick(String asTagString = "")
+	Log("ResetAnimationQuick(), Function called from invalid state: " + GetState())
 	return false
 EndFunction
 Function PrepareDone()
-	Log("Invalid state", "PrepareDone()")
+	Log("PrepareDone(), Function called from invalid state: " + GetState())
+EndFunction
+Function AliasLockDone()
+	Log("AliasLockDone(), Function called from invalid state: " + GetState())
 EndFunction
 Function AnimationStart()
-	Log("Invalid state", "AnimationStart()")
+	Log("AnimationStart(), Function called from invalid state: " + GetState())
 EndFunction
 
 ; ------------------------------------------------------- ;
@@ -1573,6 +1735,71 @@ Sound Function GetAliasSound(sslActorAlias akThis, String asVoice, int aiStrengt
 EndFunction
 Sound Function GetAliasOrgasmSound(sslActorAlias akThis, String asVoice)
 	return sslBaseVoice.GetOrgasmSound(asVoice, GetActiveScene(), ActorAlias.Find(akThis), akThis.OpenMouth)
+EndFunction
+
+; ------------------------------------------------------- ;
+; --- Threading Utilities                             --- ;
+; ------------------------------------------------------- ;
+
+float Function CalcPathingTargetDistance(int aiRaceID)
+	int k = aiRaceID
+	If (k==2||k==3||k==9||k==11||k==12||k==32||k==31||k==34||k==35||k==40||k==41||k==47)
+		return 300.0
+	ElseIf (k==18||k==24||k==27||k==38||k==46)
+		return 400.0
+	ElseIf (k==14||k==26||k==36)
+		return 800.0
+	EndIf
+	return 128.0
+EndFunction
+
+Function UpdateAnimatingActorMovement(Actor akActor)
+	If (!akActor)
+		return
+	EndIf
+	akActor.EvaluatePackage()
+	int aiFactionRank = akActor.GetFactionRank(Config.AnimatingFaction)
+	int aiMovement = -1
+	If (aiFactionRank < 0) ; OnAliasClear / NotAnimating / OnExtThreadRelease -> MOVEMENT_RELEASE
+		aiMovement = 0
+	ElseIf (aiFactionRank == 0 || aiFactionRank == 2) ; OnActorUnlocked / OnPathing -> MOVEMENT_UNLOCK
+		aiMovement = 1
+	ElseIf (aiFactionRank == 1) ; OnSetActor / OnActorLocked / OnStateAnimating / OnExtThreadControl -> MOVEMENT_LOCK
+		aiMovement = 2
+	EndIf
+	SexLabUtil.SetActorMovement(akActor, aiMovement)
+EndFunction
+
+Function MoveActorsAwayFromPlayer(bool MovePlayer = false)
+	float adjOffset = 35.0
+	int moveDir = -1
+	int i = 0
+	while (i < _Positions.Length)
+		Actor curActor = _Positions[i]
+		If (curActor != PlayerRef)
+			If (curActor.GetDistance(PlayerRef) < 50.0)
+				If (MovePlayer)
+					PlayerRef.SetPosition(PlayerRef.X + 70, PlayerRef.Y, PlayerRef.Z)
+					return
+				Else
+					moveDir += 1
+				EndIf
+				float newX = curActor.X
+				float newY = curActor.Y
+				If (moveDir == 0)
+					newY += adjOffset
+				ElseIf (moveDir == 1)
+					newX += adjOffset
+				ElseIf (moveDir == 2)
+					newY -= adjOffset
+				ElseIf (moveDir == 3)
+					newX -= adjOffset
+				EndIf
+				curActor.SetPosition(newX, newY, curActor.Z)
+			EndIf
+		EndIf
+		i += 1
+	EndWhile
 EndFunction
 
 ; ------------------------------------------------------- ;
@@ -1625,6 +1852,77 @@ Function UpdateAllEncounters()
 EndFunction
 
 ; -------------------------------------------------- ;
+; --- SCENE HUD                                  --- ;
+; -------------------------------------------------- ;
+
+bool Property ElementUI_GameHUD       Auto Hidden
+bool Property ElementUI_AnimSpeed     Auto Hidden
+bool Property ElementUI_EnjBars       Auto Hidden
+bool Property ElementUI_OffsetAdjust  Auto Hidden
+bool Property ElementUI_SceneSelect   Auto Hidden
+bool Property ElementUI_ThreadConfig  Auto Hidden
+
+float Property VarUI_MenuScaleMult    Auto Hidden
+float Property VarUI_TextScaleMult    Auto Hidden
+bool Property  VarUI_SeparateOrgasm   Auto Hidden
+bool Property  VarUI_HasPlayer        Auto Hidden
+bool Property  VarUI_AdjustStage      Auto Hidden
+
+Function TryInitSceneHUD()
+	If (GetStatus() != STATUS_INSCENE)
+		Log("Cannot initialize SceneHUD outside of playing state, TryInitSceneHUD()")
+		return
+	EndIf
+	RefreshPropertiesSceneHUD("Get")
+	If (!ElementUI_GameHUD)
+		SexLabUtil.HideElementsGameHUD(true)
+	EndIf
+	InitSceneHUDImpl()
+EndFunction
+
+Function TryCloseSceneHUD()
+	DestroySceneHUDImpl()
+	RefreshPropertiesSceneHUD("Set")
+	If (!ElementUI_GameHUD)
+		SexLabUtil.HideElementsGameHUD(false)
+	EndIf
+EndFunction
+
+Function RefreshPropertiesSceneHUD(string asMode)
+	If (asMode == "Get")
+		VarUI_MenuScaleMult        = Config.MenuScaleMult
+		VarUI_TextScaleMult        = Config.MenuTextScaleMult
+		VarUI_SeparateOrgasm       = (Config.ClimaxType == Config.CLIMAXTYPE_SLSO)
+		VarUI_HasPlayer            = HasPlayer
+		VarUI_AdjustStage          = Config.AdjustStage
+		ElementUI_GameHUD          = !Config.HideHUD
+		ElementUI_AnimSpeed        = Config.ElementAnimSpeed
+		ElementUI_EnjBars          = Config.ElementEnjBars
+		ElementUI_OffsetAdjust     = Config.ElementOffsetAdjust
+		ElementUI_SceneSelect      = Config.ElementSceneSelect
+		ElementUI_ThreadConfig     = Config.ElementThreadConfig
+	ElseIf (asMode == "Set")
+		Config.MenuScaleMult       = VarUI_MenuScaleMult
+		Config.MenuTextScaleMult   = VarUI_TextScaleMult
+		Config.AdjustStage         = VarUI_AdjustStage
+		Config.HideHUD             = !ElementUI_GameHUD
+		Config.ElementAnimSpeed    = ElementUI_AnimSpeed
+		Config.ElementEnjBars      = ElementUI_EnjBars
+		Config.ElementOffsetAdjust = ElementUI_OffsetAdjust
+		Config.ElementSceneSelect  = ElementUI_SceneSelect
+		Config.ElementThreadConfig = ElementUI_ThreadConfig
+	EndIf
+EndFunction
+
+Function InitSceneHUDImpl() native
+Function DestroySceneHUDImpl() native
+Function SetFocusSceneHUDImpl(bool abFocused) native
+
+Function UpdateMenuTimerDisplay(float afDuration, float afTime) native
+Function UpdateOffsetSlidersDisplay() native ;call on stage change
+Function EnjBarsChangeHighlightedPartner(Actor akActor) native
+
+; -------------------------------------------------- ;
 ; --- Interactions Info - INTERNAL               --- ;
 ; -------------------------------------------------- ;
 
@@ -1633,7 +1931,7 @@ bool[] Function ListDetectedInteractionsInternal(Actor akPosition, Actor akPartn
 		return ListDetectedPhysicsInteractionsInternal(akPosition, akPartner)
 	EndIf
 	;COMEBACK: Re-assess the need for the fallback with new typing update
-	If (Config.FallbackToTagsForDetection && HasSceneTag("RimTagged"))
+	If (Config.FallbackToTagsForDetection && HasSceneTag("PosTagged"))
 		return ListDetectedPosTagsInteractionsInternal(akPosition)
     EndIf
 	;If all else fails, returns pAnal, which has the highest enj factor
@@ -1702,42 +2000,47 @@ Function ApplyCumFX(Actor SourceRef)
 	int i = 0
 	While (i < _Positions.Length)
 		Actor TargetRef = _Positions[i]
-		If (TargetRef == SourceRef)
-			return
-		EndIf
-		If (!TargetRef.Is3DLoaded() || !TargetRef.GetParentCell() || !TargetRef.GetParentCell().IsAttached())
-			return
-		EndIf
-		bool[] interFlags = ListDetectedInteractionsInternal(SourceRef, TargetRef)
-		;variable names are from SourceRef's (male/futa) perspective
-		;bool pHandJob_ = interFlags[pHandJob]
-		;bool pFootJob_ = interFlags[pFootJob]
-		;bool pBoobJob_ = interFlags[pBoobJob]
-		;bool aFacial_ = interFlags[pBoobJob]
-		;bool aSkullfuck_ = interFlags[pBoobJob]
-		bool pOral_ = interFlags[pOral]
-		bool pDeepthroat_ = interFlags[pDeepthroat]
-		bool pLickingShaft_ = interFlags[pLickingShaft]
-		bool aVaginal_ = interFlags[aVaginal]
-		bool aGrinding_ = interFlags[aGrinding]
-		bool aAnal_ = interFlags[aAnal]
-		bool any_oral = pOral_ || pDeepthroat_ || pLickingShaft_
-		Log("ApplyCumFX(): Source [" + SexLabUtil.ActorName(SourceRef) + "] Target [" + SexLabUtil.ActorName(TargetRef) + "] CumFX_Types [O: " + any_oral + ", V: " + (aVaginal_ || aGrinding_) + ", A: " + aAnal_ + "]")
-		int aiType = -2
-		If (aVaginal_ || aGrinding_)
-			aiType = ActorLib.FX_VAGINAL
-		ElseIf (aAnal_)
-			aiType = ActorLib.FX_ANAL
-		ElseIf (any_oral)
-			aiType = ActorLib.FX_ORAL
-		EndIf
-		If (aiType != -2)
-			ActorLib.AddCumFx(TargetRef, aiType)
-			Int handle = ModEvent.Create("SexLabApplyCumFX")
-			ModEvent.PushForm(handle, TargetRef)
-			ModEvent.PushForm(handle, SourceRef)
-			ModEvent.PushInt(handle, aiType)
-			ModEvent.Send(handle)
+		; Skip the source's own slot and any not-yet-loaded target, but keep scanning the
+		; rest of the positions - a bare "return" here would abort the whole loop and deny
+		; cum FX (and the SexLabApplyCumFX event) to every position after this one.
+		If (TargetRef != SourceRef && TargetRef.Is3DLoaded() && TargetRef.GetParentCell() && TargetRef.GetParentCell().IsAttached())
+			bool[] interFlags = ListDetectedInteractionsInternal(SourceRef, TargetRef)
+			;variable names are from SourceRef's (male/futa) perspective
+			;bool pHandJob_ = interFlags[pHandJob]
+			;bool pFootJob_ = interFlags[pFootJob]
+			;bool pBoobJob_ = interFlags[pBoobJob]
+			;bool aFacial_ = interFlags[pBoobJob]
+			;bool aSkullfuck_ = interFlags[pBoobJob]
+			bool pOral_ = interFlags[pOral]
+			bool pDeepthroat_ = interFlags[pDeepthroat]
+			bool pLickingShaft_ = interFlags[pLickingShaft]
+			bool aVaginal_ = interFlags[aVaginal]
+			bool aGrinding_ = interFlags[aGrinding]
+			bool aAnal_ = interFlags[aAnal]
+			bool any_oral = pOral_ || pDeepthroat_ || pLickingShaft_
+			; Comeback: reasses need for fallback
+			If (!any_oral && !aVaginal_ && !aGrinding_ && !aAnal_)
+				any_oral = IsOral()
+				aVaginal_ = IsVaginal()
+				aAnal_ = IsAnal()
+			EndIf
+			Log("ApplyCumFX(): Source [" + SexLabUtil.ActorName(SourceRef) + "] Target [" + SexLabUtil.ActorName(TargetRef) + "] CumFX_Types [O: " + any_oral + ", V: " + (aVaginal_ || aGrinding_) + ", A: " + aAnal_ + "]")
+			int aiType = -2
+			If (aVaginal_ || aGrinding_)
+				aiType = ActorLib.FX_VAGINAL
+			ElseIf (aAnal_)
+				aiType = ActorLib.FX_ANAL
+			ElseIf (any_oral)
+				aiType = ActorLib.FX_ORAL
+			EndIf
+			If (aiType != -2)
+				ActorLib.AddCumFx(TargetRef, aiType)
+				Int handle = ModEvent.Create("SexLabApplyCumFX")
+				ModEvent.PushForm(handle, TargetRef)
+				ModEvent.PushForm(handle, SourceRef)
+				ModEvent.PushInt(handle, aiType)
+				ModEvent.Send(handle)
+			EndIf
 		EndIf
 		i += 1
 	EndWhile
@@ -1811,6 +2114,9 @@ Function Initialize()
 	_ContextTags = Utility.CreateStringArray(0)
 	_Hooks = Utility.CreateStringArray(0)
 	_AnimationSpeedBase = 1.0
+	_TimerPaused = false
+	_QuickResetScenes = false
+	EnjoymentPaused = false
 	; Enter thread selection pool
 	DestroyInstance()
 	GoToState(STATE_IDLE)
@@ -1858,6 +2164,7 @@ Int Property CONSENT_NONCONNONSUB 	= 1 AutoReadOnly Hidden
 Int Property CONSENT_CONSUB 		= 2 AutoReadOnly Hidden
 Int Property CONSENT_NONCONSUB 		= 3 AutoReadOnly Hidden
 
+bool Property EnjoymentPaused Auto Hidden
 AssociationType Property SpouseAssocation Auto
 Faction Property PlayerMarriedFaction Auto
 
@@ -1866,17 +2173,17 @@ Faction Property PlayerMarriedFaction Auto
 ; -------------------------------------------------- ;
 
 float Function CalculateInteractionFactor(Actor akPosition, bool[] interActive)
-	float factorTotal = 0.5
+	float factorTotal = 0.25
 	float[] factorValues = sslSystemConfig.GetEnjoymentFactors()
 	int len = interActive.Length
 	int i = 0
 	While (i < len)
 		If (interActive[i])
 			; velFactor: [Range: 1.0 to 2.0]
-			; factorValue: [Default: 1 to 12] [Adjusted: 0.583 to 4.25]
-			; factorType: [Result: 0.583 to 8.5]
+			; factorValue: [Default: 1 to 12] [Adjusted: 0.2 to 2.4]
+			; factorType: [Result: 0.2 to 4.8]
 			float velFactor = CalcInterVelocityFactor(akPosition, i)
-			float adjustedFactor = 0.25 + (factorValues[i] / 3.0)
+			float adjustedFactor = 0.25 + (factorValues[i] / 5.0)
 			factorTotal += (adjustedFactor * velFactor)
 			;Log("InterFactor: TYPE: " + i + ", Value: " + factorValues[i] + ", Adjusted: " + adjustedFactor)
 		EndIf
@@ -1943,17 +2250,18 @@ int Function IdentifyConsentSubStatus()
 	return ConSubStatus
 EndFunction
 
-bool Function SameSexThread()
-	bool SameSexThread = False
-	int MaleCount = sslActorLibrary.CountMale(_Positions)
-	int FemCount = sslActorLibrary.CountFemale(_Positions)
-	int FutaCount = sslActorLibrary.CountFuta(_Positions)
-	int CrtMaleCount = sslActorLibrary.CountCrtMale(_Positions)
-	int CrtFemaleCount = sslActorLibrary.CountCrtFemale(_Positions)
-	If (_Positions.Length != 1 && ((MaleCount + CrtMaleCount == _Positions.Length) || (FemCount + CrtFemaleCount == _Positions.Length) || (FutaCount == _Positions.Length)))
-		SameSexThread = true ; returns False for solo scenes
+bool[] Function CheckActiveHomoTypes()
+	int PosCount = _Positions.Length
+	int[] SexCount = sslActorLibrary.CountSexAll(_Positions)
+	bool[] HomoTypes = Utility.CreateBoolArray(5, False)
+	HomoTypes[0] = (PosCount == 1) ;solo
+	If (PosCount > 1)
+		HomoTypes[1] = (SexCount[0] + SexCount[3] == PosCount) ;males
+		HomoTypes[2] = (SexCount[1] + SexCount[4] == PosCount) ;females
+		HomoTypes[3] = (SexCount[2] == PosCount) ;futa
+		HomoTypes[4] = (SexCount[0] + SexCount[2] + SexCount[3] == PosCount) ;futa with males
 	EndIf
-	return SameSexThread
+	return HomoTypes
 EndFunction
 
 bool Function CrtMaleHugePP()
@@ -1983,7 +2291,7 @@ EndFunction
 bool Function ThreadWaitsForOrgasm()
 	If Config.InternalEnjoymentEnabled && (GetLegacyStagesCount() - GetLegacyStageNum() == 1)
 		int i = 0
-		While i < Positions.Length
+		While i < _Positions.Length
 			If ActorAlias[i].WaitForOrgasm()
 				return true
 			EndIf
@@ -2035,9 +2343,9 @@ bool[] Function CheckSpecificStageTags(string asScene, string asStage)
 	ret[7] = SexLabRegistry.IsStageTag(asScene, asStage, "Standing")
 	ret[8] = SexLabRegistry.IsStageTag(asScene, asStage, "Forced")
 	ret[9] = SexLabRegistry.IsStageTag(asScene, asStage, "Unconscious")
-	ret[10] = SexLabRegistry.IsStageTag(asScene, asStage, "RimTagged")
-	ret[11] = SexLabRegistry.IsStageTag(asScene, asStage, "RimFast")
-	ret[12] = SexLabRegistry.IsStageTag(asScene, asStage, "RimSlow")
+	ret[10] = SexLabRegistry.IsStageTag(asScene, asStage, "PosTagged")
+	ret[11] = SexLabRegistry.IsStageTag(asScene, asStage, "PosFast")
+	ret[12] = SexLabRegistry.IsStageTag(asScene, asStage, "PosSlow")
 	return ret
 EndFunction
 
@@ -2071,104 +2379,48 @@ EndFunction
 ; --- Enjoyment Game                         --- ;
 ; ---------------------------------------------- ;
 
-Function GameAdjustEnj(Actor akActor, Actor akPartner, int AdjustBy = 0)
-	If (AdjustBy != 0)
-		AdjustEnjoyment(akPartner, AdjustBy)
+Function GameRaiseEnjoyment(Actor akTarget)
+	If (SexLabUtil.IsGodModeEnabled())
+		AdjustEnjoyment(akTarget, Config.GameEnjAdjAmount)
 		return
-	Else
-		float arousalstat = PapyrusUtil.ClampFloat(SexlabStatistics.GetStatistic(akPartner, 17), 0.0, 100.0)
-		AdjustBy = PapyrusUtil.ClampInt((arousalstat as int / 50), 1, 2)
-		int basesex = GetActorSex(akPartner)
-		If (basesex != 0 || basesex != 3)
-			AdjustBy += GetOrgasmCount(akPartner)
-		EndIf
-		AdjustEnjoyment(akPartner, AdjustBy)
+	ElseIf (PlayerRef.GetActorValue("Stamina") > Config.GameStaminaCost)
+		PlayerRef.DamageActorValue("Stamina", Config.GameStaminaCost)
+		AdjustEnjoyment(akTarget, Config.GameEnjAdjAmount)
 	EndIf
 EndFunction
 
-Function GameRaiseEnjoyment(Actor akActor, Actor akPartner)
-	If (akActor.GetActorValuePercentage("Stamina") > 0.10)
-		akActor.DamageActorValue("Stamina", Config.GameStaminaCost)
-		GameAdjustEnj(akActor, akPartner)
+Function GameHoldback(Actor akTarget)
+	If (SexLabUtil.IsGodModeEnabled())
+		AdjustEnjoyment(akTarget, -Config.GameEnjAdjAmount)
+		return
+	ElseIf (PlayerRef.GetActorValue("Magicka") > Config.GameMagickaCost)
+		PlayerRef.DamageActorValue("Magicka", Config.GameMagickaCost)
+		AdjustEnjoyment(akTarget, -Config.GameEnjAdjAmount)
 	EndIf
 EndFunction
 
-Function GameHoldback(Actor akActor, Actor akPartner)
-	If (akActor.GetActorValuePercentage("Magicka") > 0.10)
-		akActor.DamageActorValue("Magicka", Config.GameMagickaCost)
-		GameAdjustEnj(akActor, akPartner, -1)
+Function ProcessEnjGameArg(String arg, Actor akPartner, bool abAdjustTarget)
+	Actor akTarget = PlayerRef ;change self/player enj
+	If (abAdjustTarget)
+		akTarget = akPartner ;change partner enj
 	EndIf
-EndFunction
-
-Function ProcessEnjGameArg(String arg, Actor akPlayer, Actor akPartner)
-	Actor targetActor = None
-	If (_Positions.Length == 1 || Input.IsKeyPressed(Config.GameUtilityKey))
-		targetActor = akPlayer ;change self/player enj
-	ElseIf (_Positions.Length > 1)
-		targetActor = akPartner ;change partner enj
-	EndIf
-	If (arg == "Magicka") ;HoldbackKey
-		GameHoldback(akPlayer, targetActor)
-	ElseIf (arg == "Stamina") ;RaiseEnjKey
-		If ((Config.GameRequiredOnHighEnj) && (GetEnjoyment(targetActor) > 80) && (targetActor == akPlayer))
-			ActorAlias[GetPositionIdx(targetActor)].RegisterRaiseEnjAttempt()
+	If (arg == "Magicka")
+		GameHoldback(akTarget)
+	ElseIf (arg == "Stamina")
+		If ((Config.GameRequiredOnHighEnj) && (GetEnjoyment(PlayerRef) > 80))
+			ActorAlias[GetPositionIdx(PlayerRef)].InitRaiseEnjAttempt()
 		Else
-			GameRaiseEnjoyment(akPlayer, targetActor)
+			GameRaiseEnjoyment(akTarget)
 		EndIf
 	EndIf
 EndFunction
 
-Actor Function GameChangePartner(Actor akActor, int idx = -1)
-	Actor akPartner = None
-	Actor tempRef = None
-	If (_Positions.Length > 1)
-		If (idx < 0)
-			int idxPartner = sslUtility.IndexTravel(GetPositionIdx(akActor), _Positions.Length)
-			akPartner = ActorAlias[idxPartner].GetActorRef()
-			If (akActor == PlayerRef)
-				Log("[EnjGame] " + akActor.GetDisplayName() + "'s current partner is " + akPartner.GetDisplayName())
-			EndIf
-		Else
-			tempRef = ActorAlias[idx].GetActorRef()
-			If (tempRef == None || tempRef == akPartner || tempRef == akActor || tempRef == PlayerRef)
-				return akPartner
-			EndIf
-			akPartner = tempRef
-			If (akActor == PlayerRef)
-				Log("[EnjGame] " + akActor.GetDisplayName() + " changed focus to " + akPartner.GetDisplayName())
-			EndIf
-			Config.SelectedSpell.Cast(akPartner, akPartner)
-		EndIf
-	EndIf
-	return akPartner
-EndFunction
-
-int Function GameNextPartnerIdx(Actor akActor, Actor akPartner, bool abReverse)
-	int PartnerIdx = GetPositionIdx(akPartner)
-    If (Positions.Length <= 2)
-        return PartnerIdx
-    EndIf
-	int ActorIdx = GetPositionIdx(akActor)
-    int step = 1
-    If (abReverse)
-        step = -1
-    EndIf
-    int NewIdx = (PartnerIdx + step)
-	int PosLen = Positions.Length
-    int i = 0
-    While (i < PosLen)
-        If (NewIdx >= PosLen)
-            NewIdx = 0
-        ElseIf (NewIdx < 0)
-            NewIdx = PosLen - 1
-        EndIf
-        If (NewIdx != ActorIdx) && (NewIdx != PartnerIdx)
-            return NewIdx
-        EndIf
-        NewIdx += step
-        i += 1
-    EndWhile
-    return PartnerIdx
+Function OnRaiseEnjAttemptResult(int aiSuccess)
+	sslActorAlias ref = ActorAlias(PlayerRef)
+	If (!ref)
+		return
+	EndIf ; Called by Thread::SceneHUD::EnjBarsOverlay
+	return ref.OnRaiseEnjAttemptResult(aiSuccess as bool)
 EndFunction
 
 Function EnjBasedSkipToLastStage(bool abSkip)
@@ -3010,6 +3262,14 @@ Function SetBedFlag(int flag = 0)
 EndFunction
 Function SetBedding(int flag = 0)
 	SetBedFlag(flag)
+EndFunction
+
+int Function GetPain(Actor ActorRef)
+	sslActorAlias ref = ActorAlias(ActorRef)
+	If (!ref)
+		return 0
+	EndIf
+	return ref.GetPain()
 EndFunction
 
 bool property DisableOrgasms hidden

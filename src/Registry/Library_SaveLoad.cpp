@@ -348,7 +348,7 @@ namespace Registry
         for (auto&& [value, name] : fxTypes) {
             logger::info("Initializing FX type: {}", name);
             const auto path = std::format("{}{}", CUM_FX_PATH, name);
-            if (fs::exists(path) && fs::is_empty(path)) {
+            if (fs::exists(path) && !fs::is_empty(path)) {
                 for (auto& profileEntry : fs::directory_iterator(path)) {
                     if (!profileEntry.is_directory())
                         continue;

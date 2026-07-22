@@ -2,7 +2,7 @@ set_xmakever("2.9.5")
 
 -- Globals
 PROJECT_NAME = "SexLabUtil"
-PROJECT_VERSION = "2.16.0"
+PROJECT_VERSION = "2.17.2"
 
 -- Includes
 includes("lib/CommonLibSSE-NG/xmake.lua")
@@ -92,7 +92,7 @@ option_end()
 
 -- Dependencies & Includes
 -- https://github.com/xmake-io/xmake-repo/tree/dev
-add_requires("yaml-cpp", "magic_enum", "nlohmann_json", "simpleini", "glm")
+add_requires("yaml-cpp", "magic_enum", "nlohmann_json", "simpleini", "glm", "eigen")
 
 -- policies
 set_policy("package.requires_lock", true)
@@ -151,7 +151,7 @@ add_rules("common")
 target(PROJECT_NAME)
     set_enabled(get_config("build_dll"))
     -- Dependencies
-    add_packages("yaml-cpp", "magic_enum", "nlohmann_json", "simpleini", "glm")
+    add_packages("yaml-cpp", "magic_enum", "nlohmann_json", "simpleini", "glm", "eigen")
 
     -- CommonLibSSE
     add_deps("commonlibsse-ng")
@@ -160,6 +160,10 @@ target(PROJECT_NAME)
         author = "Scrab",
         description = "Backend for skyrims adult animation framework 'SexLab'."
         })
+
+    -- ImGUI
+    add_includedirs("lib/ImGui")
+    add_defines("_SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING")
 
     -- Source files
     set_pcxxheader("src/PCH.h")
@@ -185,6 +189,7 @@ target(PROJECT_NAME)
     -- flags (cl: disable warnings)
     add_cxxflags(
         "cl::/wd4068", -- unknown pragma 'clang'
+        "cl::/wd4099", -- type name first seen using 'struct' now seen using 'class'
         "cl::/wd4201", -- nonstandard extension used : nameless struct/union
         "cl::/wd4265" -- 'type': class has virtual functions, but its non-trivial destructor is not virtual; instances of this class may not be destructed correctly
         )
@@ -203,6 +208,7 @@ target(PROJECT_NAME)
             clib:set("build_after", nil)
         end
     end)
+
     -- Post Build 
     after_build(function (target)
         import("lib.detect.find_tool")
@@ -239,6 +245,7 @@ target("papyrus")
     add_includedirs("$(papyrus_include)/SkyUI SDK/Source/Scripts")
     add_includedirs("$(papyrus_include)/Race Menu Sources/Source/Scripts")
     add_includedirs("$(papyrus_include)/MfgFix NG/Source/Scripts")
+    add_includedirs("$(papyrus_include)/VRIK Player Avatar/Source/Scripts")
     add_includedirs("$(papyrus_gamesource)/Source/Scripts")
 
     on_load(function(target)
@@ -277,8 +284,8 @@ target("assets")
     add_installfiles("dist/(Interface/SexLab/**)")
     add_installfiles("dist/(Interface/Translations/*.txt)")
     add_installfiles("dist/(SKSE/CustomConsole/*.yaml)")
+    add_installfiles("dist/(SKSE/Plugins/*.ini)")
     add_installfiles("dist/(SKSE/SexLab/**)")
-
     add_installfiles("dist/(meshes/**)")
     add_installfiles("dist/(textures/**)")
     add_installfiles("dist/(Sound/**)")

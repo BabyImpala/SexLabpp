@@ -258,8 +258,32 @@ bool property SubmissiveTarget hidden
 	  SetSettingBool("bSubmissiveTarget", aSet)
 	EndFunction
 EndProperty
+bool property AdjustStage Hidden
+  bool Function Get()
+    return GetSettingBool("bAdjustStage")
+  EndFunction
+  Function Set(bool abSet)
+    SetSettingBool("bAdjustStage", abSet)
+  EndFunction
+EndProperty
+float property AdjustStepSize hidden
+  float Function Get()
+    return GetSettingFlt("fAdjustStepSize")
+  EndFunction
+  Function Set(float afSet)
+    SetSettingFlt("fAdjustStepSize", afSet)
+  EndFunction
+EndProperty
 
 ; Integers
+int property ClimaxType hidden
+  int Function Get()
+    return GetSettingInt("iClimaxType")
+  EndFunction
+  Function Set(int aiSet)
+    SetSettingInt("iClimaxType", aiSet)
+  EndFunction
+EndProperty
 int property AskBed hidden
   int Function Get()
     return GetSettingInt("iAskBed")
@@ -329,144 +353,21 @@ int property LipsSoundTime hidden
   EndFunction
 EndProperty
 
-; Scene Control Keys
-; TODO: Add support for legacy keybinds where possible
-bool property AdjustTargetStage  Hidden
-  bool Function Get()
-    return GetSettingBool("bAdjustTargetStage")
-  EndFunction
-  Function Set(bool abSet)
-    SetSettingBool("bAdjustTargetStage", abSet)
-  EndFunction
-EndProperty
-int property AdjustStage hidden
-  int Function Get()
-    return GetSettingInt("iAdjustStage")
-  EndFunction
-  Function Set(int aiSet)
-    SetSettingInt("iAdjustStage", aiSet)
-  EndFunction
-EndProperty
-int property AdvanceAnimation hidden
-  int Function Get()
-    return GetSettingInt("iAdvanceAnimation")
-  EndFunction
-  Function Set(int aiSet)
-    SetSettingInt("iAdvanceAnimation", aiSet)
-  EndFunction
-EndProperty
-int property ChangeAnimation hidden
-  int Function Get()
-    return GetSettingInt("iChangeAnimation")
-  EndFunction
-  Function Set(int aiSet)
-    SetSettingInt("iChangeAnimation", aiSet)
-  EndFunction
-EndProperty
-int property ChangePositions hidden
-  int Function Get()
-    return GetSettingInt("iChangePositions")
-  EndFunction
-  Function Set(int aiSet)
-    SetSettingInt("iChangePositions", aiSet)
-  EndFunction
-EndProperty
-int property AdjustChange hidden
-  int Function Get()
-    return GetSettingInt("iAdjustChange")
-  EndFunction
-  Function Set(int aiSet)
-    SetSettingInt("iAdjustChange", aiSet)
-  EndFunction
-EndProperty
-int property AdjustForward hidden
-  int Function Get()
-    return GetSettingInt("iAdjustForward")
-  EndFunction
-  Function Set(int aiSet)
-    SetSettingInt("iAdjustForward", aiSet)
-  EndFunction
-EndProperty
-int property AdjustSideways hidden
-  int Function Get()
-    return GetSettingInt("iAdjustSideways")
-  EndFunction
-  Function Set(int aiSet)
-    SetSettingInt("iAdjustSideways", aiSet)
-  EndFunction
-EndProperty
-int property AdjustUpward hidden
-  int Function Get()
-    return GetSettingInt("iAdjustUpward")
-  EndFunction
-  Function Set(int aiSet)
-    SetSettingInt("iAdjustUpward", aiSet)
-  EndFunction
-EndProperty
-int property RealignActors hidden
-  int Function Get()
-    return GetSettingInt("iRealignActors")
-  EndFunction
-  Function Set(int aiSet)
-    SetSettingInt("iRealignActors", aiSet)
-  EndFunction
-EndProperty
-int property MoveScene hidden
-  int Function Get()
-    return GetSettingInt("iMoveScene")
-  EndFunction
-  Function Set(int aiSet)
-    SetSettingInt("iMoveScene", aiSet)
-  EndFunction
-EndProperty
-int property RestoreOffsets hidden
-  int Function Get()
-    return GetSettingInt("iRestoreOffsets")
-  EndFunction
-  Function Set(int aiSet)
-    SetSettingInt("iRestoreOffsets", aiSet)
-  EndFunction
-EndProperty
-int property RotateScene hidden
-  int Function Get()
-    return GetSettingInt("iRotateScene")
-  EndFunction
-  Function Set(int aiSet)
-    SetSettingInt("iRotateScene", aiSet)
-  EndFunction
-EndProperty
-int property EndAnimation hidden
-  int Function Get()
-    return GetSettingInt("iEndAnimation")
-  EndFunction
-  Function Set(int aiSet)
-    SetSettingInt("iEndAnimation", aiSet)
-  EndFunction
-EndProperty
-int property AdjustSchlong hidden
-  int Function Get()
-    return GetSettingInt("iAdjustSchlong")
-  EndFunction
-  Function Set(int aiSet)
-    SetSettingInt("iAdjustSchlong", aiSet)
-  EndFunction
-EndProperty
-int property Backwards hidden
-  int Function Get()
-    return GetSettingInt("iBackwards")
-  EndFunction
-  Function Set(int aiSet)
-    SetSettingInt("iBackwards", aiSet)
-  EndFunction
-EndProperty
-
-; Misc Keys
+; Global Keys
 int property ToggleFreeCamera hidden
   int Function Get()
     return GetSettingInt("iToggleFreeCamera")
   EndFunction
   Function Set(int aiSet)
     SetSettingInt("iToggleFreeCamera", aiSet)
+  EndFunction
+EndProperty
+int property ToggleThreadControl hidden
+  int Function Get()
+    return GetSettingInt("iToggleThreadControl")
+  EndFunction
+  Function Set(int aiSet)
+    SetSettingInt("iToggleThreadControl", aiSet)
   EndFunction
 EndProperty
 int property TargetActor hidden
@@ -477,12 +378,130 @@ int property TargetActor hidden
     SetSettingInt("iTargetActor", aiSet)
   EndFunction
 EndProperty
+
+; Scene Control Keys
+int property ModifierKey hidden
+  int Function Get()
+    return GetSettingInt("iKeyMod")
+  EndFunction
+  Function Set(int aiSet)
+    SetSettingInt("iKeyMod", aiSet)
+  EndFunction
+EndProperty
+int property AdvanceAnimation hidden
+  int Function Get()
+    return GetSettingInt("iKeyAdvance")
+  EndFunction
+  Function Set(int aiSet)
+    SetSettingInt("iKeyAdvance", aiSet)
+  EndFunction
+EndProperty
+int property EndAnimation hidden
+  int Function Get()
+    return GetSettingInt("iKeyEnd")
+  EndFunction
+  Function Set(int aiSet)
+    SetSettingInt("iKeyEnd", aiSet)
+  EndFunction
+EndProperty
+int property ChangeAnimation hidden
+  int Function Get()
+    return GetSettingInt("iChangeAnimation")
+  EndFunction
+  Function Set(int aiSet)
+    SetSettingInt("iChangeAnimation", aiSet)
+  EndFunction
+EndProperty
+int property MoveScene hidden
+  int Function Get()
+    return GetSettingInt("iMoveScene")
+  EndFunction
+  Function Set(int aiSet)
+    SetSettingInt("iMoveScene", aiSet)
+  EndFunction
+EndProperty
+
+; Scene Menu
+int property ToggleSceneHUD hidden
+  int Function Get()
+    return GetSettingInt("iToggleSceneHUD")
+  EndFunction
+  Function Set(int aiSet)
+    SetSettingInt("iToggleSceneHUD", aiSet)
+  EndFunction
+EndProperty
+int property FocusSceneHUD hidden
+  int Function Get()
+    return GetSettingInt("iFocusSceneHUD")
+  EndFunction
+  Function Set(int aiSet)
+    SetSettingInt("iFocusSceneHUD", aiSet)
+  EndFunction
+EndProperty
+float property MenuScaleMult hidden
+  float Function Get()
+    return GetSettingFlt("fMenuScaleMult")
+  EndFunction
+  Function Set(float afSet)
+    SetSettingFlt("fMenuScaleMult", afSet)
+  EndFunction
+EndProperty
+float property MenuTextScaleMult hidden
+  float Function Get()
+    return GetSettingFlt("fMenuTextScaleMult")
+  EndFunction
+  Function Set(float afSet)
+    SetSettingFlt("fMenuTextScaleMult", afSet)
+  EndFunction
+EndProperty
+
+; UI Visibility
 bool property HideHUD hidden
 	bool Function Get()
 	  return GetSettingBool("bHideHUD")
 	EndFunction
 	Function Set(bool aSet)
 	  SetSettingBool("bHideHUD", aSet)
+	EndFunction
+EndProperty
+bool property ElementAnimSpeed hidden
+	bool Function Get()
+	  return GetSettingBool("bElementAnimSpeed")
+	EndFunction
+	Function Set(bool aSet)
+	  SetSettingBool("bElementAnimSpeed", aSet)
+	EndFunction
+EndProperty
+bool property ElementEnjBars hidden
+	bool Function Get()
+	  return GetSettingBool("bElementEnjBars")
+	EndFunction
+	Function Set(bool aSet)
+	  SetSettingBool("bElementEnjBars", aSet)
+	EndFunction
+EndProperty
+bool property ElementOffsetAdjust hidden
+	bool Function Get()
+	  return GetSettingBool("bElementOffsetAdjust")
+	EndFunction
+	Function Set(bool aSet)
+	  SetSettingBool("bElementOffsetAdjust", aSet)
+	EndFunction
+EndProperty
+bool property ElementSceneSelect hidden
+	bool Function Get()
+	  return GetSettingBool("bElementSceneSelect")
+	EndFunction
+	Function Set(bool aSet)
+	  SetSettingBool("bElementSceneSelect", aSet)
+	EndFunction
+EndProperty
+bool property ElementThreadConfig hidden
+	bool Function Get()
+	  return GetSettingBool("bElementThreadConfig")
+	EndFunction
+	Function Set(bool aSet)
+	  SetSettingBool("bElementThreadConfig", aSet)
 	EndFunction
 EndProperty
 
@@ -577,20 +596,6 @@ Function _SetfTimers(int aiIdx0, float[] afSet)
     SetSettingFltA("fTimers", afSet[3], 3)
 EndFunction
 
-; Compatibility checks
-bool property HasNiOverride hidden
-  bool Function Get()
-    return SKSE.GetPluginVersion("SKEE64") >= 7 || NiOverride.GetScriptVersion() >= 7
-  EndFUnction
-  Function Set(bool aSet)
-  EndFunction
-EndProperty
-bool property HasMFGFix hidden
-  bool Function Get()
-    return SKSE.GetPluginVersion("mfgfix") > -1
-  EndFunction
-EndProperty
-
 ; ------------------------------------------------------- ;
 ; --- Config Accessors                                --- ;
 ; ------------------------------------------------------- ;
@@ -679,61 +684,50 @@ Event OnKeyDown(int keyCode)
   If (Utility.IsInMenuMode())
     return
   ElseIf (keyCode == ToggleFreeCamera)
-    ToggleFreeCamera()
-  ElseIf (keyCode == TargetActor)
-    If (_ActiveControl && !_ActiveControl.HasPlayer)
-      DisableThreadControl(_ActiveControl)
-    Else
-      SetTargetActor()
-    EndIf
+    SexLabUtil.ToggleFreeCamera()
+  ElseIf (keyCode == TargetActor && !_ActiveControl)
+    SetTargetActor(_CrosshairRef, true)
+  ElseIf (keyCode == ToggleThreadControl)
+    ToggleThreadControl()
   EndIf
 EndEvent
 
-Function SetTargetActor()
-  If (!_CrosshairRef)
+Function SetTargetActor(Actor akActor = None, bool abThreadControl = false)
+  If (!akActor || akActor == Game.GetPlayer())
     return
   EndIf
-  TargetRef = _CrosshairRef
-  SelectedSpell.Cast(TargetRef, TargetRef)
-  Debug.Notification("SexLab Target Selected: " + TargetRef.GetLeveledActorBase().GetName())
-  ; Attempt to grab control of their animation?
-  sslThreadController TargetThread = ThreadSlots.GetActorController(TargetRef)
-  If (TargetThread && !TargetThread.HasPlayer && TargetThread.GetStatus() == TargetThread.STATUS_INSCENE && \
-        !ThreadSlots.GetActorController(Game.GetPlayer()) && TakeThreadControl.Show())
-    GetThreadControl(TargetThread) 
+  TargetRef = akActor
+  If (abThreadControl)
+    ToggleThreadControl()
   EndIf
 EndFunction
 
-Function ToggleFreeCamera()
-  If (Game.GetCameraState() != 3)
-    MiscUtil.SetFreeCameraSpeed(AutoSUCSM)
+Function ToggleThreadControl()
+  If (_ActiveControl)
+    DisableThreadControl(_ActiveControl)
+    return
   EndIf
-  MiscUtil.ToggleFreeCamera()
+  Actor akTarget = None
+  If (Game.GetPlayer().IsInFaction(AnimatingFaction))
+    akTarget = Game.GetPlayer()
+  ElseIf (TargetRef)
+    akTarget = TargetRef
+  Else
+    return
+  EndIf
+  Debug.Notification("SexLab target selected: " + SexLabUtil.ActorName(akTarget))
+  SelectedSpell.Cast(akTarget)
+  SexLabThread TargetThread = ThreadSlots.GetThreadByActor(akTarget)
+  If (TargetThread && TargetThread.GetStatus() == TargetThread.STATUS_INSCENE)
+    Log("AttemptThreadControl(), Attempting thread control for actor: " + SexLabUtil.ActorName(akTarget))
+    If (TargetThread.HasPlayer() || TakeThreadControl.Show())
+      GetThreadControl(TargetThread as sslThreadController)
+    EndIf
+  EndIf
 EndFunction
 
-bool function BackwardsPressed()
-  return Input.GetNumKeysPressed() > 1 && MirrorPress(Backwards)
-endFunction
-
-bool function AdjustStagePressed()
-  return (!AdjustTargetStage && Input.GetNumKeysPressed() > 1 && MirrorPress(AdjustStage)) \
-    || (AdjustTargetStage && !(Input.GetNumKeysPressed() > 1 && MirrorPress(AdjustStage)))
-endFunction
-
-bool function IsAdjustStagePressed()
-  return Input.GetNumKeysPressed() > 1 && MirrorPress(AdjustStage)
-endFunction
-
-bool function MirrorPress(int mirrorkey)
-  if mirrorkey == 42 || mirrorkey == 54  ; Shift
-    return Input.IsKeyPressed(42) || Input.IsKeyPressed(54)
-  elseif mirrorkey == 29 || mirrorkey == 157 ; Ctrl
-    return Input.IsKeyPressed(29) || Input.IsKeyPressed(157)
-  elseif mirrorkey == 56 || mirrorkey == 184 ; Alt
-    return Input.IsKeyPressed(56) || Input.IsKeyPressed(184)
-  else
-    return Input.IsKeyPressed(mirrorkey)
-  endIf
+bool function ModifierPressed()
+  return ((Input.IsKeyPressed(ModifierKey) || Input.IsKeyPressed(42) || Input.IsKeyPressed(54))) ; Shift keys
 endFunction
 
 ; ------------------------------------------------------- ;
@@ -757,13 +751,14 @@ Function GetThreadControl(sslThreadController TargetThread)
   _ActiveControl = TargetThread
   ; Lock players movement iff they arent owned by the thread
   If (!_ActiveControl.HasPlayer)
-    Actor player = Game.GetPlayer()
     _ActiveControl.AutoAdvance = false
+    Actor player = Game.GetPlayer()
     player.StopCombatAlarm()
     if player.IsWeaponDrawn()
       player.SheatheWeapon()
     endIf
-    Game.SetPlayerAIDriven()
+    player.SetFactionRank(AnimatingFaction, 1)
+    _ActiveControl.UpdateAnimatingActorMovement(player) ;MOVEMENT_LOCK
   EndIf
   _ActiveControl.EnableHotkeys(true)
 EndFunction
@@ -772,12 +767,15 @@ Function DisableThreadControl(sslThreadController TargetThread)
   If (!_ActiveControl || _ActiveControl != TargetThread)
     return
   EndIf
+  TargetRef = None
   ; Release players thread control
   _ActiveControl.DisableHotkeys()
   _ActiveControl.AutoAdvance = true
   ; Unlock players movement iff they arent owned by the thread
   If (!_ActiveControl.HasPlayer)
-    Game.SetPlayerAIDriven(false)
+    Actor player = Game.GetPlayer()
+    player.SetFactionRank(AnimatingFaction, -1)
+    _ActiveControl.UpdateAnimatingActorMovement(player) ;MOVEMENT_RELEASE
   EndIf
   _ActiveControl = none
 Endfunction
@@ -958,33 +956,52 @@ bool function CheckSystemPart(string CheckSystem)
     return SKSE.GetScriptVersionRelease() >= 60
   elseIf CheckSystem == "SkyUI"
     return Quest.GetQuest("SKI_ConfigManagerInstance") != none
-  elseIf CheckSystem == "SexLabP+"
+  elseIf CheckSystem == "SexLabUtil"
     return SKSE.GetPluginVersion("SexLabUtil") > -1
   elseIf CheckSystem == "PapyrusUtil"
     return PapyrusUtil.GetVersion() >= 36
-  elseIf CheckSystem == "NiOverride"
-		return HasNiOverride
-  elseIf CheckSystem == "MfgFix"
-		return HasMFGFix
+  elseIf CheckSystem == "RaceMenu"
+    return ((SKSE.GetPluginVersion("skee64") > -1) || (SKSE.GetPluginVersion("skeevr") > -1) || (NiOverride.GetScriptVersion() >= 7))
+  elseIf CheckSystem == "MfgFixNG"
+    return SKSE.GetPluginVersion("mfgfix") > -1
+  elseIf CheckSystem == "PPA"
+    return SKSE.GetPluginVersion("AccuratePenetration") > -1
+  elseIf CheckSystem == "SKSEMenuFramework"
+    return SKSE.GetPluginVersion("SKSEMenuFramework") > -1
+  elseif CheckSystem == "VRIK"
+    return CheckForVRIK()
   endIf
   return false
 endFunction
 
 bool function CheckSystem()
+  bool ret = true
   If (!CheckSystemPart("SKSE"))
     CheckSKSE.Show(2.22)
-    return false
-  ElseIf (!CheckSystemPart("SexLabP+"))
-    Debug.MessageBox("[SexLab]\nMissing SexLabUtil.dll.\nThis plugin is mandatory for SexLab to function. Ensure you have a with your game compatible version of SexLab installed.")
-    return false
+    ret = false
+  ElseIf (!CheckSystemPart("SexLabUtil"))
+    Debug.MessageBox("[SexLab]\nMissing SexLabUtil.dll.\nThis plugin is mandatory for SexLab to function.")
+    ret = false
   ElseIf (!CheckSystemPart("SkyUI"))
     CheckSkyUI.Show(5.2)
-    return false
+    ret = false
   ElseIf (!CheckSystemPart("PapyrusUtil"))
     CheckPapyrusUtil.Show(4.4)
-    return false
-  endIf
-  return true
+    ret = false
+  ElseIf (!CheckSystemPart("SKSEMenuFramework"))
+    Debug.MessageBox("[SexLab]\nMissing 'SKSE Menu Framework'.\nThis mod is mandatory for the SceneHUD to work.")
+    ret = false
+  ElseIf (!CheckSystemPart("PPA"))
+    Debug.MessageBox("[SexLab]\nMissing 'Procedural Penis Animations'.\nThis mod is highly recommended for schlong allignments to work properly.")
+  EndIf
+  If (CheckForSkyrimVR() && !CheckSystemPart("VRIK"))
+    Debug.MessageBox("[SexLab]\nMissing VRIK.\nThis mod is mandatory for SexLab to function properly in VR.")
+    ret = false
+  EndIf
+  If (ret == false)
+    Debug.MessageBox("[SexLab]\nMissing one or more mandatory requirements. SexLab will not be installed!")
+  EndIf
+  return ret
 endFunction
 
 Function Reload()
@@ -998,11 +1015,13 @@ Function Reload()
   _CrosshairRef = none
   TargetRef = none
   _Hooks = sslUtility.ClearNoneThreadHook(_Hooks)
+  HasVRIK = CheckForSkyrimVR() && CheckForVRIK()
+  InitFootStepVariablesVR()
 
   UnregisterForAllKeys()
   RegisterForKey(ToggleFreeCamera)
   RegisterForKey(TargetActor)
-  RegisterForKey(EndAnimation)
+  RegisterForKey(ToggleThreadControl)
 
   AddRemoveMatchmakerSpells()
   DisableThreadControl(_ActiveControl)
@@ -1234,22 +1253,6 @@ bool Property GameEnabled hidden
     SetSettingBool("bGameEnabled", value)
   EndFunction
 EndProperty
-int Property GameUtilityKey hidden
-  int Function Get()
-    return GetSettingInt("iGameUtilityKey")
-  EndFunction
-  Function Set(int aiSet)
-    SetSettingInt("iGameUtilityKey", aiSet)
-  EndFunction
-EndProperty
-int Property GamePauseKey hidden
-  int Function Get()
-    return GetSettingInt("iGamePauseKey")
-  EndFunction
-  Function Set(int aiSet)
-    SetSettingInt("iGamePauseKey", aiSet)
-  EndFunction
-EndProperty
 int Property GameRaiseEnjKey hidden
   int Function Get()
     return GetSettingInt("iGameRaiseEnjKey")
@@ -1264,14 +1267,6 @@ int Property GameHoldbackKey hidden
   EndFunction
   Function Set(int aiSet)
     SetSettingInt("iGameHoldbackKey", aiSet)
-  EndFunction
-EndProperty
-int Property GameSelectNextPos hidden
-  int Function Get()
-    return GetSettingInt("iGameSelectNextPos")
-  EndFunction
-  Function Set(int aiSet)
-    SetSettingInt("iGameSelectNextPos", aiSet)
   EndFunction
 EndProperty
 int Property GameStaminaCost hidden
@@ -1290,6 +1285,14 @@ int Property GameMagickaCost hidden
     SetSettingInt("iEnjGameMagickaCost", aiSet)
   EndFunction
 EndProperty
+int Property GameEnjAdjAmount hidden
+  int Function Get()
+    return GetSettingInt("iGameEnjAdjAmount")
+  EndFunction
+  Function Set(int aiSet)
+    SetSettingInt("iGameEnjAdjAmount", aiSet)
+  EndFunction
+EndProperty
 bool Property GameRequiredOnHighEnj hidden
   bool Function Get()
     return GetSettingBool("bGameRequiredOnHighEnj")
@@ -1304,6 +1307,392 @@ bool Property GameSpamDelayPenalty hidden
   EndFunction
   Function Set(bool value)
     SetSettingBool("bGameSpamDelayPenalty", value)
+  EndFunction
+EndProperty
+
+; *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-* ;
+; ----------------------------------------------------------------------------- ;
+;                          ██╗   ██╗██████╗ ██╗██╗  ██╗                         ;
+;                          ██║   ██║██╔══██╗██║██║ ██╔╝                         ;
+;                          ██║   ██║██████╔╝██║█████╔╝                          ;
+;                          ╚██╗ ██╔╝██╔══██╗██║██╔═██╗                          ;
+;                           ╚████╔╝ ██║  ██║██║██║  ██╗                         ;
+;                            ╚═══╝  ╚═╝  ╚═╝╚═╝╚═╝  ╚═╝                         ;
+; ----------------------------------------------------------------------------- ;
+; *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-* ;
+
+bool Function CheckForSkyrimVR() global
+  return ((SKSE.GetVersion()*10000 + SKSE.GetVersionMinor()*100 + SKSE.GetVersionBeta()) == 20012) ;SKSE VR v2.0.12
+EndFunction
+
+bool Function CheckForVRIK() global
+  return (VRIK.VrikGetBuildNumber() >= 80123)
+EndFunction
+
+Function ToggleVRIK(bool abEnabled, int aiPOVMode = -1)
+  If ((!HasVRIK) ||(_bAnimatingVR && abEnabled && aiPOVMode==POVModeVR) || (aiPOVMode < -1) || (aiPOVMode > VRIK_TPP_FREE))
+    return
+  EndIf
+  If (abEnabled)
+    If (aiPOVMode > -1)
+      POVModeVR = aiPOVMode
+    EndIf
+    RefreshConfigsVRIK()
+  EndIf
+  ApplyConfigsVRIK(abEnabled)
+EndFunction
+
+Function SetPOVModeVRIK(int aiSet, bool abForced = false)
+  If (!HasVRIK || !_bAnimatingVR)
+    If (abForced)
+      POVModeVR = aiSet
+    EndIf
+    return
+  EndIf
+  If ((aiSet==POVModeVR) || (aiSet < VRIK_FPP_HMD) || (aiSet > VRIK_TPP_FREE))
+    return
+  EndIf 
+  If (aiSet == VRIK_FPP_HMD)
+    Debug.Notification("SexLabVR POV: 1st LOCKED")
+  ElseIf (aiSet == VRIK_FPP_FREE)
+    Debug.Notification("SexLabVR POV: 1st FREE")
+  ElseIf (aiSet == VRIK_TPP_FREE)
+    Debug.Notification("SexLabVR POV: 3rd FREE")
+  EndIf
+  ToggleVRIK(true, aiPOVMode=aiSet)
+EndFunction
+
+; ----------------------------------------------- ;
+; --- VRIK CONFIGURATION                      --- ;
+; ----------------------------------------------- ;
+
+int Property VRIK_FPP_HMD   = 0 AutoReadOnly   ; 1st Person [Headset Locked to Body]
+int Property VRIK_FPP_FREE  = 1 AutoReadOnly   ; 1st Person [Headset Unlocked]
+int Property VRIK_TPP_FREE  = 2 AutoReadOnly   ; 3rd Person [Headset Unlocked]
+
+bool _bLockHeight
+float _fHeightAdjSpeed
+bool _bTrackHead
+int _iTrackHands
+float _fDistHideHead
+float _fDistNearClip
+int _iLockHmdToBody
+float _fLockHmdDistance
+float _fLockHmdTolerance
+float _fLockHmdSpeed
+bool _bAnimatingVR
+SoundCategory _AudioCategoryFST
+SoundCategory _AudioCategoryNPCFST
+
+Function RefreshConfigsVRIK(bool abOverrideConfig=false, int aiPOVMode=-1, \
+  int abLockHeight=-1, float afHeightAdjSpeed=-1.0, int abTrackHead=-1, int aiTrackHands=-1, \
+  float afDistHideHead=-1.0, float afDistNearClip=-1.0, int aiLockHmdToBody=-1, \
+  float afLockHmdDistance=-1.0, float afLockHmdTolerance=-1.0, float afLockHmdSpeed=-1.0)
+  If ((!HasVRIK) || (aiPOVMode < -1) || (aiPOVMode > VRIK_TPP_FREE))
+    return
+  EndIf
+  ; Camera Mode
+  If (abOverrideConfig) && (aiPOVMode != -1)
+    POVModeVR = aiPOVMode
+  EndIf
+  bool VR_1st_HMD  = (POVModeVR == VRIK_FPP_HMD)
+  bool VR_1st_FREE = (POVModeVR == VRIK_FPP_FREE)
+  bool VR_3rd_FREE = (POVModeVR == VRIK_TPP_FREE)
+  ; Shared
+  _fHeightAdjSpeed = HeightAdjustSpeed
+  _fDistNearClip = DistanceNearClip
+  ; Mode Dependent
+  If (VR_1st_HMD)
+    _bLockHeight = true
+    _iLockHmdToBody = 1
+    _bTrackHead = TrackHead
+    _iTrackHands = TrackHands
+    _fDistHideHead = DistanceHideHead
+    _fLockHmdDistance = LockHmdDistance
+    _fLockHmdTolerance = LockHmdTolerance
+    _fLockHmdSpeed = LockHmdSpeed
+  ElseIf (VR_1st_FREE)
+    _bLockHeight = true
+    _iLockHmdToBody = 0
+    _bTrackHead = false
+    _iTrackHands = 0
+    _fDistHideHead = DistanceHideHead
+    _fLockHmdDistance = 0.0
+    _fLockHmdTolerance = 0.0
+    _fLockHmdSpeed = 150.0
+  ElseIf (VR_3rd_FREE)
+    _bLockHeight = LockHeight
+    _iLockHmdToBody = 0
+    _bTrackHead = false
+    _iTrackHands = 0
+    _fDistHideHead = 2.0
+    _fLockHmdDistance = 500.0
+    _fLockHmdTolerance = 500.0
+    _fLockHmdSpeed = 60.0
+  EndIf
+  If (!abOverrideConfig)
+    return
+  EndIf
+  ; Apply Overrides
+  If (abLockHeight != -1)
+    _bLockHeight = abLockHeight as bool
+  EndIf
+  If (afHeightAdjSpeed != -1.0)
+    _fHeightAdjSpeed = afHeightAdjSpeed
+  EndIf
+  If (abTrackHead != -1)
+    _bTrackHead = abTrackHead as bool
+  EndIf
+  If (aiTrackHands != -1)
+    _iTrackHands = aiTrackHands
+  EndIf
+  If (afDistHideHead != -1.0)
+    _fDistHideHead = afDistHideHead
+  EndIf
+  If (afDistNearClip != -1.0)
+    _fDistNearClip = afDistNearClip
+  EndIf
+  If (aiLockHmdToBody != -1)
+    _iLockHmdToBody = aiLockHmdToBody
+  EndIf
+  If (afLockHmdDistance != -1.0)
+    _fLockHmdDistance = afLockHmdDistance
+  EndIf
+  If (afLockHmdTolerance != -1.0)
+    _fLockHmdTolerance = afLockHmdTolerance
+  EndIf
+  If (afLockHmdSpeed != -1.0)
+    _fLockHmdSpeed = afLockHmdSpeed
+  EndIf
+EndFunction
+
+Function ApplyConfigsVRIK(bool abEnabled)
+  If (!HasVRIK)
+    return
+  EndIf
+  If (!abEnabled)
+    _bAnimatingVR = false
+    Utility.SetIniBool("bComfortSneak:VR", false)
+    VRIK.VrikRestoreSettings()
+    _AudioCategoryFST.Unmute()
+    _AudioCategoryNPCFST.Unmute()
+    return
+  EndIf
+  float afScaleBody = Game.GetPlayer().GetScale()
+  ;float afScaleVR = VRIK.VrikGetSetting("bodySize")
+  If (ScaleVRBody)
+    VRIK.VrikSetSetting("bodySize", afScaleBody)
+    VRIK.VrikSetSetting("armSize", afScaleBody)
+    VRIK.VrikSetSetting("armLength", afScaleBody) ; or 1.0?
+  EndIf
+  ; Constant
+  Utility.SetIniBool("bComfortSneak:VR", true)
+  VRIK.VrikSetSetting("enablePosture", 0)
+  VRIK.VrikSetSetting("enableBody", 0)
+  VRIK.VrikSetSetting("enableJumping", 0)
+  VRIK.VrikSetSetting("displayHolsters", 0)
+  VRIK.VrikSetSetting("lockRotation", 1)
+  ; Shared
+  VRIK.VrikSetGesture("enableGestureHaptics", GestureHaptics as int)
+  VRIK.VrikSetSetting("heightAdjustSpeed", _fHeightAdjSpeed)
+  VRIK.VrikSetSetting("nearClipDistance", _fDistNearClip)
+  Utility.SetIniFloat("fNearDistance:Display", _fDistNearClip)
+  ; Mode Dependent
+  VRIK.VrikSetSetting("lockHeightToBody", _bLockHeight as int)
+  VRIK.VrikSetSetting("enableHead", _bTrackHead as int)
+  If (_iTrackHands > 0)
+    VRIK.VrikSetSetting("enableLeftArm", 1)
+    VRIK.VrikSetSetting("enableRightArm", 1)
+    VRIK.VrikSetSetting("enableInteractiveHands", _iTrackHands - 1)
+  Else
+    VRIK.VrikSetSetting("enableLeftArm", 0)
+    VRIK.VrikSetSetting("enableRightArm", 0)
+    VRIK.VrikSetSetting("enableInteractiveHands", 0)
+  EndIf
+  VRIK.VrikSetSetting("hidePlayerHeadDistance", _fDistHideHead)
+  VRIK.VrikSetSetting("lockHmdToBody", _iLockHmdToBody)
+  VRIK.VrikSetSetting("lockHmdMinThreshold", _fLockHmdDistance)
+  VRIK.VrikSetSetting("lockHmdMaxThreshold", _fLockHmdTolerance)
+  VRIK.VrikSetSetting("lockHmdSpeed", _fLockHmdSpeed)
+  ; Other Configs
+  _bAnimatingVR = true
+  _AudioCategoryFST.Mute()
+  _AudioCategoryNPCFST.Mute()
+EndFunction
+
+int Function UpdatePositioningVRIK(int VRIKRestoreInTicks)
+  If ((!_bAnimatingVR) || (POVModeVR != VRIK_FPP_FREE))
+    return 0
+  EndIf
+  Actor PlayerRef = Game.GetPlayer()
+  VRIK.VrikSetSetting("lockRotationAngle", PlayerRef.GetAngleZ())
+  VRIK.VrikSetSetting("lockPositionX", PlayerRef.X)
+  VRIK.VrikSetSetting("lockPositionY", PlayerRef.Y)
+  VRIK.VrikSetSetting("lockPositionZ", PlayerRef.Z)
+  VRIK.VrikSetSetting("lockPosition", 2)
+  VRIK.VrikSetSetting("rotateHmdToBodySeconds", 1.5)
+  VRIK.VrikSetSetting("lockHmdToBody", 1) ;temp override
+  If (VRIKRestoreInTicks < 3)
+    VRIKRestoreInTicks = 3 ; t=1.5s
+  EndIf
+  return VRIKRestoreInTicks
+EndFunction
+
+Function RestoreHmdVRIK()
+  If ((!_bAnimatingVR) || (POVModeVR != VRIK_FPP_FREE))
+    return
+  EndIf
+  VRIK.VrikSetSetting("lockHmdToBody", 2)
+  VRIK.VrikSetSetting("lockPosition", 0)
+EndFunction
+
+Function DoWhiteOutEfffect(int aiOrgasms)
+  If (!_bAnimatingVR || !OrgasmWhiteout)
+    return
+  EndIf
+  bool abKO = (Game.GetPlayer().GetActorValuePercentage("Stamina") < 0.25)
+  float HoldTime = (aiOrgasms as float) + 1.0
+  If (HoldTime > 4.0)
+    HoldTime = 4.0
+  EndIf
+  Game.FadeOutGame(true, abKO, 0.0, 2.0)
+  Utility.WaitMenuMode(0.5)
+  Game.FadeOutGame(false, false, HoldTime, 2.0)
+EndFunction
+
+Function InitFootStepVariablesVR()
+  If (!HasVRIK)
+    return
+  EndIf
+  _AudioCategoryFST = Game.GetFormFromFile(0x0F5FFC,"Skyrim.esm") as SoundCategory
+  _AudioCategoryNPCFST = Game.GetFormFromFile(0x000F72,"Skyrim.esm") as SoundCategory
+EndFunction
+
+; ----------------------------------------------- ;
+; --- VRIK Settings                           --- ;
+; ----------------------------------------------- ;
+
+; General
+bool Property HasVRIK hidden
+  bool Function Get()
+    return GetSettingBool("bHasVRIK")
+  EndFunction
+  Function Set(bool value)
+    SetSettingBool("bHasVRIK", value)
+  EndFunction
+EndProperty
+bool Property UseGestures hidden
+  bool Function Get()
+    return GetSettingBool("bVRGestures")
+  EndFunction
+  Function Set(bool value)
+    SetSettingBool("bVRGestures", value)
+  EndFunction
+EndProperty
+bool Property GestureHaptics hidden
+  bool Function Get()
+    return GetSettingBool("bVRGestureHaptics")
+  EndFunction
+  Function Set(bool value)
+    SetSettingBool("bVRGestureHaptics", value)
+  EndFunction
+EndProperty
+bool Property ScaleVRBody hidden
+  bool Function Get()
+    return GetSettingBool("bVRScaleBody")
+  EndFunction
+  Function Set(bool value)
+    SetSettingBool("bVRScaleBody", value)
+  EndFunction
+EndProperty
+bool Property OrgasmWhiteout hidden
+  bool Function Get()
+    return GetSettingBool("bVROrgasmFX")
+  EndFunction
+  Function Set(bool value)
+    SetSettingBool("bVROrgasmFX", value)
+  EndFunction
+EndProperty
+
+; VRIK
+int Property POVModeVR hidden
+  int Function Get()
+    return GetSettingInt("iPOVModeVR")
+  EndFunction
+  Function Set(int aiSet)
+    SetSettingInt("iPOVModeVR", aiSet)
+  EndFunction
+EndProperty
+bool Property LockHeight hidden
+  bool Function Get()
+    return GetSettingBool("bLockHeightVR")
+  EndFunction
+  Function Set(bool value)
+    SetSettingBool("bLockHeightVR", value)
+  EndFunction
+EndProperty
+bool Property TrackHead hidden
+  bool Function Get()
+    return GetSettingBool("bTrackHeadVR")
+  EndFunction
+  Function Set(bool value)
+    SetSettingBool("bTrackHeadVR", value)
+  EndFunction
+EndProperty
+int Property TrackHands hidden
+  int Function Get()
+    return GetSettingInt("iTrackHandsVR")
+  EndFunction
+  Function Set(int aiSet)
+    SetSettingInt("iTrackHandsVR", aiSet)
+  EndFunction
+EndProperty
+float Property HeightAdjustSpeed hidden
+  float Function Get()
+    return GetSettingFlt("fHeightAdjSpeedVR")
+  EndFunction
+  Function Set(float afSet)
+    SetSettingFlt("fHeightAdjSpeedVR", afSet)
+  EndFunction
+EndProperty 
+float Property DistanceHideHead hidden
+  float Function Get()
+    return GetSettingFlt("fDistHideHeadVR")
+  EndFunction
+  Function Set(float afSet)
+    SetSettingFlt("fDistHideHeadVR", afSet)
+  EndFunction
+EndProperty
+float Property DistanceNearClip hidden
+  float Function Get()
+    return GetSettingFlt("fDistNearClipVR")
+  EndFunction
+  Function Set(float afSet)
+    SetSettingFlt("fDistNearClipVR", afSet)
+  EndFunction
+EndProperty
+float Property LockHmdDistance hidden
+  float Function Get()
+    return GetSettingFlt("fLockHmdDistance")
+  EndFunction
+  Function Set(float afSet)
+    SetSettingFlt("fLockHmdDistance", afSet)
+  EndFunction
+EndProperty
+float Property LockHmdTolerance hidden
+  float Function Get()
+    return GetSettingFlt("fLockHmdTolerance")
+  EndFunction
+  Function Set(float afSet)
+    SetSettingFlt("fLockHmdTolerance", afSet)
+  EndFunction
+EndProperty
+float Property LockHmdSpeed hidden
+  float Function Get()
+    return GetSettingFlt("fLockHmdSpeed")
+  EndFunction
+  Function Set(float afSet)
+    SetSettingFlt("fLockHmdSpeed", afSet)
   EndFunction
 EndProperty
 
@@ -1348,7 +1737,6 @@ Message property CheckSexLabUtil Hidden
     return Game.GetFormFromFile(0x7D380, "SexLab.esm") as Message
   EndFunction
 EndProperty
-
 
 Faction property AnimatingFaction Hidden
   Faction Function Get()
@@ -1888,6 +2276,95 @@ int function GetOpenMouthExpression(bool isFemale)
 endFunction
 bool function SetOpenMouthExpression(bool isFemale, int value)
   return true
+endFunction
+
+int property AdjustChange hidden
+  int Function Get()
+    return GetSettingInt("iAdjustChange")
+  EndFunction
+  Function Set(int aiSet)
+    SetSettingInt("iAdjustChange", aiSet)
+  EndFunction
+EndProperty
+int property AdjustForward hidden
+  int Function Get()
+    return GetSettingInt("iAdjustForward")
+  EndFunction
+  Function Set(int aiSet)
+    SetSettingInt("iAdjustForward", aiSet)
+  EndFunction
+EndProperty
+int property AdjustSideways hidden
+  int Function Get()
+    return GetSettingInt("iAdjustSideways")
+  EndFunction
+  Function Set(int aiSet)
+    SetSettingInt("iAdjustSideways", aiSet)
+  EndFunction
+EndProperty
+int property AdjustUpward hidden
+  int Function Get()
+    return GetSettingInt("iAdjustUpward")
+  EndFunction
+  Function Set(int aiSet)
+    SetSettingInt("iAdjustUpward", aiSet)
+  EndFunction
+EndProperty
+int property RealignActors hidden
+  int Function Get()
+    return GetSettingInt("iRealignActors")
+  EndFunction
+  Function Set(int aiSet)
+    SetSettingInt("iRealignActors", aiSet)
+  EndFunction
+EndProperty
+int property RotateScene hidden
+  int Function Get()
+    return GetSettingInt("iRotateScene")
+  EndFunction
+  Function Set(int aiSet)
+    SetSettingInt("iRotateScene", aiSet)
+  EndFunction
+EndProperty
+int property AdjustSchlong hidden
+  int Function Get()
+    return GetSettingInt("iAdjustSchlong")
+  EndFunction
+  Function Set(int aiSet)
+    SetSettingInt("iAdjustSchlong", aiSet)
+  EndFunction
+EndProperty
+int property Backwards hidden
+  int Function Get()
+    return GetSettingInt("iBackwards")
+  EndFunction
+  Function Set(int aiSet)
+    SetSettingInt("iBackwards", aiSet)
+  EndFunction
+EndProperty
+
+bool function BackwardsPressed()
+  return ModifierPressed()
+endFunction
+
+bool function AdjustStagePressed()
+  return ModifierPressed()
+endFunction
+
+bool function IsAdjustStagePressed()
+  return Input.GetNumKeysPressed() > 1 && ModifierPressed()
+endFunction
+
+bool function MirrorPress(int mirrorkey)
+  if mirrorkey == 42 || mirrorkey == 54  ; Shift
+    return Input.IsKeyPressed(42) || Input.IsKeyPressed(54)
+  elseif mirrorkey == 29 || mirrorkey == 157 ; Ctrl
+    return Input.IsKeyPressed(29) || Input.IsKeyPressed(157)
+  elseif mirrorkey == 56 || mirrorkey == 184 ; Alt
+    return Input.IsKeyPressed(56) || Input.IsKeyPressed(184)
+  else
+    return Input.IsKeyPressed(mirrorkey)
+  endIf
 endFunction
 
 ; ------------------------------------------------------- ;

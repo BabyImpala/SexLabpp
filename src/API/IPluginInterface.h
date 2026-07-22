@@ -104,6 +104,8 @@ namespace SKEE
     class INiTransformInterface : public IPluginInterface
     {
       public:
+        static constexpr uint32_t Version = 3;
+
         struct Position
         {
             float x, y, z;
@@ -153,6 +155,98 @@ namespace SKEE
         virtual void VisitNodes(RE::TESObjectREFR* refr, bool firstPerson, bool isFemale, NodeVisitor& visitor) = 0;
         virtual void UpdateNodeTransforms(RE::TESObjectREFR* ref, bool firstPerson, bool isFemale, const char* node) = 0;
     };
+
+    // Support for older versions of RaceMenu (Like SE's version). Otherwise it'll lead to a crash. Not good.
+    namespace Legacy
+    {
+        class FixedString
+        {
+          public:
+            explicit FixedString(const char* a_string) :
+              string(a_string)
+            {
+                constexpr std::size_t offsetBasis = 14695981039346656037ULL;
+                constexpr std::size_t prime = 1099511628211ULL;
+                hash = offsetBasis;
+                for (const auto character : string) {
+                    hash ^= static_cast<std::size_t>(std::tolower(static_cast<unsigned char>(character)));
+                    hash *= prime;
+                }
+            }
+
+          private:
+            std::string string;
+            std::size_t hash;
+        };
+
+        struct OverrideVariant
+        {
+            enum : uint16_t
+            {
+                Scale = 30,
+                ScaleMode = 33,
+            };
+
+            enum : uint8_t
+            {
+                Int = 3,
+                Float = 4,
+            };
+
+            void SetInt(uint16_t a_key, int32_t a_value)
+            {
+                key = a_key;
+                type = Int;
+                index = 0;
+                data.integer = a_value;
+                string.reset();
+            }
+
+            void SetFloat(uint16_t a_key, float a_value)
+            {
+                key = a_key;
+                type = Float;
+                index = 0;
+                data.floatingPoint = a_value;
+                string.reset();
+            }
+
+            uint16_t key{ 0 };
+            uint8_t type{ 0 };
+            int8_t index{ -1 };
+            union Data
+            {
+                int32_t integer;
+                uint32_t unsignedInteger;
+                float floatingPoint;
+                bool boolean;
+                void* pointer;
+            } data{};
+            std::shared_ptr<FixedString> string;
+        };
+
+        class INiTransformInterface : public IPluginInterface
+        {
+          public:
+            virtual void SaveReserved() = 0;
+            virtual void LoadReserved() = 0;
+            virtual bool AddNodeTransform(RE::TESObjectREFR* ref, bool firstPerson, bool isFemale, FixedString node, FixedString name, OverrideVariant& value) = 0;
+            virtual bool RemoveNodeTransformComponent(RE::TESObjectREFR* ref, bool firstPerson, bool isFemale, FixedString node, FixedString name, uint16_t key, uint16_t index) = 0;
+            virtual void RemoveNodeTransformReserved() = 0;
+            virtual void RemoveAllReferenceTransformsReserved() = 0;
+            virtual void GetOverrideNodeValueReserved() = 0;
+            virtual void GetOverrideNodeTransformReserved() = 0;
+            virtual void GetOverrideTransformReserved() = 0;
+            virtual void GetRootModelPathReserved() = 0;
+            virtual void UpdateNodeAllTransformsReserved() = 0;
+            virtual void VisitNodesReserved() = 0;
+            virtual void VisitNodeTransformsReserved() = 0;
+            virtual void UpdateNodeTransforms(RE::TESObjectREFR* ref, bool firstPerson, bool isFemale, FixedString node) = 0;
+        };
+
+        static_assert(sizeof(FixedString) == 0x28);
+        static_assert(sizeof(OverrideVariant) == 0x20);
+    }
 
     class IAttachmentInterface : public IPluginInterface
     {

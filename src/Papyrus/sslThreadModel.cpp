@@ -65,7 +65,7 @@ namespace Papyrus::ThreadModel
             position->expression = Registry::Library::GetSingleton()->GetExpressionById(a_expression);
         }
 
-        void LockActorImpl(ALIASARGS)
+        void StartSetActorInterrupts(ALIASARGS)
         {
             const auto actor = a_alias->GetActorReference();
             if (!actor) {
@@ -73,7 +73,6 @@ namespace Papyrus::ThreadModel
                 return;
             }
             if (actor->IsPlayerRef()) {
-                RE::PlayerCharacter::GetSingleton()->SetAIDriven(true);
                 const auto ui = RE::UI::GetSingleton();
                 const auto interfacestr = RE::InterfaceStrings::GetSingleton();
                 if (ui->IsMenuOpen(interfacestr->dialogueMenu)) {
@@ -110,21 +109,17 @@ namespace Papyrus::ThreadModel
                 }
             }
 
-            Thread::Collision::CollisionHandler::GetSingleton()->AddActor(actor->GetFormID());
-
             actor->StopCombat();
             actor->EndDialogue();
             actor->InterruptCast(false);
             actor->StopInteractingQuick(true);
-            // actor->SetCollision(false);
 
             if (const auto process = actor->GetActorRuntimeData().currentProcess) {
                 process->ClearMuzzleFlashes();
             }
-            actor->StopMoving(1.0f);
         }
 
-        void UnlockActorImpl(ALIASARGS)
+        void EndSetActorInterrupts(ALIASARGS)
         {
             const auto actor = a_alias->GetActorReference();
             if (!actor) {
@@ -140,13 +135,27 @@ namespace Papyrus::ThreadModel
                 actor->AsActorState()->actorState1.lifeState = RE::ACTOR_LIFE_STATE::kAlive;
                 break;
             }
-            if (actor->IsPlayerRef()) {
-                RE::PlayerCharacter::GetSingleton()->SetAIDriven(false);
-            } else {
+            if (!actor->IsPlayerRef()) {
                 actor->AsActorValueOwner()->SetActorValue(RE::ActorValue::kVariable05, 0.0f);
             }
-            Thread::Collision::CollisionHandler::GetSingleton()->RemoveActor(actor->GetFormID());
-            // actor->SetCollision(true);
+        }
+
+        void SetActorCollisions(ALIASARGS, bool a_enable)
+        {
+            const auto actor = a_alias->GetActorReference();
+            if (!actor) {
+                a_vm->TraceStack("Reference is empty or not an actor", a_stackID);
+                return;
+            }
+            const auto handler = Thread::Collision::CollisionHandler::GetSingleton();
+            const auto formID = actor->GetFormID();
+            if (!a_enable) {
+                handler->AddActor(formID);
+                // actor->SetCollision(false);
+            } else {
+                handler->RemoveActor(formID);
+                // actor->SetCollision(true);
+            }
         }
 
         std::vector<RE::TESForm*> StripByData(ALIASARGS, int32_t a_stripdata, std::vector<uint32_t> a_defaults, std::vector<uint32_t> a_overwrite)
@@ -264,11 +273,18 @@ namespace Papyrus::ThreadModel
             return a_mergewith;
         }
 
-        void UpdateEnjoyment(ALIASARGS, float a_enjoyment)
+        void EnjBarsUpdateSlider(ALIASARGS, float a_enjoyment, RE::BSFixedString a_interactions)
         {
             const auto& a_qst = a_alias->owningQuest;
             GET_INSTANCE();
-            instance->SetEnjoyment(a_alias->GetActorReference(), a_enjoyment);
+            instance->EnjBarsUpdateSlider(a_alias->GetActorReference(), a_enjoyment, a_interactions);
+        }
+
+        void RegisterRaiseEnjAttempt(ALIASARGS, float a_nextTimeCycle)
+        {
+            const auto& a_qst = a_alias->owningQuest;
+            GET_INSTANCE();
+            instance->RegisterRaiseEnjAttempt(a_alias->GetActorReference(), a_nextTimeCycle);
         }
 
 #undef GET_POSITION
@@ -348,10 +364,7 @@ namespace Papyrus::ThreadModel
             toVector(a_scenesCustom)
         };
         std::thread([=]() {
-            bool result = Thread::Instance::CreateInstance(a_qst, a_submissives, scenes, preference);
-            auto handle = Script::GetScriptObject(a_qst, "sslThreadModel");
-            Script::CallbackPtr callbackPtr{};
-            Script::DispatchMethodCall(handle, "ContinueSetup", callbackPtr, std::move(result));
+            Thread::Instance::CreateInstance(a_qst, a_submissives, scenes, preference);
         }).detach();
     }
 
@@ -443,6 +456,12 @@ namespace Papyrus::ThreadModel
         return instance->ReplaceCenterRef(a_centeron);
     }
 
+    bool SetNextPermutation(QUESTARGS, RE::Actor* a_position)
+    {
+        GET_INSTANCE(false);
+        return instance->SetNextPermutation(a_position);
+    }
+
     void UpdatePlacement(QUESTARGS, RE::Actor* a_position)
     {
         GET_INSTANCE();
@@ -463,19 +482,22 @@ namespace Papyrus::ThreadModel
         return scene->IsCompatibleFurniture(a_center);
     }
 
-    bool IsCollisionRegistered(QUESTARGS)
+    // ================================================
+    //        TYPE-GUESSING - Machine Learning
+
+    bool IsCollisionRegisteredML(QUESTARGS)
     {
         GET_INSTANCE(false);
         return instance->HasNiInstance();
     }
 
-    void UnregisterCollision(QUESTARGS)
+    void UnregisterCollisionML(QUESTARGS)
     {
         GET_INSTANCE();
         instance->UnregisterNiInstance();
     }
 
-    std::vector<int> GetCollisionActions(QUESTARGS, RE::Actor* a_position, RE::Actor* a_partner)
+    std::vector<int> GetCollisionActionsML(QUESTARGS, RE::Actor* a_position, RE::Actor* a_partner)
     {
         GET_INSTANCE({});
         auto niInstance = instance->GetNiInstance();
@@ -492,7 +514,7 @@ namespace Papyrus::ThreadModel
         return ret;
     }
 
-    bool HasCollisionAction(QUESTARGS, int a_type, RE::Actor* a_position, RE::Actor* a_partner)
+    bool HasCollisionActionML(QUESTARGS, int a_type, RE::Actor* a_position, RE::Actor* a_partner)
     {
         GET_INSTANCE({});
         auto niInstance = instance->GetNiInstance();
@@ -506,7 +528,7 @@ namespace Papyrus::ThreadModel
         return !interactions.empty();
     }
 
-    RE::Actor* GetPartnerByAction(QUESTARGS, RE::Actor* a_position, int a_type)
+    RE::Actor* GetPartnerByActionML(QUESTARGS, RE::Actor* a_position, int a_type)
     {
         if (!a_position) {
             a_vm->TraceStack("Actor is none", a_stackID);
@@ -516,7 +538,7 @@ namespace Papyrus::ThreadModel
         return ret.empty() ? nullptr : ret.front();
     }
 
-    std::vector<RE::Actor*> GetPartnersByAction(QUESTARGS, RE::Actor* a_position, int a_type)
+    std::vector<RE::Actor*> GetPartnersByActionML(QUESTARGS, RE::Actor* a_position, int a_type)
     {
         GET_INSTANCE({});
         auto niInstance = instance->GetNiInstance();
@@ -528,7 +550,7 @@ namespace Papyrus::ThreadModel
         return niInstance->GetInteractionPartners(idxA, Thread::NiNode::NiType::Type(a_type));
     }
 
-    RE::Actor* GetPartnerByTypeRev(QUESTARGS, RE::Actor* a_position, int a_type)
+    RE::Actor* GetPartnerByTypeRevML(QUESTARGS, RE::Actor* a_position, int a_type)
     {
         if (!a_position) {
             a_vm->TraceStack("Actor is none", a_stackID);
@@ -538,7 +560,7 @@ namespace Papyrus::ThreadModel
         return ret.empty() ? nullptr : ret.front();
     }
 
-    std::vector<RE::Actor*> GetPartnersByTypeRev(QUESTARGS, RE::Actor* a_position, int a_type)
+    std::vector<RE::Actor*> GetPartnersByTypeRevML(QUESTARGS, RE::Actor* a_position, int a_type)
     {
         GET_INSTANCE({});
         auto niInstance = instance->GetNiInstance();
@@ -550,7 +572,7 @@ namespace Papyrus::ThreadModel
         return niInstance->GetInteractionPartnersRev(idxB, Thread::NiNode::NiType::Type(a_type));
     }
 
-    float GetActionVelocity(QUESTARGS, RE::Actor* a_position, RE::Actor* a_partner, int a_type)
+    float GetActionVelocityML(QUESTARGS, RE::Actor* a_position, RE::Actor* a_partner, int a_type)
     {
         if (!a_position) {
             a_vm->TraceStack("Actor is none", a_stackID);
@@ -577,6 +599,248 @@ namespace Papyrus::ThreadModel
         }
         return ret;
     }
+
+    // ================================================
+    //            TYPE-GUESSING - Legacy
+
+    bool IsCollisionRegisteredLegacy(QUESTARGS)
+    {
+        GET_INSTANCE(false);
+        return instance->HasNiInstanceLegacy();
+    }
+
+    void UnregisterCollisionLegacy(QUESTARGS)
+    {
+        GET_INSTANCE();
+        instance->UnregisterNiInstanceLegacy();
+    }
+
+    std::vector<int> GetCollisionActionsLegacy(QUESTARGS, RE::Actor* a_position, RE::Actor* a_partner)
+    {
+        GET_INSTANCE({});
+        auto niInstance = instance->GetNiInstanceLegacy();
+        if (!niInstance) {
+            a_vm->TraceStack("Not registered", a_stackID);
+            return {};
+        }
+        std::vector<int> ret{};
+        niInstance->VisitPositions([&](auto& p) {
+            if (a_position && p.actor->formID != a_position->formID)
+                return false;
+            for (auto&& type : p.interactions) {
+                if (a_partner && type.partner->formID != a_partner->formID)
+                    continue;
+                ret.push_back(static_cast<int>(type.action));
+            }
+            return false;
+        });
+        return ret;
+    }
+
+    bool HasCollisionActionLegacy(QUESTARGS, int a_type, RE::Actor* a_position, RE::Actor* a_partner)
+    {
+        GET_INSTANCE({});
+        auto niInstance = instance->GetNiInstanceLegacy();
+        if (!niInstance) {
+            a_vm->TraceStack("Not registered", a_stackID);
+            return false;
+        }
+        return niInstance->VisitPositions([&](auto& p) {
+            if (a_position && p.actor->formID != a_position->formID)
+                return false;
+            for (auto&& type : p.interactions) {
+                if (a_partner && type.partner->formID != a_partner->formID)
+                    continue;
+                if (a_type != -1 && a_type != static_cast<int>(type.action))
+                    continue;
+                return true;
+            }
+            return false;
+        });
+    }
+
+    RE::Actor* GetPartnerByActionLegacy(QUESTARGS, RE::Actor* a_position, int a_type)
+    {
+        if (!a_position) {
+            a_vm->TraceStack("Actor is none", a_stackID);
+            return nullptr;
+        }
+        GET_INSTANCE({});
+        auto niInstance = instance->GetNiInstanceLegacy();
+        if (!niInstance) {
+            a_vm->TraceStack("Not registered", a_stackID);
+            return nullptr;
+        }
+        RE::Actor* ret = nullptr;
+        niInstance->VisitPositions([&](auto& p) {
+            if (p.actor->formID != a_position->formID)
+                return false;
+            for (auto&& type : p.interactions) {
+                if (a_type != -1 && a_type != static_cast<int>(type.action))
+                    continue;
+                ret = type.partner.get();
+                return true;
+            }
+            return false;
+        });
+        return ret;
+    }
+
+    std::vector<RE::Actor*> GetPartnersByActionLegacy(QUESTARGS, RE::Actor* a_position, int a_type)
+    {
+        GET_INSTANCE({});
+        auto niInstance = instance->GetNiInstanceLegacy();
+        if (!niInstance) {
+            a_vm->TraceStack("Not registered", a_stackID);
+            return {};
+        }
+        std::vector<RE::Actor*> ret{};
+        niInstance->VisitPositions([&](auto& p) {
+            if (a_position && p.actor->formID != a_position->formID)
+                return false;
+            for (auto&& type : p.interactions) {
+                if (a_type != -1 && a_type != static_cast<int>(type.action))
+                    continue;
+                ret.push_back(type.partner.get());
+            }
+            return false;
+        });
+        return ret;
+    }
+
+    RE::Actor* GetPartnerByTypeRevLegacy(QUESTARGS, RE::Actor* a_position, int a_type)
+    {
+        if (!a_position) {
+            a_vm->TraceStack("Actor is none", a_stackID);
+            return nullptr;
+        }
+        GET_INSTANCE({});
+        auto niInstance = instance->GetNiInstanceLegacy();
+        if (!niInstance) {
+            a_vm->TraceStack("Not registered", a_stackID);
+            return {};
+        }
+        RE::Actor* ret = nullptr;
+        niInstance->VisitPositions([&](auto& p) {
+            for (auto&& type : p.interactions) {
+                if (a_position->formID == type.partner->formID) {
+                    if (a_type == -1 || a_type == static_cast<int>(type.action)) {
+                        ret = p.actor.get();
+                        return true;
+                    }
+                    break;
+                }
+            }
+            return false;
+        });
+        return ret;
+    }
+
+    std::vector<RE::Actor*> GetPartnersByTypeRevLegacy(QUESTARGS, RE::Actor* a_position, int a_type)
+    {
+        GET_INSTANCE({});
+        auto niInstance = instance->GetNiInstanceLegacy();
+        if (!niInstance) {
+            a_vm->TraceStack("Not registered", a_stackID);
+            return {};
+        }
+        std::vector<RE::Actor*> ret{};
+        niInstance->VisitPositions([&](auto& p) {
+            for (auto&& type : p.interactions) {
+                if (!a_position || a_position->formID == type.partner->formID) {
+                    if (a_type == -1 || a_type == static_cast<int>(type.action))
+                        ret.push_back(p.actor.get());
+                    break;
+                }
+            }
+            return false;
+        });
+        return ret;
+    }
+
+    float GetActionVelocityLegacy(QUESTARGS, RE::Actor* a_position, RE::Actor* a_partner, int a_type)
+    {
+        if (!a_position) {
+            a_vm->TraceStack("Actor is none", a_stackID);
+            return 0.0f;
+        }
+        if (a_type == -1) {
+            a_vm->TraceStack("Type cant be 'any'", a_stackID);
+            return 0.0f;
+        }
+        GET_INSTANCE({});
+        auto niInstance = instance->GetNiInstanceLegacy();
+        if (!niInstance) {
+            a_vm->TraceStack("Not registered", a_stackID);
+            return 0.0f;
+        }
+        float ret = 0.0f;
+        niInstance->VisitPositions([&](auto& p) {
+            if (p.actor->formID != a_position->formID)
+                return false;
+            for (auto&& type : p.interactions) {
+                if (a_partner && a_partner->formID != type.partner->formID)
+                    continue;
+                if (a_type != static_cast<int>(type.action))
+                    continue;
+                ret = type.velocity;
+                return true;
+            }
+            return false;
+        });
+        return ret;
+    }
+
+    // ================================================
+    //            TYPE-GUESSING - Dispatch
+
+    bool IsCollisionRegistered(QUESTARGS)
+    {
+        return Settings::bUseLegacyNiType ? IsCollisionRegisteredLegacy(a_vm, a_stackID, a_qst) : IsCollisionRegisteredML(a_vm, a_stackID, a_qst);
+    }
+
+    void UnregisterCollision(QUESTARGS)
+    {
+        Settings::bUseLegacyNiType ? UnregisterCollisionLegacy(a_vm, a_stackID, a_qst) : UnregisterCollisionML(a_vm, a_stackID, a_qst);
+    }
+
+    std::vector<int> GetCollisionActions(QUESTARGS, RE::Actor* a_position, RE::Actor* a_partner)
+    {
+        return Settings::bUseLegacyNiType ? GetCollisionActionsLegacy(a_vm, a_stackID, a_qst, a_position, a_partner) : GetCollisionActionsML(a_vm, a_stackID, a_qst, a_position, a_partner);
+    }
+
+    bool HasCollisionAction(QUESTARGS, int a_type, RE::Actor* a_position, RE::Actor* a_partner)
+    {
+        return Settings::bUseLegacyNiType ? HasCollisionActionLegacy(a_vm, a_stackID, a_qst, a_type, a_position, a_partner) : HasCollisionActionML(a_vm, a_stackID, a_qst, a_type, a_position, a_partner);
+    }
+
+    RE::Actor* GetPartnerByAction(QUESTARGS, RE::Actor* a_position, int a_type)
+    {
+        return Settings::bUseLegacyNiType ? GetPartnerByActionLegacy(a_vm, a_stackID, a_qst, a_position, a_type) : GetPartnerByActionML(a_vm, a_stackID, a_qst, a_position, a_type);
+    }
+
+    std::vector<RE::Actor*> GetPartnersByAction(QUESTARGS, RE::Actor* a_position, int a_type)
+    {
+        return Settings::bUseLegacyNiType ? GetPartnersByActionLegacy(a_vm, a_stackID, a_qst, a_position, a_type) : GetPartnersByActionML(a_vm, a_stackID, a_qst, a_position, a_type);
+    }
+
+    RE::Actor* GetPartnerByTypeRev(QUESTARGS, RE::Actor* a_position, int a_type)
+    {
+        return Settings::bUseLegacyNiType ? GetPartnerByTypeRevLegacy(a_vm, a_stackID, a_qst, a_position, a_type) : GetPartnerByTypeRevML(a_vm, a_stackID, a_qst, a_position, a_type);
+    }
+
+    std::vector<RE::Actor*> GetPartnersByTypeRev(QUESTARGS, RE::Actor* a_position, int a_type)
+    {
+        return Settings::bUseLegacyNiType ? GetPartnersByTypeRevLegacy(a_vm, a_stackID, a_qst, a_position, a_type) : GetPartnersByTypeRevML(a_vm, a_stackID, a_qst, a_position, a_type);
+    }
+
+    float GetActionVelocity(QUESTARGS, RE::Actor* a_position, RE::Actor* a_partner, int a_type)
+    {
+        return Settings::bUseLegacyNiType ? GetActionVelocityLegacy(a_vm, a_stackID, a_qst, a_position, a_partner, a_type) : GetActionVelocityML(a_vm, a_stackID, a_qst, a_position, a_partner, a_type);
+    }
+
+    //
+    // ================================================
 
     void SetAnimationPlaybackSpeed(QUESTARGS, float a_playbackSpeed)
     {
@@ -701,28 +965,43 @@ namespace Papyrus::ThreadModel
         }
     }
 
-    bool IsOwningSceneMenu(QUESTARGS)
-    {
-        GET_INSTANCE(false);
-        return instance->ControlsMenu();
-    }
+    // ---------------------------------------------- //
+    //                   SCENE HUD                    //
+    // ---------------------------------------------- //
 
-    bool TryOpenSceneMenu(QUESTARGS)
-    {
-        GET_INSTANCE(false);
-        return instance->TryOpenMenu();
-    }
-
-    bool TryCloseSceneMenu(QUESTARGS)
-    {
-        GET_INSTANCE(false);
-        return instance->TryCloseMenu();
-    }
-
-    void TryUpdateMenuTimer(QUESTARGS, float a_time)
+    void InitSceneHUDImpl(QUESTARGS)
     {
         GET_INSTANCE();
-        instance->UpdateTimer(a_time);
+        return instance->InitSceneHUDImpl();
+    }
+    void DestroySceneHUDImpl(QUESTARGS)
+    {
+        GET_INSTANCE();
+        return instance->DestroySceneHUDImpl();
+    }
+
+    void SetFocusSceneHUDImpl(QUESTARGS, bool a_focused)
+    {
+        GET_INSTANCE();
+        return instance->SetFocusSceneHUDImpl(a_focused);
+    }
+
+    void UpdateMenuTimerDisplay(QUESTARGS, float a_duration, float a_time)
+    {
+        GET_INSTANCE();
+        instance->UpdateMenuTimerDisplay(a_duration, a_time);
+    }
+
+    void UpdateOffsetSlidersDisplay(QUESTARGS)
+    {
+        GET_INSTANCE();
+        return instance->UpdateOffsetSlidersDisplay();
+    }
+
+    void EnjBarsChangeHighlightedPartner(QUESTARGS, RE::Actor* a_actor)
+    {
+        GET_INSTANCE();
+        return instance->EnjBarsChangeHighlightedPartner(a_actor);
     }
 
 }  // namespace Papyrus::ThreadModel

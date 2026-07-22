@@ -24,13 +24,15 @@ namespace Papyrus::ThreadModel
         void SetActorVoiceImpl(ALIASARGS, RE::BSFixedString a_voice);
         void SetActorExpressionImpl(ALIASARGS, RE::BSFixedString a_expression);
 
-        void LockActorImpl(ALIASARGS);
-        void UnlockActorImpl(ALIASARGS);
+        void StartSetActorInterrupts(ALIASARGS);
+        void EndSetActorInterrupts(ALIASARGS);
+        void SetActorCollisions(ALIASARGS, bool a_enable);
 
         std::vector<RE::TESForm*> StripByData(ALIASARGS, int32_t a_stripdata, std::vector<uint32_t> a_defaults, std::vector<uint32_t> a_overwrite);
         std::vector<RE::TESForm*> StripByDataEx(ALIASARGS, int32_t a_stripdata, std::vector<uint32_t> a_defaults, std::vector<uint32_t> a_overwrite, std::vector<RE::TESForm*> a_mergewith);
 
-        void UpdateEnjoyment(ALIASARGS, float a_enjoyment);
+        void EnjBarsUpdateSlider(ALIASARGS, float a_enjoyment, RE::BSFixedString a_interactions);
+        void RegisterRaiseEnjAttempt(ALIASARGS, float a_nextTimeCycle);
 
         inline bool Register(VM* a_vm)
         {
@@ -39,13 +41,15 @@ namespace Papyrus::ThreadModel
             REGISTERFUNC(SetActorVoiceImpl, "sslActorAlias", false);
             REGISTERFUNC(SetActorExpressionImpl, "sslActorAlias", false);
 
-            REGISTERFUNC(LockActorImpl, "sslActorAlias", false);
-            REGISTERFUNC(UnlockActorImpl, "sslActorAlias", false);
+            REGISTERFUNC(StartSetActorInterrupts, "sslActorAlias", false);
+            REGISTERFUNC(EndSetActorInterrupts, "sslActorAlias", false);
+            REGISTERFUNC(SetActorCollisions, "sslActorAlias", false);
 
             REGISTERFUNC(StripByData, "sslActorAlias", false);
             REGISTERFUNC(StripByDataEx, "sslActorAlias", false);
 
-            REGISTERFUNC(UpdateEnjoyment, "sslActorAlias", false);
+            REGISTERFUNC(EnjBarsUpdateSlider, "sslActorAlias", false);
+            REGISTERFUNC(RegisterRaiseEnjAttempt, "sslActorAlias", false);
 
             return true;
         }
@@ -66,6 +70,7 @@ namespace Papyrus::ThreadModel
     int SelectNextStage(QUESTARGS, std::vector<RE::BSFixedString> a_tags);
     bool SetActiveScene(QUESTARGS, RE::BSFixedString a_sceneid);
     bool ReassignCenter(QUESTARGS, RE::TESObjectREFR* a_centeron);
+    bool SetNextPermutation(QUESTARGS, RE::Actor* a_position);
     void UpdatePlacement(QUESTARGS, RE::Actor* a_position);
 
     bool IsCollisionRegistered(QUESTARGS);
@@ -83,10 +88,14 @@ namespace Papyrus::ThreadModel
     void AddExperience(QUESTARGS, std::vector<RE::Actor*> a_positions, RE::BSFixedString a_scene, std::vector<RE::BSFixedString> a_playedstages);
     void UpdateStatistics(QUESTARGS, RE::Actor* a_actor, std::vector<RE::Actor*> a_positions, RE::BSFixedString a_scene, std::vector<RE::BSFixedString> a_playedstages, float a_time);
 
-    bool IsOwningSceneMenu(QUESTARGS);
-    bool TryOpenSceneMenu(QUESTARGS);
-    bool TryCloseSceneMenu(QUESTARGS);
-    void TryUpdateMenuTimer(QUESTARGS, float a_time);
+    // SCENE HUD
+    void InitSceneHUDImpl(QUESTARGS);
+    void DestroySceneHUDImpl(QUESTARGS);
+    void SetFocusSceneHUDImpl(QUESTARGS, bool a_focused);
+
+    void UpdateMenuTimerDisplay(QUESTARGS, float a_duration, float a_time);
+    void UpdateOffsetSlidersDisplay(QUESTARGS);
+    void EnjBarsChangeHighlightedPartner(QUESTARGS, RE::Actor* a_actor);
 
     inline bool Register(VM* a_vm)
     {
@@ -106,6 +115,7 @@ namespace Papyrus::ThreadModel
         REGISTERFUNC(SetActiveScene, "sslThreadModel", false);
         REGISTERFUNC(ReassignCenter, "sslThreadModel", false);
         REGISTERFUNC(UpdatePlacement, "sslThreadModel", false);
+        REGISTERFUNC(SetNextPermutation, "sslThreadModel", false);
 
         REGISTERFUNC(IsCollisionRegistered, "sslThreadModel", true);
         REGISTERFUNC(UnregisterCollision, "sslThreadModel", true);
@@ -122,10 +132,13 @@ namespace Papyrus::ThreadModel
         REGISTERFUNC(AddExperience, "sslThreadModel", true);
         REGISTERFUNC(UpdateStatistics, "sslThreadModel", true);
 
-        REGISTERFUNC(IsOwningSceneMenu, "sslThreadModel", true);
-        REGISTERFUNC(TryOpenSceneMenu, "sslThreadModel", true);
-        REGISTERFUNC(TryCloseSceneMenu, "sslThreadModel", true);
-        REGISTERFUNC(TryUpdateMenuTimer, "sslThreadModel", true);
+        REGISTERFUNC(InitSceneHUDImpl, "sslThreadModel", true);
+        REGISTERFUNC(DestroySceneHUDImpl, "sslThreadModel", true);
+        REGISTERFUNC(SetFocusSceneHUDImpl, "sslThreadModel", true);
+
+        REGISTERFUNC(UpdateMenuTimerDisplay, "sslThreadModel", true);
+        REGISTERFUNC(UpdateOffsetSlidersDisplay, "sslThreadModel", true);
+        REGISTERFUNC(EnjBarsChangeHighlightedPartner, "sslThreadModel", true);
 
         return ActorAlias::Register(a_vm);
     }
