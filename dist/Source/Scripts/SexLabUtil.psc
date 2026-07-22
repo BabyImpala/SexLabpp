@@ -129,21 +129,6 @@ string[] function ActorNames(Actor[] ActorRefs) global
     return ret
 EndFunction
 
-float Function CalcPathingTargetDistance(int k) global
-    If (k==2||k==3||k==9||k==11||k==12||k==32||k==31||k==34||k==35||k==40||k==41||k==47)
-        return 300.0
-    ElseIf (k==18||k==24||k==27||k==38||k==46)
-        return 400.0
-    ElseIf (k==14||k==26||k==36)
-        return 800.0
-    EndIf
-    return 128.0
-EndFunction
-
-; ------------------------------------------------------- ;
-; --- Threading Utilities                             --- ;
-; ------------------------------------------------------- ;
-
 Function ToggleFreeCamera(int aiForceState = -1) global
 	;[-1:Toggle, 0:TFC_STAYS_OFF, 1:TFC_STAYS_ON]
 	bool bVRMode = GetConfig().HasVRIK
@@ -217,23 +202,6 @@ Function SetActorMovement(Actor akActor, int aiMovement) global
 			Game.EnablePlayerControls()
 		EndIf
 	EndIf
-EndFunction
-
-Function UpdateAnimatingActorMovement(Actor akActor) global
-	If (!akActor)
-		return
-	EndIf
-	akActor.EvaluatePackage()
-	int aiFactionRank = akActor.GetFactionRank(GetConfig().AnimatingFaction)
-	int aiMovement = -1
-	If (aiFactionRank < 0) ; OnAliasClear / NotAnimating / OnExtThreadRelease -> MOVEMENT_RELEASE
-		aiMovement = 0
-	ElseIf (aiFactionRank == 0 || aiFactionRank == 2) ; OnActorUnlocked / OnPathing -> MOVEMENT_UNLOCK
-		aiMovement = 1
-	ElseIf (aiFactionRank == 1) ; OnSetActor / OnActorLocked / OnStateAnimating / OnExtThreadControl -> MOVEMENT_LOCK
-		aiMovement = 2
-	EndIf
-	SetActorMovement(akActor, aiMovement)
 EndFunction
 
 ; *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-* ;

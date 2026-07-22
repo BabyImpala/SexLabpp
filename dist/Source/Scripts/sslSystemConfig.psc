@@ -758,7 +758,7 @@ Function GetThreadControl(sslThreadController TargetThread)
       player.SheatheWeapon()
     endIf
     player.SetFactionRank(AnimatingFaction, 1)
-    SexLabUtil.UpdateAnimatingActorMovement(player) ;MOVEMENT_LOCK
+    _ActiveControl.UpdateAnimatingActorMovement(player) ;MOVEMENT_LOCK
   EndIf
   _ActiveControl.EnableHotkeys(true)
 EndFunction
@@ -775,7 +775,7 @@ Function DisableThreadControl(sslThreadController TargetThread)
   If (!_ActiveControl.HasPlayer)
     Actor player = Game.GetPlayer()
     player.SetFactionRank(AnimatingFaction, -1)
-    SexLabUtil.UpdateAnimatingActorMovement(player) ;MOVEMENT_RELEASE
+    _ActiveControl.UpdateAnimatingActorMovement(player) ;MOVEMENT_RELEASE
   EndIf
   _ActiveControl = none
 Endfunction
@@ -1476,7 +1476,6 @@ Function ApplyConfigsVRIK(bool abEnabled)
     VRIK.VrikRestoreSettings()
     _AudioCategoryFST.Unmute()
     _AudioCategoryNPCFST.Unmute()
-    SexLabUtil.UpdateAnimatingActorMovement(Game.GetPlayer())
     return
   EndIf
   float afScaleBody = Game.GetPlayer().GetScale()
@@ -1519,7 +1518,6 @@ Function ApplyConfigsVRIK(bool abEnabled)
   _bAnimatingVR = true
   _AudioCategoryFST.Mute()
   _AudioCategoryNPCFST.Mute()
-  SexLabUtil.UpdateAnimatingActorMovement(Game.GetPlayer())
 EndFunction
 
 int Function UpdatePositioningVRIK(int VRIKRestoreInTicks)

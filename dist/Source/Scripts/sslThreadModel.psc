@@ -57,7 +57,7 @@ EndFunction
 int Function GetPositionIdx(Actor akActor)
 	return _Positions.Find(akActor)
 EndFunction
-Actor Function GetIdxPosition(int n)
+Actor Function GetNthPosition(int n)
 	return _Positions[n]
 EndFunction
 
@@ -924,14 +924,10 @@ State Making_M
 		If (_lockAsyncCount < (_Positions.Length + 1))
 			return
 		EndIf
-		If (!UndressAndStripActors())
-			EndAnimation()
-			return
-		EndIf
-		GoToState(STATE_PLAYING)
+		UndressAndStripActors()
 	EndFunction
 
-	bool Function UndressAndStripActors()
+	Function UndressAndStripActors()
 		bool WaitForUndress = false
 		int i = 0
 		While (i < _Positions.Length)
@@ -955,15 +951,13 @@ State Making_M
 		int[] sex_ = SexLabRegistry.GetPositionSexA(activeScene)
 		int j = 0
 		While (j < _Positions.Length)
-			If (!ActorAlias[j].ReadyActor(strips_[j], sex_[j]))
-				return false
-			EndIf
+			ActorAlias[j].ReadyActor(strips_[j], sex_[j])
 			j += 1
 		EndWhile
 		If (WaitForUndress)
 			Utility.Wait(1.5)
 		EndIf
-		return true
+		GoToState(STATE_PLAYING)
 	EndFunction
 	
 	Function EndAnimation(bool Quickly = false)
@@ -1025,9 +1019,8 @@ EndFunction
 Function ContinueSetup(bool abContinue)
 	Log("ContinueSetup() can only be called during setup", "ContinueSetup()")
 EndFunction
-bool Function UndressAndStripActors()
+Function UndressAndStripActors()
 	Log("Actors can be undressed only during setup", "UndressAndStripActors()")
-	return false
 EndFunction
 
 Function CreateInstance(Actor[] akSubmissives, String[] asPrimaryScenes, String[] asLeadInScenes, String[] asCustomScenes, int aiFurnitureStatus) native
@@ -1667,38 +1660,6 @@ int Function IndexTravelComplex(int curIdx, bool abReverse = false, Actor akSkip
 	return curIdx
 EndFunction
 
-Function MoveActorsAwayFromPlayer(bool MovePlayer = false)
-	float adjOffset = 35.0
-	int moveDir = -1
-	int i = 0
-	while (i < _Positions.Length)
-		Actor curActor = _Positions[i]
-		If (curActor != PlayerRef)
-			If (curActor.GetDistance(PlayerRef) < 50.0)
-				If (MovePlayer)
-					PlayerRef.SetPosition(PlayerRef.X + 70, PlayerRef.Y, PlayerRef.Z)
-					return
-				Else
-					moveDir += 1
-				EndIf
-				float newX = curActor.X
-				float newY = curActor.Y
-				If (moveDir == 0)
-					newY += adjOffset
-				ElseIf (moveDir == 1)
-					newX += adjOffset
-				ElseIf (moveDir == 2)
-					newY -= adjOffset
-				ElseIf (moveDir == 3)
-					newX -= adjOffset
-				EndIf
-				curActor.SetPosition(newX, newY, curActor.Z)
-			EndIf
-		EndIf
-		i += 1
-	EndWhile
-EndFunction
-
 ; ------------------------------------------------------- ;
 ; --- Function Declarations                           --- ;
 ; ------------------------------------------------------- ;
@@ -1774,6 +1735,71 @@ Sound Function GetAliasSound(sslActorAlias akThis, String asVoice, int aiStrengt
 EndFunction
 Sound Function GetAliasOrgasmSound(sslActorAlias akThis, String asVoice)
 	return sslBaseVoice.GetOrgasmSound(asVoice, GetActiveScene(), ActorAlias.Find(akThis), akThis.OpenMouth)
+EndFunction
+
+; ------------------------------------------------------- ;
+; --- Threading Utilities                             --- ;
+; ------------------------------------------------------- ;
+
+float Function CalcPathingTargetDistance(int aiRaceID)
+	int k = aiRaceID
+	If (k==2||k==3||k==9||k==11||k==12||k==32||k==31||k==34||k==35||k==40||k==41||k==47)
+		return 300.0
+	ElseIf (k==18||k==24||k==27||k==38||k==46)
+		return 400.0
+	ElseIf (k==14||k==26||k==36)
+		return 800.0
+	EndIf
+	return 128.0
+EndFunction
+
+Function UpdateAnimatingActorMovement(Actor akActor)
+	If (!akActor)
+		return
+	EndIf
+	akActor.EvaluatePackage()
+	int aiFactionRank = akActor.GetFactionRank(Config.AnimatingFaction)
+	int aiMovement = -1
+	If (aiFactionRank < 0) ; OnAliasClear / NotAnimating / OnExtThreadRelease -> MOVEMENT_RELEASE
+		aiMovement = 0
+	ElseIf (aiFactionRank == 0 || aiFactionRank == 2) ; OnActorUnlocked / OnPathing -> MOVEMENT_UNLOCK
+		aiMovement = 1
+	ElseIf (aiFactionRank == 1) ; OnSetActor / OnActorLocked / OnStateAnimating / OnExtThreadControl -> MOVEMENT_LOCK
+		aiMovement = 2
+	EndIf
+	SexLabUtil.SetActorMovement(akActor, aiMovement)
+EndFunction
+
+Function MoveActorsAwayFromPlayer(bool MovePlayer = false)
+	float adjOffset = 35.0
+	int moveDir = -1
+	int i = 0
+	while (i < _Positions.Length)
+		Actor curActor = _Positions[i]
+		If (curActor != PlayerRef)
+			If (curActor.GetDistance(PlayerRef) < 50.0)
+				If (MovePlayer)
+					PlayerRef.SetPosition(PlayerRef.X + 70, PlayerRef.Y, PlayerRef.Z)
+					return
+				Else
+					moveDir += 1
+				EndIf
+				float newX = curActor.X
+				float newY = curActor.Y
+				If (moveDir == 0)
+					newY += adjOffset
+				ElseIf (moveDir == 1)
+					newX += adjOffset
+				ElseIf (moveDir == 2)
+					newY -= adjOffset
+				ElseIf (moveDir == 3)
+					newX -= adjOffset
+				EndIf
+				curActor.SetPosition(newX, newY, curActor.Z)
+			EndIf
+		EndIf
+		i += 1
+	EndWhile
 EndFunction
 
 ; ------------------------------------------------------- ;

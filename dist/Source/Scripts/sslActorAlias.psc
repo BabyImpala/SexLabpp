@@ -384,7 +384,7 @@ Auto State Empty
 		_sex = SexLabRegistry.GetSex(_ActorRef, true)
 		_raceID = SexLabRegistry.GetRaceID(_ActorRef)
 		_ActorRef.SetFactionRank(_AnimatingFaction, 1)
-		SexLabUtil.UpdateAnimatingActorMovement(_ActorRef) ;MOVEMENT_LOCK
+		_Thread.UpdateAnimatingActorMovement(_ActorRef) ;MOVEMENT_LOCK
 		StartSetActorInterrupts()
 		TrackedEvent(TRACK_ADDED)
 		GoToState(STATE_SETUP)
@@ -402,7 +402,7 @@ Auto State Empty
 			_Thread.RequestStatisticUpdate(_ActorRef, _StartedAt)
 		EndIf
 		_ActorRef.SetFactionRank(_AnimatingFaction, -1)
-		SexLabUtil.UpdateAnimatingActorMovement(_ActorRef) ;MOVEMENT_RELEASE
+		_Thread.UpdateAnimatingActorMovement(_ActorRef) ;MOVEMENT_RELEASE
 		Parent.Clear()
 	EndFunction
 
@@ -420,7 +420,7 @@ bool Function SetActor(Actor ProspectRef)
 	return false
 EndFunction
 
-; Take this actor out of combat and clear all actor states, return true if the actor was the player
+; Take this actor out of combat and clear all actor states
 Function StartSetActorInterrupts() native
 ; Undo "StartSetActorInterrupts()" persistent changes
 Function EndSetActorInterrupts() native
@@ -494,10 +494,10 @@ State Ready
 		EndIf
 		ObjectReference target = akPathTo as ObjectReference
 		float distance = _ActorRef.GetDistance(target)		
-		float target_distance = SexLabUtil.CalcPathingTargetDistance(_raceID)
+		float target_distance = _Thread.CalcPathingTargetDistance(_raceID)
 		If(distance > target_distance && distance <= 6144.0)
 			_ActorRef.SetFactionRank(_AnimatingFaction, 2)
-			SexLabUtil.UpdateAnimatingActorMovement(_ActorRef) ;MOVEMENT_UNLOCK
+			_Thread.UpdateAnimatingActorMovement(_ActorRef) ;MOVEMENT_UNLOCK
 			float fallback_timer = 15.0
 			float prev_dist = distance + 1.0
 			Utility.Wait(2.0)
@@ -558,7 +558,7 @@ State Paused
 	EndEvent
 	Function LockActor()
 		_ActorRef.SetFactionRank(_AnimatingFaction, 1)
-		SexLabUtil.UpdateAnimatingActorMovement(_ActorRef) ;MOVEMENT_LOCK
+		_Thread.UpdateAnimatingActorMovement(_ActorRef) ;MOVEMENT_LOCK
 		Debug.SendAnimationEvent(_ActorRef, "IdleFurnitureExit")
 		Debug.SendAnimationEvent(_ActorRef, "AnimObjectUnequip")
 		Debug.SendAnimationEvent(_ActorRef, "IdleStop")
@@ -593,7 +593,7 @@ State Paused
 		EndIf
 		return false
 	EndFunction
-	bool Function ReadyActor(int aiStripData, int aiPositionGenders)
+	Function ReadyActor(int aiStripData, int aiPositionGenders)
 		_stripData = aiStripData
 		_useStrapon = _sex == 1 && Math.LogicalAnd(aiPositionGenders, 0x2) == 0
 		If (_sex <= 2)
@@ -603,7 +603,6 @@ State Paused
 		EndIf
 		Debug.SendAnimationEvent(_ActorRef, "SOSBend0")
 		RegisterForModEvent("SSL_READY_Thread" + _Thread.tid, "OnStartPlaying")
-		return true
 	EndFunction
 
 	Event OnStartPlaying(string asEventName, string asStringArg, float afNumArg, form akSender)
@@ -642,7 +641,7 @@ State Paused
 		EndIf
 		SetActorCollisions(true)
 		_ActorRef.SetFactionRank(_AnimatingFaction, 0)
-		SexLabUtil.UpdateAnimatingActorMovement(_ActorRef) ;MOVEMENT_UNLOCK
+		_Thread.UpdateAnimatingActorMovement(_ActorRef) ;MOVEMENT_UNLOCK
 		Log("Unlocked Actor: " + GetActorName())
 		_ActorLocked = False
 	EndFunction
@@ -683,9 +682,8 @@ bool Function InitiateUndressing()
 	Error("Cannot undress actors outside of idle state", "InitiateUndressing()")
 	return false
 EndFunction
-bool Function ReadyActor(int aiStripData, int aiPositionGenders)
+Function ReadyActor(int aiStripData, int aiPositionGenders)
 	Error("Cannot ready outside of idle state", "ReadyActor()")
-	return false
 EndFunction
 Event OnStartPlaying(string asEventName, string asStringArg, float afNumArg, form akSender)
 	Error("Playing request outside of idle state", "OnStartPlaying()")
