@@ -74,8 +74,11 @@ namespace Thread::Interface
             ImGuiMCP::ImGuiWindowFlags_NoMove | ImGuiMCP::ImGuiWindowFlags_NoCollapse |
             ImGuiMCP::ImGuiWindowFlags_AlwaysAutoResize;
 
+        ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_WindowBg, UI::Theme::Color.panelBackground);
+        ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_Border, UI::Theme::Color.panelBorder);
         if (!ImGuiMCP::Begin("##slpp_FurnSelect", &isOpen, kFlags)) {
             ImGuiMCP::End();
+            ImGuiMCP::PopStyleColor(2);
             SetVisible(isOpen);
             return;
         }
@@ -140,6 +143,7 @@ namespace Thread::Interface
         ImGuiMCP::Dummy(ImGuiMCP::ImVec2{ 0.0f, scale.Px(2.0f) });
         ImGuiMCP::SetWindowFontScale(1.0f);
         ImGuiMCP::End();
+        ImGuiMCP::PopStyleColor(2);
         SetVisible(isOpen);
         if (selectedIndex)
             HandleSelection(*selectedIndex);

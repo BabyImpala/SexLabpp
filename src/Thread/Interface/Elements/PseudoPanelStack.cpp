@@ -101,10 +101,10 @@ namespace Thread::Interface
 
             const float rounding = scale.Px(UI::Theme::Geometry::roundingPanel);
             const auto roundLeft = ImGuiMCP::ImDrawFlags_RoundCornersLeft;
-            const auto background = isActiveTab ? UI::Theme::Color.surfaceActive :
-                                    pressed     ? UI::Theme::Color.surfacePressed :
-                                    highlighted ? UI::Theme::Color.surfaceHovered :
-                                                  UI::Theme::Color.surfacePanel;
+            const auto background = isActiveTab ? UI::Theme::Color.buttonSelected :
+                                    pressed     ? UI::Theme::Color.buttonPressed :
+                                    highlighted ? UI::Theme::Color.buttonHovered :
+                                                  UI::Theme::Color.buttonIdle;
             const auto border = isActiveTab ? UI::Theme::Color.borderActive :
                                 highlighted ? UI::Theme::Color.borderHovered :
                                               UI::Theme::Color.borderSubtle;

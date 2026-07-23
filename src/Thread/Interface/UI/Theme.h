@@ -11,10 +11,13 @@ namespace Thread::Interface::UI::Theme
         ImGuiMCP::ImU32 textMuted = IM_COL32(136, 128, 120, 255);
         ImGuiMCP::ImU32 accent = IM_COL32(112, 184, 112, 255);
 
-        ImGuiMCP::ImU32 surfacePanel = IM_COL32(20, 20, 22, 245);
-        ImGuiMCP::ImU32 surfaceHovered = IM_COL32(36, 36, 40, 245);
-        ImGuiMCP::ImU32 surfacePressed = IM_COL32(34, 34, 36, 245);
-        ImGuiMCP::ImU32 surfaceActive = IM_COL32(22, 25, 23, 245);
+        ImGuiMCP::ImU32 panelBackground = IM_COL32(0, 0, 0, 182);
+        ImGuiMCP::ImU32 panelBorder = IM_COL32(255, 255, 255, 58);
+
+        ImGuiMCP::ImU32 buttonIdle = IM_COL32(20, 20, 22, 245);
+        ImGuiMCP::ImU32 buttonHovered = IM_COL32(36, 36, 40, 245);
+        ImGuiMCP::ImU32 buttonPressed = IM_COL32(34, 34, 36, 245);
+        ImGuiMCP::ImU32 buttonSelected = IM_COL32(22, 25, 23, 245);
         ImGuiMCP::ImU32 separator = IM_COL32(55, 55, 58, 128);
         ImGuiMCP::ImU32 shadow = IM_COL32(0, 0, 0, 210);
         ImGuiMCP::ImU32 shadowSoft = IM_COL32(0, 0, 0, 90);
