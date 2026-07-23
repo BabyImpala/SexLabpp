@@ -74,8 +74,11 @@ namespace Thread::Interface
             ImGuiMCP::ImGuiWindowFlags_NoMove | ImGuiMCP::ImGuiWindowFlags_NoCollapse |
             ImGuiMCP::ImGuiWindowFlags_AlwaysAutoResize;
 
+        ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_WindowBg, UI::Theme::Color.panelBackground);
+        ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_Border, UI::Theme::Color.panelBorder);
         if (!ImGuiMCP::Begin("##slpp_FurnSelect", &isOpen, kFlags)) {
             ImGuiMCP::End();
+            ImGuiMCP::PopStyleColor(2);
             SetVisible(isOpen);
             return;
         }
@@ -84,7 +87,7 @@ namespace Thread::Interface
         SetWindowFontSize(scale.TextPx(UI::Theme::FontSize::sectionHeader));
         const char* title = "SELECT SCENE CENTER";
         ImGuiMCP::SetCursorPosX((panelW - ImGuiMCP::CalcTextSize(title).x) * 0.5f);
-        ImGuiMCP::TextColored(UI::Theme::ToVec4(UI::Theme::Color::textSecondary), "%s", title);
+        ImGuiMCP::TextColored(UI::Theme::ToVec4(UI::Theme::Color.textSecondary), "%s", title);
         ImGuiMCP::Dummy(ImGuiMCP::ImVec2{ 0.0f, scale.Px(2.0f) });
         ImGuiMCP::Separator();
         ImGuiMCP::Dummy(ImGuiMCP::ImVec2{ 0.0f, scale.Px(2.0f) });
@@ -94,7 +97,7 @@ namespace Thread::Interface
 
         if (_items.empty()) {
             ImGuiMCP::SetCursorPosX(padH);
-            ImGuiMCP::TextColored(UI::Theme::ToVec4(UI::Theme::Color::textMuted), "No suitable scene center nearby.");
+            ImGuiMCP::TextColored(UI::Theme::ToVec4(UI::Theme::Color.textMuted), "No suitable scene center nearby.");
         } else {
             const float innerW = panelW - padH * 2.0f;
 
@@ -123,13 +126,13 @@ namespace Thread::Interface
 
                 ImGuiMCP::SetCursorScreenPos({ rowMin.x + padH, rowMin.y + padV });
                 ImGuiMCP::TextColored(
-                    UI::Theme::ToVec4(hov ? UI::Theme::Color::textPrimary : UI::Theme::Color::textSecondary),
+                    UI::Theme::ToVec4(hov ? UI::Theme::Color.textPrimary : UI::Theme::Color.textSecondary),
                     "%s", leftLabel.c_str());
 
                 if (!formId.empty()) {
                     const float fW = ImGuiMCP::CalcTextSize(formId.c_str()).x;
                     ImGuiMCP::SetCursorScreenPos({ rowMin.x + padH + innerW - fW - padH, rowMin.y + padV });
-                    ImGuiMCP::TextColored(UI::Theme::ToVec4(UI::Theme::Color::textMuted), "%s", formId.c_str());
+                    ImGuiMCP::TextColored(UI::Theme::ToVec4(UI::Theme::Color.textMuted), "%s", formId.c_str());
                 }
 
                 ImGuiMCP::SetCursorScreenPos({ rowMin.x, rowMin.y + rowH });
@@ -140,6 +143,7 @@ namespace Thread::Interface
         ImGuiMCP::Dummy(ImGuiMCP::ImVec2{ 0.0f, scale.Px(2.0f) });
         ImGuiMCP::SetWindowFontScale(1.0f);
         ImGuiMCP::End();
+        ImGuiMCP::PopStyleColor(2);
         SetVisible(isOpen);
         if (selectedIndex)
             HandleSelection(*selectedIndex);

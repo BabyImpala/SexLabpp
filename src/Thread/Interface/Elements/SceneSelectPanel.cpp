@@ -195,10 +195,10 @@ namespace Thread::Interface
 
         // Modern scrollbar styling
         ImGuiMCP::PushStyleVar(ImGuiMCP::ImGuiStyleVar_ScrollbarSize, scale.Px(6.0f));
-        ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_ScrollbarBg, UI::Theme::Color::surfacePanel);
-        ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_ScrollbarGrab, UI::Theme::ToVec4(UI::Theme::Color::borderSubtle));
-        ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_ScrollbarGrabHovered, UI::Theme::ToVec4(UI::Theme::Color::borderHovered));
-        ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_ScrollbarGrabActive, UI::Theme::ToVec4(UI::Theme::Color::borderActive));
+        ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_ScrollbarBg, UI::Theme::Color.panelBackground);
+        ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_ScrollbarGrab, UI::Theme::ToVec4(UI::Theme::Color.borderSubtle));
+        ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_ScrollbarGrabHovered, UI::Theme::ToVec4(UI::Theme::Color.borderHovered));
+        ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_ScrollbarGrabActive, UI::Theme::ToVec4(UI::Theme::Color.borderActive));
 
         ImGuiMCP::BeginChild("##slpp_smmSceneList", ImGuiMCP::ImVec2{ panelW - panelPadding * 2.0f, calculatedListH },
             ImGuiMCP::ImGuiChildFlags_None, ImGuiMCP::ImGuiWindowFlags_None);
@@ -210,9 +210,9 @@ namespace Thread::Interface
             ImGuiMCP::PushID(i);
 
             if (e.isActive)
-                ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_Text, UI::Theme::Color::accent);
+                ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_Text, UI::Theme::Color.accent);
             else
-                ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_Text, UI::Theme::ToVec4(UI::Theme::Color::textSecondary));
+                ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_Text, UI::Theme::ToVec4(UI::Theme::Color.textSecondary));
 
             ImGuiMCP::SetCursorPosX(ImGuiMCP::GetCursorPosX() + scale.Px(8.0f));
             const bool clicked = UI::SelectableButton(e.name.c_str(), e.isActive,
@@ -246,7 +246,7 @@ namespace Thread::Interface
         const float inputW = searchAreaW - btnTextW - scale.Px(8.0f);
 
         // Style search input
-        ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_Text, UI::Theme::ToVec4(UI::Theme::Color::textSecondary));
+        ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_Text, UI::Theme::ToVec4(UI::Theme::Color.textSecondary));
         SetWindowFontSize(scale.TextPx(UI::Theme::FontSize::caption));
 
         ImGuiMCP::SetNextItemWidth(inputW);
@@ -320,10 +320,10 @@ namespace Thread::Interface
                 SetWindowFontSize(keyFont);
 
                 auto infoRow = [&](const char* key, const std::string& val, float valFont) {
-                    ImGuiMCP::TextColored(UI::Theme::ToVec4(UI::Theme::Color::textSecondary), "%s", key);
+                    ImGuiMCP::TextColored(UI::Theme::ToVec4(UI::Theme::Color.textSecondary), "%s", key);
                     ImGuiMCP::SameLine(keyW);
                     SetWindowFontSize(valFont);
-                    ImGuiMCP::TextColored(UI::Theme::ToVec4(UI::Theme::Color::textMuted), "%s",
+                    ImGuiMCP::TextColored(UI::Theme::ToVec4(UI::Theme::Color.textMuted), "%s",
                         val.empty() ? "\xE2\x80\x94" : val.c_str());
                     SetWindowFontSize(keyFont);
                     ImGuiMCP::Dummy(ImGuiMCP::ImVec2{ 0.0f, rowGap });
@@ -332,16 +332,16 @@ namespace Thread::Interface
                 infoRow("PACK:", e.packageName, rowFont);
                 infoRow("AUTHOR:", e.author, rowFont);
 
-                ImGuiMCP::TextColored(UI::Theme::ToVec4(UI::Theme::Color::textSecondary), "TAGS:");
+                ImGuiMCP::TextColored(UI::Theme::ToVec4(UI::Theme::Color.textSecondary), "TAGS:");
                 ImGuiMCP::SameLine(keyW);
                 SetWindowFontSize(tagFont);
-                ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_Text, UI::Theme::ToVec4(UI::Theme::Color::textMuted));
+                ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_Text, UI::Theme::ToVec4(UI::Theme::Color.textMuted));
                 ImGuiMCP::TextWrapped("%s", e.tags.empty() ? "\xE2\x80\x94" : e.tags.c_str());
                 ImGuiMCP::PopStyleColor();
                 SetWindowFontSize(keyFont);
                 ImGuiMCP::Dummy(ImGuiMCP::ImVec2{ 0.0f, rowGap });
 
-                ImGuiMCP::TextColored(UI::Theme::ToVec4(UI::Theme::Color::textSecondary), "ANNOTATIONS");
+                ImGuiMCP::TextColored(UI::Theme::ToVec4(UI::Theme::Color.textSecondary), "ANNOTATIONS");
                 SetWindowFontSize(rowFont);
                 const float fieldW = cardW - scale.Px(12.0f);
                 const ImGuiMCP::ImVec2 annotSz{ fieldW,

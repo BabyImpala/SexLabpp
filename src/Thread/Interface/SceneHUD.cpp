@@ -128,6 +128,11 @@ namespace Thread::Interface
         if (!_focused)
             return;
 
+        ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_WindowBg, UI::Theme::Color.panelBackground);
+        ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_Border, UI::Theme::Color.panelBorder);
+        ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_Button, UI::Theme::Color.buttonIdle);
+        ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_ButtonHovered, UI::Theme::Color.buttonHovered);
+        ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_ButtonActive, UI::Theme::Color.buttonPressed);
         _elements->pseudoPanelStack.Render(*this);
         switch (_activePanel) {
         case PanelId::kThreadConfig:
@@ -145,6 +150,8 @@ namespace Thread::Interface
         default:
             break;
         }
+        _elements->elementCtrlPanel.RenderColorEditor(*this);
+        ImGuiMCP::PopStyleColor(5);
     }
 
     void SceneHUD::SetFocus(bool a_focused)

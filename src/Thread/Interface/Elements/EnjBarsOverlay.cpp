@@ -119,17 +119,17 @@ namespace Thread::Interface
     void EnjBarsOverlay::FillGradient(float enj, ImGuiMCP::ImU32& lo, ImGuiMCP::ImU32& hi)
     {
         if (enj < 0.0f) {
-            lo = UI::Theme::Enjoyment::negativeHigh;
-            hi = UI::Theme::Enjoyment::negativeLow;
+            lo = UI::Theme::Enjoyment.negativeHigh;
+            hi = UI::Theme::Enjoyment.negativeLow;
             return;
         }
         if (enj > 100.0f) {
-            lo = UI::Theme::Enjoyment::overflowLow;
-            hi = UI::Theme::Enjoyment::overflowHigh;
+            lo = UI::Theme::Enjoyment.overflowLow;
+            hi = UI::Theme::Enjoyment.overflowHigh;
             return;
         }
-        lo = UI::Theme::Enjoyment::normalLow;
-        hi = UI::Theme::Enjoyment::normalHigh;
+        lo = UI::Theme::Enjoyment.normalLow;
+        hi = UI::Theme::Enjoyment.normalHigh;
     }
 
     float EnjBarsOverlay::GreenZoneHalfWidth(float a_enjoyment)
@@ -263,7 +263,7 @@ namespace Thread::Interface
                 ImGuiMCP::ImVec2{ nameMaxX, rowMaxY }, true);
             DrawTextShadowed(dl,
                 ImGuiMCP::ImVec2{ rowStart.x + lblPad, rowStart.y + lblPad },
-                b.isTarget ? UI::Theme::Color::textPrimary : UI::Theme::Color::textSecondary,
+                b.isTarget ? UI::Theme::Color.textPrimary : UI::Theme::Color.textSecondary,
                 b.name);
             ImGuiMCP::ImDrawListManager::PopClipRect(dl);
 
@@ -272,8 +272,8 @@ namespace Thread::Interface
             char valBuf[12];
             std::snprintf(valBuf, sizeof(valBuf), "%d",
                 static_cast<int>(std::round(b.enjoyment)));
-            const ImGuiMCP::ImU32 valCol = b.enjoyment > 100.0f ? UI::Theme::Enjoyment::overflowLow : b.enjoyment < 0.0f ? UI::Theme::Enjoyment::negativeHigh :
-                                                                                                                           UI::Theme::Color::textSecondary;
+            const ImGuiMCP::ImU32 valCol = b.enjoyment > 100.0f ? UI::Theme::Enjoyment.overflowLow : b.enjoyment < 0.0f ? UI::Theme::Enjoyment.negativeHigh :
+                                                                                                                          UI::Theme::Color.textSecondary;
             const float valX = rowStart.x + zoneW - ImGuiMCP::CalcTextSize(valBuf).x - lblPad;
             ImGuiMCP::ImDrawListManager::PushClipRect(dl,
                 ImGuiMCP::ImVec2{ valueMinX, rowStart.y }, ImGuiMCP::ImVec2{ rowStart.x + zoneW, rowMaxY }, true);
@@ -288,7 +288,7 @@ namespace Thread::Interface
                 ImGuiMCP::ImDrawListManager::PushClipRect(dl,
                     ImGuiMCP::ImVec2{ nameMaxX, rowStart.y }, ImGuiMCP::ImVec2{ valueMinX, rowMaxY }, true);
                 DrawTextShadowed(dl, ImGuiMCP::ImVec2{ intrX, rowStart.y + lblPad },
-                    UI::Theme::Color::textMuted, b.interactions);
+                    UI::Theme::Color.textMuted, b.interactions);
                 ImGuiMCP::ImDrawListManager::PopClipRect(dl);
             }
 
@@ -300,20 +300,20 @@ namespace Thread::Interface
             const ImGuiMCP::ImVec2 frameMax{ frameMin.x + zoneW, frameMin.y + frameH };
 
             // track
-            ImGuiMCP::ImDrawListManager::AddRectFilled(dl, frameMin, frameMax, UI::Theme::Enjoyment::frameSurface, 0.0f, 0);
-            ImGuiMCP::ImDrawListManager::AddRect(dl, frameMin, frameMax, UI::Theme::Enjoyment::frameBorder, 0.0f, 0, 1.0f);
+            ImGuiMCP::ImDrawListManager::AddRectFilled(dl, frameMin, frameMax, UI::Theme::Enjoyment.frameSurface, 0.0f, 0);
+            ImGuiMCP::ImDrawListManager::AddRect(dl, frameMin, frameMax, UI::Theme::Enjoyment.frameBorder, 0.0f, 0, 1.0f);
 
             // outer white rim
             ImGuiMCP::ImDrawListManager::AddRect(dl,
                 ImGuiMCP::ImVec2{ frameMin.x - 1, frameMin.y - 1 },
                 ImGuiMCP::ImVec2{ frameMax.x + 1, frameMax.y + 1 },
-                UI::Theme::Enjoyment::frameRim, 0.0f, 0, 1.0f);
+                UI::Theme::Enjoyment.frameRim, 0.0f, 0, 1.0f);
 
             // inner top shine
             ImGuiMCP::ImDrawListManager::AddLine(dl,
                 ImGuiMCP::ImVec2{ frameMin.x + 1, frameMin.y + 1 },
                 ImGuiMCP::ImVec2{ frameMax.x - 1, frameMin.y + 1 },
-                UI::Theme::Enjoyment::frameShine, 1.0f);
+                UI::Theme::Enjoyment.frameShine, 1.0f);
 
             // fill
             const float frac = FillFraction(b.enjoyment);
@@ -343,26 +343,26 @@ namespace Thread::Interface
 
                 ImGuiMCP::ImDrawListManager::AddRectFilled(dl,
                     ImGuiMCP::ImVec2{ gx0, frameMin.y }, ImGuiMCP::ImVec2{ gx1, frameMax.y },
-                    inZone ? UI::Theme::Enjoyment::zoneActive : UI::Theme::Enjoyment::zoneIdle, 0.0f, 0);
+                    inZone ? UI::Theme::Enjoyment.zoneActive : UI::Theme::Enjoyment.zoneIdle, 0.0f, 0);
                 ImGuiMCP::ImDrawListManager::AddLine(dl,
                     ImGuiMCP::ImVec2{ gx0, frameMin.y }, ImGuiMCP::ImVec2{ gx0, frameMax.y },
-                    inZone ? UI::Theme::Enjoyment::zoneFocused : UI::Theme::Enjoyment::zoneBorder, 1.0f);
+                    inZone ? UI::Theme::Enjoyment.zoneFocused : UI::Theme::Enjoyment.zoneBorder, 1.0f);
                 ImGuiMCP::ImDrawListManager::AddLine(dl,
                     ImGuiMCP::ImVec2{ gx1, frameMin.y }, ImGuiMCP::ImVec2{ gx1, frameMax.y },
-                    inZone ? UI::Theme::Enjoyment::zoneFocused : UI::Theme::Enjoyment::zoneBorder, 1.0f);
+                    inZone ? UI::Theme::Enjoyment.zoneFocused : UI::Theme::Enjoyment.zoneBorder, 1.0f);
 
                 // zone center line
                 const float zoneCx = (gx0 + gx1) * 0.5f;
                 ImGuiMCP::ImDrawListManager::AddLine(dl,
                     ImGuiMCP::ImVec2{ zoneCx, frameMin.y }, ImGuiMCP::ImVec2{ zoneCx, frameMax.y },
-                    inZone ? UI::Theme::Enjoyment::zoneCenterActive : UI::Theme::Enjoyment::zoneCenter, 1.0f);
+                    inZone ? UI::Theme::Enjoyment.zoneCenterActive : UI::Theme::Enjoyment.zoneCenter, 1.0f);
 
                 // needle rect
                 const float nx = frameMin.x + _needlePosition * zoneW;
                 const float nw = innerGp * 0.667f;
                 const float nTop = frameMin.y - innerGp * 0.667f;
                 const float nBot = frameMax.y + innerGp * 0.667f;
-                const ImGuiMCP::ImU32 nCol = inZone ? UI::Theme::Enjoyment::needleActive : UI::Theme::Enjoyment::needle;
+                const ImGuiMCP::ImU32 nCol = inZone ? UI::Theme::Enjoyment.needleActive : UI::Theme::Enjoyment.needle;
                 ImGuiMCP::ImDrawListManager::AddRectFilled(dl,
                     ImGuiMCP::ImVec2{ nx - nw * 0.5f, nTop }, ImGuiMCP::ImVec2{ nx + nw * 0.5f, nBot },
                     nCol, 0.0f, 0);
@@ -377,11 +377,11 @@ namespace Thread::Interface
                 // feedback flash
                 if (_feedbackActorId == b.formId && now < _feedbackUntil) {
                     ImGuiMCP::ImDrawListManager::AddRectFilled(dl, frameMin, frameMax,
-                        _feedbackHit ? UI::Theme::Enjoyment::feedbackHit : UI::Theme::Enjoyment::feedbackMiss,
+                        _feedbackHit ? UI::Theme::Enjoyment.feedbackHit : UI::Theme::Enjoyment.feedbackMiss,
                         0.0f, 0);
                     SetWindowFontSize(fbFt);
                     const char* fbStr = _feedbackHit ? "HIT" : "MISS";
-                    const ImGuiMCP::ImU32 fbCol = _feedbackHit ? UI::Theme::Enjoyment::hit : UI::Theme::Enjoyment::miss;
+                    const ImGuiMCP::ImU32 fbCol = _feedbackHit ? UI::Theme::Enjoyment.hit : UI::Theme::Enjoyment.miss;
                     const ImGuiMCP::ImVec2 fbSz = ImGuiMCP::CalcTextSize(fbStr);
                     DrawTextShadowed(dl,
                         ImGuiMCP::ImVec2{ frameMax.x - fbSz.x - innerGp * 1.667f,
@@ -394,7 +394,7 @@ namespace Thread::Interface
 
             // highlight border for whichever actor is currently targeted
             if (b.isTarget) {
-                constexpr auto tc = UI::Theme::Enjoyment::targetBorder;
+                const auto tc = UI::Theme::Enjoyment.targetBorder;
                 ImGuiMCP::ImDrawListManager::AddRect(dl, frameMin, frameMax, tc, 0.0f, 0, 1.0f);
                 ImGuiMCP::ImDrawListManager::AddRect(dl,
                     ImGuiMCP::ImVec2{ frameMin.x - 1, frameMin.y - 1 },

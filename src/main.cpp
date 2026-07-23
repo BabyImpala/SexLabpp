@@ -6,6 +6,7 @@
 #include "Thread/Hooks.h"
 #include "Thread/Interface/FurnSelectMenu.h"
 #include "Thread/Interface/SceneHUD.h"
+#include "Thread/Interface/UI/Theme.h"
 #include "Thread/NiNode/Legacy/LegacyNiUpdate.h"
 #include "Thread/NiNode/NiUpdate.h"
 #include "UserData/StripData.h"
@@ -78,6 +79,7 @@ static void SKSEMessageHandler(SKSE::MessagingInterface::Message* message)
             Thread::Interface::FurnSelectMenu::GetSingleton().Register();
         break;
     case SKSE::MessagingInterface::kDataLoaded:
+        Thread::Interface::UI::Theme::Load();
         Settings::Initialize();
         if (!GameForms::LoadData()) {
             logger::critical("Unable to load esp objects");

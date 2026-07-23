@@ -93,16 +93,16 @@ namespace Thread::Interface
         SKSEMenuFramework::PushFont(UI::Theme::Icon::solidFont);
         DrawTextShadowed(dl,
             ImGuiMCP::ImVec2{ rowScreenPos.x + (btnW - leftIconSize.x) * 0.5f, rowScreenPos.y + (rowH - leftIconSize.y) * 0.5f },
-            UI::Theme::Color::textSecondary, UI::Theme::Icon::anglesLeft);
+            UI::Theme::Color.textSecondary, UI::Theme::Icon::anglesLeft);
         DrawTextShadowed(dl,
             ImGuiMCP::ImVec2{ rowScreenPos.x + contentW - btnW + (btnW - rightIconSize.x) * 0.5f,
                 rowScreenPos.y + (rowH - rightIconSize.y) * 0.5f },
-            UI::Theme::Color::textSecondary, UI::Theme::Icon::anglesRight);
+            UI::Theme::Color.textSecondary, UI::Theme::Icon::anglesRight);
         FontAwesome::Pop();
         DrawTextShadowed(dl,
             ImGuiMCP::ImVec2{ rowScreenPos.x + (contentW - valSz.x) * 0.5f,
                 rowScreenPos.y + (rowH - valSz.y) * 0.5f },
-            UI::Theme::Color::textPrimary, buf);
+            UI::Theme::Color.textPrimary, buf);
         ImGuiMCP::SetCursorScreenPos(rowScreenPos);
         ImGuiMCP::Dummy(ImGuiMCP::ImVec2{ contentW, rowH });
 
@@ -118,15 +118,15 @@ namespace Thread::Interface
 
             ImGuiMCP::ImDrawListManager::AddRectFilled(dl,
                 barPos, ImGuiMCP::ImVec2{ barPos.x + contentW, barPos.y + timerH },
-                UI::Theme::Animation::timerTrack, timerH * 0.5f, 0);
+                UI::Theme::Animation.timerTrack, timerH * 0.5f, 0);
             if (fillW > 0.0f) {
                 const float fx = barPos.x + contentW - fillW;
                 ImGuiMCP::ImDrawListManager::AddRectFilledMultiColor(dl,
                     ImGuiMCP::ImVec2{ fx, barPos.y }, ImGuiMCP::ImVec2{ barPos.x + contentW, barPos.y + timerH },
-                    UI::Theme::Animation::timerEdge,
-                    UI::Theme::Animation::timerCenter,
-                    UI::Theme::Animation::timerCenter,
-                    UI::Theme::Animation::timerEdge);
+                    UI::Theme::Animation.timerEdge,
+                    UI::Theme::Animation.timerCenter,
+                    UI::Theme::Animation.timerCenter,
+                    UI::Theme::Animation.timerEdge);
             }
             ImGuiMCP::Dummy(ImGuiMCP::ImVec2{ contentW, timerH });
         }

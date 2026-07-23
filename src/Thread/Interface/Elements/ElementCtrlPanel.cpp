@@ -6,6 +6,38 @@ namespace Thread::Interface
 {
     using UI::SetWindowFontSize;
 
+    namespace
+    {
+        constexpr auto COLOR_EDIT_FLAGS =
+            ImGuiMCP::ImGuiColorEditFlags_NoInputs |
+            ImGuiMCP::ImGuiColorEditFlags_AlphaBar |
+            ImGuiMCP::ImGuiColorEditFlags_AlphaPreviewHalf;
+
+        template <class T>
+        void DrawThemeColorFields(T& a_values)
+        {
+            std::size_t index = 0;
+            glz::for_each_field(a_values, [&](auto& a_field) {
+                using Field = std::remove_cvref_t<decltype(a_field)>;
+
+                const auto fieldIndex = index++;
+                const auto fieldName = glz::reflect<T>::keys[fieldIndex];
+                ImGuiMCP::PushID(static_cast<int>(fieldIndex));
+
+                if constexpr (std::is_same_v<Field, ImGuiMCP::ImU32>) {
+                    auto color = UI::Theme::ToVec4(a_field);
+                    if (ImGuiMCP::ColorEdit4(fieldName.data(), &color.x, COLOR_EDIT_FLAGS))
+                        a_field = ImGuiMCP::ColorConvertFloat4ToU32(color);
+                } else if constexpr (glz::reflectable<Field>) {
+                    if (ImGuiMCP::CollapsingHeader(fieldName.data(), ImGuiMCP::ImGuiTreeNodeFlags_DefaultOpen))
+                        DrawThemeColorFields(a_field);
+                }
+
+                ImGuiMCP::PopID();
+            });
+        }
+    }
+
     void ElementCtrlPanel::Open(SceneHUD& a_hud)
     {
         if (auto* inst = a_hud.GetThreadInstance()) {
@@ -62,7 +94,7 @@ namespace Thread::Interface
             return;
         }
         SetWindowFontSize(scale.TextPx(UI::Theme::FontSize::body));
-        ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_Text, UI::Theme::ToVec4(UI::Theme::Color::textSecondary));
+        ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_Text, UI::Theme::ToVec4(UI::Theme::Color.textSecondary));
 
         ImGuiMCP::SetNextItemWidth(-1.0f);
         ImGuiMCP::SliderFloat("##slpp_ecmScale", &_scaleAdjustment, 0.5f, 2.5f, "UI Scale %.2fx");
@@ -74,12 +106,11 @@ namespace Thread::Interface
             OnTextScaleChange(a_hud, _textScaleAdjustment);
 
         ImGuiMCP::PopStyleColor();
-        ImGuiMCP::Separator();
 
         // Elements
         SetWindowFontSize(scale.TextPx(UI::Theme::FontSize::body));
         UI::PushCheckboxStyle(scale.Factor());
-        ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_Text, UI::Theme::ToVec4(UI::Theme::Color::textSecondary));
+        ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_Text, UI::Theme::ToVec4(UI::Theme::Color.textSecondary));
 
         const float toggleRowH = scale.Px(24.0f);
         const float rowPadH = scale.Px(12.0f);
@@ -91,7 +122,7 @@ namespace Thread::Interface
 
             // Full row selectable button
             ImGuiMCP::SetCursorScreenPos({ toggleRowMin.x + rowPadH, toggleRowMin.y });
-            ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_HeaderHovered, UI::Theme::ToVec4(UI::Theme::Color::transparent));
+            ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_HeaderHovered, UI::Theme::ToVec4(UI::Theme::Color.transparent));
             std::string rowId = std::string("##slpp_ecp_row_") + id;
             if (UI::SelectableButton(rowId.c_str(), false, 0, ImGuiMCP::ImVec2{ availW, toggleRowH })) {
                 state = !state;
@@ -155,6 +186,51 @@ namespace Thread::Interface
         }
         ImGuiMCP::PopStyleColor();
         UI::PopCheckboxStyle();
+
+        const float actionGap = scale.Px(UI::Theme::Spacing::sm);
+        const float actionWidth = (ImGuiMCP::GetContentRegionAvail().x - actionGap) * 0.5f;
+        ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_Text, UI::Theme::ToVec4(UI::Theme::Color.textSecondary));
+        if (UI::ActionButton("Adjust Colors", actionWidth))
+            _showColorEditor = true;
+        ImGuiMCP::SameLine(0.0f, actionGap);
+        ImGuiMCP::BeginDisabled(!UI::Theme::IsLoaded());
+        if (UI::ActionButton("Save", actionWidth))
+            UI::Theme::Save();
+        ImGuiMCP::EndDisabled();
+        ImGuiMCP::PopStyleColor();
+
+        ImGuiMCP::SetWindowFontScale(1.0f);
+        ImGuiMCP::End();
+    }
+
+    void ElementCtrlPanel::RenderColorEditor(SceneHUD& a_hud)
+    {
+        if (!_showColorEditor)
+            return;
+
+        auto& scale = a_hud.GetScale();
+        auto* io = ImGuiMCP::GetIO();
+        const float editorWidth = std::min(scale.Px(200.0f), io->DisplaySize.x * 0.8f);
+        const float editorMinHeight = scale.Px(100.0f);
+        const float editorMaxHeight = std::max(editorMinHeight, io->DisplaySize.y * 0.75f);
+        const float panelOffset = scale.Px(UI::Theme::Geometry::panelTabWidth + UI::Theme::Geometry::panelTabGap);
+        const float editorRight = io->DisplaySize.x - panelOffset - scale.Px(220.0f) - scale.Px(UI::Theme::Spacing::sm);
+
+        ImGuiMCP::SetNextWindowPos(ImGuiMCP::ImVec2{ editorRight, io->DisplaySize.y * 0.5f },
+            ImGuiMCP::ImGuiCond_FirstUseEver, ImGuiMCP::ImVec2{ 1.0f, 0.5f });
+        ImGuiMCP::SetNextWindowSizeConstraints(
+            ImGuiMCP::ImVec2{ editorWidth, editorMinHeight }, ImGuiMCP::ImVec2{ editorWidth, editorMaxHeight });
+
+        constexpr auto kFlags = ImGuiMCP::ImGuiWindowFlags_NoCollapse | ImGuiMCP::ImGuiWindowFlags_AlwaysAutoResize;
+        if (!ImGuiMCP::Begin("Theme Colors##slpp_ColorEditor", &_showColorEditor, kFlags)) {
+            ImGuiMCP::End();
+            return;
+        }
+
+        SetWindowFontSize(scale.TextPx(UI::Theme::FontSize::body));
+        ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_Text, UI::Theme::ToVec4(UI::Theme::Color.textSecondary));
+        DrawThemeColorFields(UI::Theme::data);
+        ImGuiMCP::PopStyleColor();
         ImGuiMCP::SetWindowFontScale(1.0f);
         ImGuiMCP::End();
     }
