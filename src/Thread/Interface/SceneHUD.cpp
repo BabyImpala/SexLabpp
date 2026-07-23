@@ -145,6 +145,7 @@ namespace Thread::Interface
         default:
             break;
         }
+        _elements->elementCtrlPanel.RenderColorEditor(*this);
     }
 
     void SceneHUD::SetFocus(bool a_focused)
