@@ -106,7 +106,6 @@ namespace Thread::Interface
             OnTextScaleChange(a_hud, _textScaleAdjustment);
 
         ImGuiMCP::PopStyleColor();
-        ImGuiMCP::Separator();
 
         // Elements
         SetWindowFontSize(scale.TextPx(UI::Theme::FontSize::body));
@@ -188,7 +187,6 @@ namespace Thread::Interface
         ImGuiMCP::PopStyleColor();
         UI::PopCheckboxStyle();
 
-        ImGuiMCP::Separator();
         const float actionGap = scale.Px(UI::Theme::Spacing::sm);
         const float actionWidth = (ImGuiMCP::GetContentRegionAvail().x - actionGap) * 0.5f;
         ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_Text, UI::Theme::ToVec4(UI::Theme::Color.textSecondary));
