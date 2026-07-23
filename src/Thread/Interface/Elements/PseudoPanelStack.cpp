@@ -90,9 +90,9 @@ namespace Thread::Interface
             const ImGuiMCP::ImVec2 tMin = ImGuiMCP::GetCursorScreenPos();
             const ImGuiMCP::ImVec2 tMax{ tMin.x + tabW, tMin.y + tabH };
 
-            ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_Header, UI::Theme::Color::transparent);
-            ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_HeaderHovered, UI::Theme::Color::transparent);
-            ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_HeaderActive, UI::Theme::Color::transparent);
+            ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_Header, UI::Theme::Color.transparent);
+            ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_HeaderHovered, UI::Theme::Color.transparent);
+            ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_HeaderActive, UI::Theme::Color.transparent);
             const bool clicked = ImGuiMCP::Selectable("##slpp_ppsTab", isActiveTab, 0, ImGuiMCP::ImVec2{ tabW, tabH });
             const bool highlighted = ImGuiMCP::IsItemHovered() || ImGuiMCP::IsItemFocused();
             const bool pressed = ImGuiMCP::IsItemActive();
@@ -101,19 +101,19 @@ namespace Thread::Interface
 
             const float rounding = scale.Px(UI::Theme::Geometry::roundingPanel);
             const auto roundLeft = ImGuiMCP::ImDrawFlags_RoundCornersLeft;
-            const auto background = isActiveTab ? UI::Theme::Color::surfaceActive :
-                                    pressed     ? UI::Theme::Color::surfacePressed :
-                                    highlighted ? UI::Theme::Color::surfaceHovered :
-                                                  UI::Theme::Color::surfacePanel;
-            const auto border = isActiveTab ? UI::Theme::Color::borderActive :
-                                highlighted ? UI::Theme::Color::borderHovered :
-                                              UI::Theme::Color::borderSubtle;
-            const auto text = isActiveTab || highlighted ? UI::Theme::Color::textPrimary : UI::Theme::Color::textSecondary;
+            const auto background = isActiveTab ? UI::Theme::Color.surfaceActive :
+                                    pressed     ? UI::Theme::Color.surfacePressed :
+                                    highlighted ? UI::Theme::Color.surfaceHovered :
+                                                  UI::Theme::Color.surfacePanel;
+            const auto border = isActiveTab ? UI::Theme::Color.borderActive :
+                                highlighted ? UI::Theme::Color.borderHovered :
+                                              UI::Theme::Color.borderSubtle;
+            const auto text = isActiveTab || highlighted ? UI::Theme::Color.textPrimary : UI::Theme::Color.textSecondary;
 
             ImGuiMCP::ImDrawListManager::AddRectFilled(dl,
                 ImGuiMCP::ImVec2{ tMin.x - scale.Px(1.0f), tMin.y + scale.Px(1.0f) },
                 ImGuiMCP::ImVec2{ tMax.x, tMax.y + scale.Px(1.0f) },
-                UI::Theme::Color::shadowSoft, rounding, roundLeft);
+                UI::Theme::Color.shadowSoft, rounding, roundLeft);
             ImGuiMCP::ImDrawListManager::AddRectFilled(dl, tMin, tMax, background, rounding, roundLeft);
             ImGuiMCP::ImDrawListManager::AddRect(dl, tMin, tMax, border, rounding, roundLeft,
                 scale.Px(UI::Theme::Geometry::borderThin));
@@ -122,7 +122,7 @@ namespace Thread::Interface
             ImGuiMCP::ImDrawListManager::AddLine(dl,
                 ImGuiMCP::ImVec2{ tMin.x + accentW * 0.5f, tMin.y + rounding },
                 ImGuiMCP::ImVec2{ tMin.x + accentW * 0.5f, tMax.y - rounding },
-                isActiveTab ? UI::Theme::Color::accent : border, accentW);
+                isActiveTab ? UI::Theme::Color.accent : border, accentW);
 
             const ImGuiMCP::ImVec2 lblSz = ImGuiMCP::CalcTextSize(kTabs[index].label);
             const ImGuiMCP::ImVec2 lblPos{ tMin.x + scale.Px(13.0f), tMin.y + (tabH - lblSz.y) * 0.5f };

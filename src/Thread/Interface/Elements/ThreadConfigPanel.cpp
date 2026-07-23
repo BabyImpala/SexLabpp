@@ -144,9 +144,9 @@ namespace Thread::Interface
         const ImGuiMCP::ImVec2 hdrMin = ImGuiMCP::GetCursorScreenPos();
         const float hdrH = subsectionHeaderSize + hdrPadV * 2.0f;
 
-        ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_Header, UI::Theme::Color::nestedHeader);
-        ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_HeaderHovered, UI::Theme::Color::nestedHeaderHovered);
-        ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_HeaderActive, UI::Theme::Color::nestedControlActive);
+        ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_Header, UI::Theme::Color.nestedHeader);
+        ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_HeaderHovered, UI::Theme::Color.nestedHeaderHovered);
+        ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_HeaderActive, UI::Theme::Color.nestedControlActive);
         if (ImGuiMCP::Selectable("##slpp_tcmCardHdr", false, 0, ImGuiMCP::ImVec2{ cardW, hdrH }))
             state.cardOpen = !state.cardOpen;
         ImGuiMCP::PopStyleColor(3);
@@ -156,7 +156,7 @@ namespace Thread::Interface
         auto* dl = ImGuiMCP::GetWindowDrawList();
         if (!hdrHov) {
             const ImGuiMCP::ImVec2 hdrMax{ hdrMin.x + cardW, hdrMin.y + hdrH };
-            ImGuiMCP::ImDrawListManager::AddRectFilled(dl, hdrMin, hdrMax, UI::Theme::Color::nestedHeader, 0.0f, 0);
+            ImGuiMCP::ImDrawListManager::AddRectFilled(dl, hdrMin, hdrMax, UI::Theme::Color.nestedHeader, 0.0f, 0);
         }
 
         ImGuiMCP::SetCursorScreenPos(hdrMin);
@@ -167,11 +167,11 @@ namespace Thread::Interface
         ImGuiMCP::ImDrawListManager::AddRectFilled(dl,
             ImGuiMCP::ImVec2{ hdrMin.x, hdrMin.y },
             ImGuiMCP::ImVec2{ hdrMin.x + accentBarW, hdrMin.y + hdrH },
-            hdrHov ? UI::Theme::Color::accent : UI::Theme::Color::borderSubtle, 0.0f, 0);
+            hdrHov ? UI::Theme::Color.accent : UI::Theme::Color.borderSubtle, 0.0f, 0);
 
         // Name at left with padding
         ImGuiMCP::SetCursorScreenPos(ImGuiMCP::ImVec2{ hdrMin.x + hdrPadH, hdrMin.y + hdrPadV });
-        ImGuiMCP::TextColored(UI::Theme::ToVec4(hdrHov ? UI::Theme::Color::textPrimary : UI::Theme::Color::textSecondary),
+        ImGuiMCP::TextColored(UI::Theme::ToVec4(hdrHov ? UI::Theme::Color.textPrimary : UI::Theme::Color.textSecondary),
             "%s", actor->GetDisplayFullName());
 
         // Right side: PLAYER badge then toggle icon, both flush-right
@@ -185,11 +185,11 @@ namespace Thread::Interface
             const ImGuiMCP::ImVec2 badgeSize = ImGuiMCP::CalcTextSize("PLAYER");
             const float badgeX = toggleIconX - fieldGap - badgeSize.x;
             ImGuiMCP::SetCursorScreenPos(ImGuiMCP::ImVec2{ badgeX, hdrMin.y + hdrPadV });
-            ImGuiMCP::TextColored(UI::Theme::ToVec4(UI::Theme::Color::accent), "PLAYER");
+            ImGuiMCP::TextColored(UI::Theme::ToVec4(UI::Theme::Color.accent), "PLAYER");
         }
         SKSEMenuFramework::PushFont(UI::Theme::Icon::solidFont);
         ImGuiMCP::SetCursorScreenPos(ImGuiMCP::ImVec2{ toggleIconX, hdrMin.y + hdrPadV });
-        ImGuiMCP::TextColored(UI::Theme::ToVec4(UI::Theme::Color::textSecondary), "%s", toggleIcon);
+        ImGuiMCP::TextColored(UI::Theme::ToVec4(UI::Theme::Color.textSecondary), "%s", toggleIcon);
         FontAwesome::Pop();
 
         ImGuiMCP::SetCursorScreenPos(ImGuiMCP::ImVec2{ hdrMin.x, hdrMin.y + hdrH });
@@ -208,12 +208,12 @@ namespace Thread::Interface
         ImGuiMCP::ImDrawListManager::ChannelsSplit(dl, 2);
         ImGuiMCP::ImDrawListManager::ChannelsSetCurrent(dl, 1);
 
-        ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_FrameBg, UI::Theme::Color::nestedControl);
-        ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_FrameBgHovered, UI::Theme::Color::nestedControlHovered);
-        ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_FrameBgActive, UI::Theme::Color::nestedControlActive);
-        ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_Button, UI::Theme::Color::nestedControl);
-        ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_ButtonHovered, UI::Theme::Color::nestedControlHovered);
-        ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_ButtonActive, UI::Theme::Color::nestedControlActive);
+        ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_FrameBg, UI::Theme::Color.nestedControl);
+        ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_FrameBgHovered, UI::Theme::Color.nestedControlHovered);
+        ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_FrameBgActive, UI::Theme::Color.nestedControlActive);
+        ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_Button, UI::Theme::Color.nestedControl);
+        ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_ButtonHovered, UI::Theme::Color.nestedControlHovered);
+        ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_ButtonActive, UI::Theme::Color.nestedControlActive);
         SetWindowFontSize(scale.TextPx(UI::Theme::FontSize::compact) * nestedScale);
 
         // ── Expression combo
@@ -224,13 +224,13 @@ namespace Thread::Interface
 
             ImGuiMCP::SetCursorPosX(cardX + rowPadH);
             SetWindowFontSize(captionSize);
-            ImGuiMCP::TextColored(UI::Theme::ToVec4(UI::Theme::Color::textSecondary), "Expression");
+            ImGuiMCP::TextColored(UI::Theme::ToVec4(UI::Theme::Color.textSecondary), "Expression");
             ImGuiMCP::SameLine(fieldX);
 
             SetWindowFontSize(captionSize);
             ImGuiMCP::SetNextItemWidth(fieldW);
-            ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_PopupBg, UI::Theme::Color::nestedPopup);
-            ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_Text, UI::Theme::ToVec4(UI::Theme::Color::textMuted));
+            ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_PopupBg, UI::Theme::Color.nestedPopup);
+            ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_Text, UI::Theme::ToVec4(UI::Theme::Color.textMuted));
             if (ImGuiMCP::BeginCombo("##slpp_tcmExpr", curLabel.c_str())) {
                 ImGuiMCP::PopStyleColor();
                 lib->ForEachExpression([&](const auto& expr) {
@@ -240,9 +240,9 @@ namespace Thread::Interface
                     SKSE::Translation::Translate(label, label);
                     const bool sel = curExpr && curExpr->GetId() == expr.GetId();
                     if (sel)
-                        ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_Text, UI::Theme::Color::selectionText);
+                        ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_Text, UI::Theme::Color.selectionText);
                     else
-                        ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_Text, UI::Theme::ToVec4(UI::Theme::Color::textMuted));
+                        ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_Text, UI::Theme::ToVec4(UI::Theme::Color.textMuted));
                     SetWindowFontSize(captionSize);
                     if (ImGuiMCP::Selectable(label.c_str(), sel)) {
                         OnSetExpression(a_hud, actor, &expr);
@@ -267,13 +267,13 @@ namespace Thread::Interface
 
             ImGuiMCP::SetCursorPosX(cardX + rowPadH);
             SetWindowFontSize(captionSize);
-            ImGuiMCP::TextColored(UI::Theme::ToVec4(UI::Theme::Color::textSecondary), "Voice");
+            ImGuiMCP::TextColored(UI::Theme::ToVec4(UI::Theme::Color.textSecondary), "Voice");
             ImGuiMCP::SameLine(fieldX);
 
             SetWindowFontSize(captionSize);
             ImGuiMCP::SetNextItemWidth(fieldW);
-            ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_PopupBg, UI::Theme::Color::nestedPopup);
-            ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_Text, UI::Theme::ToVec4(UI::Theme::Color::textMuted));
+            ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_PopupBg, UI::Theme::Color.nestedPopup);
+            ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_Text, UI::Theme::ToVec4(UI::Theme::Color.textMuted));
             if (ImGuiMCP::BeginCombo("##slpp_tcmVoice", curLabel.c_str())) {
                 ImGuiMCP::PopStyleColor();
                 lib->ForEachVoice([&](const auto& v) {
@@ -283,9 +283,9 @@ namespace Thread::Interface
                     SKSE::Translation::Translate(label, label);
                     const bool sel = curVoice && curVoice->GetId() == v.GetId();
                     if (sel)
-                        ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_Text, UI::Theme::Color::selectionText);
+                        ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_Text, UI::Theme::Color.selectionText);
                     else
-                        ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_Text, UI::Theme::ToVec4(UI::Theme::Color::textMuted));
+                        ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_Text, UI::Theme::ToVec4(UI::Theme::Color.textMuted));
                     SetWindowFontSize(captionSize);
                     if (ImGuiMCP::Selectable(label.c_str(), sel)) {
                         OnSetVoice(a_hud, actor, &v);
@@ -307,7 +307,7 @@ namespace Thread::Interface
 
             ImGuiMCP::SetCursorPosX(cardX + rowPadH);
             SetWindowFontSize(captionSize);
-            ImGuiMCP::TextColored(UI::Theme::ToVec4(UI::Theme::Color::textSecondary), "Alpha");
+            ImGuiMCP::TextColored(UI::Theme::ToVec4(UI::Theme::Color.textSecondary), "Alpha");
             ImGuiMCP::SameLine(fieldX);
 
             ImGuiMCP::SetNextItemWidth(alphaW);
@@ -320,7 +320,7 @@ namespace Thread::Interface
 
             ImGuiMCP::SameLine(0.0f, fieldGap);
             SetWindowFontSize(captionSize);
-            ImGuiMCP::TextColored(UI::Theme::ToVec4(UI::Theme::Color::textMuted), "%d%%", alphaInt);
+            ImGuiMCP::TextColored(UI::Theme::ToVec4(UI::Theme::Color.textMuted), "%d%%", alphaInt);
         }
 
         // ── Scene position row
@@ -344,14 +344,14 @@ namespace Thread::Interface
                 ImGuiMCP::SetCursorPosX(cardX + rowPadH);
 
                 // Label (left)
-                ImGuiMCP::TextColored(UI::Theme::ToVec4(UI::Theme::Color::textSecondary), "Scene Position");
+                ImGuiMCP::TextColored(UI::Theme::ToVec4(UI::Theme::Color.textSecondary), "Scene Position");
 
                 // Count (center, same line)
                 const float permTextW = ImGuiMCP::CalcTextSize(permBuf).x;
                 const float centerX = cardX + cardW * 0.5f - permTextW * 0.5f;
                 ImGuiMCP::SameLine();
                 ImGuiMCP::SetCursorPosX(centerX);
-                ImGuiMCP::TextColored(UI::Theme::ToVec4(UI::Theme::Color::textMuted), "%s", permBuf);
+                ImGuiMCP::TextColored(UI::Theme::ToVec4(UI::Theme::Color.textMuted), "%s", permBuf);
 
                 // Next-perm button (right, same line)
                 const float rightBtnX = cardX + cardW - rowPadH - btnRoundedW;
@@ -375,7 +375,7 @@ namespace Thread::Interface
         const ImGuiMCP::ImVec2 bodyMax{ hdrMin.x + cardW, ImGuiMCP::GetCursorScreenPos().y };
         ImGuiMCP::ImDrawListManager::ChannelsSetCurrent(dl, 0);
         ImGuiMCP::ImDrawListManager::AddRectFilled(
-            dl, bodyMin, bodyMax, UI::Theme::Color::nestedSurface, 0.0f, 0);
+            dl, bodyMin, bodyMax, UI::Theme::Color.nestedSurface, 0.0f, 0);
         ImGuiMCP::ImDrawListManager::ChannelsMerge(dl);
 
         ImGuiMCP::SetCursorPosX(contentX);
@@ -424,7 +424,7 @@ namespace Thread::Interface
         const ImGuiMCP::ImVec2 toggleRowMin = ImGuiMCP::GetCursorScreenPos();
         ImGuiMCP::SetCursorScreenPos({ toggleRowMin.x + rowPadH, toggleRowMin.y });
 
-        ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_HeaderHovered, UI::Theme::ToVec4(UI::Theme::Color::transparent));
+        ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_HeaderHovered, UI::Theme::ToVec4(UI::Theme::Color.transparent));
         if (UI::SelectableButton("##slpp_autoAdvanceRow", false, 0, ImGuiMCP::ImVec2{ availW, toggleRowH })) {
             bool autoPlay = inst->GetThreadProperty<bool>("AutoAdvance");
             OnAutoPlaySet(a_hud, !autoPlay);
@@ -445,7 +445,7 @@ namespace Thread::Interface
         const ImGuiMCP::ImVec2 labelSize = ImGuiMCP::CalcTextSize("Auto Advance");
         const float labelY = toggleRowMin.y + (toggleRowH - labelSize.y) * 0.5f;
         ImGuiMCP::SetCursorScreenPos({ toggleRowMin.x + rowPadH, labelY });
-        ImGuiMCP::TextColored(UI::Theme::ToVec4(UI::Theme::Color::textSecondary), "Auto Advance");
+        ImGuiMCP::TextColored(UI::Theme::ToVec4(UI::Theme::Color.textSecondary), "Auto Advance");
         ImGuiMCP::SetCursorScreenPos({ toggleRowMin.x, toggleRowMin.y + toggleRowH });
 
         ImGuiMCP::Dummy(ImGuiMCP::ImVec2{ 0.0f, scale.Px(UI::Theme::Spacing::md) });
@@ -455,7 +455,7 @@ namespace Thread::Interface
         const float actionGap = scale.Px(UI::Theme::Spacing::sm);
         const float actionW = (panelW - rowPadH * 2.0f - actionGap) * 0.5f;
         ImGuiMCP::SetCursorPosX(rowPadH);
-        ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_Text, UI::Theme::ToVec4(UI::Theme::Color::textSecondary));
+        ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_Text, UI::Theme::ToVec4(UI::Theme::Color.textSecondary));
         if (UI::ActionButton("Random Scene", actionW))
             OnRandomScene(a_hud);
         ImGuiMCP::SameLine(0.0f, actionGap);
@@ -463,7 +463,7 @@ namespace Thread::Interface
             OnMoveScene(a_hud);
         ImGuiMCP::PopStyleColor();
 
-        ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_Separator, UI::Theme::Color::nestedSeparator);
+        ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_Separator, UI::Theme::Color.nestedSeparator);
         ImGuiMCP::Dummy(ImGuiMCP::ImVec2{ 0.0f, scale.Px(UI::Theme::Spacing::sm) });
         ImGuiMCP::Separator();
         ImGuiMCP::PopStyleColor();
@@ -472,16 +472,16 @@ namespace Thread::Interface
         ImGuiMCP::Dummy(ImGuiMCP::ImVec2{ 0.0f, scale.Px(UI::Theme::Spacing::xs) });
 
         ImGuiMCP::PushStyleVar(ImGuiMCP::ImGuiStyleVar_ScrollbarSize, scale.Px(6.0f));
-        ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_ScrollbarBg, UI::Theme::Color::surfacePanel);
-        ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_ScrollbarGrab, UI::Theme::ToVec4(UI::Theme::Color::borderSubtle));
-        ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_ScrollbarGrabHovered, UI::Theme::ToVec4(UI::Theme::Color::borderHovered));
-        ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_ScrollbarGrabActive, UI::Theme::ToVec4(UI::Theme::Color::borderActive));
+        ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_ScrollbarBg, UI::Theme::Color.surfacePanel);
+        ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_ScrollbarGrab, UI::Theme::ToVec4(UI::Theme::Color.borderSubtle));
+        ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_ScrollbarGrabHovered, UI::Theme::ToVec4(UI::Theme::Color.borderHovered));
+        ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_ScrollbarGrabActive, UI::Theme::ToVec4(UI::Theme::Color.borderActive));
 
         ImGuiMCP::SetNextWindowSizeConstraints(
             ImGuiMCP::ImVec2{ 0.0f, 0.0f }, ImGuiMCP::ImVec2{ FLT_MAX, maxBodyH });
         ImGuiMCP::BeginChild("##slpp_tcmActors", ImGuiMCP::ImVec2{ -FLT_MIN, 0.0f },
             ImGuiMCP::ImGuiChildFlags_AutoResizeY, ImGuiMCP::ImGuiWindowFlags_None);
-        ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_Separator, UI::Theme::Color::nestedSeparator);
+        ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_Separator, UI::Theme::Color.nestedSeparator);
 
         bool first = true;
         for (auto* actor : _sortedActors) {

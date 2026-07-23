@@ -4,35 +4,35 @@
 
 namespace Thread::Interface::UI::Theme
 {
-    struct Color final
+    struct ColorValues final
     {
-        static constexpr ImGuiMCP::ImU32 textPrimary = IM_COL32(221, 216, 208, 255);
-        static constexpr ImGuiMCP::ImU32 textSecondary = IM_COL32(176, 168, 152, 255);
-        static constexpr ImGuiMCP::ImU32 textMuted = IM_COL32(136, 128, 120, 255);
-        static constexpr ImGuiMCP::ImU32 accent = IM_COL32(112, 184, 112, 255);
+        ImGuiMCP::ImU32 textPrimary = IM_COL32(221, 216, 208, 255);
+        ImGuiMCP::ImU32 textSecondary = IM_COL32(176, 168, 152, 255);
+        ImGuiMCP::ImU32 textMuted = IM_COL32(136, 128, 120, 255);
+        ImGuiMCP::ImU32 accent = IM_COL32(112, 184, 112, 255);
 
-        static constexpr ImGuiMCP::ImU32 surfacePanel = IM_COL32(20, 20, 22, 245);
-        static constexpr ImGuiMCP::ImU32 surfaceHovered = IM_COL32(36, 36, 40, 245);
-        static constexpr ImGuiMCP::ImU32 surfacePressed = IM_COL32(34, 34, 36, 245);
-        static constexpr ImGuiMCP::ImU32 surfaceActive = IM_COL32(22, 25, 23, 245);
-        static constexpr ImGuiMCP::ImU32 separator = IM_COL32(55, 55, 58, 128);
-        static constexpr ImGuiMCP::ImU32 shadow = IM_COL32(0, 0, 0, 210);
-        static constexpr ImGuiMCP::ImU32 shadowSoft = IM_COL32(0, 0, 0, 90);
-        static constexpr ImGuiMCP::ImU32 transparent = IM_COL32(0, 0, 0, 0);
-        static constexpr ImGuiMCP::ImU32 selectionText = IM_COL32(144, 176, 200, 255);
-        static constexpr ImGuiMCP::ImU32 selectionFill = IM_COL32(30, 40, 30, 128);
-        static constexpr ImGuiMCP::ImU32 nestedSurface = IM_COL32(10, 10, 10, 110);
-        static constexpr ImGuiMCP::ImU32 nestedHeader = IM_COL32(18, 18, 18, 180);
-        static constexpr ImGuiMCP::ImU32 nestedHeaderHovered = IM_COL32(30, 30, 30, 220);
-        static constexpr ImGuiMCP::ImU32 nestedControl = IM_COL32(10, 10, 10, 190);
-        static constexpr ImGuiMCP::ImU32 nestedControlHovered = IM_COL32(30, 30, 30, 225);
-        static constexpr ImGuiMCP::ImU32 nestedControlActive = IM_COL32(24, 24, 24, 235);
-        static constexpr ImGuiMCP::ImU32 nestedPopup = IM_COL32(14, 14, 14, 248);
-        static constexpr ImGuiMCP::ImU32 nestedSeparator = IM_COL32(92, 90, 86, 58);
+        ImGuiMCP::ImU32 surfacePanel = IM_COL32(20, 20, 22, 245);
+        ImGuiMCP::ImU32 surfaceHovered = IM_COL32(36, 36, 40, 245);
+        ImGuiMCP::ImU32 surfacePressed = IM_COL32(34, 34, 36, 245);
+        ImGuiMCP::ImU32 surfaceActive = IM_COL32(22, 25, 23, 245);
+        ImGuiMCP::ImU32 separator = IM_COL32(55, 55, 58, 128);
+        ImGuiMCP::ImU32 shadow = IM_COL32(0, 0, 0, 210);
+        ImGuiMCP::ImU32 shadowSoft = IM_COL32(0, 0, 0, 90);
+        ImGuiMCP::ImU32 transparent = IM_COL32(0, 0, 0, 0);
+        ImGuiMCP::ImU32 selectionText = IM_COL32(144, 176, 200, 255);
+        ImGuiMCP::ImU32 selectionFill = IM_COL32(30, 40, 30, 128);
+        ImGuiMCP::ImU32 nestedSurface = IM_COL32(10, 10, 10, 110);
+        ImGuiMCP::ImU32 nestedHeader = IM_COL32(18, 18, 18, 180);
+        ImGuiMCP::ImU32 nestedHeaderHovered = IM_COL32(30, 30, 30, 220);
+        ImGuiMCP::ImU32 nestedControl = IM_COL32(10, 10, 10, 190);
+        ImGuiMCP::ImU32 nestedControlHovered = IM_COL32(30, 30, 30, 225);
+        ImGuiMCP::ImU32 nestedControlActive = IM_COL32(24, 24, 24, 235);
+        ImGuiMCP::ImU32 nestedPopup = IM_COL32(14, 14, 14, 248);
+        ImGuiMCP::ImU32 nestedSeparator = IM_COL32(92, 90, 86, 58);
 
-        static constexpr ImGuiMCP::ImU32 borderSubtle = IM_COL32(92, 90, 86, 105);
-        static constexpr ImGuiMCP::ImU32 borderHovered = IM_COL32(145, 142, 136, 150);
-        static constexpr ImGuiMCP::ImU32 borderActive = IM_COL32(112, 184, 112, 220);
+        ImGuiMCP::ImU32 borderSubtle = IM_COL32(92, 90, 86, 105);
+        ImGuiMCP::ImU32 borderHovered = IM_COL32(145, 142, 136, 150);
+        ImGuiMCP::ImU32 borderActive = IM_COL32(112, 184, 112, 220);
     };
 
     struct FontSize final
@@ -83,50 +83,68 @@ namespace Thread::Interface::UI::Theme
         static constexpr float nestedMenuScale = 0.90f;
     };
 
-    struct Enjoyment final
+    struct EnjoymentValues final
     {
-        static constexpr ImGuiMCP::ImU32 normalLow = IM_COL32(122, 40, 40, 255);
-        static constexpr ImGuiMCP::ImU32 normalHigh = IM_COL32(208, 104, 88, 255);
-        static constexpr ImGuiMCP::ImU32 overflowLow = IM_COL32(138, 96, 16, 255);
-        static constexpr ImGuiMCP::ImU32 overflowHigh = IM_COL32(232, 184, 64, 255);
-        static constexpr ImGuiMCP::ImU32 negativeLow = IM_COL32(30, 58, 88, 255);
-        static constexpr ImGuiMCP::ImU32 negativeHigh = IM_COL32(72, 128, 192, 255);
-        static constexpr ImGuiMCP::ImU32 zoneIdle = IM_COL32(50, 155, 60, 41);
-        static constexpr ImGuiMCP::ImU32 zoneActive = IM_COL32(60, 185, 65, 71);
-        static constexpr ImGuiMCP::ImU32 zoneBorder = IM_COL32(90, 200, 70, 128);
-        static constexpr ImGuiMCP::ImU32 zoneFocused = IM_COL32(110, 250, 90, 242);
-        static constexpr ImGuiMCP::ImU32 needle = IM_COL32(200, 216, 184, 255);
-        static constexpr ImGuiMCP::ImU32 needleActive = IM_COL32(144, 248, 120, 255);
-        static constexpr ImGuiMCP::ImU32 hit = IM_COL32(96, 204, 80, 255);
-        static constexpr ImGuiMCP::ImU32 miss = IM_COL32(224, 96, 80, 255);
-        static constexpr ImGuiMCP::ImU32 frameSurface = IM_COL32(16, 16, 18, 255);
-        static constexpr ImGuiMCP::ImU32 frameBorder = IM_COL32(40, 40, 48, 255);
-        static constexpr ImGuiMCP::ImU32 frameRim = IM_COL32(255, 255, 255, 20);
-        static constexpr ImGuiMCP::ImU32 frameShine = IM_COL32(255, 255, 255, 10);
-        static constexpr ImGuiMCP::ImU32 zoneCenter = IM_COL32(80, 180, 60, 51);
-        static constexpr ImGuiMCP::ImU32 zoneCenterActive = IM_COL32(100, 230, 80, 77);
-        static constexpr ImGuiMCP::ImU32 feedbackHit = IM_COL32(60, 200, 80, 89);
-        static constexpr ImGuiMCP::ImU32 feedbackMiss = IM_COL32(200, 60, 40, 97);
-        static constexpr ImGuiMCP::ImU32 targetBorder = IM_COL32(106, 96, 85, 255);
+        ImGuiMCP::ImU32 normalLow = IM_COL32(122, 40, 40, 255);
+        ImGuiMCP::ImU32 normalHigh = IM_COL32(208, 104, 88, 255);
+        ImGuiMCP::ImU32 overflowLow = IM_COL32(138, 96, 16, 255);
+        ImGuiMCP::ImU32 overflowHigh = IM_COL32(232, 184, 64, 255);
+        ImGuiMCP::ImU32 negativeLow = IM_COL32(30, 58, 88, 255);
+        ImGuiMCP::ImU32 negativeHigh = IM_COL32(72, 128, 192, 255);
+        ImGuiMCP::ImU32 zoneIdle = IM_COL32(50, 155, 60, 41);
+        ImGuiMCP::ImU32 zoneActive = IM_COL32(60, 185, 65, 71);
+        ImGuiMCP::ImU32 zoneBorder = IM_COL32(90, 200, 70, 128);
+        ImGuiMCP::ImU32 zoneFocused = IM_COL32(110, 250, 90, 242);
+        ImGuiMCP::ImU32 needle = IM_COL32(200, 216, 184, 255);
+        ImGuiMCP::ImU32 needleActive = IM_COL32(144, 248, 120, 255);
+        ImGuiMCP::ImU32 hit = IM_COL32(96, 204, 80, 255);
+        ImGuiMCP::ImU32 miss = IM_COL32(224, 96, 80, 255);
+        ImGuiMCP::ImU32 frameSurface = IM_COL32(16, 16, 18, 255);
+        ImGuiMCP::ImU32 frameBorder = IM_COL32(40, 40, 48, 255);
+        ImGuiMCP::ImU32 frameRim = IM_COL32(255, 255, 255, 20);
+        ImGuiMCP::ImU32 frameShine = IM_COL32(255, 255, 255, 10);
+        ImGuiMCP::ImU32 zoneCenter = IM_COL32(80, 180, 60, 51);
+        ImGuiMCP::ImU32 zoneCenterActive = IM_COL32(100, 230, 80, 77);
+        ImGuiMCP::ImU32 feedbackHit = IM_COL32(60, 200, 80, 89);
+        ImGuiMCP::ImU32 feedbackMiss = IM_COL32(200, 60, 40, 97);
+        ImGuiMCP::ImU32 targetBorder = IM_COL32(106, 96, 85, 255);
     };
 
-    struct Offset final
+    struct OffsetValues final
     {
-        static constexpr ImGuiMCP::ImU32 fill = IM_COL32(160, 160, 160, 56);
-        static constexpr ImGuiMCP::ImU32 needle = IM_COL32(176, 168, 152, 255);
-        static constexpr ImGuiMCP::ImU32 needleActive = IM_COL32(221, 216, 208, 255);
-        static constexpr ImGuiMCP::ImU32 track = IM_COL32(255, 255, 255, 10);
-        static constexpr ImGuiMCP::ImU32 trackBorder = IM_COL32(58, 58, 58, 128);
-        static constexpr ImGuiMCP::ImU32 centerTick = IM_COL32(255, 255, 255, 26);
-        static constexpr ImGuiMCP::ImU32 separator = IM_COL32(38, 38, 38, 115);
+        ImGuiMCP::ImU32 fill = IM_COL32(160, 160, 160, 56);
+        ImGuiMCP::ImU32 needle = IM_COL32(176, 168, 152, 255);
+        ImGuiMCP::ImU32 needleActive = IM_COL32(221, 216, 208, 255);
+        ImGuiMCP::ImU32 track = IM_COL32(255, 255, 255, 10);
+        ImGuiMCP::ImU32 trackBorder = IM_COL32(58, 58, 58, 128);
+        ImGuiMCP::ImU32 centerTick = IM_COL32(255, 255, 255, 26);
+        ImGuiMCP::ImU32 separator = IM_COL32(38, 38, 38, 115);
     };
 
-    struct Animation final
+    struct AnimationValues final
     {
-        static constexpr ImGuiMCP::ImU32 timerTrack = IM_COL32(10, 10, 12, 178);
-        static constexpr ImGuiMCP::ImU32 timerEdge = IM_COL32(255, 255, 255, 38);
-        static constexpr ImGuiMCP::ImU32 timerCenter = IM_COL32(255, 255, 255, 217);
+        ImGuiMCP::ImU32 timerTrack = IM_COL32(10, 10, 12, 178);
+        ImGuiMCP::ImU32 timerEdge = IM_COL32(255, 255, 255, 38);
+        ImGuiMCP::ImU32 timerCenter = IM_COL32(255, 255, 255, 217);
     };
+
+    struct Data final
+    {
+        ColorValues color{};
+        EnjoymentValues enjoyment{};
+        OffsetValues offset{};
+        AnimationValues animation{};
+    };
+
+    inline Data data{};
+    inline auto& Color = data.color;
+    inline auto& Enjoyment = data.enjoyment;
+    inline auto& Offset = data.offset;
+    inline auto& Animation = data.animation;
+
+    void Load();
+    void Save();
+    [[nodiscard]] bool IsLoaded();
 
     inline ImGuiMCP::ImVec4 ToVec4(ImGuiMCP::ImU32 a_color)
     {
@@ -179,7 +197,7 @@ namespace Thread::Interface::UI
         const bool hovered = ImGuiMCP::IsItemHovered();
         const ImGuiMCP::ImVec2 cursorAfter = ImGuiMCP::GetCursorPos();
         const ImGuiMCP::ImVec2 labelSize = ImGuiMCP::CalcTextSize(a_label);
-        const ImGuiMCP::ImVec4 color = Theme::ToVec4(hovered ? Theme::Color::textPrimary : Theme::Color::textSecondary);
+        const ImGuiMCP::ImVec4 color = Theme::ToVec4(hovered ? Theme::Color.textPrimary : Theme::Color.textSecondary);
         const float horizontalPadding = a_size.y * 0.5f;
 
         ImGuiMCP::SetCursorScreenPos({ headerMin.x + horizontalPadding, headerMin.y + (a_size.y - labelSize.y) * 0.5f });
@@ -201,10 +219,10 @@ namespace Thread::Interface::UI
     inline void DrawTextShadowed(ImGuiMCP::ImDrawList* a_drawList, ImGuiMCP::ImVec2 a_position,
         ImGuiMCP::ImU32 a_color, const char* a_text)
     {
-        ImGuiMCP::ImDrawListManager::AddText(a_drawList, { a_position.x - 1, a_position.y - 1 }, Theme::Color::shadow, a_text, nullptr);
-        ImGuiMCP::ImDrawListManager::AddText(a_drawList, { a_position.x + 1, a_position.y - 1 }, Theme::Color::shadow, a_text, nullptr);
-        ImGuiMCP::ImDrawListManager::AddText(a_drawList, { a_position.x - 1, a_position.y + 1 }, Theme::Color::shadow, a_text, nullptr);
-        ImGuiMCP::ImDrawListManager::AddText(a_drawList, { a_position.x + 1, a_position.y + 1 }, Theme::Color::shadow, a_text, nullptr);
+        ImGuiMCP::ImDrawListManager::AddText(a_drawList, { a_position.x - 1, a_position.y - 1 }, Theme::Color.shadow, a_text, nullptr);
+        ImGuiMCP::ImDrawListManager::AddText(a_drawList, { a_position.x + 1, a_position.y - 1 }, Theme::Color.shadow, a_text, nullptr);
+        ImGuiMCP::ImDrawListManager::AddText(a_drawList, { a_position.x - 1, a_position.y + 1 }, Theme::Color.shadow, a_text, nullptr);
+        ImGuiMCP::ImDrawListManager::AddText(a_drawList, { a_position.x + 1, a_position.y + 1 }, Theme::Color.shadow, a_text, nullptr);
         ImGuiMCP::ImDrawListManager::AddText(a_drawList, a_position, a_color, a_text, nullptr);
     }
 }

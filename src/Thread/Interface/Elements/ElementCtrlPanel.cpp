@@ -62,7 +62,7 @@ namespace Thread::Interface
             return;
         }
         SetWindowFontSize(scale.TextPx(UI::Theme::FontSize::body));
-        ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_Text, UI::Theme::ToVec4(UI::Theme::Color::textSecondary));
+        ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_Text, UI::Theme::ToVec4(UI::Theme::Color.textSecondary));
 
         ImGuiMCP::SetNextItemWidth(-1.0f);
         ImGuiMCP::SliderFloat("##slpp_ecmScale", &_scaleAdjustment, 0.5f, 2.5f, "UI Scale %.2fx");
@@ -79,7 +79,7 @@ namespace Thread::Interface
         // Elements
         SetWindowFontSize(scale.TextPx(UI::Theme::FontSize::body));
         UI::PushCheckboxStyle(scale.Factor());
-        ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_Text, UI::Theme::ToVec4(UI::Theme::Color::textSecondary));
+        ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_Text, UI::Theme::ToVec4(UI::Theme::Color.textSecondary));
 
         const float toggleRowH = scale.Px(24.0f);
         const float rowPadH = scale.Px(12.0f);
@@ -91,7 +91,7 @@ namespace Thread::Interface
 
             // Full row selectable button
             ImGuiMCP::SetCursorScreenPos({ toggleRowMin.x + rowPadH, toggleRowMin.y });
-            ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_HeaderHovered, UI::Theme::ToVec4(UI::Theme::Color::transparent));
+            ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_HeaderHovered, UI::Theme::ToVec4(UI::Theme::Color.transparent));
             std::string rowId = std::string("##slpp_ecp_row_") + id;
             if (UI::SelectableButton(rowId.c_str(), false, 0, ImGuiMCP::ImVec2{ availW, toggleRowH })) {
                 state = !state;

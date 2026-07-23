@@ -196,7 +196,7 @@ namespace Thread::Interface
         const float labelTextH = ImGuiMCP::CalcTextSize(axisLabel).y;
         const ImGuiMCP::ImVec2 lblMin = { rowOrigin.x + rowPadH, rowCenterY - labelTextH * 0.5f };
         ImGuiMCP::SetCursorScreenPos(lblMin);
-        ImGuiMCP::TextColored(UI::Theme::ToVec4(UI::Theme::Color::textSecondary), "%s", axisLabel);
+        ImGuiMCP::TextColored(UI::Theme::ToVec4(UI::Theme::Color.textSecondary), "%s", axisLabel);
         const ImGuiMCP::ImVec2 lblMax = ImGuiMCP::ImVec2{ lblMin.x + ImGuiMCP::CalcTextSize(axisLabel).x, lblMin.y + labelTextH };
         if (ImGuiMCP::IsMouseHoveringRect(lblMin, lblMax) &&
             ImGuiMCP::IsMouseDoubleClicked(ImGuiMCP::ImGuiMouseButton_Left)) {
@@ -224,8 +224,8 @@ namespace Thread::Interface
         std::snprintf(valBuf, sizeof(valBuf),
             "%d", static_cast<int>(std::round(state.value)));
         ImGuiMCP::SetNextItemWidth(valW);
-        ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_FrameBg, UI::Theme::Color::transparent);
-        const ImGuiMCP::ImU32 valTextCol = UI::Theme::Color::textMuted;
+        ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_FrameBg, UI::Theme::Color.transparent);
+        const ImGuiMCP::ImU32 valTextCol = UI::Theme::Color.textMuted;
         ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_Text, valTextCol);
         ImGuiMCP::PushStyleVar(ImGuiMCP::ImGuiStyleVar_FrameRounding, a_scale.Px(UI::Theme::Geometry::roundingSmall));
         if (ImGuiMCP::InputText("##slpp_oamVal", valBuf, sizeof(valBuf),
@@ -290,14 +290,14 @@ namespace Thread::Interface
         auto* dl = ImGuiMCP::GetWindowDrawList();
 
         // Track background
-        ImGuiMCP::ImDrawListManager::AddRectFilled(dl, trackMin, trackMax, UI::Theme::Offset::track, a_scale.Px(2.0f), 0);
-        ImGuiMCP::ImDrawListManager::AddRect(dl, trackMin, trackMax, UI::Theme::Offset::trackBorder, a_scale.Px(2.0f), 0, 1.0f);
+        ImGuiMCP::ImDrawListManager::AddRectFilled(dl, trackMin, trackMax, UI::Theme::Offset.track, a_scale.Px(2.0f), 0);
+        ImGuiMCP::ImDrawListManager::AddRect(dl, trackMin, trackMax, UI::Theme::Offset.trackBorder, a_scale.Px(2.0f), 0, 1.0f);
 
         // Center tick
         const float cx = trackMin.x + trackW * 0.5f;
         ImGuiMCP::ImDrawListManager::AddLine(dl,
             ImGuiMCP::ImVec2{ cx, trackMin.y - a_scale.Px(2.0f) }, ImGuiMCP::ImVec2{ cx, trackMax.y + a_scale.Px(2.0f) },
-            UI::Theme::Offset::centerTick, 1.0f);
+            UI::Theme::Offset.centerTick, 1.0f);
 
         // Fill grows from the center out toward the needle, in either direction.
         const float pct = std::clamp(0.5f + (state.value / range) * 0.5f, 0.0f, 1.0f);
@@ -307,13 +307,13 @@ namespace Thread::Interface
             const float fillR = std::max(cx, needleX);
             ImGuiMCP::ImDrawListManager::AddRectFilled(dl,
                 ImGuiMCP::ImVec2{ fillL, trackMin.y }, ImGuiMCP::ImVec2{ fillR, trackMax.y },
-                UI::Theme::Offset::fill, 0.0f, 0);
+                UI::Theme::Offset.fill, 0.0f, 0);
         }
 
         // Needle extends slightly above and below the track so it stays visible
         const float nTop = trackMin.y - a_scale.Px(5.0f);
         const float nBot = trackMax.y + a_scale.Px(5.0f);
-        const ImGuiMCP::ImU32 nCol = active ? UI::Theme::Offset::needleActive : UI::Theme::Offset::needle;
+        const ImGuiMCP::ImU32 nCol = active ? UI::Theme::Offset.needleActive : UI::Theme::Offset.needle;
         ImGuiMCP::ImDrawListManager::AddRectFilled(dl,
             ImGuiMCP::ImVec2{ needleX - needleW * 0.5f, nTop },
             ImGuiMCP::ImVec2{ needleX + needleW * 0.5f, nBot },
@@ -324,7 +324,7 @@ namespace Thread::Interface
         ImGuiMCP::ImDrawListManager::AddLine(dl,
             ImGuiMCP::ImVec2{ rowOrigin.x + rowPadH, sepPos.y },
             ImGuiMCP::ImVec2{ rowOrigin.x + rowPadH + availW, sepPos.y },
-            UI::Theme::Offset::separator, 1.0f);
+            UI::Theme::Offset.separator, 1.0f);
 
         return changed;
     }
@@ -357,7 +357,7 @@ namespace Thread::Interface
                 SetWindowFontSize(scale.TextPx(UI::Theme::FontSize::sectionHeader));
                 const float titleW = ImGuiMCP::CalcTextSize("PICK TARGET").x;
                 ImGuiMCP::SetCursorPosX((pickerW - titleW) * 0.5f);
-                ImGuiMCP::TextColored(UI::Theme::ToVec4(UI::Theme::Color::textPrimary), "PICK TARGET");
+                ImGuiMCP::TextColored(UI::Theme::ToVec4(UI::Theme::Color.textPrimary), "PICK TARGET");
                 ImGuiMCP::Dummy(ImGuiMCP::ImVec2{ 0.0f, scale.Px(4.0f) });
                 ImGuiMCP::Separator();
 
@@ -372,7 +372,7 @@ namespace Thread::Interface
                             lbl += " [SCENE]";
 
                         if (isSel)
-                            ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_Header, UI::Theme::Color::selectionFill);
+                            ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_Header, UI::Theme::Color.selectionFill);
                         if (UI::SelectableButton(lbl.c_str(), isSel, 0, ImGuiMCP::ImVec2{ 0, scale.Px(28.0f) }))
                             OnActorSelected(a_hud, item);
                         if (isSel)
@@ -415,7 +415,7 @@ namespace Thread::Interface
                 SetWindowFontSize(scale.TextPx(UI::Theme::FontSize::sectionHeader));
                 const float titleW = ImGuiMCP::CalcTextSize(panelTitle.c_str()).x;
                 ImGuiMCP::SetCursorPosX((panelW - titleW) * 0.5f);
-                ImGuiMCP::TextColored(UI::Theme::ToVec4(UI::Theme::Color::textPrimary), "%s", panelTitle.c_str());
+                ImGuiMCP::TextColored(UI::Theme::ToVec4(UI::Theme::Color.textPrimary), "%s", panelTitle.c_str());
                 ImGuiMCP::Dummy(ImGuiMCP::ImVec2{ 0.0f, scale.Px(4.0f) });
                 ImGuiMCP::Separator();
 
@@ -428,7 +428,7 @@ namespace Thread::Interface
                 const float availW = ImGuiMCP::GetContentRegionAvail().x - rowPadH * 2.0f;
                 const ImGuiMCP::ImVec2 toggleRowMin = ImGuiMCP::GetCursorScreenPos();
                 ImGuiMCP::SetCursorScreenPos({ toggleRowMin.x + rowPadH, toggleRowMin.y });
-                ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_HeaderHovered, UI::Theme::ToVec4(UI::Theme::Color::transparent));
+                ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_HeaderHovered, UI::Theme::ToVec4(UI::Theme::Color.transparent));
                 if (UI::SelectableButton("##slpp_stageOnlyRow", false, 0, ImGuiMCP::ImVec2{ availW, toggleRowH })) {
                     OnSetAdjustStageOnly(a_hud, !_adjustStageOnly);
                 }
@@ -448,10 +448,10 @@ namespace Thread::Interface
                 const ImGuiMCP::ImVec2 labelSize = ImGuiMCP::CalcTextSize("Adjust Stage Only");
                 const float labelY = toggleRowMin.y + (toggleRowH - labelSize.y) * 0.5f;
                 ImGuiMCP::SetCursorScreenPos({ toggleRowMin.x + rowPadH, labelY });
-                ImGuiMCP::TextColored(UI::Theme::ToVec4(UI::Theme::Color::textSecondary), "Adjust Stage Only");
+                ImGuiMCP::TextColored(UI::Theme::ToVec4(UI::Theme::Color.textSecondary), "Adjust Stage Only");
                 ImGuiMCP::SetCursorScreenPos({ toggleRowMin.x, toggleRowMin.y + toggleRowH });
 
-                ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_Separator, UI::Theme::Offset::separator);
+                ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_Separator, UI::Theme::Offset.separator);
                 ImGuiMCP::Dummy(ImGuiMCP::ImVec2{ 0.0f, scale.Px(6.0f) });
                 ImGuiMCP::Separator();
                 ImGuiMCP::PopStyleColor();
