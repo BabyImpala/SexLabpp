@@ -697,6 +697,9 @@ namespace Thread
 
     void Instance::SetAnimationPlaybackSpeed(float playbackSpeed)
     {
+        if (animationPlaybackSpeed == playbackSpeed) {
+            return;
+        }
         animationPlaybackSpeed = playbackSpeed;
         std::vector<std::pair<RE::BSAnimationGraphManagerPtr, std::unique_ptr<RE::BSSpinLockGuard>>> lockedGraphs;
 
