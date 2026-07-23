@@ -110,11 +110,6 @@ Event OnConfigInit()
 	_toggleGroup[0] = "$SSL_Humans"
 	_toggleGroup[1] = "$SSL_Creatures"
 	_toggleGroup[2] = "$SSL_Everything"
-
-	If (SKSE.GetVersionMinor() < 2)
-		Config.DisableScale = true
-		Debug.MessageBox("[SexLab]\nYou are using an outdated version of Skyrim and scaling has thus been disabled to prevent crashes.")
-	EndIf
 EndEvent
 
 Event OnConfigOpen()
