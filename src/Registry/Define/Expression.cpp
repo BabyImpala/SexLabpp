@@ -2,6 +2,27 @@
 
 namespace Registry
 {
+    namespace detail
+    {
+        struct LegacyExpressionStrings
+        {
+            std::optional<std::string> name;
+        };
+
+        struct LegacyExpression
+        {
+            std::optional<LegacyExpressionStrings> string;
+            std::optional<std::unordered_map<std::string, std::vector<float>>> floatList;
+            std::optional<std::unordered_map<std::string, int32_t>> integers;
+
+            struct glaze
+            {
+                using T = LegacyExpression;
+                static constexpr auto value = glz::object(&T::string, &T::floatList, "int", &T::integers);
+            };
+        };
+    }
+
     Expression::Expression(const YAML::Node& a_src) :
       id(a_src["id"].as<std::string>("Missing Name")),
       version(static_cast<uint8_t>(a_src["version"].as<uint32_t>(0))),
@@ -25,48 +46,53 @@ namespace Registry
         }
     }
 
-    Expression::Expression(const nlohmann::json& a_src) :
-      id([&]() {
-          if (const auto strings = a_src.find("string"); strings != a_src.end())
-              if (const auto name = strings->find("name"); name != strings->end())
-                  return name->get<std::string>();
-          throw std::runtime_error("Missing Name field");
-      }())
+    Expression Expression::FromLegacyFile(const fs::path& a_path)
     {
-        const auto floats = a_src.find("floatList");
-        if (floats == a_src.end())
+        detail::LegacyExpression source;
+        std::string buffer;
+        const auto filename = a_path.string();
+        constexpr glz::opts options{ .error_on_unknown_keys = false };
+        if (const auto error = glz::read_file_json<options>(source, filename, buffer); error) {
+            throw std::runtime_error(glz::format_error(error, buffer));
+        }
+        if (!source.string || !source.string->name || source.string->name->empty())
+            throw std::runtime_error("Missing Name field");
+        if (!source.floatList)
             throw std::runtime_error("Missing 'floatList' field");
-        auto fill = [&](RE::SEXES::SEX sex, std::string prefix) mutable {
+
+        Expression expression{ RE::BSFixedString{ *source.string->name } };
+        auto fill = [&](RE::SEXES::SEX sex, std::string prefix) {
             constexpr auto MAX_VALUE_FIELDS = 5;
             for (size_t i = 1; i <= MAX_VALUE_FIELDS; i++) {
                 auto fieldname = prefix + std::to_string(i);
-                auto field = floats->find(fieldname);
-                if (field == floats->end() || !field->is_array())
+                auto field = source.floatList->find(fieldname);
+                if (field == source.floatList->end())
                     break;
-                auto values = field->get<std::vector<float>>();
+                const auto& values = field->second;
                 if (values.size() != ValueType::Total) {
-                    const auto err = std::format("Invalid value field, expected {}/32 values found in field {}", values.size(), fieldname);
-                    throw std::runtime_error(err.c_str());
+                    const auto err = std::format("Invalid value field: expected 32 values, found {} in field {}", values.size(), fieldname);
+                    throw std::runtime_error(err);
                 }
-                auto& it = data[sex].emplace_back();
+                auto& it = expression.data[sex].emplace_back();
                 std::copy_n(values.begin(), it.size(), it.begin());
             }
         };
         fill(RE::SEXES::kMale, "male");
         fill(RE::SEXES::kFemale, "female");
-        if (data[RE::SEXES::kMale].empty() && data[RE::SEXES::kFemale].empty()) {
+        if (expression.data[RE::SEXES::kMale].empty() && expression.data[RE::SEXES::kFemale].empty()) {
             throw std::runtime_error("Data fields have no values");
         }
-        if (const auto ints = a_src.find("int"); ints != a_src.end()) {
+        if (source.integers) {
             const auto get = [&](const char* fieldname) -> bool {
-                auto field = ints->find(fieldname);
-                return field != ints->end() && field->get<int>() == 1;
+                auto field = source.integers->find(fieldname);
+                return field != source.integers->end() && field->second == 1;
             };
-            enabled = get("enabled");
+            expression.enabled = get("enabled");
             for (auto&& tag : { "aggressor", "normal", "victim " })
                 if (get(tag))
-                    tags.AddTag(tag);
+                    expression.tags.AddTag(tag);
         }
+        return expression;
     }
 
     Expression::Expression(DefaultExpression a_default) :

@@ -212,8 +212,7 @@ namespace Registry
             if (!filename.starts_with("expression"))
                 continue;
             try {
-                const auto jsonfile = nlohmann::json::parse(std::ifstream(file.path().string()));
-                auto profile = Expression{ jsonfile };
+                auto profile = Expression::FromLegacyFile(file.path());
                 auto succ = expressions.emplace(profile.GetId(), std::move(profile));
                 if (succ.second) {
                     succ.first->second.Save(EXPRESSION_PATH, true);

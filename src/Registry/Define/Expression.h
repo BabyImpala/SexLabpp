@@ -43,8 +43,9 @@ namespace Registry
           id(a_id) { assert(!a_id.empty()); };
         Expression(DefaultExpression a_default);
         Expression(const YAML::Node& a_src);
-        Expression(const nlohmann::json& a_src);
         ~Expression() = default;
+
+        static Expression FromLegacyFile(const fs::path& a_path);
 
         bool IsEnabled() const { return enabled; }
         RE::BSFixedString GetId() const { return id; }
