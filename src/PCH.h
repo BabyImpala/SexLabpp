@@ -7,9 +7,9 @@
 #pragma warning(pop)
 
 #include <atomic>
+#include <glaze/glaze.hpp>
 #include <glm/glm.hpp>
 #include <magic_enum.hpp>
-#include <nlohmann/json.hpp>
 #include <ranges>
 #include <unordered_map>
 #include <yaml-cpp/yaml.h>
