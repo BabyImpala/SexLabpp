@@ -10,7 +10,6 @@ namespace Thread::Interface
     {
         RebuildEntries(a_hud);
         _searchBuffer[0] = '\0';
-        _lastSearch[0] = '\0';
         _filteredIndices.clear();
         _hoveredIndex = -1;
         RebuildFilter();
@@ -32,23 +31,6 @@ namespace Thread::Interface
         RebuildEntries(a_hud);
         RebuildFilter();
         _hoveredIndex = -1;
-    }
-
-    void SceneSelectPanel::OnConfirmSearch(SceneHUD& a_hud)
-    {
-        // Trims the search text, clears the field, and passes it to the script
-        std::string query{ _searchBuffer };
-        const auto lo = query.find_first_not_of(' ');
-        if (lo != std::string::npos) {
-            query = query.substr(lo, query.find_last_not_of(' ') - lo + 1);
-        } else {  // Empty or whitespace-only: use empty string
-            query.clear();
-        }
-        _searchBuffer[0] = '\0';
-
-        Script::DispatchMethodCall(a_hud.GetThreadScript(), "OnSceneResetBySearch",
-            a_hud.GetCallback(), RE::BSFixedString{ query.c_str() });
-        a_hud.CloseAllPanels();
     }
 
     void SceneSelectPanel::OnAnnotationSave(SceneEntry& e)
@@ -142,7 +124,6 @@ namespace Thread::Interface
 
     void SceneSelectPanel::RebuildFilter()
     {
-        std::memcpy(_lastSearch, _searchBuffer, sizeof(_searchBuffer));
         _filteredIndices.clear();
         const std::string_view filter{ _searchBuffer };
         for (int i = 0; i < static_cast<int>(_entries.size()); ++i)
@@ -168,7 +149,7 @@ namespace Thread::Interface
 
         // Calculate dynamic list height based on number of entries
         const float maxListH = scale.Px(280.0f);
-        const float calculatedListH = std::min(static_cast<float>(_filteredIndices.size()) * rowH, maxListH);
+        const float calculatedListH = std::min(std::max(static_cast<float>(_filteredIndices.size()), 1.0f) * rowH, maxListH);
 
         ImGuiMCP::SetNextWindowPos(
             ImGuiMCP::ImVec2{ dw - offset, dh * 0.5f }, ImGuiMCP::ImGuiCond_Always, ImGuiMCP::ImVec2{ 1.0f, 0.5f });
@@ -242,36 +223,29 @@ namespace Thread::Interface
         ImGuiMCP::SetCursorPosX(panelPadding);
 
         const float searchAreaW = panelW - panelPadding * 2.0f;
-        const float btnTextW = ImGuiMCP::CalcTextSize("Search").x + scale.Px(12.0f);
-        const float inputW = searchAreaW - btnTextW - scale.Px(8.0f);
 
         // Style search input
         ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_Text, UI::Theme::ToVec4(UI::Theme::Color.textSecondary));
         SetWindowFontSize(scale.TextPx(UI::Theme::FontSize::caption));
 
-        ImGuiMCP::SetNextItemWidth(inputW);
-        ImGuiMCP::InputTextWithHint("##slpp_smmSearch", "Tag or scene name...",
-            _searchBuffer, sizeof(_searchBuffer));
+        ImGuiMCP::SetNextItemWidth(searchAreaW);
+        if (ImGuiMCP::InputTextWithHint("##slpp_smmSearch", "Tag or scene name...",
+                _searchBuffer, sizeof(_searchBuffer))) {
+            RebuildFilter();
+            _hoveredIndex = -1;
+        }
 
         const bool searchInputHasFocus = ImGuiMCP::IsItemFocused();
 
         ImGuiMCP::PopStyleColor();
         SetWindowFontSize(scale.TextPx(UI::Theme::FontSize::body));
 
-        if (searchInputHasFocus && ImGuiMCP::IsKeyPressed(ImGuiMCP::ImGuiKey_Enter, false)) {
-            OnConfirmSearch(a_hud);  // Handle Enter key to search
+        if (searchInputHasFocus && _searchBuffer[0] != '\0' &&
+            ImGuiMCP::IsKeyPressed(ImGuiMCP::ImGuiKey_Escape, false)) {
+            _searchBuffer[0] = '\0';
+            RebuildFilter();
+            _hoveredIndex = -1;
         }
-        if (searchInputHasFocus && ImGuiMCP::IsKeyPressed(ImGuiMCP::ImGuiKey_Escape, false)) {
-            _searchBuffer[0] = '\0';  // Handle Escape key to cancel
-        }
-
-        ImGuiMCP::SameLine(0.0f, scale.Px(8.0f));
-
-        // Rounded button styling
-        ImGuiMCP::PushStyleVar(ImGuiMCP::ImGuiStyleVar_FrameRounding, scale.Px(4.0f));
-        if (UI::ActionButton("Search##slpp_smmConfirm", btnTextW))
-            OnConfirmSearch(a_hud);
-        ImGuiMCP::PopStyleVar();
 
         ImGuiMCP::SetWindowFontScale(1.0f);
         ImGuiMCP::Dummy(ImGuiMCP::ImVec2{ 0.0f, scale.Px(4.0f) });
