@@ -37,8 +37,8 @@ namespace Thread::Interface
         const float edgeV = scale.Clamp(16.0f, 1.8f, 32.0f, dh);
         const float zoneW = scale.Px(100.0f);
         const float zoneH = scale.Px(60.0f);
-        const float timerH = scale.Px(UI::Theme::Spacing::xs);
-        const float gap = scale.Px(UI::Theme::Spacing::sm);
+        const float timerH = scale.Px(UI::Theme::Spacing.xs);
+        const float gap = scale.Px(UI::Theme::Spacing.sm);
 
         // Pinned to the bottom-right corner.
         const float winX = dw - zoneW - edgeH;
@@ -59,7 +59,7 @@ namespace Thread::Interface
             return;
         }
 
-        SetWindowFontSize(scale.TextPx(UI::Theme::FontSize::overlay));
+        SetWindowFontSize(scale.TextPx(UI::Theme::FontSize.overlay));
         const float contentW = ImGuiMCP::GetContentRegionAvail().x;
 
         const float spd = _speed;
@@ -72,10 +72,10 @@ namespace Thread::Interface
         const ImGuiMCP::ImVec2 leftIconSize = ImGuiMCP::CalcTextSize(UI::Theme::Icon::anglesLeft);
         const ImGuiMCP::ImVec2 rightIconSize = ImGuiMCP::CalcTextSize(UI::Theme::Icon::anglesRight);
         FontAwesome::Pop();
-        const float iconPadding = scale.Px(UI::Theme::Spacing::xxs);
+        const float iconPadding = scale.Px(UI::Theme::Spacing.xxs);
         const float btnW = std::max(scale.Px(20.0f), std::max(leftIconSize.x, rightIconSize.x) + iconPadding * 2.0f);
         const float rowH = std::max(
-            std::max(scale.Px(UI::Theme::Spacing::xl), scale.TextPx(UI::Theme::FontSize::overlay) + iconPadding),
+            std::max(scale.Px(UI::Theme::Spacing.xl), scale.TextPx(UI::Theme::FontSize.overlay) + iconPadding),
             std::max(leftIconSize.y, rightIconSize.y) + iconPadding * 2.0f);
         auto* dl = ImGuiMCP::GetWindowDrawList();
         const ImGuiMCP::ImVec2 rowScreenPos = ImGuiMCP::GetCursorScreenPos();
@@ -121,12 +121,10 @@ namespace Thread::Interface
                 UI::Theme::Animation.timerTrack, timerH * 0.5f, 0);
             if (fillW > 0.0f) {
                 const float fx = barPos.x + contentW - fillW;
-                ImGuiMCP::ImDrawListManager::AddRectFilledMultiColor(dl,
+                const auto fillCorners = frac >= 1.0f ? ImGuiMCP::ImDrawFlags_RoundCornersAll : ImGuiMCP::ImDrawFlags_RoundCornersRight;
+                UI::DrawRoundedGradientRect(dl,
                     ImGuiMCP::ImVec2{ fx, barPos.y }, ImGuiMCP::ImVec2{ barPos.x + contentW, barPos.y + timerH },
-                    UI::Theme::Animation.timerEdge,
-                    UI::Theme::Animation.timerCenter,
-                    UI::Theme::Animation.timerCenter,
-                    UI::Theme::Animation.timerEdge);
+                    UI::Theme::Animation.timerEdge, UI::Theme::Animation.timerCenter, timerH * 0.5f, fillCorners);
             }
             ImGuiMCP::Dummy(ImGuiMCP::ImVec2{ contentW, timerH });
         }

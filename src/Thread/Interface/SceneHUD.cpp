@@ -128,6 +128,8 @@ namespace Thread::Interface
         if (!_focused)
             return;
 
+        ImGuiMCP::PushStyleVar(ImGuiMCP::ImGuiStyleVar_WindowRounding, _scale.Px(UI::Theme::Geometry.roundingPanel));
+        ImGuiMCP::PushStyleVar(ImGuiMCP::ImGuiStyleVar_FrameRounding, _scale.Px(UI::Theme::Geometry.roundingSmall));
         ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_WindowBg, UI::Theme::Color.panelBackground);
         ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_Border, UI::Theme::Color.panelBorder);
         ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_Button, UI::Theme::Color.buttonIdle);
@@ -150,8 +152,9 @@ namespace Thread::Interface
         default:
             break;
         }
-        _elements->elementCtrlPanel.RenderColorEditor(*this);
+        _elements->elementCtrlPanel.RenderThemeEditor(*this);
         ImGuiMCP::PopStyleColor(5);
+        ImGuiMCP::PopStyleVar(2);
     }
 
     void SceneHUD::SetFocus(bool a_focused)
