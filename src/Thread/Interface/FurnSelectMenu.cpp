@@ -58,7 +58,7 @@ namespace Thread::Interface
         const float panelW = scale.Px(300.0f);
         const float padH = scale.Px(12.0f);
         const float padV = scale.Px(5.0f);
-        const float rowH = scale.TextPx(UI::Theme::FontSize::body) + padV * 2.0f;
+        const float rowH = scale.TextPx(UI::Theme::FontSize.body) + padV * 2.0f;
 
         // Centred on screen
         auto* vp = ImGuiMCP::GetMainViewport();
@@ -84,7 +84,7 @@ namespace Thread::Interface
         }
 
         // Panel title
-        SetWindowFontSize(scale.TextPx(UI::Theme::FontSize::sectionHeader));
+        SetWindowFontSize(scale.TextPx(UI::Theme::FontSize.sectionHeader));
         const char* title = "SELECT SCENE CENTER";
         ImGuiMCP::SetCursorPosX((panelW - ImGuiMCP::CalcTextSize(title).x) * 0.5f);
         ImGuiMCP::TextColored(UI::Theme::ToVec4(UI::Theme::Color.textSecondary), "%s", title);
@@ -92,7 +92,7 @@ namespace Thread::Interface
         ImGuiMCP::Separator();
         ImGuiMCP::Dummy(ImGuiMCP::ImVec2{ 0.0f, scale.Px(2.0f) });
 
-        SetWindowFontSize(scale.TextPx(UI::Theme::FontSize::body));
+        SetWindowFontSize(scale.TextPx(UI::Theme::FontSize.body));
         std::optional<std::size_t> selectedIndex;
 
         if (_items.empty()) {

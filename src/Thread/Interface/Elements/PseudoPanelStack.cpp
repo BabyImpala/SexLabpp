@@ -29,9 +29,9 @@ namespace Thread::Interface
         const float dw = io->DisplaySize.x;
         const float dh = io->DisplaySize.y;
 
-        const float tabW = scale.Px(UI::Theme::Geometry::panelTabWidth);
+        const float tabW = scale.Px(UI::Theme::Geometry.panelTabWidth);
         const float tabH = std::max(scale.Px(30.0f),
-            scale.TextPx(UI::Theme::FontSize::caption) + scale.Px(UI::Theme::Spacing::xs));
+            scale.TextPx(UI::Theme::FontSize.caption) + scale.Px(UI::Theme::Spacing.xs));
         const float tabGap = scale.Px(5.0f);
         const float railPad = scale.Px(3.0f);
 
@@ -76,7 +76,7 @@ namespace Thread::Interface
             return;
         }
 
-        SetWindowFontSize(scale.TextPx(UI::Theme::FontSize::caption));
+        SetWindowFontSize(scale.TextPx(UI::Theme::FontSize.caption));
         bool closeFocus = false;
 
         for (std::size_t visibleIndex = 0; visibleIndex < visibleCount; ++visibleIndex) {
@@ -99,7 +99,7 @@ namespace Thread::Interface
 
             ImGuiMCP::PopStyleColor(3);
 
-            const float rounding = scale.Px(UI::Theme::Geometry::roundingPanel);
+            const float rounding = scale.Px(UI::Theme::Geometry.roundingPanelTab);
             const auto roundLeft = ImGuiMCP::ImDrawFlags_RoundCornersLeft;
             const auto background = isActiveTab ? UI::Theme::Color.buttonSelected :
                                     pressed     ? UI::Theme::Color.buttonPressed :
@@ -116,7 +116,7 @@ namespace Thread::Interface
                 UI::Theme::Color.shadowSoft, rounding, roundLeft);
             ImGuiMCP::ImDrawListManager::AddRectFilled(dl, tMin, tMax, background, rounding, roundLeft);
             ImGuiMCP::ImDrawListManager::AddRect(dl, tMin, tMax, border, rounding, roundLeft,
-                scale.Px(UI::Theme::Geometry::borderThin));
+                scale.Px(UI::Theme::Geometry.borderThin));
 
             const float accentW = scale.Px(isActiveTab ? 3.0f : 1.0f);
             ImGuiMCP::ImDrawListManager::AddLine(dl,

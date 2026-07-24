@@ -38,17 +38,17 @@ namespace Thread::Interface::UI::Theme
         ImGuiMCP::ImU32 borderActive = IM_COL32(112, 184, 112, 220);
     };
 
-    struct FontSize final
+    struct FontSizeValues final
     {
-        static constexpr float detail = 7.5f;             // tiny enjoyment-bar interaction text.
-        static constexpr float smallText = 8.0f;          // enjoyment values and Scene hover-card keys
-        static constexpr float metadata = 8.5f;           // enjoyment actor names and Scene tags.
-        static constexpr float caption = 9.5f;            // panel titles, tabs, and many General field labels
-        static constexpr float compact = 10.0f;           // General actor-card content and Scene hover-card rows
-        static constexpr float subsectionHeader = 10.0f;  // collapsible subsection headers
-        static constexpr float sectionHeader = 11.0f;     // collapsible section headers
-        static constexpr float body = 10.5f;              // normal buttons, lists, checkboxes, sliders, and primary text
-        static constexpr float overlay = 9.0f;            // large animation-speed overlay text
+        float detail = 7.5f;             // tiny enjoyment-bar interaction text.
+        float smallText = 8.0f;          // enjoyment values and Scene hover-card keys
+        float metadata = 8.5f;           // enjoyment actor names and Scene tags.
+        float caption = 9.5f;            // panel titles, tabs, and many General field labels
+        float compact = 10.0f;           // General actor-card content and Scene hover-card rows
+        float subsectionHeader = 10.0f;  // collapsible subsection headers
+        float sectionHeader = 11.0f;     // collapsible section headers
+        float body = 10.5f;              // normal buttons, lists, checkboxes, sliders, and primary text
+        float overlay = 9.0f;            // large animation-speed overlay text
     };
 
     struct Icon final
@@ -65,25 +65,27 @@ namespace Thread::Interface::UI::Theme
         static constexpr const char* nextPerm = "\xEE\x95\x92";      // U+E552
     };
 
-    struct Spacing final
+    struct SpacingValues final
     {
-        static constexpr float xxs = 2.0f;
-        static constexpr float xs = 4.0f;
-        static constexpr float sm = 6.0f;
-        static constexpr float md = 8.0f;
-        static constexpr float lg = 12.0f;
-        static constexpr float xl = 16.0f;
+        float xxs = 2.0f;
+        float xs = 4.0f;
+        float sm = 6.0f;
+        float md = 8.0f;
+        float lg = 12.0f;
+        float xl = 16.0f;
     };
 
-    struct Geometry final
+    struct GeometryValues final
     {
-        static constexpr float roundingSmall = 2.0f;
-        static constexpr float roundingPanel = 5.0f;
-        static constexpr float borderThin = 1.0f;
-        static constexpr float checkboxPaddingY = 0.5f;
-        static constexpr float panelTabWidth = 78.0f;
-        static constexpr float panelTabGap = 8.0f;
-        static constexpr float nestedMenuScale = 0.90f;
+        float roundingSmall = 2.0f;
+        float roundingPanelTab = 5.0f;
+        float roundingPanel = 0.0f;
+        float roundingEnjBar = 0.0f;
+        float borderThin = 1.0f;
+        float checkboxPaddingY = 0.5f;
+        float panelTabWidth = 78.0f;
+        float panelTabGap = 8.0f;
+        float nestedMenuScale = 0.90f;
     };
 
     struct EnjoymentValues final
@@ -137,6 +139,9 @@ namespace Thread::Interface::UI::Theme
         EnjoymentValues enjoyment{};
         OffsetValues offset{};
         AnimationValues animation{};
+        SpacingValues spacing{};
+        GeometryValues geometry{};
+        FontSizeValues fontSize{};
     };
 
     inline Data data{};
@@ -144,6 +149,9 @@ namespace Thread::Interface::UI::Theme
     inline auto& Enjoyment = data.enjoyment;
     inline auto& Offset = data.offset;
     inline auto& Animation = data.animation;
+    inline auto& Spacing = data.spacing;
+    inline auto& Geometry = data.geometry;
+    inline auto& FontSize = data.fontSize;
 
     void Load();
     void Save();
@@ -174,6 +182,25 @@ namespace Thread::Interface::UI
         return ImGuiMCP::Button(a_label, ImGuiMCP::ImVec2{ a_width, 0.0f });
     }
 
+    inline void DrawRoundedGradientRect(ImGuiMCP::ImDrawList* a_drawList, ImGuiMCP::ImVec2 a_min, ImGuiMCP::ImVec2 a_max, ImGuiMCP::ImU32 a_left, ImGuiMCP::ImU32 a_right, float a_rounding, ImGuiMCP::ImDrawFlags a_flags)
+    {
+        if (a_max.x <= a_min.x || a_max.y <= a_min.y)
+            return;
+
+        const int vertexStart = a_drawList->VtxBuffer.Size;
+        ImGuiMCP::ImDrawListManager::AddRectFilled(a_drawList, a_min, a_max, IM_COL32(255, 255, 255, 255),
+            a_rounding, a_flags);
+        const auto left = Theme::ToVec4(a_left);
+        const auto right = Theme::ToVec4(a_right);
+        for (int index = vertexStart; index < a_drawList->VtxBuffer.Size; ++index) {
+            auto& vertex = a_drawList->VtxBuffer.Data[index];
+            const float factor = std::clamp((vertex.pos.x - a_min.x) / (a_max.x - a_min.x), 0.0f, 1.0f);
+            vertex.col = ImGuiMCP::ColorConvertFloat4ToU32({
+                std::lerp(left.x, right.x, factor), std::lerp(left.y, right.y, factor),
+                std::lerp(left.z, right.z, factor), std::lerp(left.w, right.w, factor) });
+        }
+    }
+
     inline bool SelectableButton(const char* a_label, bool a_selected, ImGuiMCP::ImGuiSelectableFlags a_flags, ImGuiMCP::ImVec2 a_size)
     {
         ImGuiMCP::PushStyleVar(ImGuiMCP::ImGuiStyleVar_SelectableTextAlign, ImGuiMCP::ImVec2{ 0.0f, 0.5f });
@@ -185,7 +212,7 @@ namespace Thread::Interface::UI
     inline void PushCheckboxStyle(float a_scale)
     {
         ImGuiMCP::PushStyleVar(ImGuiMCP::ImGuiStyleVar_FramePadding,
-            ImGuiMCP::ImVec2{ ImGuiMCP::GetStyle()->FramePadding.x, Theme::Geometry::checkboxPaddingY * a_scale });
+            ImGuiMCP::ImVec2{ ImGuiMCP::GetStyle()->FramePadding.x, Theme::Geometry.checkboxPaddingY * a_scale });
     }
 
     inline void PopCheckboxStyle()
