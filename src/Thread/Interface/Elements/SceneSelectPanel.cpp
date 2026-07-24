@@ -161,9 +161,9 @@ namespace Thread::Interface
         const float dh = io->DisplaySize.y;
 
         const float panelW = scale.Px(240.0f);
-        const float offset = scale.Px(UI::Theme::Geometry::panelTabWidth + UI::Theme::Geometry::panelTabGap);
+        const float offset = scale.Px(UI::Theme::Geometry.panelTabWidth + UI::Theme::Geometry.panelTabGap);
         const float maxH = dh * 0.8f;
-        const float rowH = scale.TextPx(UI::Theme::FontSize::body) + scale.Px(UI::Theme::Spacing::xs);
+        const float rowH = scale.TextPx(UI::Theme::FontSize.body) + scale.Px(UI::Theme::Spacing.xs);
         const float panelPadding = scale.Px(10.0f);
 
         // Calculate dynamic list height based on number of entries
@@ -191,7 +191,7 @@ namespace Thread::Interface
         ImGuiMCP::Dummy(ImGuiMCP::ImVec2{ 0.0f, scale.Px(4.0f) });
         ImGuiMCP::SetCursorPosX(panelPadding);
 
-        SetWindowFontSize(scale.TextPx(UI::Theme::FontSize::compact));
+        SetWindowFontSize(scale.TextPx(UI::Theme::FontSize.compact));
 
         // Modern scrollbar styling
         ImGuiMCP::PushStyleVar(ImGuiMCP::ImGuiStyleVar_ScrollbarSize, scale.Px(6.0f));
@@ -238,7 +238,7 @@ namespace Thread::Interface
         ImGuiMCP::Dummy(ImGuiMCP::ImVec2{ 0.0f, scale.Px(8.0f) });
 
         // ── Search Section with padding
-        SetWindowFontSize(scale.TextPx(UI::Theme::FontSize::body));
+        SetWindowFontSize(scale.TextPx(UI::Theme::FontSize.body));
         ImGuiMCP::SetCursorPosX(panelPadding);
 
         const float searchAreaW = panelW - panelPadding * 2.0f;
@@ -247,7 +247,7 @@ namespace Thread::Interface
 
         // Style search input
         ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_Text, UI::Theme::ToVec4(UI::Theme::Color.textSecondary));
-        SetWindowFontSize(scale.TextPx(UI::Theme::FontSize::caption));
+        SetWindowFontSize(scale.TextPx(UI::Theme::FontSize.caption));
 
         ImGuiMCP::SetNextItemWidth(inputW);
         ImGuiMCP::InputTextWithHint("##slpp_smmSearch", "Tag or scene name...",
@@ -256,7 +256,7 @@ namespace Thread::Interface
         const bool searchInputHasFocus = ImGuiMCP::IsItemFocused();
 
         ImGuiMCP::PopStyleColor();
-        SetWindowFontSize(scale.TextPx(UI::Theme::FontSize::body));
+        SetWindowFontSize(scale.TextPx(UI::Theme::FontSize.body));
 
         if (searchInputHasFocus && ImGuiMCP::IsKeyPressed(ImGuiMCP::ImGuiKey_Enter, false)) {
             OnConfirmSearch(a_hud);  // Handle Enter key to search
@@ -267,11 +267,8 @@ namespace Thread::Interface
 
         ImGuiMCP::SameLine(0.0f, scale.Px(8.0f));
 
-        // Rounded button styling
-        ImGuiMCP::PushStyleVar(ImGuiMCP::ImGuiStyleVar_FrameRounding, scale.Px(4.0f));
         if (UI::ActionButton("Search##slpp_smmConfirm", btnTextW))
             OnConfirmSearch(a_hud);
-        ImGuiMCP::PopStyleVar();
 
         ImGuiMCP::SetWindowFontScale(1.0f);
         ImGuiMCP::Dummy(ImGuiMCP::ImVec2{ 0.0f, scale.Px(4.0f) });
@@ -289,9 +286,9 @@ namespace Thread::Interface
             const float cardW = scale.Px(190.0f);
             const float keyW = scale.Px(46.0f);
             const float rowGap = scale.Px(4.0f);
-            const float keyFont = scale.TextPx(UI::Theme::FontSize::smallText);
-            const float rowFont = scale.TextPx(UI::Theme::FontSize::compact);
-            const float tagFont = scale.TextPx(UI::Theme::FontSize::metadata);
+            const float keyFont = scale.TextPx(UI::Theme::FontSize.smallText);
+            const float rowFont = scale.TextPx(UI::Theme::FontSize.compact);
+            const float tagFont = scale.TextPx(UI::Theme::FontSize.metadata);
 
             const float cardX = winPos.x - cardW - 6.0f;
 

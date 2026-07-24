@@ -176,8 +176,8 @@ namespace Thread::Interface
         const float hitExt = a_scale.Px(10.0f);  // extends clickable/draggable area above and below visible track
         const float valW = a_scale.Px(40.0f);    // width of the numeric value field
         const float labelW = a_scale.Px(20.0f);  // width for axis label
-        const float labelFt = a_scale.TextPx(UI::Theme::FontSize::body);
-        const float valFt = a_scale.TextPx(UI::Theme::FontSize::body);
+        const float labelFt = a_scale.TextPx(UI::Theme::FontSize.body);
+        const float valFt = a_scale.TextPx(UI::Theme::FontSize.body);
         const float availW = ImGuiMCP::GetContentRegionAvail().x - rowPadH * 2.0f;
         const float trackW = availW - labelW - valW - rowPadH * 2.0f;  // space between label and value
 
@@ -227,7 +227,6 @@ namespace Thread::Interface
         ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_FrameBg, UI::Theme::Color.transparent);
         const ImGuiMCP::ImU32 valTextCol = UI::Theme::Color.textMuted;
         ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_Text, valTextCol);
-        ImGuiMCP::PushStyleVar(ImGuiMCP::ImGuiStyleVar_FrameRounding, a_scale.Px(UI::Theme::Geometry::roundingSmall));
         if (ImGuiMCP::InputText("##slpp_oamVal", valBuf, sizeof(valBuf),
                 ImGuiMCP::ImGuiInputTextFlags_EnterReturnsTrue | ImGuiMCP::ImGuiInputTextFlags_CharsDecimal)) {
             float v = std::round(std::strtof(valBuf, nullptr));
@@ -339,7 +338,7 @@ namespace Thread::Interface
         const float dw = io->DisplaySize.x;
         const float dh = io->DisplaySize.y;
 
-        const float offset = scale.Px(UI::Theme::Geometry::panelTabWidth + UI::Theme::Geometry::panelTabGap);
+        const float offset = scale.Px(UI::Theme::Geometry.panelTabWidth + UI::Theme::Geometry.panelTabGap);
         const float pickerW = scale.Px(200.0f);
         const float panelW = scale.Px(300.0f);
 
@@ -354,7 +353,7 @@ namespace Thread::Interface
                 ImGuiMCP::ImGuiWindowFlags_NoCollapse | ImGuiMCP::ImGuiWindowFlags_AlwaysAutoResize;
 
             if (ImGuiMCP::Begin("##slpp_OAMPicker", nullptr, pFlags)) {
-                SetWindowFontSize(scale.TextPx(UI::Theme::FontSize::sectionHeader));
+                SetWindowFontSize(scale.TextPx(UI::Theme::FontSize.sectionHeader));
                 const float titleW = ImGuiMCP::CalcTextSize("PICK TARGET").x;
                 ImGuiMCP::SetCursorPosX((pickerW - titleW) * 0.5f);
                 ImGuiMCP::TextColored(UI::Theme::ToVec4(UI::Theme::Color.textPrimary), "PICK TARGET");
@@ -362,7 +361,7 @@ namespace Thread::Interface
                 ImGuiMCP::Separator();
 
                 if (_pickerOpen) {
-                    SetWindowFontSize(scale.TextPx(UI::Theme::FontSize::body));
+                    SetWindowFontSize(scale.TextPx(UI::Theme::FontSize.body));
                     for (const auto& item : _items) {
                         ImGuiMCP::PushID(static_cast<int>(item.formId));
                         const bool isSel = _selectedId && *_selectedId == item.formId;
@@ -412,7 +411,7 @@ namespace Thread::Interface
 
             if (ImGuiMCP::Begin("##slpp_OAMPanel", nullptr, panelFlags)) {
                 // ────── Title
-                SetWindowFontSize(scale.TextPx(UI::Theme::FontSize::sectionHeader));
+                SetWindowFontSize(scale.TextPx(UI::Theme::FontSize.sectionHeader));
                 const float titleW = ImGuiMCP::CalcTextSize(panelTitle.c_str()).x;
                 ImGuiMCP::SetCursorPosX((panelW - titleW) * 0.5f);
                 ImGuiMCP::TextColored(UI::Theme::ToVec4(UI::Theme::Color.textPrimary), "%s", panelTitle.c_str());
@@ -422,7 +421,7 @@ namespace Thread::Interface
                 // ────── Stage Only
                 ImGuiMCP::Dummy(ImGuiMCP::ImVec2{ 0.0f, scale.Px(6.0f) });
                 // toggle row
-                SetWindowFontSize(scale.TextPx(UI::Theme::FontSize::body));
+                SetWindowFontSize(scale.TextPx(UI::Theme::FontSize.body));
                 const float toggleRowH = scale.Px(24.0f);
                 const float rowPadH = scale.Px(12.0f);
                 const float availW = ImGuiMCP::GetContentRegionAvail().x - rowPadH * 2.0f;

@@ -137,41 +137,30 @@ namespace Thread::Interface
         return std::max(kGZoneMin, kGZoneDefault - (a_enjoyment - kGameEnjDrawMin) * 0.00375f);
     }
 
-    // ── Layout Cache ────────────────────────────────────────────────────────
-    const EnjBarsOverlay::LayoutCache& EnjBarsOverlay::GetLayout(UI::Scale& a_scale, size_t actorCount)
+    EnjBarsOverlay::Layout EnjBarsOverlay::GetLayout(UI::Scale& a_scale, size_t actorCount)
     {
         auto* io = ImGuiMCP::GetIO();
         const float dw = io->DisplaySize.x;
         const float dh = io->DisplaySize.y;
-        const float factor = a_scale.Px(1.0f);
-        const float textFactor = a_scale.TextPx(1.0f);
-        if (_layoutForFactor == factor && _layoutForTextFactor == textFactor &&
-            _layoutForWidth == dw && _layoutForHeight == dh && _layoutForCount == actorCount) {
-            return _layout;
-        }
 
-        auto& L = _layout;
+        Layout layout;
+        auto& L = layout;
         L.zoneW = std::clamp(a_scale.Px(260.0f), dw * 0.15f, a_scale.Px(360.0f));
         L.barGap = a_scale.Px(4.5f);
         L.innerGp = a_scale.Px(2.0f);
-        L.frameH = a_scale.Px(UI::Theme::FontSize::body);
+        L.frameH = a_scale.Px(UI::Theme::FontSize.body);
         L.lblPad = a_scale.Px(1.5f);
-        L.nameFt = a_scale.TextPx(UI::Theme::FontSize::metadata);
-        L.valFt = a_scale.TextPx(UI::Theme::FontSize::smallText);
-        L.intrFt = a_scale.TextPx(UI::Theme::FontSize::detail);
-        L.fbFt = std::min(a_scale.TextPx(UI::Theme::FontSize::body), L.frameH);
+        L.nameFt = a_scale.TextPx(UI::Theme::FontSize.metadata);
+        L.valFt = a_scale.TextPx(UI::Theme::FontSize.smallText);
+        L.intrFt = a_scale.TextPx(UI::Theme::FontSize.detail);
+        L.fbFt = std::min(a_scale.TextPx(UI::Theme::FontSize.body), L.frameH);
         L.edgeH = a_scale.Clamp(14.0f, 2.5f, 48.0f, dw);
         L.edgeV = a_scale.Clamp(16.0f, 1.8f, 32.0f, dh);
-        L.lblRowH = std::max(a_scale.Px(UI::Theme::FontSize::metadata), L.nameFt) + L.lblPad * 2.0f;
+        L.lblRowH = std::max(a_scale.Px(UI::Theme::FontSize.metadata), L.nameFt) + L.lblPad * 2.0f;
         L.unitH = L.lblRowH + L.innerGp + L.frameH + L.barGap;
         L.winH = L.unitH * static_cast<float>(actorCount) - L.barGap;
 
-        _layoutForFactor = factor;
-        _layoutForTextFactor = textFactor;
-        _layoutForWidth = dw;
-        _layoutForHeight = dh;
-        _layoutForCount = actorCount;
-        return L;
+        return layout;
     }
 
     void EnjBarsOverlay::Render(SceneHUD& a_hud)
@@ -202,10 +191,10 @@ namespace Thread::Interface
 
         const double now = ImGuiMCP::GetTime();
 
-        // Read cached layout
+        // Calculate layout
         auto* io = ImGuiMCP::GetIO();
         const float dh = io->DisplaySize.y;
-        const auto& L = GetLayout(scale, _bars.size());
+        const auto L = GetLayout(scale, _bars.size());
         const float zoneW = L.zoneW;
         const float barGap = L.barGap;
         const float innerGp = L.innerGp;
@@ -219,6 +208,8 @@ namespace Thread::Interface
         const float edgeV = L.edgeV;
         const float lblRowH = L.lblRowH;
         const float winH = L.winH;
+        const float frameRounding = scale.Px(UI::Theme::Geometry.roundingEnjBar);
+        const float clipPadding = frameRounding + scale.Px(2.0f);
 
         constexpr auto kFlags =
             ImGuiMCP::ImGuiWindowFlags_NoTitleBar | ImGuiMCP::ImGuiWindowFlags_NoResize | ImGuiMCP::ImGuiWindowFlags_NoMove |
@@ -226,10 +217,10 @@ namespace Thread::Interface
             ImGuiMCP::ImGuiWindowFlags_NoFocusOnAppearing | ImGuiMCP::ImGuiWindowFlags_NoNav |
             ImGuiMCP::ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiMCP::ImGuiWindowFlags_NoBackground;
 
-        ImGuiMCP::SetNextWindowPos(ImGuiMCP::ImVec2{ edgeH, dh - winH - edgeV }, ImGuiMCP::ImGuiCond_Always);
-        ImGuiMCP::SetNextWindowSize(ImGuiMCP::ImVec2{ zoneW, winH }, ImGuiMCP::ImGuiCond_Always);
+        ImGuiMCP::SetNextWindowPos(ImGuiMCP::ImVec2{ edgeH - clipPadding, dh - winH - edgeV }, ImGuiMCP::ImGuiCond_Always);
+        ImGuiMCP::SetNextWindowSize(ImGuiMCP::ImVec2{ zoneW + clipPadding * 2.0f, winH }, ImGuiMCP::ImGuiCond_Always);
 
-        ImGuiMCP::PushStyleVar(ImGuiMCP::ImGuiStyleVar_WindowPadding, ImGuiMCP::ImVec2{ 0.0f, 0.0f });
+        ImGuiMCP::PushStyleVar(ImGuiMCP::ImGuiStyleVar_WindowPadding, ImGuiMCP::ImVec2{ clipPadding, 0.0f });
         ImGuiMCP::PushStyleVar(ImGuiMCP::ImGuiStyleVar_ItemSpacing, ImGuiMCP::ImVec2{ 0.0f, 0.0f });
         if (!ImGuiMCP::Begin("##slpp_EnjBars", nullptr, kFlags)) {
             ImGuiMCP::End();
@@ -300,14 +291,16 @@ namespace Thread::Interface
             const ImGuiMCP::ImVec2 frameMax{ frameMin.x + zoneW, frameMin.y + frameH };
 
             // track
-            ImGuiMCP::ImDrawListManager::AddRectFilled(dl, frameMin, frameMax, UI::Theme::Enjoyment.frameSurface, 0.0f, 0);
-            ImGuiMCP::ImDrawListManager::AddRect(dl, frameMin, frameMax, UI::Theme::Enjoyment.frameBorder, 0.0f, 0, 1.0f);
+            ImGuiMCP::ImDrawListManager::AddRectFilled(dl, frameMin, frameMax,
+                UI::Theme::Enjoyment.frameSurface, frameRounding, ImGuiMCP::ImDrawFlags_RoundCornersAll);
+            ImGuiMCP::ImDrawListManager::AddRect(dl, frameMin, frameMax,
+                UI::Theme::Enjoyment.frameBorder, frameRounding, ImGuiMCP::ImDrawFlags_RoundCornersAll, 1.0f);
 
             // outer white rim
             ImGuiMCP::ImDrawListManager::AddRect(dl,
                 ImGuiMCP::ImVec2{ frameMin.x - 1, frameMin.y - 1 },
                 ImGuiMCP::ImVec2{ frameMax.x + 1, frameMax.y + 1 },
-                UI::Theme::Enjoyment.frameRim, 0.0f, 0, 1.0f);
+                UI::Theme::Enjoyment.frameRim, frameRounding, ImGuiMCP::ImDrawFlags_RoundCornersAll, 1.0f);
 
             // inner top shine
             ImGuiMCP::ImDrawListManager::AddLine(dl,
@@ -322,13 +315,13 @@ namespace Thread::Interface
                 FillGradient(b.enjoyment, cLo, cHi);
                 const float fillW = zoneW * frac;
                 if (b.enjoyment < 0.0f) {
-                    ImGuiMCP::ImDrawListManager::AddRectFilledMultiColor(dl,
-                        ImGuiMCP::ImVec2{ frameMax.x - fillW, frameMin.y }, frameMax,
-                        cLo, cHi, cHi, cLo);
+                    const auto fillCorners = frac >= 1.0f ? ImGuiMCP::ImDrawFlags_RoundCornersAll : ImGuiMCP::ImDrawFlags_RoundCornersRight;
+                    UI::DrawRoundedGradientRect(dl,
+                        ImGuiMCP::ImVec2{ frameMax.x - fillW, frameMin.y }, frameMax, cLo, cHi, frameRounding, fillCorners);
                 } else {
-                    ImGuiMCP::ImDrawListManager::AddRectFilledMultiColor(dl,
-                        frameMin, ImGuiMCP::ImVec2{ frameMin.x + fillW, frameMax.y },
-                        cLo, cHi, cHi, cLo);
+                    const auto fillCorners = frac >= 1.0f ? ImGuiMCP::ImDrawFlags_RoundCornersAll : ImGuiMCP::ImDrawFlags_RoundCornersLeft;
+                    UI::DrawRoundedGradientRect(dl,
+                        frameMin, ImGuiMCP::ImVec2{ frameMin.x + fillW, frameMax.y }, cLo, cHi, frameRounding, fillCorners);
                 }
             }
 
@@ -378,7 +371,7 @@ namespace Thread::Interface
                 if (_feedbackActorId == b.formId && now < _feedbackUntil) {
                     ImGuiMCP::ImDrawListManager::AddRectFilled(dl, frameMin, frameMax,
                         _feedbackHit ? UI::Theme::Enjoyment.feedbackHit : UI::Theme::Enjoyment.feedbackMiss,
-                        0.0f, 0);
+                        frameRounding, ImGuiMCP::ImDrawFlags_RoundCornersAll);
                     SetWindowFontSize(fbFt);
                     const char* fbStr = _feedbackHit ? "HIT" : "MISS";
                     const ImGuiMCP::ImU32 fbCol = _feedbackHit ? UI::Theme::Enjoyment.hit : UI::Theme::Enjoyment.miss;
@@ -395,11 +388,12 @@ namespace Thread::Interface
             // highlight border for whichever actor is currently targeted
             if (b.isTarget) {
                 const auto tc = UI::Theme::Enjoyment.targetBorder;
-                ImGuiMCP::ImDrawListManager::AddRect(dl, frameMin, frameMax, tc, 0.0f, 0, 1.0f);
+                ImGuiMCP::ImDrawListManager::AddRect(dl, frameMin, frameMax,
+                    tc, frameRounding, ImGuiMCP::ImDrawFlags_RoundCornersAll, 1.0f);
                 ImGuiMCP::ImDrawListManager::AddRect(dl,
                     ImGuiMCP::ImVec2{ frameMin.x - 1, frameMin.y - 1 },
                     ImGuiMCP::ImVec2{ frameMax.x + 1, frameMax.y + 1 },
-                    tc, 0.0f, 0, 1.0f);
+                    tc, frameRounding, ImGuiMCP::ImDrawFlags_RoundCornersAll, 1.0f);
             }
 
             if (barIndex + 1 < _bars.size())

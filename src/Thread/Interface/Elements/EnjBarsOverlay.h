@@ -56,20 +56,13 @@ namespace Thread::Interface
         bool _feedbackHit{ false };
         double _feedbackUntil{ 0.0 };
 
-        // ── Layout cache
-        struct LayoutCache
+        struct Layout
         {
             float zoneW, barGap, innerGp, frameH, lblPad;
             float nameFt, valFt, intrFt, fbFt;
             float edgeH, edgeV, lblRowH, unitH, winH;
         };
-        LayoutCache _layout{};
-        float _layoutForFactor{ -1.0f };
-        float _layoutForTextFactor{ -1.0f };
-        float _layoutForWidth{ -1.0f };
-        float _layoutForHeight{ -1.0f };
-        std::size_t _layoutForCount{ SIZE_MAX };
 
-        const LayoutCache& GetLayout(UI::Scale& a_scale, std::size_t a_actorCount);
+        static Layout GetLayout(UI::Scale& a_scale, std::size_t a_actorCount);
     };
 }

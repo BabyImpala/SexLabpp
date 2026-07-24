@@ -106,7 +106,7 @@ namespace Thread::Interface
         auto* lib = Registry::Library::GetSingleton();
         auto& scale = a_hud.GetScale();
 
-        constexpr float nestedScale = UI::Theme::Geometry::nestedMenuScale;
+        const float nestedScale = UI::Theme::Geometry.nestedMenuScale;
         const float contentX = ImGuiMCP::GetCursorPosX();
         const float availableW = ImGuiMCP::GetContentRegionAvail().x;
         const float cardW = availableW * nestedScale;
@@ -115,9 +115,9 @@ namespace Thread::Interface
         const float rowPadH = scale.Px(12.0f) * nestedScale;
         const float hdrPadV = scale.Px(5.0f) * nestedScale;
         const float hdrPadH = scale.Px(10.0f) * nestedScale;
-        const float fieldGap = scale.Px(UI::Theme::Spacing::sm) * nestedScale;
-        const float captionSize = scale.TextPx(UI::Theme::FontSize::caption) * nestedScale;
-        const float subsectionHeaderSize = scale.TextPx(UI::Theme::FontSize::subsectionHeader) * nestedScale;
+        const float fieldGap = scale.Px(UI::Theme::Spacing.sm) * nestedScale;
+        const float captionSize = scale.TextPx(UI::Theme::FontSize.caption) * nestedScale;
+        const float subsectionHeaderSize = scale.TextPx(UI::Theme::FontSize.subsectionHeader) * nestedScale;
 
         SetWindowFontSize(captionSize);
         const float labelW = ImGuiMCP::CalcTextSize("Scene Position").x + fieldGap;
@@ -204,7 +204,7 @@ namespace Thread::Interface
         auto* inst = a_hud.GetThreadInstance();
         const ImGuiMCP::ImVec2 bodyMin{ hdrMin.x, hdrMin.y + hdrH };
         ImGuiMCP::SetCursorScreenPos(bodyMin);
-        ImGuiMCP::Dummy(ImGuiMCP::ImVec2{ 0.0f, scale.Px(UI::Theme::Spacing::xs) * nestedScale });
+        ImGuiMCP::Dummy(ImGuiMCP::ImVec2{ 0.0f, scale.Px(UI::Theme::Spacing.xs) * nestedScale });
         ImGuiMCP::ImDrawListManager::ChannelsSplit(dl, 2);
         ImGuiMCP::ImDrawListManager::ChannelsSetCurrent(dl, 1);
 
@@ -214,7 +214,7 @@ namespace Thread::Interface
         ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_Button, UI::Theme::Color.nestedControl);
         ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_ButtonHovered, UI::Theme::Color.nestedControlHovered);
         ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_ButtonActive, UI::Theme::Color.nestedControlActive);
-        SetWindowFontSize(scale.TextPx(UI::Theme::FontSize::compact) * nestedScale);
+        SetWindowFontSize(scale.TextPx(UI::Theme::FontSize.compact) * nestedScale);
 
         // ── Expression combo
         if (Registry::RaceKey(actor).Is(Registry::RaceKey::Value::Human)) {
@@ -357,11 +357,9 @@ namespace Thread::Interface
                 const float rightBtnX = cardX + cardW - rowPadH - btnRoundedW;
                 ImGuiMCP::SameLine();
                 ImGuiMCP::SetCursorPosX(rightBtnX);
-                ImGuiMCP::PushStyleVar(ImGuiMCP::ImGuiStyleVar_FrameRounding, scale.Px(4.0f) * nestedScale);
                 SKSEMenuFramework::PushFont(UI::Theme::Icon::solidFont);
                 const bool nextPosition = ImGuiMCP::Button(UI::Theme::Icon::nextPerm, ImGuiMCP::ImVec2{ btnRoundedW, btnRoundedH });
                 FontAwesome::Pop();
-                ImGuiMCP::PopStyleVar();
                 if (ImGuiMCP::IsItemHovered())
                     ImGuiMCP::SetTooltip("Move actor to the next compatible scene position");
                 if (nextPosition)
@@ -394,7 +392,7 @@ namespace Thread::Interface
         auto& scale = a_hud.GetScale();
         auto* io = ImGuiMCP::GetIO();
         const float panelW = scale.Px(280.0f);
-        const float offset = scale.Px(UI::Theme::Geometry::panelTabWidth + UI::Theme::Geometry::panelTabGap);
+        const float offset = scale.Px(UI::Theme::Geometry.panelTabWidth + UI::Theme::Geometry.panelTabGap);
         const float rowMinH = scale.Px(28.0f);
         const float rowPadH = scale.Px(12.0f);
         const float maxBodyH = scale.Px(340.0f);  // before scrolling
@@ -418,7 +416,7 @@ namespace Thread::Interface
         }
 
         // ── Auto Advance toggle
-        SetWindowFontSize(scale.TextPx(UI::Theme::FontSize::body));
+        SetWindowFontSize(scale.TextPx(UI::Theme::FontSize.body));
         const float toggleRowH = scale.Px(24.0f);
         const float availW = ImGuiMCP::GetContentRegionAvail().x - rowPadH * 2.0f;
         const ImGuiMCP::ImVec2 toggleRowMin = ImGuiMCP::GetCursorScreenPos();
@@ -448,11 +446,11 @@ namespace Thread::Interface
         ImGuiMCP::TextColored(UI::Theme::ToVec4(UI::Theme::Color.textSecondary), "Auto Advance");
         ImGuiMCP::SetCursorScreenPos({ toggleRowMin.x, toggleRowMin.y + toggleRowH });
 
-        ImGuiMCP::Dummy(ImGuiMCP::ImVec2{ 0.0f, scale.Px(UI::Theme::Spacing::md) });
+        ImGuiMCP::Dummy(ImGuiMCP::ImVec2{ 0.0f, scale.Px(UI::Theme::Spacing.md) });
 
         // ── Actions
-        SetWindowFontSize(scale.TextPx(UI::Theme::FontSize::body));
-        const float actionGap = scale.Px(UI::Theme::Spacing::sm);
+        SetWindowFontSize(scale.TextPx(UI::Theme::FontSize.body));
+        const float actionGap = scale.Px(UI::Theme::Spacing.sm);
         const float actionW = (panelW - rowPadH * 2.0f - actionGap) * 0.5f;
         ImGuiMCP::SetCursorPosX(rowPadH);
         ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_Text, UI::Theme::ToVec4(UI::Theme::Color.textSecondary));
@@ -464,12 +462,12 @@ namespace Thread::Interface
         ImGuiMCP::PopStyleColor();
 
         ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_Separator, UI::Theme::Color.nestedSeparator);
-        ImGuiMCP::Dummy(ImGuiMCP::ImVec2{ 0.0f, scale.Px(UI::Theme::Spacing::sm) });
+        ImGuiMCP::Dummy(ImGuiMCP::ImVec2{ 0.0f, scale.Px(UI::Theme::Spacing.sm) });
         ImGuiMCP::Separator();
         ImGuiMCP::PopStyleColor();
 
         // ── Actors list with scrolling
-        ImGuiMCP::Dummy(ImGuiMCP::ImVec2{ 0.0f, scale.Px(UI::Theme::Spacing::xs) });
+        ImGuiMCP::Dummy(ImGuiMCP::ImVec2{ 0.0f, scale.Px(UI::Theme::Spacing.xs) });
 
         ImGuiMCP::PushStyleVar(ImGuiMCP::ImGuiStyleVar_ScrollbarSize, scale.Px(6.0f));
         ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_ScrollbarBg, UI::Theme::Color.panelBackground);

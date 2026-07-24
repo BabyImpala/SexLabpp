@@ -9,7 +9,7 @@ namespace Thread::Interface
         void Open(SceneHUD& a_hud);
         void Close();
         void Render(SceneHUD& a_hud);
-        void RenderColorEditor(SceneHUD& a_hud);
+        void RenderThemeEditor(SceneHUD& a_hud);
 
       private:
         void OnScaleChange(SceneHUD& a_hud, float a_value);
@@ -17,6 +17,6 @@ namespace Thread::Interface
 
         float _scaleAdjustment{ 1.5f };
         float _textScaleAdjustment{ 1.0f };
-        bool _showColorEditor{ false };
+        bool _showThemeEditor{ false };
     };
 }
