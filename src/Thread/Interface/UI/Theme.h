@@ -80,7 +80,7 @@ namespace Thread::Interface::UI::Theme
         float roundingSmall = 2.0f;
         float roundingPanelTab = 5.0f;
         float roundingPanel = 0.0f;
-        float roundingEnjBar = 0.0f;
+        float roundingEnjBar = 3.0f;
         float borderThin = 1.0f;
         float checkboxPaddingY = 0.5f;
         float panelTabWidth = 78.0f;
@@ -106,11 +106,18 @@ namespace Thread::Interface::UI::Theme
         ImGuiMCP::ImU32 miss = IM_COL32(224, 96, 80, 255);
         ImGuiMCP::ImU32 frameSurface = IM_COL32(16, 16, 18, 255);
         ImGuiMCP::ImU32 frameBorder = IM_COL32(40, 40, 48, 255);
+        ImGuiMCP::ImU32 fillTrail = IM_COL32(208, 188, 168, 64);
         ImGuiMCP::ImU32 zoneCenter = IM_COL32(80, 180, 60, 51);
         ImGuiMCP::ImU32 zoneCenterActive = IM_COL32(100, 230, 80, 77);
         ImGuiMCP::ImU32 feedbackHit = IM_COL32(60, 200, 80, 89);
         ImGuiMCP::ImU32 feedbackMiss = IM_COL32(200, 60, 40, 97);
         ImGuiMCP::ImU32 targetBorder = IM_COL32(106, 96, 85, 255);
+        float fillEaseRate = 15.0f;
+        float trailEaseRate = 5.0f;
+        float waveIntensity = 1.0f;
+        float waveSpeed = 1.0f;
+        float waveSpatialFrequency = 0.6f;
+        float waveSecondaryStrength = 2.3f;
     };
 
     struct OffsetValues final
