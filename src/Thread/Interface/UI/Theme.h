@@ -106,8 +106,6 @@ namespace Thread::Interface::UI::Theme
         ImGuiMCP::ImU32 miss = IM_COL32(224, 96, 80, 255);
         ImGuiMCP::ImU32 frameSurface = IM_COL32(16, 16, 18, 255);
         ImGuiMCP::ImU32 frameBorder = IM_COL32(40, 40, 48, 255);
-        ImGuiMCP::ImU32 frameRim = IM_COL32(255, 255, 255, 20);
-        ImGuiMCP::ImU32 frameShine = IM_COL32(255, 255, 255, 10);
         ImGuiMCP::ImU32 zoneCenter = IM_COL32(80, 180, 60, 51);
         ImGuiMCP::ImU32 zoneCenterActive = IM_COL32(100, 230, 80, 77);
         ImGuiMCP::ImU32 feedbackHit = IM_COL32(60, 200, 80, 89);
@@ -195,8 +193,7 @@ namespace Thread::Interface::UI
         for (int index = vertexStart; index < a_drawList->VtxBuffer.Size; ++index) {
             auto& vertex = a_drawList->VtxBuffer.Data[index];
             const float factor = std::clamp((vertex.pos.x - a_min.x) / (a_max.x - a_min.x), 0.0f, 1.0f);
-            vertex.col = ImGuiMCP::ColorConvertFloat4ToU32({
-                std::lerp(left.x, right.x, factor), std::lerp(left.y, right.y, factor),
+            vertex.col = ImGuiMCP::ColorConvertFloat4ToU32({ std::lerp(left.x, right.x, factor), std::lerp(left.y, right.y, factor),
                 std::lerp(left.z, right.z, factor), std::lerp(left.w, right.w, factor) });
         }
     }

@@ -217,10 +217,10 @@ namespace Thread::Interface
             ImGuiMCP::ImGuiWindowFlags_NoFocusOnAppearing | ImGuiMCP::ImGuiWindowFlags_NoNav |
             ImGuiMCP::ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiMCP::ImGuiWindowFlags_NoBackground;
 
-        ImGuiMCP::SetNextWindowPos(ImGuiMCP::ImVec2{ edgeH - clipPadding, dh - winH - edgeV }, ImGuiMCP::ImGuiCond_Always);
-        ImGuiMCP::SetNextWindowSize(ImGuiMCP::ImVec2{ zoneW + clipPadding * 2.0f, winH }, ImGuiMCP::ImGuiCond_Always);
+        ImGuiMCP::SetNextWindowPos(ImGuiMCP::ImVec2{ edgeH - clipPadding, dh - winH - edgeV - clipPadding }, ImGuiMCP::ImGuiCond_Always);
+        ImGuiMCP::SetNextWindowSize(ImGuiMCP::ImVec2{ zoneW + clipPadding * 2.0f, winH + clipPadding * 2.0f }, ImGuiMCP::ImGuiCond_Always);
 
-        ImGuiMCP::PushStyleVar(ImGuiMCP::ImGuiStyleVar_WindowPadding, ImGuiMCP::ImVec2{ clipPadding, 0.0f });
+        ImGuiMCP::PushStyleVar(ImGuiMCP::ImGuiStyleVar_WindowPadding, ImGuiMCP::ImVec2{ clipPadding, clipPadding });
         ImGuiMCP::PushStyleVar(ImGuiMCP::ImGuiStyleVar_ItemSpacing, ImGuiMCP::ImVec2{ 0.0f, 0.0f });
         if (!ImGuiMCP::Begin("##slpp_EnjBars", nullptr, kFlags)) {
             ImGuiMCP::End();
@@ -289,24 +289,12 @@ namespace Thread::Interface
             // ── Enj Bar frame ───────────────────────────────────────────────
             const ImGuiMCP::ImVec2 frameMin = ImGuiMCP::GetCursorScreenPos();
             const ImGuiMCP::ImVec2 frameMax{ frameMin.x + zoneW, frameMin.y + frameH };
+            const ImGuiMCP::ImVec2 borderMin{ frameMin.x - 0.5f, frameMin.y - 0.5f };
+            const ImGuiMCP::ImVec2 borderMax{ frameMax.x + 0.5f, frameMax.y + 0.5f };
 
             // track
             ImGuiMCP::ImDrawListManager::AddRectFilled(dl, frameMin, frameMax,
                 UI::Theme::Enjoyment.frameSurface, frameRounding, ImGuiMCP::ImDrawFlags_RoundCornersAll);
-            ImGuiMCP::ImDrawListManager::AddRect(dl, frameMin, frameMax,
-                UI::Theme::Enjoyment.frameBorder, frameRounding, ImGuiMCP::ImDrawFlags_RoundCornersAll, 1.0f);
-
-            // outer white rim
-            ImGuiMCP::ImDrawListManager::AddRect(dl,
-                ImGuiMCP::ImVec2{ frameMin.x - 1, frameMin.y - 1 },
-                ImGuiMCP::ImVec2{ frameMax.x + 1, frameMax.y + 1 },
-                UI::Theme::Enjoyment.frameRim, frameRounding, ImGuiMCP::ImDrawFlags_RoundCornersAll, 1.0f);
-
-            // inner top shine
-            ImGuiMCP::ImDrawListManager::AddLine(dl,
-                ImGuiMCP::ImVec2{ frameMin.x + 1, frameMin.y + 1 },
-                ImGuiMCP::ImVec2{ frameMax.x - 1, frameMin.y + 1 },
-                UI::Theme::Enjoyment.frameShine, 1.0f);
 
             // fill
             const float frac = FillFraction(b.enjoyment);
@@ -324,6 +312,8 @@ namespace Thread::Interface
                         frameMin, ImGuiMCP::ImVec2{ frameMin.x + fillW, frameMax.y }, cLo, cHi, frameRounding, fillCorners);
                 }
             }
+            ImGuiMCP::ImDrawListManager::AddRect(dl, borderMin, borderMax,
+                UI::Theme::Enjoyment.frameBorder, frameRounding, ImGuiMCP::ImDrawFlags_RoundCornersAll, 1.0f);
 
             // ── Green zone + needle ─────────────────────────────────────────
             if (b.isGameDpt && b.enjoyment >= kGameEnjDrawMin) {
@@ -360,13 +350,6 @@ namespace Thread::Interface
                     ImGuiMCP::ImVec2{ nx - nw * 0.5f, nTop }, ImGuiMCP::ImVec2{ nx + nw * 0.5f, nBot },
                     nCol, 0.0f, 0);
 
-                // small downward-pointing triangle beneath the needle
-                ImGuiMCP::ImDrawListManager::AddTriangleFilled(dl,
-                    ImGuiMCP::ImVec2{ nx - innerGp, nBot },
-                    ImGuiMCP::ImVec2{ nx + innerGp, nBot },
-                    ImGuiMCP::ImVec2{ nx, nBot + lblPad * 2.0f },
-                    nCol);
-
                 // feedback flash
                 if (_feedbackActorId == b.formId && now < _feedbackUntil) {
                     ImGuiMCP::ImDrawListManager::AddRectFilled(dl, frameMin, frameMax,
@@ -388,12 +371,8 @@ namespace Thread::Interface
             // highlight border for whichever actor is currently targeted
             if (b.isTarget) {
                 const auto tc = UI::Theme::Enjoyment.targetBorder;
-                ImGuiMCP::ImDrawListManager::AddRect(dl, frameMin, frameMax,
-                    tc, frameRounding, ImGuiMCP::ImDrawFlags_RoundCornersAll, 1.0f);
-                ImGuiMCP::ImDrawListManager::AddRect(dl,
-                    ImGuiMCP::ImVec2{ frameMin.x - 1, frameMin.y - 1 },
-                    ImGuiMCP::ImVec2{ frameMax.x + 1, frameMax.y + 1 },
-                    tc, frameRounding, ImGuiMCP::ImDrawFlags_RoundCornersAll, 1.0f);
+                ImGuiMCP::ImDrawListManager::AddRect(dl, borderMin, borderMax,
+                    tc, frameRounding, ImGuiMCP::ImDrawFlags_RoundCornersAll, 2.0f);
             }
 
             if (barIndex + 1 < _bars.size())
