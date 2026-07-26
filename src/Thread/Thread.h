@@ -100,6 +100,10 @@ namespace Thread
         void SetCenterRefSelected(size_t a_index);
 
         void SetAnimationPlaybackSpeed(float playbackSpeed);
+        bool RestartFixedLengthTimer();
+        bool AdjustFixedLengthTimer(float a_delta);
+        void SetFixedLengthTimerPaused(bool a_paused);
+        bool ConsumeFixedLengthTimerExpiration();
         void OffsetAdjustSet(uint32_t actorFormId, Registry::CoordinateType axis, float value);
         void OffsetAdjustReset(bool hasFurn);
 
@@ -161,6 +165,23 @@ namespace Thread
             bool getUpEndQueued{ false };
         };
 
+        // Used by animation stages that have percise animation play time, to avoid the Papyrus 0.5
+        // second poll delay
+        struct FixedLengthTimer
+        {
+            enum class State : uint8_t
+            {
+                Stopped,
+                Running,
+                Expired,
+            };
+
+            float duration{ 0.0f };
+            float remaining{ 0.0f };
+            State state{ State::Stopped };
+            bool paused{ false };
+        };
+
         RE::TESQuest* linkedQst;
         std::shared_ptr<NiNode::NiInstance> niInstance{ nullptr };
         std::shared_ptr<LegacyNiNode::NiInstance> niInstanceLegacy{ nullptr };
@@ -182,6 +203,7 @@ namespace Thread
         bool playerSheatheActionSubmitted{ false };
         bool playerSheathePending{ false };
         float animationPlaybackSpeed{ 1.0f };
+        FixedLengthTimer fixedLengthTimer{};
 
         // used during center selection through menu
         RE::TESQuest* pendingQst{ nullptr };
@@ -209,6 +231,9 @@ namespace Thread
         void TryStartAnimations();
         bool HoldAnimation(PendingAnimation& a_pending);
         void ReleaseAnimations();
+        bool StartFixedLengthTimer();
+        void CancelFixedLengthTimer();
+        void UpdateFixedLengthTimer(float a_delta);
         void UpdatePendingAnimations(float a_delta);
         void UpdatePendingRecoveries(float a_delta);
         void ReassertPlacement(size_t a_position, bool a_force);
