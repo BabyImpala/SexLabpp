@@ -1480,7 +1480,7 @@ State Animating
 			ResetScene(queuedScene)
 			return
 		EndIf
-		UpdateOffsetSlidersDisplay()
+		OnStageChangedUpdateHUD()
 		ReStartTimer()
 		If (!_animationStarted)
 			_animationStarted = true
@@ -2022,7 +2022,7 @@ Function DestroySceneHUDImpl() native
 Function SetFocusSceneHUDImpl(bool abFocused) native
 
 Function UpdateMenuTimerDisplay(float afDuration, float afTime) native
-Function UpdateOffsetSlidersDisplay() native ;call on stage change
+Function OnStageChangedUpdateHUD() native
 Function EnjBarsChangeHighlightedPartner(Actor akActor) native
 
 ; -------------------------------------------------- ;

@@ -38,7 +38,7 @@ namespace Thread::Interface
         void UpdateHighlightedPartner(RE::Actor* a_partner);
         void UpdateEnjoyment(RE::Actor* a_actor, float a_enjoyment, RE::BSFixedString a_interactions);
         void RegisterRaiseEnjoymentAttempt(RE::Actor* a_actor, float a_nextTimeCycle);
-        void OnStageChanged();
+        void RefreshStageOffsets();
         void RebuildSceneList();
 
         [[nodiscard]] bool IsActive() const { return _linkedThread != nullptr; }

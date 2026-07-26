@@ -251,10 +251,10 @@ namespace Thread::Interface
         }
     }
 
-    void SceneHUD::OnStageChanged()
+    void SceneHUD::RefreshStageOffsets()
     {
         if (_elements && _activePanel == PanelId::kOffsetAdjust)
-            _elements->offsetAdjustPanel.OnStageChanged(*this);
+            _elements->offsetAdjustPanel.RefreshStageOffsets(*this);
     }
 
     void SceneHUD::RebuildSceneList()

@@ -517,10 +517,10 @@ namespace Thread
             sceneHUD->RegisterRaiseEnjoymentAttempt(a_position, a_nextTimeCycle);
     }
 
-    void Instance::UpdateOffsetSlidersDisplay()
+    void Instance::OnStageChangedUpdateHUD()
     {
         if (auto* sceneHUD = Interface::SceneHUD::GetSingleton().GetForThread(linkedQst))
-            sceneHUD->OnStageChanged();
+            sceneHUD->RefreshStageOffsets();
     }
 
 }  // namespace Thread

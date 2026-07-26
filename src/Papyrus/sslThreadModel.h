@@ -87,7 +87,7 @@ namespace Papyrus::ThreadModel
     void SetFocusSceneHUDImpl(QUESTARGS, bool a_focused);
 
     void UpdateMenuTimerDisplay(QUESTARGS, float a_duration, float a_time);
-    void UpdateOffsetSlidersDisplay(QUESTARGS);
+    void OnStageChangedUpdateHUD(QUESTARGS);
     void EnjBarsChangeHighlightedPartner(QUESTARGS, RE::Actor* a_actor);
 
     inline bool Register(VM* a_vm)
@@ -133,7 +133,7 @@ namespace Papyrus::ThreadModel
         REGISTERFUNC(SetFocusSceneHUDImpl, "sslThreadModel", true);
 
         REGISTERFUNC(UpdateMenuTimerDisplay, "sslThreadModel", true);
-        REGISTERFUNC(UpdateOffsetSlidersDisplay, "sslThreadModel", true);
+        REGISTERFUNC(OnStageChangedUpdateHUD, "sslThreadModel", true);
         REGISTERFUNC(EnjBarsChangeHighlightedPartner, "sslThreadModel", true);
 
         return ActorAlias::Register(a_vm);

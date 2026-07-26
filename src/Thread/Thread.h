@@ -125,7 +125,7 @@ namespace Thread
         void EnjBarsChangeHighlightedPartner(RE::Actor* a_target);
         void EnjBarsUpdateSlider(RE::Actor* a_position, float a_enjoyment, RE::BSFixedString a_interactions);
         void RegisterRaiseEnjAttempt(RE::Actor* a_position, float a_nextTimeCycle);
-        void UpdateOffsetSlidersDisplay();
+        void OnStageChangedUpdateHUD();
 
       private:
         struct ActiveClip

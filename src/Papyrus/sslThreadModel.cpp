@@ -937,10 +937,10 @@ namespace Papyrus::ThreadModel
         instance->UpdateMenuTimerDisplay(a_duration, a_time);
     }
 
-    void UpdateOffsetSlidersDisplay(QUESTARGS)
+    void OnStageChangedUpdateHUD(QUESTARGS)
     {
         GET_INSTANCE();
-        return instance->UpdateOffsetSlidersDisplay();
+        return instance->OnStageChangedUpdateHUD();
     }
 
     void EnjBarsChangeHighlightedPartner(QUESTARGS, RE::Actor* a_actor)
