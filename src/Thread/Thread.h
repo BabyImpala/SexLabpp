@@ -127,6 +127,9 @@ namespace Thread
         void RegisterRaiseEnjAttempt(RE::Actor* a_position, float a_nextTimeCycle);
         void OnStageChangedUpdateHUD();
 
+        bool OpenStageSelectMenuImpl();
+        void SetVisibilitySceneGraphImpl(bool a_open);
+
       private:
         struct ActiveClip
         {

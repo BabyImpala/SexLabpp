@@ -33,6 +33,7 @@ namespace Thread::Interface
         void SetFocus(bool a_focused);
         void OpenPanel(PanelId a_panel);
         void CloseAllPanels();
+        void SetRenderEnabled(bool a_enabled) { _renderEnabled = a_enabled; }
 
         void UpdateStageTimer(float a_duration, float a_timer);
         void UpdateHighlightedPartner(RE::Actor* a_partner);
@@ -42,7 +43,7 @@ namespace Thread::Interface
         void RebuildSceneList();
 
         [[nodiscard]] bool IsActive() const { return _linkedThread != nullptr; }
-        [[nodiscard]] bool ShouldRender() const { return IsActive() && !RE::UI::GetSingleton()->GameIsPaused(); }
+        [[nodiscard]] bool ShouldRender() const { return IsActive() && !RE::UI::GetSingleton()->GameIsPaused() && _renderEnabled; }
         [[nodiscard]] bool IsFocused() const { return _focused; }
         [[nodiscard]] bool IsPanelOpen(PanelId a_panel) const { return _activePanel == a_panel; }
         [[nodiscard]] RE::TESQuest* GetLinkedThread() const { return _linkedThread; }
@@ -70,5 +71,6 @@ namespace Thread::Interface
         PanelId _activePanel{ PanelId::kNone };
         bool _registered{ false };
         bool _focused{ false };
+        bool _renderEnabled{ true };
     };
 }

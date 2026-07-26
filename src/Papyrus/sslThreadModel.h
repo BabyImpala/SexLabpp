@@ -90,6 +90,9 @@ namespace Papyrus::ThreadModel
     void OnStageChangedUpdateHUD(QUESTARGS);
     void EnjBarsChangeHighlightedPartner(QUESTARGS, RE::Actor* a_actor);
 
+    bool OpenStageSelectMenuImpl(QUESTARGS);
+    void SetVisibilitySceneGraphImpl(QUESTARGS, bool a_open);
+
     inline bool Register(VM* a_vm)
     {
         REGISTERFUNC(GetActiveScene, "sslThreadModel", true);
@@ -135,6 +138,9 @@ namespace Papyrus::ThreadModel
         REGISTERFUNC(UpdateMenuTimerDisplay, "sslThreadModel", true);
         REGISTERFUNC(OnStageChangedUpdateHUD, "sslThreadModel", true);
         REGISTERFUNC(EnjBarsChangeHighlightedPartner, "sslThreadModel", true);
+
+        REGISTERFUNC(OpenStageSelectMenuImpl, "sslThreadModel", true);
+        REGISTERFUNC(SetVisibilitySceneGraphImpl, "sslThreadModel", true);
 
         return ActorAlias::Register(a_vm);
     }

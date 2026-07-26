@@ -438,6 +438,14 @@ int property FocusSceneHUD hidden
     SetSettingInt("iFocusSceneHUD", aiSet)
   EndFunction
 EndProperty
+int property ToggleSceneGraph hidden
+  int Function Get()
+    return GetSettingInt("iToggleSceneGraph")
+  EndFunction
+  Function Set(int aiSet)
+    SetSettingInt("iToggleSceneGraph", aiSet)
+  EndFunction
+EndProperty
 float property MenuScaleMult hidden
   float Function Get()
     return GetSettingFlt("fMenuScaleMult")

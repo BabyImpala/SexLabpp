@@ -145,6 +145,8 @@ Settings::KeyType Settings::GetKeyType(uint32_t a_keyCode)
         return KeyType::Scene;
     if (a_keyCode == get(Settings::iMoveScene))
         return KeyType::Move;
+    if (a_keyCode == get(Settings::iToggleSceneGraph))
+        return KeyType::Graph;
     if (a_keyCode == get(Settings::iToggleThreadControl))
         return KeyType::Thread;
     if (a_keyCode == get(Settings::iToggleFreeCamera))
@@ -178,6 +180,8 @@ uint32_t Settings::GetKeyCode(KeyType a_keyType)
         return get(Settings::iChangeAnimation);
     case KeyType::Move:
         return get(Settings::iMoveScene);
+    case KeyType::Graph:
+        return get(Settings::iToggleSceneGraph);
     case KeyType::Thread:
         return get(Settings::iToggleThreadControl);
     case KeyType::FreeCam:

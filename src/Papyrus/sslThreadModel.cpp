@@ -949,4 +949,16 @@ namespace Papyrus::ThreadModel
         return instance->EnjBarsChangeHighlightedPartner(a_actor);
     }
 
+    bool OpenStageSelectMenuImpl(QUESTARGS)
+    {
+        GET_INSTANCE(false);
+        return instance->OpenStageSelectMenuImpl();
+    }
+
+    void SetVisibilitySceneGraphImpl(QUESTARGS, bool a_open)
+    {
+        GET_INSTANCE();
+        return instance->SetVisibilitySceneGraphImpl(a_open);
+    }
+
 }  // namespace Papyrus::ThreadModel
