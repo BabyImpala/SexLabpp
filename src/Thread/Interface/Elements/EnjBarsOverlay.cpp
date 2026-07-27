@@ -1,10 +1,34 @@
 #include "EnjBarsOverlay.h"
 #include "Thread/Interface/SceneHUD.h"
 
+#include <array>
+#include <limits>
+
 namespace Thread::Interface
 {
     using UI::DrawTextShadowed;
     using UI::SetWindowFontSize;
+
+    namespace
+    {
+        float SmoothStep(float a_edge0, float a_edge1, float a_value)
+        {
+            const float amount = std::clamp((a_value - a_edge0) / (a_edge1 - a_edge0), 0.0f, 1.0f);
+            return amount * amount * (3.0f - 2.0f * amount);
+        }
+
+        // Computes a seed from a formId
+        float PhaseFromId(std::uint32_t a_formId, std::uint32_t a_salt)
+        {
+            std::uint32_t value = a_formId ^ a_salt;
+            value ^= value >> 16;
+            value *= 0x7FEB352Du;
+            value ^= value >> 15;
+            value *= 0x846CA68Bu;
+            value ^= value >> 16;
+            return static_cast<float>(value) / static_cast<float>(std::numeric_limits<std::uint32_t>::max()) * 6.283185307f;
+        }
+    }
 
     void EnjBarsOverlay::Init(Instance& a_instance)
     {
@@ -170,6 +194,7 @@ namespace Thread::Interface
         auto& scale = a_hud.GetScale();
 
         const float deltaTime = ImGuiMCP::GetIO()->DeltaTime;
+        const float animationDelta = std::min(deltaTime, 0.1f);
 
         const bool anyQualify = std::ranges::any_of(_bars,
             [](const ActorEnjBar& b) { return b.isGameDpt && b.enjoyment >= kGameEnjDrawMin; });
@@ -178,7 +203,7 @@ namespace Thread::Interface
             _needleRunning = false;
 
         if (anyQualify && _needleRunning && _timeCycle > 0.0f) {
-            _needlePosition += _needleDirection * (1.0f / _timeCycle) * std::min(deltaTime, 0.1f);
+            _needlePosition += _needleDirection * (1.0f / _timeCycle) * animationDelta;
             if (_needlePosition >= 1.0f) {
                 _needlePosition = 1.0f;
                 _needleDirection = -1.0f;
@@ -217,10 +242,10 @@ namespace Thread::Interface
             ImGuiMCP::ImGuiWindowFlags_NoFocusOnAppearing | ImGuiMCP::ImGuiWindowFlags_NoNav |
             ImGuiMCP::ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiMCP::ImGuiWindowFlags_NoBackground;
 
-        ImGuiMCP::SetNextWindowPos(ImGuiMCP::ImVec2{ edgeH - clipPadding, dh - winH - edgeV }, ImGuiMCP::ImGuiCond_Always);
-        ImGuiMCP::SetNextWindowSize(ImGuiMCP::ImVec2{ zoneW + clipPadding * 2.0f, winH }, ImGuiMCP::ImGuiCond_Always);
+        ImGuiMCP::SetNextWindowPos(ImGuiMCP::ImVec2{ edgeH - clipPadding, dh - winH - edgeV - clipPadding }, ImGuiMCP::ImGuiCond_Always);
+        ImGuiMCP::SetNextWindowSize(ImGuiMCP::ImVec2{ zoneW + clipPadding * 2.0f, winH + clipPadding * 2.0f }, ImGuiMCP::ImGuiCond_Always);
 
-        ImGuiMCP::PushStyleVar(ImGuiMCP::ImGuiStyleVar_WindowPadding, ImGuiMCP::ImVec2{ clipPadding, 0.0f });
+        ImGuiMCP::PushStyleVar(ImGuiMCP::ImGuiStyleVar_WindowPadding, ImGuiMCP::ImVec2{ clipPadding, clipPadding });
         ImGuiMCP::PushStyleVar(ImGuiMCP::ImGuiStyleVar_ItemSpacing, ImGuiMCP::ImVec2{ 0.0f, 0.0f });
         if (!ImGuiMCP::Begin("##slpp_EnjBars", nullptr, kFlags)) {
             ImGuiMCP::End();
@@ -289,41 +314,128 @@ namespace Thread::Interface
             // ── Enj Bar frame ───────────────────────────────────────────────
             const ImGuiMCP::ImVec2 frameMin = ImGuiMCP::GetCursorScreenPos();
             const ImGuiMCP::ImVec2 frameMax{ frameMin.x + zoneW, frameMin.y + frameH };
+            const ImGuiMCP::ImVec2 borderMin{ frameMin.x - 0.5f, frameMin.y - 0.5f };
+            const ImGuiMCP::ImVec2 borderMax{ frameMax.x + 0.5f, frameMax.y + 0.5f };
+
+            const float targetFill = FillFraction(b.enjoyment);
+            if (std::abs(targetFill - b.targetFill) > 0.0005f) {
+                if (targetFill > b.targetFill)
+                    b.trailingFill = targetFill;
+                b.targetFill = targetFill;
+            }
+            b.displayedFill += (targetFill - b.displayedFill) * (1.0f - std::exp(-UI::Theme::Enjoyment.fillEaseRate * animationDelta));
+            b.trailingFill += (targetFill - b.trailingFill) * (1.0f - std::exp(-UI::Theme::Enjoyment.trailEaseRate * animationDelta));
+            if (std::abs(targetFill - b.displayedFill) < 0.0005f)
+                b.displayedFill = targetFill;
+            if (std::abs(targetFill - b.trailingFill) < 0.0005f)
+                b.trailingFill = targetFill;
 
             // track
             ImGuiMCP::ImDrawListManager::AddRectFilled(dl, frameMin, frameMax,
                 UI::Theme::Enjoyment.frameSurface, frameRounding, ImGuiMCP::ImDrawFlags_RoundCornersAll);
-            ImGuiMCP::ImDrawListManager::AddRect(dl, frameMin, frameMax,
-                UI::Theme::Enjoyment.frameBorder, frameRounding, ImGuiMCP::ImDrawFlags_RoundCornersAll, 1.0f);
 
-            // outer white rim
-            ImGuiMCP::ImDrawListManager::AddRect(dl,
-                ImGuiMCP::ImVec2{ frameMin.x - 1, frameMin.y - 1 },
-                ImGuiMCP::ImVec2{ frameMax.x + 1, frameMax.y + 1 },
-                UI::Theme::Enjoyment.frameRim, frameRounding, ImGuiMCP::ImDrawFlags_RoundCornersAll, 1.0f);
-
-            // inner top shine
-            ImGuiMCP::ImDrawListManager::AddLine(dl,
-                ImGuiMCP::ImVec2{ frameMin.x + 1, frameMin.y + 1 },
-                ImGuiMCP::ImVec2{ frameMax.x - 1, frameMin.y + 1 },
-                UI::Theme::Enjoyment.frameShine, 1.0f);
+            // trailing fill
+            if (b.trailingFill > b.displayedFill + 0.0005f) {
+                const float trailW = zoneW * b.trailingFill;
+                const auto trailCorners = b.trailingFill >= 1.0f ? ImGuiMCP::ImDrawFlags_RoundCornersAll : b.enjoyment < 0.0f ? ImGuiMCP::ImDrawFlags_RoundCornersRight :
+                                                                                                                                ImGuiMCP::ImDrawFlags_RoundCornersLeft;
+                const ImGuiMCP::ImVec2 trailMin = b.enjoyment < 0.0f ? ImGuiMCP::ImVec2{ frameMax.x - trailW, frameMin.y } : frameMin;
+                const ImGuiMCP::ImVec2 trailMax = b.enjoyment < 0.0f ? frameMax : ImGuiMCP::ImVec2{ frameMin.x + trailW, frameMax.y };
+                ImGuiMCP::ImDrawListManager::AddRectFilled(dl, trailMin, trailMax,
+                    UI::Theme::Enjoyment.fillTrail, frameRounding, trailCorners);
+            }
 
             // fill
-            const float frac = FillFraction(b.enjoyment);
+            const float frac = b.displayedFill;
             if (frac > 0.0f) {
                 ImGuiMCP::ImU32 cLo, cHi;
                 FillGradient(b.enjoyment, cLo, cHi);
                 const float fillW = zoneW * frac;
-                if (b.enjoyment < 0.0f) {
-                    const auto fillCorners = frac >= 1.0f ? ImGuiMCP::ImDrawFlags_RoundCornersAll : ImGuiMCP::ImDrawFlags_RoundCornersRight;
-                    UI::DrawRoundedGradientRect(dl,
-                        ImGuiMCP::ImVec2{ frameMax.x - fillW, frameMin.y }, frameMax, cLo, cHi, frameRounding, fillCorners);
+                const bool negative = b.enjoyment < 0.0f;
+                const auto fillCorners = frac >= 1.0f ? ImGuiMCP::ImDrawFlags_RoundCornersAll : b.enjoyment < 0.0f ? ImGuiMCP::ImDrawFlags_RoundCornersRight :
+                                                                                                                     ImGuiMCP::ImDrawFlags_RoundCornersLeft;
+                const ImGuiMCP::ImVec2 fillMin = negative ? ImGuiMCP::ImVec2{ frameMax.x - fillW, frameMin.y } : frameMin;
+                const ImGuiMCP::ImVec2 fillMax = negative ? frameMax : ImGuiMCP::ImVec2{ frameMin.x + fillW, frameMax.y };
+                if (fillW <= 1.5f) {
+                    UI::DrawRoundedGradientRect(dl, fillMin, fillMax, cLo, cHi, frameRounding, fillCorners);
                 } else {
-                    const auto fillCorners = frac >= 1.0f ? ImGuiMCP::ImDrawFlags_RoundCornersAll : ImGuiMCP::ImDrawFlags_RoundCornersLeft;
-                    UI::DrawRoundedGradientRect(dl,
-                        frameMin, ImGuiMCP::ImVec2{ frameMin.x + fillW, frameMax.y }, cLo, cHi, frameRounding, fillCorners);
+                    float capRadius = 0.0f;
+                    if (frameRounding >= 0.5f) {
+                        const float heightLimit = std::max(frameH * 0.5f - 1.0f, 0.0f);
+                        const float widthLimit = std::max(fillW - 1.0f, 0.0f);
+                        capRadius = std::min(frameRounding, std::min(heightLimit, widthLimit));
+                    }
+
+                    const float subtle = SmoothStep(70.0f, 82.0f, b.enjoyment);
+                    const float strong = SmoothStep(85.0f, 100.0f, b.enjoyment);
+                    const float frequencyFactor = (0.5f + subtle * 0.4f + strong * 1.4f) * UI::Theme::Enjoyment.waveSpeed;
+                    const float desiredAmplitude = scale.Px(0.75f + SmoothStep(50.0f, 82.0f, b.enjoyment) * 0.5f + strong * 1.75f) * UI::Theme::Enjoyment.waveIntensity;
+                    const float edgeAmplitude = std::min(desiredAmplitude, std::max(fillW - capRadius - 0.5f, 0.0f) * 0.5f);
+                    const float phaseA = PhaseFromId(b.formId, 0x68E31DA4u);
+                    const float phaseB = PhaseFromId(b.formId, 0xB7E15162u);
+                    const float time = static_cast<float>(now);
+                    const auto edgeOffset = [&](float a_yFraction) {
+                        const float yPhase = a_yFraction * 100.0f * UI::Theme::Enjoyment.waveSpatialFrequency;
+                        return edgeAmplitude *
+                               (0.7f * std::sin(1.6f * frequencyFactor * time + phaseA + yPhase * 0.06f) +
+                                   0.4f * UI::Theme::Enjoyment.waveSecondaryStrength *
+                                       std::sin(3.9f * frequencyFactor * time + phaseB - yPhase * 0.09f));
+                    };
+
+                    constexpr int edgeSamples = 16;
+                    constexpr int arcSegments = 4;
+                    std::array<ImGuiMCP::ImVec2, 32> points;
+                    int pointCount = 0;
+                    const float anchorX = negative ? frameMax.x : frameMin.x;
+                    const float direction = negative ? -1.0f : 1.0f;
+                    const auto point = [&](float a_distance, float a_y) {
+                        return ImGuiMCP::ImVec2{ anchorX + direction * a_distance, a_y };
+                    };
+
+                    points[pointCount++] = point(capRadius, frameMin.y);
+                    for (int sample = 0; sample <= edgeSamples; ++sample) {
+                        const float yFraction = static_cast<float>(sample) / static_cast<float>(edgeSamples);
+                        const float y = std::lerp(frameMin.y, frameMax.y, yFraction);
+                        const float edgeDistance = std::max(capRadius + 0.25f, fillW + edgeOffset(yFraction));
+                        points[pointCount++] = point(edgeDistance, y);
+                    }
+                    points[pointCount++] = point(capRadius, frameMax.y);
+
+                    if (capRadius > 0.0f) {
+                        for (int segment = 1; segment <= arcSegments; ++segment) {
+                            const float angle = 1.570796327f + 1.570796327f * static_cast<float>(segment) / static_cast<float>(arcSegments);
+                            points[pointCount++] = point(capRadius + std::cos(angle) * capRadius,
+                                frameMax.y - capRadius + std::sin(angle) * capRadius);
+                        }
+                        points[pointCount++] = point(0.0f, frameMin.y + capRadius);
+                        for (int segment = 1; segment < arcSegments; ++segment) {
+                            const float angle = 3.141592654f + 1.570796327f * static_cast<float>(segment) / static_cast<float>(arcSegments);
+                            points[pointCount++] = point(capRadius + std::cos(angle) * capRadius,
+                                frameMin.y + capRadius + std::sin(angle) * capRadius);
+                        }
+                    }
+
+                    if (negative)
+                        std::reverse(points.begin(), points.begin() + pointCount);
+
+                    ImGuiMCP::ImDrawListManager::PushClipRect(dl, frameMin, frameMax, true);
+                    const int vertexStart = dl->VtxBuffer.Size;
+                    ImGuiMCP::ImDrawListManager::AddConcavePolyFilled(dl, points.data(), pointCount, IM_COL32(255, 255, 255, 255));
+                    ImGuiMCP::ImDrawListManager::PopClipRect(dl);
+
+                    const auto low = UI::Theme::ToVec4(cLo);
+                    const auto high = UI::Theme::ToVec4(cHi);
+                    for (int vertexIndex = vertexStart; vertexIndex < dl->VtxBuffer.Size; ++vertexIndex) {
+                        auto& vertex = dl->VtxBuffer.Data[vertexIndex];
+                        const float coverage = UI::Theme::ToVec4(vertex.col).w;
+                        const float factor = std::clamp((vertex.pos.x - fillMin.x) / fillW, 0.0f, 1.0f);
+                        vertex.col = ImGuiMCP::ColorConvertFloat4ToU32({ std::lerp(low.x, high.x, factor), std::lerp(low.y, high.y, factor),
+                            std::lerp(low.z, high.z, factor), std::lerp(low.w, high.w, factor) * coverage });
+                    }
                 }
             }
+            ImGuiMCP::ImDrawListManager::AddRect(dl, borderMin, borderMax,
+                UI::Theme::Enjoyment.frameBorder, frameRounding, ImGuiMCP::ImDrawFlags_RoundCornersAll, 1.0f);
 
             // ── Green zone + needle ─────────────────────────────────────────
             if (b.isGameDpt && b.enjoyment >= kGameEnjDrawMin) {
@@ -360,13 +472,6 @@ namespace Thread::Interface
                     ImGuiMCP::ImVec2{ nx - nw * 0.5f, nTop }, ImGuiMCP::ImVec2{ nx + nw * 0.5f, nBot },
                     nCol, 0.0f, 0);
 
-                // small downward-pointing triangle beneath the needle
-                ImGuiMCP::ImDrawListManager::AddTriangleFilled(dl,
-                    ImGuiMCP::ImVec2{ nx - innerGp, nBot },
-                    ImGuiMCP::ImVec2{ nx + innerGp, nBot },
-                    ImGuiMCP::ImVec2{ nx, nBot + lblPad * 2.0f },
-                    nCol);
-
                 // feedback flash
                 if (_feedbackActorId == b.formId && now < _feedbackUntil) {
                     ImGuiMCP::ImDrawListManager::AddRectFilled(dl, frameMin, frameMax,
@@ -388,12 +493,8 @@ namespace Thread::Interface
             // highlight border for whichever actor is currently targeted
             if (b.isTarget) {
                 const auto tc = UI::Theme::Enjoyment.targetBorder;
-                ImGuiMCP::ImDrawListManager::AddRect(dl, frameMin, frameMax,
-                    tc, frameRounding, ImGuiMCP::ImDrawFlags_RoundCornersAll, 1.0f);
-                ImGuiMCP::ImDrawListManager::AddRect(dl,
-                    ImGuiMCP::ImVec2{ frameMin.x - 1, frameMin.y - 1 },
-                    ImGuiMCP::ImVec2{ frameMax.x + 1, frameMax.y + 1 },
-                    tc, frameRounding, ImGuiMCP::ImDrawFlags_RoundCornersAll, 1.0f);
+                ImGuiMCP::ImDrawListManager::AddRect(dl, borderMin, borderMax,
+                    tc, frameRounding, ImGuiMCP::ImDrawFlags_RoundCornersAll, 2.0f);
             }
 
             if (barIndex + 1 < _bars.size())
