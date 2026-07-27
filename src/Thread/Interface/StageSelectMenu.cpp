@@ -23,8 +23,7 @@ namespace Thread::Interface
                     if (close != std::string_view::npos) {
                         const std::string_view digits = a_text.substr(i + 1, close - i - 1);
                         const bool isIndex = !digits.empty() &&
-                                             std::ranges::all_of(digits, [](char c) {
-                                                return std::isdigit(static_cast<unsigned char>(c));});
+                                             std::ranges::all_of(digits, [](char c) { return std::isdigit(static_cast<unsigned char>(c)); });
                         if (isIndex) {
                             const size_t idx = static_cast<size_t>(std::stoul(std::string{ digits }));
                             const RE::Actor* actor = idx < a_actors.size() ? a_actors[idx] : nullptr;
@@ -80,7 +79,8 @@ namespace Thread::Interface
         int choiceIdx = 1;
         for (const auto* next : *adjacent) {
             std::string navText = !next->navtext.empty() ?
-                ResolveNavTextPlaceholders(next->navtext, inst->GetActors()) : next->id;
+                                      ResolveNavTextPlaceholders(next->navtext, inst->GetActors()) :
+                                      next->id;
             std::string prefix = std::to_string(choiceIdx++) + ".  ";
             _choices.push_back({ next, std::move(prefix), std::move(navText) });
         }
@@ -299,8 +299,8 @@ namespace Thread::Interface
         const float accentW = scale.Px(3.0f);
         const float padLeft = scale.Px(10.0f);
         const float rowH = fontSize + padV * 2.0f;
-        const float maxW = io->DisplaySize.x * 0.20f;   // hard 20% width cap
-        const float scrollSpd = scale.Px(10.0f);        // pixels per second for marquee
+        const float maxW = io->DisplaySize.x * 0.20f;  // hard 20% width cap
+        const float scrollSpd = scale.Px(10.0f);       // pixels per second for marquee
 
         const float titleFontSize = scale.TextPx(UI::Theme::FontSize.sectionHeader);
         const float titleH = titleFontSize + padV * 2.0f;
@@ -340,6 +340,11 @@ namespace Thread::Interface
 
         std::optional<int> clickedIndex;
 
+        const ImGuiMCP::ImU32 panelClear = UI::Theme::Color.panelBackground & 0x00FFFFFFu;
+        ImGuiMCP::ImDrawListManager::AddRectFilledMultiColor(dl,
+            winPos, ImGuiMCP::ImVec2{ winPos.x + maxW, winPos.y + totalH },
+            UI::Theme::Color.panelBackground, panelClear, panelClear, UI::Theme::Color.panelBackground);
+
         // Title
         SetWindowFontSize(titleFontSize);
         DrawTextShadowed(dl,
@@ -356,7 +361,9 @@ namespace Thread::Interface
             const ImGuiMCP::ImVec2 barMin{ winPos.x, barY };
             const ImGuiMCP::ImVec2 barMax{ winPos.x + maxW, barY + timerBarH };
 
-            ImGuiMCP::ImDrawListManager::AddRectFilled(dl, barMin, barMax, UI::Theme::Animation.timerTrack, 0.0f, 0);
+            const ImGuiMCP::ImU32 trackClear = UI::Theme::Animation.timerTrack & 0x00FFFFFFu;
+            ImGuiMCP::ImDrawListManager::AddRectFilledMultiColor(dl, barMin, barMax,
+                UI::Theme::Animation.timerTrack, trackClear, trackClear, UI::Theme::Animation.timerTrack);
 
             const float filledW = maxW * remainFrac;
             const ImGuiMCP::ImVec2 fillMin{ barMin.x, barMin.y };
@@ -367,9 +374,10 @@ namespace Thread::Interface
 
             if (filledW > 0.0f) {
                 const float edgeW = std::min(filledW, scale.Px(3.0f));
-                ImGuiMCP::ImDrawListManager::AddRectFilled(dl,
+                const ImGuiMCP::ImU32 edgeClear = UI::Theme::Animation.timerEdge & 0x00FFFFFFu;
+                ImGuiMCP::ImDrawListManager::AddRectFilledMultiColor(dl,
                     ImGuiMCP::ImVec2{ fillMax.x - edgeW, barMin.y }, fillMax,
-                    UI::Theme::Animation.timerEdge, 0.0f, 0);
+                    UI::Theme::Animation.timerEdge, edgeClear, edgeClear, UI::Theme::Animation.timerEdge);
             }
 
             if (remainFrac <= 0.0f && rowCount > 0) {
@@ -403,7 +411,7 @@ namespace Thread::Interface
 
             // Left accent bar that fades to the right
             const ImGuiMCP::ImU32 accentCol = isSelected ? UI::Theme::Color.accent : UI::Theme::Color.borderSubtle;
-            const ImGuiMCP::ImU32 accentFade = (accentCol & 0x00FFFFFFu); // same color, alpha=0
+            const ImGuiMCP::ImU32 accentFade = (accentCol & 0x00FFFFFFu);  // same color, alpha=0
             ImGuiMCP::ImDrawListManager::AddRectFilledMultiColor(dl,
                 rowMin, ImGuiMCP::ImVec2{ rowMin.x + accentW, rowMax.y },
                 accentCol, accentFade, accentFade, accentCol);
@@ -438,16 +446,6 @@ namespace Thread::Interface
             }
             DrawTextShadowed(dl, ImGuiMCP::ImVec2{ navX, textY }, textCol, choice.label.c_str());
 
-            // Right-edge fade: masks the hard clip cutoff
-            const float fadeW = std::min(navAvailW * 0.35f, scale.Px(24.0f));
-            if (fadeW > 0.0f) {
-                const ImGuiMCP::ImVec2 fadeMin{ rowMax.x - fadeW, rowMin.y };
-                const ImGuiMCP::ImU32 fadeClear = (UI::Theme::Color.panelBackground & 0x00FFFFFFu);
-                ImGuiMCP::ImDrawListManager::AddRectFilledMultiColor(dl,
-                    fadeMin, rowMax,
-                    fadeClear, UI::Theme::Color.panelBackground, UI::Theme::Color.panelBackground, fadeClear);
-            }
-
             ImGuiMCP::ImDrawListManager::PopClipRect(dl);
             ImGuiMCP::PopID();
         }
@@ -456,16 +454,16 @@ namespace Thread::Interface
         if (!clickedIndex) {
             for (int i = 0; i < rowCount && i < 9; ++i) {
                 const auto key = static_cast<ImGuiMCP::ImGuiKey>(static_cast<int>(ImGuiMCP::ImGuiKey_1) + i);
-                if (ImGuiMCP::IsKeyPressed(key, false)) {
+                if (ImGuiMCP::IsKeyReleased(key)) {
                     clickedIndex = i;
                     break;
                 }
             }
         }
         if (!clickedIndex && _selectedChoiceIndex >= 0 && _selectedChoiceIndex < rowCount &&
-            ImGuiMCP::IsKeyPressed(ImGuiMCP::ImGuiKey_Space, false))
+            ImGuiMCP::IsKeyReleased(ImGuiMCP::ImGuiKey_Space))
             clickedIndex = _selectedChoiceIndex;
-        if (!clickedIndex && rowCount > 0 && ImGuiMCP::IsKeyPressed(ImGuiMCP::ImGuiKey_Escape, false))
+        if (!clickedIndex && rowCount > 0 && ImGuiMCP::IsKeyReleased(ImGuiMCP::ImGuiKey_Escape))
             clickedIndex = 0;
 
         ImGuiMCP::SetWindowFontScale(1.0f);
@@ -528,17 +526,17 @@ namespace Thread::Interface
         // ── Edge vignette
         const ImGuiMCP::ImU32 vigFull = (UI::Theme::Color.panelBackground & 0x00FFFFFFu) | (160u << 24);
         const ImGuiMCP::ImU32 vigClear = (UI::Theme::Color.panelBackground & 0x00FFFFFFu);
-        const float vigW = scale.Px(48.0f); // horizontal vignette depth
-        const float vigH = scale.Px(56.0f); // vertical vignette depth
+        const float vigW = scale.Px(48.0f);  // horizontal vignette depth
+        const float vigH = scale.Px(56.0f);  // vertical vignette depth
 
         const auto Vig = [&](float x0, float y0, float x1, float y1,
-            ImGuiMCP::ImU32 tl, ImGuiMCP::ImU32 tr, ImGuiMCP::ImU32 br, ImGuiMCP::ImU32 bl) {
+                             ImGuiMCP::ImU32 tl, ImGuiMCP::ImU32 tr, ImGuiMCP::ImU32 br, ImGuiMCP::ImU32 bl) {
             ImGuiMCP::ImDrawListManager::AddRectFilledMultiColor(dl, { x0, y0 }, { x1, y1 }, tl, tr, br, bl);
         };
-        Vig(bodyLeft, bodyTop, bodyRight, bodyTop + vigH, vigFull, vigFull, vigClear, vigClear);  // Top
-        Vig(bodyLeft, bodyBot - vigH, bodyRight, bodyBot, vigClear, vigClear, vigFull, vigFull);  // Bottom
-        Vig(bodyLeft, bodyTop, bodyLeft + vigW, bodyBot, vigFull, vigClear, vigClear, vigFull);   // Left
-        Vig(bodyRight - vigW, bodyTop, bodyRight, bodyBot, vigClear, vigFull, vigFull, vigClear); // Right
+        Vig(bodyLeft, bodyTop, bodyRight, bodyTop + vigH, vigFull, vigFull, vigClear, vigClear);   // Top
+        Vig(bodyLeft, bodyBot - vigH, bodyRight, bodyBot, vigClear, vigClear, vigFull, vigFull);   // Bottom
+        Vig(bodyLeft, bodyTop, bodyLeft + vigW, bodyBot, vigFull, vigClear, vigClear, vigFull);    // Left
+        Vig(bodyRight - vigW, bodyTop, bodyRight, bodyBot, vigClear, vigFull, vigFull, vigClear);  // Right
 
         // ── Scene name
         const float nameFontSize = scale.TextPx(UI::Theme::FontSize.sectionHeader);
@@ -576,13 +574,13 @@ namespace Thread::Interface
         SetWindowFontSize(btnFontSize);
         ImGuiMCP::PushStyleVar(ImGuiMCP::ImGuiStyleVar_FrameRounding, btnRounding);
 
-        ImGuiMCP::SetWindowFontScale(1.0f); // reset scale so GetFrameHeight works
+        ImGuiMCP::SetWindowFontScale(1.0f);  // reset scale so GetFrameHeight works
         SetWindowFontSize(btnFontSize);
         const float btnH = ImGuiMCP::GetFrameHeight();
         const float btnW = scale.Px(80.0f);
 
-        const float closeBtnY  = bodyBot - btnPadBot - btnH;
-        const float labelBtnY  = closeBtnY - btnGap - btnH;
+        const float closeBtnY = bodyBot - btnPadBot - btnH;
+        const float labelBtnY = closeBtnY - btnGap - btnH;
         const float btnX = bodyRight - btnPadSide - btnW;
 
         const char* lblToggleLabel = _graphShowLabels ? "Labels: On" : "Labels: Off";
@@ -596,7 +594,7 @@ namespace Thread::Interface
         ImGuiMCP::PopStyleVar();
 
         // ── Canvas
-        const ImGuiMCP::ImVec2 canvasMin{ bodyLeft,  bodyTop };
+        const ImGuiMCP::ImVec2 canvasMin{ bodyLeft, bodyTop };
         const ImGuiMCP::ImVec2 canvasMax{ bodyRight, bodyBot };
         const ImGuiMCP::ImVec2 canvasSize{ viewW, viewH };
 
@@ -653,7 +651,7 @@ namespace Thread::Interface
                 const float ux = dx / len, uy = dy / len;
                 const ImGuiMCP::ImVec2 tip{ b.x - ux * radius, b.y - uy * radius };
                 const float wingSize = scale.Px(4.0f);
-                const ImGuiMCP::ImVec2 wLeft { tip.x - ux * wingSize - uy * wingSize * 0.6f, tip.y - uy * wingSize + ux * wingSize * 0.6f };
+                const ImGuiMCP::ImVec2 wLeft{ tip.x - ux * wingSize - uy * wingSize * 0.6f, tip.y - uy * wingSize + ux * wingSize * 0.6f };
                 const ImGuiMCP::ImVec2 wRight{ tip.x - ux * wingSize + uy * wingSize * 0.6f, tip.y - uy * wingSize - ux * wingSize * 0.6f };
                 ImGuiMCP::ImDrawListManager::AddTriangleFilled(dl, tip, wLeft, wRight, UI::Theme::Color.borderHovered);
             }
@@ -679,9 +677,10 @@ namespace Thread::Interface
 
             const bool isCurrent = i == _graphCurrentIndex;
             const auto nodeType = _graphScene ? _graphScene->GetStageNodeType(node.stage) : Registry::Scene::NodeType::None;
-            const auto fill = isCurrent ? UI::Theme::Color.accent :
-                              hovered ? UI::Theme::Color.borderHovered :
-                              nodeType == Registry::Scene::NodeType::Sink ? UI::Theme::Color.textMuted : UI::Theme::Color.buttonIdle;
+            const auto fill = isCurrent                                   ? UI::Theme::Color.accent :
+                              hovered                                     ? UI::Theme::Color.borderHovered :
+                              nodeType == Registry::Scene::NodeType::Sink ? UI::Theme::Color.textMuted :
+                                                                            UI::Theme::Color.buttonIdle;
 
             ImGuiMCP::ImDrawListManager::AddCircleFilled(dl, p, radius, fill, 20);
 
@@ -689,7 +688,8 @@ namespace Thread::Interface
             const bool showLabel = _graphShowLabels || isCurrent || hovered;
             if (showLabel) {
                 std::string label = !node.stage->navtext.empty() ?
-                    ResolveNavTextPlaceholders(node.stage->navtext, inst->GetActors()) : node.stage->id;
+                                        ResolveNavTextPlaceholders(node.stage->navtext, inst->GetActors()) :
+                                        node.stage->id;
                 SetWindowFontSize(scale.TextPx(UI::Theme::FontSize.metadata) * 0.88f);
                 const ImGuiMCP::ImVec2 labelSz = ImGuiMCP::CalcTextSize(label.c_str());
                 DrawTextShadowed(dl, ImGuiMCP::ImVec2{ p.x - labelSz.x * 0.5f, p.y + radius + scale.Px(2.0f) },
@@ -712,7 +712,7 @@ namespace Thread::Interface
                 return;
             }
         }
-        if (closeClicked || ImGuiMCP::IsKeyPressed(ImGuiMCP::ImGuiKey_Escape, false))
+        if (closeClicked || ImGuiMCP::IsKeyReleased(ImGuiMCP::ImGuiKey_Escape))
             Script::DispatchMethodCall(script, "ToggleVisibilitySceneGraph", Script::CallbackPtr{}, -1);
     }
 }
