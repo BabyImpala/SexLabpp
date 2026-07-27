@@ -84,21 +84,21 @@ namespace Thread::NiNode
             process->ForEachCluster([&](RE::ActorPtr a, RE::ActorPtr b, const NiInteractionCluster& cluster) {
                 if (!a->IsPlayerRef() && !b->IsPlayerRef()) {
                     return;  // only log interactions involving the player & interaction has likelihood
-                } else if (cluster.interactions.empty()) {
+                } else if (!cluster.IsValid()) {
                     return;  // skip logging if no interactions detected in cluster
+                } else if (mlTrainingState.recordedData.empty()) {
+                    const auto msg = std::format("ML Training: Starting new recording session for interaction type {}", magic_enum::enum_name(mlTrainingState.type));
+                    logger::info("{}", msg);
+                    Util::PrintConsole(msg);
+                    const auto headerStr = std::format("ActorA,ActorB,{},Label", cluster.GetCsvFeatureHeader());
+                    logger::info("ML Training: CSV Header - {}", headerStr);
+                    mlTrainingState.recordedData.push_back(headerStr);
                 }
-                const auto& interactions = cluster.interactions;
-                std::vector<INiDescriptor*> descriptors;
-                for (const auto& interaction : interactions) {
-                    descriptors.push_back(interaction.descriptor.get());
+                const auto csvRow = cluster.GetCsvFeatureRow();
+                if (csvRow.empty()) {
+                    logger::error("ML Training: Empty CSV row for interaction type {}", magic_enum::enum_name(mlTrainingState.type));
+                    return;  // skip logging if no features detected in interaction
                 }
-                if (mlTrainingState.recordedData.empty()) {
-                    logger::info("ML Training: Initializing new recording session for interaction type {}", magic_enum::enum_name(mlTrainingState.type));
-                    const auto headerStr = INiDescriptor::CreateCsvHeader(descriptors);
-                    logger::info("ML Training: CSV Header - ActorA, ActorB, {}, Label", headerStr);
-                    mlTrainingState.recordedData.push_back(std::format("ActorA,ActorB,{},Label", headerStr));
-                }
-                const auto csvRow = INiDescriptor::CreateCsvRow(descriptors);
                 const auto actorAId = a->GetFormID();
                 const auto actorBId = b->GetFormID();
                 const auto labelStr = mlTrainingState.enabled ? magic_enum::enum_name(mlTrainingState.type) : "0";
@@ -144,50 +144,59 @@ namespace Thread::NiNode
     void NiUpdate::UpdateMLTrainingState(NiType::Type a_type, bool enabled)
     {
         std::scoped_lock lk{ _mlMutex };
-        const auto oldCluster = NiType::GetClusterForType(mlTrainingState.type);
-        const auto newCluster = NiType::GetClusterForType(a_type);
-        if (oldCluster != newCluster && mlTrainingState.recordedData.size() > 0) {
-            // Clear recorded data when changing to a different interaction type
-            const auto oldStateStr = magic_enum::enum_name(oldCluster);
-            const auto newStateStr = magic_enum::enum_name(newCluster);
-            logger::info("ML Training State changing from {} to {}, clearing recorded data with {} rows", oldStateStr, newStateStr, mlTrainingState.recordedData.size());
-            const auto csvFile = std::ranges::fold_left(mlTrainingState.recordedData, "", [](std::string&& acc, const std::string& row) {
-                return acc.empty() ? row : std::move(acc) + "\n" + row;
-            });
-            const auto folderPath = std::format("{}\\{}", MODELDATAPATH, oldStateStr);
-            size_t uniqueFileId = 0;
+        const auto switchType = mlTrainingState.type != a_type;
+        if (!mlTrainingState.recordedData.empty() && switchType) {
+            const auto activeTypeStr = magic_enum::enum_name(mlTrainingState.type);
+            const auto numRows = mlTrainingState.recordedData.size();
+            if (a_type == NiType::Type::None) {
+                const auto msg = std::format("ML Training State: Stopping recording for interaction type {}, saving {} rows of data", activeTypeStr, numRows);
+                logger::info("{}", msg);
+                Util::PrintConsole(msg);
+            } else {
+                const auto msg = std::format("ML Training State: Switching from {} to {}, saving {} rows of data", activeTypeStr, magic_enum::enum_name(a_type), numRows);
+                logger::info("{}", msg);
+                Util::PrintConsole(msg);
+            }
+            const auto activeClusterStr = magic_enum::enum_name(NiType::GetClusterForType(mlTrainingState.type));
+            const auto folderPath = std::format("{}\\{}", MODELDATAPATH, activeClusterStr);
             if (!fs::exists(folderPath)) {
                 fs::create_directories(folderPath);
-            } else {
-                for (const auto& entry : fs::directory_iterator(folderPath)) {
-                    if (entry.is_regular_file() && entry.path().extension() == ".csv") {
-                        uniqueFileId++;
-                    }
-                }
             }
-            const auto finalPath = std::format("{}\\ML_TrainingData_{}.csv", folderPath, uniqueFileId);
-            std::ofstream outFile(finalPath);
+            const auto filePath = std::format("{}\\ML_TrainingData_{}.csv", folderPath, std::chrono::system_clock::now().time_since_epoch().count());
+
+            std::ofstream outFile(filePath);
             if (outFile.is_open()) {
+                const auto csvFile = std::ranges::fold_left(mlTrainingState.recordedData, "", [](std::string&& acc, const std::string& row) {
+                    return acc.empty() ? row : std::move(acc) + "\n" + row;
+                });
                 outFile << csvFile;
                 outFile.close();
-                logger::info("Saved ML training data to {}", finalPath);
-                Util::PrintConsole(std::format("Saved ML training data to {}", finalPath));
+                const auto msg = std::format("ML Training State: Saved training data to {}", filePath);
+                logger::info("{}", msg);
+                Util::PrintConsole(msg);
             } else {
-                logger::error("Failed to save ML training data to {}", finalPath);
+                const auto err = std::format("ML Training State: Failed to save training data to {}", filePath);
+                RE::DebugMessageBox(err.c_str());
+                logger::error("{}", err);
+                Util::PrintConsole(err);
             }
             mlTrainingState.recordedData.clear();
         }
         mlTrainingState.type = a_type;
         mlTrainingState.enabled = enabled;
         mlTrainingState.frameCount = 0;  // reset frame count when changing state
-        logger::info("ML Training State updated: Type={}, Enabled={}", magic_enum::enum_name(a_type), enabled);
+        const auto msg = std::format("ML Training State: Updated training to type: {}. Enabled? {}", magic_enum::enum_name(a_type), enabled);
+        logger::info("{}", msg);
+        Util::PrintConsole(msg);
     }
 
     void NiUpdate::SetMLTrainingFrameInterval(size_t interval)
     {
         std::scoped_lock lk{ _mlMutex };
         mlTrainingState.frameInterval = interval;
-        logger::info("ML Training frame interval set to {} frames", interval);
+        const auto msg = std::format("ML Training State: Frame interval set to {} frames", interval);
+        logger::info("{}", msg);
+        Util::PrintConsole(msg);
     }
 
     void NiUpdate::ClearMLTrainingData()
@@ -195,7 +204,9 @@ namespace Thread::NiNode
         std::scoped_lock lk{ _mlMutex };
         const auto dataSize = mlTrainingState.recordedData.size();
         mlTrainingState.recordedData.clear();
-        logger::info("Cleared ML training data, removed {} rows", dataSize);
+        const auto msg = std::format("ML Training State: Cleared training data, removed {} rows", dataSize);
+        logger::info("{}", msg);
+        Util::PrintConsole(msg);
     }
 
     bool NiUpdate::IsMLTrainingEnabled()

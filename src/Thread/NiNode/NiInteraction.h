@@ -35,20 +35,25 @@ namespace Thread::NiNode
         NiInteractionCluster(const NiInteractionCluster&) = delete;
         NiInteractionCluster& operator=(const NiInteractionCluster&) = delete;
 
-        std::vector<NiInteraction> interactions{};
-
         bool IncludesType(NiType::Type type) const;
         bool IsValid() const { return !interactions.empty(); }
         bool IsBinary() const { return interactions.size() == 1; }
         bool IsSoftmax() const { return interactions.size() > 1; }
         NiType::Cluster GetClusterType() const;
         NiInteraction* ApplySoftmax();
+
+        // Debug
+        std::string GetCsvFeatureHeader() const;
+        std::string GetCsvFeatureRow() const;
+
+      public:
+        std::vector<NiInteraction> interactions{};
     };
 
-    NiInteractionCluster EvaluateCrotchInteractions(const NiMotion& a_motionA, const NiMotion& a_motionB);
-    NiInteractionCluster EvaluateHeadInteractions(const NiMotion& a_motionA, const NiMotion& a_motionB);
+    NiInteractionCluster EvaluateCrotchInteractions(NiMotion& a_motionA, NiMotion& a_motionB);
+    NiInteractionCluster EvaluateHeadInteractions(NiMotion& a_motionA, NiMotion& a_motionB);
     // TODO: Hand & Footjob funcs here
-    NiInteractionCluster EvaluateKissingCluster(const NiMotion& a_motionA, const NiMotion& a_motionB);
+    NiInteractionCluster EvaluateKissingCluster(NiMotion& a_motionA, NiMotion& a_motionB);
 
     // NiInteraction EvaluateFootJob(const NiMotion& a_motionA, const NiMotion& a_motionB);
     // NiInteraction EvaluateHandJob(const NiMotion& a_motionA, const NiMotion& a_motionB);
