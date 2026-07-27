@@ -39,7 +39,10 @@ namespace Thread::Interface
             ActorEnjBar bar;
             bar.formId = actor->GetFormID();
             std::snprintf(bar.name, sizeof(bar.name), "%s", actor->GetName());
-            _bars.push_back(bar);
+            if (actor->IsPlayerRef())
+                _bars.insert(_bars.begin(), bar);
+            else
+                _bars.push_back(bar);
         }
         _needlePosition = 0.5f;
         _needleDirection = 1.0f;
@@ -101,7 +104,7 @@ namespace Thread::Interface
         for (auto& b : _bars) {
             if (b.formId != actorID)
                 continue;
-            if (b.enjoyment >= kGameEnjThresh && !b.isGameDpt) {
+            if (b.enjoyment >= kGameEnjThresh) {
                 b.isGameDpt = true;
                 _needleRunning = true;
             }
