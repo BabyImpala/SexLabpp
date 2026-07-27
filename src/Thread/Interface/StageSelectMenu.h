@@ -33,6 +33,7 @@ namespace Thread::Interface
         struct ChoiceOption
         {
             const Registry::Stage* stage;
+            std::string prefix;
             std::string label;
         };
 
@@ -73,6 +74,10 @@ namespace Thread::Interface
         bool _choicePending{ false };
         std::vector<ChoiceOption> _choices;
         const Registry::Stage* _choiceOrigin{ nullptr };
+        int _selectedChoiceIndex = 0;
+        std::vector<float> _choiceScrollOffsets;
+        double _choiceStartTime = 0.0;
+        float _choiceTimeLimitSec = 5.0f; // 0.0f disable auto-select timeout
 
         // Graph view
         bool _graphOpen{ false };
@@ -85,5 +90,6 @@ namespace Thread::Interface
         float _graphPanY{ 0.0f };
         bool _graphFitPending{ true };
         bool _graphShowLabels{ false };
+        float _graphNameScrollOffset{ 0.0f };
     };
 }
