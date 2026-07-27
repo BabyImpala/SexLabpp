@@ -66,7 +66,6 @@ Function RegisterHotkeys()
 	; required inits
 	InitHotkeys()
 	GetAdjustPos()
-	EnjBarsChangeHighlightedPartner(_AdjustActor)
 	; register for hotkeys
 	RegisterForKey(Hotkeys[kToggleSceneHUD])
 	RegisterForKey(Hotkeys[kFocusSceneHUD])

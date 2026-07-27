@@ -205,6 +205,10 @@ $SSL_bShowInMap	Показать сцены на карте
 $SSL_bShowInMapHighlight	Получите дополнительный маркер задания для каждой сцены, происходящей поблизости (кроме тех, в которых вы сами участвуете).
 $SSL_bSetAnimSpeedByEnjoyment	Возбуждение влияет на скорость 
 $SSL_bSetAnimSpeedByEnjoymentHighlight	Базовая скорость анимации изменяется в зависимости степени возбуждения актёра (+/-20%).
+# TODO: $SSL_bEnjInterText
+$SSL_bEnjInterText	Enjoyment Interaction Text
+# TODO: $SSL_bEnjInterTextHighlight
+$SSL_bEnjInterTextHighlight	Toggles the current interactions string for SceneHUD's enjoyment bars.
 $SSL_AdjustStage	Корректирование текущей стадии
 $SSL_AdjustStageHighlight	Переключает режим, при котором все изменения смещения позиции/сцены будут применяться только к текущей воспроизводимой сцене.
 $SSL_fAdjustStepSize	Величина шага смещения

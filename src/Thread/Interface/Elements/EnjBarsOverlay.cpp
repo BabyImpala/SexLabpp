@@ -187,6 +187,9 @@ namespace Thread::Interface
     {
         if (_bars.empty())
             return;
+        auto* inst = a_hud.GetThreadInstance();
+        if (!inst)
+            return;
         auto& scale = a_hud.GetScale();
 
         const float deltaTime = ImGuiMCP::GetIO()->DeltaTime;
@@ -293,13 +296,18 @@ namespace Thread::Interface
 
             // interaction string (centre)
             if (b.interactions[0] != '\0') {
+                const bool showInterText = inst->GetThreadProperty<bool>("VarUI_EnjInterText");
+                const ImGuiMCP::ImU32 interStrCol = showInterText
+                    ? UI::Theme::Enjoyment.interactionText
+                    : (UI::Theme::Enjoyment.interactionText & ~IM_COL32_A_MASK);  // zero alpha
+
                 SetWindowFontSize(intrFt);
                 const float intrX = nameMaxX +
                                     (valueMinX - nameMaxX - ImGuiMCP::CalcTextSize(b.interactions).x) * 0.5f;
                 ImGuiMCP::ImDrawListManager::PushClipRect(dl,
                     ImGuiMCP::ImVec2{ nameMaxX, rowStart.y }, ImGuiMCP::ImVec2{ valueMinX, rowMaxY }, true);
                 DrawTextShadowed(dl, ImGuiMCP::ImVec2{ intrX, rowStart.y + lblPad },
-                    UI::Theme::Enjoyment.interactionText, b.interactions);
+                    interStrCol, b.interactions);
                 ImGuiMCP::ImDrawListManager::PopClipRect(dl);
             }
 

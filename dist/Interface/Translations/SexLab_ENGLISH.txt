@@ -205,6 +205,8 @@ $SSL_bShowInMap	Show Scenes on Map
 $SSL_bShowInMapHighlight	Get a miscellaneous quest marker for each scene playing nearby (except the ones you are participating in yourself).
 $SSL_bSetAnimSpeedByEnjoyment	Enjoyment affected Animation Speed
 $SSL_bSetAnimSpeedByEnjoymentHighlight	Base animation speed changes depending on actor enjoyment (+/-20%).
+$SSL_bEnjInterText	Enjoyment Interaction Text
+$SSL_bEnjInterTextHighlight	Toggles the current interactions string for SceneHUD's enjoyment bars.
 $SSL_AdjustStage	Adjust Stage Only
 $SSL_AdjustStageHighlight	Toggles whether all edits to position/stage offsets will apply for currently playing stage only.
 $SSL_fAdjustStepSize	Offset Step Size

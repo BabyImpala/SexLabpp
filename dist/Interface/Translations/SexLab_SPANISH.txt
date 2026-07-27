@@ -205,6 +205,10 @@ $SSL_bShowInMap	Mostrar escenas en el mapa
 $SSL_bShowInMapHighlight	Muestra un marcador de misión para cada escena cercana (excepto las del jugador).
 $SSL_bSetAnimSpeedByEnjoyment	Velocidad según disfrute
 $SSL_bSetAnimSpeedByEnjoymentHighlight	La velocidad de la animación cambia según el disfrute del actor (+/-20%).
+# TODO: $SSL_bEnjInterText
+$SSL_bEnjInterText	Enjoyment Interaction Text
+# TODO: $SSL_bEnjInterTextHighlight
+$SSL_bEnjInterTextHighlight	Toggles the current interactions string for SceneHUD's enjoyment bars.
 # TODO: $SSL_AdjustStage
 $SSL_AdjustStage	Adjust Stage Only
 # TODO: $SSL_AdjustStageHighlight
