@@ -77,6 +77,10 @@ namespace Papyrus::ThreadModel
     float GetActionVelocity(QUESTARGS, RE::Actor* a_position, RE::Actor* a_partner, int a_type);
 
     void SetAnimationPlaybackSpeed(QUESTARGS, float a_playbackSpeed);
+    bool RestartFixedLengthTimer(QUESTARGS);
+    bool AdjustFixedLengthTimer(QUESTARGS, float a_delta);
+    void SetFixedLengthTimerPaused(QUESTARGS, bool a_paused);
+    bool ConsumeFixedLengthTimerExpiration(QUESTARGS);
 
     void AddExperience(QUESTARGS, std::vector<RE::Actor*> a_positions, RE::BSFixedString a_scene, std::vector<RE::BSFixedString> a_playedstages);
     void UpdateStatistics(QUESTARGS, RE::Actor* a_actor, std::vector<RE::Actor*> a_positions, RE::BSFixedString a_scene, std::vector<RE::BSFixedString> a_playedstages, float a_time);
@@ -124,6 +128,10 @@ namespace Papyrus::ThreadModel
         REGISTERFUNC(GetActionVelocity, "sslThreadModel", true);
 
         REGISTERFUNC(SetAnimationPlaybackSpeed, "sslThreadModel", false);
+        REGISTERFUNC(RestartFixedLengthTimer, "sslThreadModel", false);
+        REGISTERFUNC(AdjustFixedLengthTimer, "sslThreadModel", false);
+        REGISTERFUNC(SetFixedLengthTimerPaused, "sslThreadModel", false);
+        REGISTERFUNC(ConsumeFixedLengthTimerExpiration, "sslThreadModel", false);
 
         REGISTERFUNC(AddExperience, "sslThreadModel", true);
         REGISTERFUNC(UpdateStatistics, "sslThreadModel", true);

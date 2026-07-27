@@ -1079,6 +1079,7 @@ int _initialRealignTicks	; Placement is only asserted once per stage; if the fir
 
 bool _QuickResetScenes		; reinits thread without actor/center changes (e.g. to get new playing scenes)
 bool _ForceAdvance		; Force fully auto advance (set by timed stages)
+bool _NativeFixedLengthTimer	; whether the current stage timer is owned by the native frame update
 float _StageTimer			; timer for the current stage
 float _StageDuration		; duration of the current stage
 bool _TimerPaused		; whether timer drain for current stage should be paused
@@ -1254,10 +1255,19 @@ State Animating
 	EndFunction
 
 	Function ReStartTimer()
+		ConfigureStageTimer(true)
+	EndFunction
+
+	Function ConfigureStageTimer(bool abRestartFixedTimer)
 		_ForceAdvance = false
 		_StageDuration = GetTimer()
 		_StageTimer = _StageDuration
-		If (!_ForceAdvance && !AutoAdvance)
+		_NativeFixedLengthTimer = _ForceAdvance
+		If (_NativeFixedLengthTimer)
+			If (abRestartFixedTimer)
+				RestartFixedLengthTimer()
+			EndIf
+		ElseIf (!AutoAdvance)
 			UpdateMenuTimerDisplay(0.0, 0.0)
 		Else
 			UpdateMenuTimerDisplay(_StageDuration, _StageTimer)
@@ -1266,6 +1276,10 @@ State Animating
 	EndFunction
 
 	Function UpdateTimer(float AddSeconds = 0.0)
+		If (_NativeFixedLengthTimer && AdjustFixedLengthTimer(AddSeconds))
+			_ForceAdvance = true
+			return
+		EndIf
 		_StageTimer += AddSeconds
 		_ForceAdvance = true
 		UpdateMenuTimerDisplay(_StageDuration, _StageTimer)
@@ -1273,6 +1287,7 @@ State Animating
 
 	Function PauseTimer(bool abEnable)
 		_TimerPaused = abEnable
+		SetFixedLengthTimerPaused(abEnable)
 	EndFunction
 
 	Function SetTimers(float[] SetTimers)
@@ -1306,6 +1321,18 @@ State Animating
 		return Timers[lastTimerIdx]
 	Endfunction
 	
+	Function AdvanceFromTimer()
+		If !ThreadWaitsForOrgasm()
+			GoToStage(_StageHistory.Length + 1)
+		Else
+			string[] NewSceneStage = FindSimilarSceneStage()
+			ResetScene(NewSceneStage[0])
+			int NewStageNum = SexlabRegistry.GetAllStages(NewSceneStage[0]).Find(NewSceneStage[1])
+			GoToStage(NewStageNum)
+			Log("Skipped scene to " + SexlabRegistry.GetSceneName(NewSceneStage[0]) + " (Stage: " + NewStageNum + ")")
+		EndIf
+	EndFunction
+
 	Event OnUpdate()
 		If (SexLabUtil.IsGamePausedOrFrozen())
 			RegisterForSingleUpdate(ANIMATING_UPDATE_INTERVAL)
@@ -1317,21 +1344,12 @@ State Animating
 				RealignActors()
 			EndIf
 		EndIf
-		If (!_TimerPaused && (AutoAdvance || _ForceAdvance))
+		If (!_NativeFixedLengthTimer && !_TimerPaused && (AutoAdvance || _ForceAdvance))
 			_StageTimer -= ANIMATING_UPDATE_INTERVAL
 			UpdateMenuTimerDisplay(_StageDuration, _StageTimer)
 			If (_StageTimer <= 0)
-				If !ThreadWaitsForOrgasm()
-					GoToStage(_StageHistory.Length + 1)
-					return
-				Else
-					string[] NewSceneStage = FindSimilarSceneStage()
-					ResetScene(NewSceneStage[0])
-					int NewStageNum = SexlabRegistry.GetAllStages(NewSceneStage[0]).Find(NewSceneStage[1])
-					GoToStage(NewStageNum)
-					Log("Skipped scene to " + SexlabRegistry.GetSceneName(NewSceneStage[0]) + " (Stage: " + NewStageNum + ")")
-					return
-				EndIf
+				AdvanceFromTimer()
+				return
 			EndIf
 		EndIf
 		If (_SFXTimer > 0)
@@ -1476,6 +1494,16 @@ State Animating
 		EndWhile
 	EndFunction
 
+	Function OnFixedLengthStageComplete()
+		If (_animationSyncPending)
+			return
+		EndIf
+		If (!ConsumeFixedLengthTimerExpiration())
+			return
+		EndIf
+		AdvanceFromTimer()
+	EndFunction
+
 	Function OnAnimationSynchronized()
 		_animationSyncPending = false
 		String queuedScene = _queuedSceneReset
@@ -1485,13 +1513,16 @@ State Animating
 			return
 		EndIf
 		UpdateOffsetSlidersDisplay()
-		ReStartTimer()
+		ConfigureStageTimer(false)
 		If (!_animationStarted)
 			_animationStarted = true
 			SendThreadEvent("AnimationStart")
 			If (LeadIn)
 				SendThreadEvent("LeadInStart")
 			EndIf
+		EndIf
+		If (ConsumeFixedLengthTimerExpiration())
+			AdvanceFromTimer()
 		EndIf
 	EndFunction
 
@@ -1539,6 +1570,9 @@ EndFunction
 Function ReStartTimer()
 	Log("Cannot re/start timers outside of playing state", "ReStartTimer()")
 EndFunction
+Function ConfigureStageTimer(bool abRestartFixedTimer)
+	Log("Cannot configure timers outside of playing state", "ConfigureStageTimer()")
+EndFunction
 Function UpdateTimer(float AddSeconds = 0.0)
 	Log("Cannot update timers outside of playing state", "UpdateTimer()")
 EndFunction
@@ -1578,6 +1612,14 @@ Function OnNativeActorsPrepared()
 	Log("OnNativeActorsPrepared(), Function called from invalid state: " + GetState())
 EndFunction
 
+Function OnFixedLengthStageComplete()
+	Log("OnFixedLengthStageComplete(), Function called from invalid state: " + GetState())
+EndFunction
+
+Function AdvanceFromTimer()
+	Log("AdvanceFromTimer(), Function called from invalid state: " + GetState())
+EndFunction
+
 Function OnAnimationSynchronized()
 	Log("OnAnimationSynchronized(), Function called from invalid state: " + GetState())
 EndFunction
@@ -1589,6 +1631,10 @@ bool Function SetActiveScene(String asScene) native
 bool Function ReassignCenter(ObjectReference CenterOn) native
 bool Function SetNextPermutation(Actor akActor) native
 Function UpdatePlacement(Actor akActor) native
+bool Function RestartFixedLengthTimer() native
+bool Function AdjustFixedLengthTimer(float afDelta) native
+Function SetFixedLengthTimerPaused(bool abPaused) native
+bool Function ConsumeFixedLengthTimerExpiration() native
 ; Physics/SFX Related
 bool Function IsCollisionRegistered() native
 Function UnregisterCollision() native
@@ -2222,6 +2268,7 @@ Function Initialize()
 	_Hooks = Utility.CreateStringArray(0)
 	_AnimationSpeedBase = 1.0
 	_TimerPaused = false
+	_NativeFixedLengthTimer = false
 	_QuickResetScenes = false
 	_animationStarted = false
 	_animationSyncPending = false
