@@ -322,6 +322,9 @@ namespace Thread::Interface
             const ImGuiMCP::ImVec2 frameMax{ frameMin.x + zoneW, frameMin.y + frameH };
             const ImGuiMCP::ImVec2 borderMin{ frameMin.x - 0.5f, frameMin.y - 0.5f };
             const ImGuiMCP::ImVec2 borderMax{ frameMax.x + 0.5f, frameMax.y + 0.5f };
+            const float frameClipRadius = frameRounding >= 0.5f
+                                              ? std::min(frameRounding, std::max(std::min(frameH, zoneW) * 0.5f - 1.0f, 0.0f))
+                                              : 0.0f;
 
             const float targetFill = FillFraction(b.enjoyment);
             if (std::abs(targetFill - b.targetFill) > 0.0005f) {
@@ -343,8 +346,8 @@ namespace Thread::Interface
             // trailing fill
             if (b.trailingFill > b.displayedFill + 0.0005f) {
                 const float trailW = zoneW * b.trailingFill;
-                const auto trailCorners = b.trailingFill >= 1.0f ? ImGuiMCP::ImDrawFlags_RoundCornersAll : b.enjoyment < 0.0f ? ImGuiMCP::ImDrawFlags_RoundCornersRight :
-                                                                                                                                ImGuiMCP::ImDrawFlags_RoundCornersLeft;
+                const auto trailCorners = trailW >= zoneW - frameClipRadius ? ImGuiMCP::ImDrawFlags_RoundCornersAll : b.enjoyment < 0.0f ? ImGuiMCP::ImDrawFlags_RoundCornersRight :
+                                                                                                                                          ImGuiMCP::ImDrawFlags_RoundCornersLeft;
                 const ImGuiMCP::ImVec2 trailMin = b.enjoyment < 0.0f ? ImGuiMCP::ImVec2{ frameMax.x - trailW, frameMin.y } : frameMin;
                 const ImGuiMCP::ImVec2 trailMax = b.enjoyment < 0.0f ? frameMax : ImGuiMCP::ImVec2{ frameMin.x + trailW, frameMax.y };
                 ImGuiMCP::ImDrawListManager::AddRectFilled(dl, trailMin, trailMax,
@@ -366,10 +369,9 @@ namespace Thread::Interface
                     UI::DrawRoundedGradientRect(dl, fillMin, fillMax, cLo, cHi, frameRounding, fillCorners);
                 } else {
                     float capRadius = 0.0f;
-                    if (frameRounding >= 0.5f) {
-                        const float heightLimit = std::max(frameH * 0.5f - 1.0f, 0.0f);
+                    if (frameClipRadius > 0.0f) {
                         const float widthLimit = std::max(fillW - 1.0f, 0.0f);
-                        capRadius = std::min(frameRounding, std::min(heightLimit, widthLimit));
+                        capRadius = std::min(frameClipRadius, widthLimit);
                     }
 
                     const float subtle = SmoothStep(70.0f, 82.0f, b.enjoyment);
@@ -402,7 +404,13 @@ namespace Thread::Interface
                     for (int sample = 0; sample <= edgeSamples; ++sample) {
                         const float yFraction = static_cast<float>(sample) / static_cast<float>(edgeSamples);
                         const float y = std::lerp(frameMin.y, frameMax.y, yFraction);
-                        const float edgeDistance = std::max(capRadius + 0.25f, fillW + edgeOffset(yFraction));
+                        const float distanceFromHorizontalEdge = std::min(y - frameMin.y, frameMax.y - y);
+                        float roundedFrameInset = 0.0f;
+                        if (distanceFromHorizontalEdge < frameClipRadius) {
+                            const float radiusOffset = frameClipRadius - distanceFromHorizontalEdge;
+                            roundedFrameInset = frameClipRadius - std::sqrt(std::max(frameClipRadius * frameClipRadius - radiusOffset * radiusOffset, 0.0f));
+                        }
+                        const float edgeDistance = std::clamp(fillW + edgeOffset(yFraction), capRadius + 0.25f, zoneW - roundedFrameInset);
                         points[pointCount++] = point(edgeDistance, y);
                     }
                     points[pointCount++] = point(capRadius, frameMax.y);
