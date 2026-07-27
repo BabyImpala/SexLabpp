@@ -49,6 +49,8 @@ namespace Thread::Interface
         static constexpr float kGZoneMin = 0.02f;
         static constexpr float kGameEnjThresh = 75.0f;
         static constexpr float kGameEnjDrawMin = 80.0f;
+        // At 100 enjoyment, the needle cycle is 0.8s. It shouldn't go any faster than that.
+        static constexpr float kGameMinTimeCycle = 0.8f;
         static constexpr double kFeedbackSec = 0.6;
 
         bool _needleRunning{ false };

@@ -56,12 +56,13 @@ int Function GetEnjoyment()
 	return _FullEnjoyment
 EndFunction
 
+; Enjoyment always stays between -100 and 100. Negative enjoyment is treated as pain.
 Function SetEnjoyment(int aiSet)
-	_FullEnjoyment = aiSet
+	_FullEnjoyment = PapyrusUtil.ClampInt(aiSet, -100, 100)
 EndFunction
 
 Function AdjustEnjoyment(int AdjustBy)
-	_FullEnjoyment += AdjustBy
+	_FullEnjoyment = PapyrusUtil.ClampInt(_FullEnjoyment + AdjustBy, -100, 100)
 EndFunction
 
 Function ModEnjoymentMult(float afSet, bool bAdjust)
@@ -948,6 +949,8 @@ State Animating
 					_FullEnjoyment -= (_OrgasmCount - _Config.MaxNoPainOrgasmFemale) * 20
 				EndIf
 			EndIf
+			; The extra orgasm penalty can stack, but it shouldn't go below -100.
+			_FullEnjoyment = PapyrusUtil.ClampInt(_FullEnjoyment, -100, 100)
 			UpdateEffectiveEnjoymentCalculations()
 		EndIf
 		RegisterForSingleUpdate(UPDATE_INTERVAL)
@@ -1272,11 +1275,15 @@ Function UpdateBaseEnjoymentCalculations()
 EndFunction
 
 Function UpdateEffectiveEnjoymentCalculations()
-	If ((!_bEnjEnabled) || (_Thread.EnjoymentPaused) || (_LoopEnjoymentDelay < _EnjoymentDelay))
+	If (!_bEnjEnabled)
 		return
 	EndIf
 	If (_FullEnjoyment >= 100)
+		_FullEnjoyment = 100
 		DoOrgasm()
+		return
+	EndIf
+	If ((_Thread.EnjoymentPaused) || (_LoopEnjoymentDelay < _EnjoymentDelay))
 		return
 	EndIf
 	bool NoStaminaEndScenario = (_Config.NoStaminaEndsScene && !_victim && _ActorRef.GetActorValuePercentage("Stamina") < 0.10)
@@ -1286,7 +1293,8 @@ Function UpdateEffectiveEnjoymentCalculations()
 	EndIf
 	_LoopEnjoymentDelay = 0.0
 	_InterFactor = _Thread.CalculateInteractionFactor(_ActorRef, _CurrentInteractions)
-	_FullEnjoyment = CalcEffectiveEnjoyment() as int
+	; A single update can jump past either end, so clamp it before anything else uses it.
+	_FullEnjoyment = PapyrusUtil.ClampInt(CalcEffectiveEnjoyment() as int, -100, 100)
 	UpdateArousalStat()
 	If (_Config.DebugMode)
 		DebugEffectiveCalcVariables()
@@ -1462,13 +1470,19 @@ Function StoreExcitementState(String arg = "")
 		If (TimeSinceEnjBackup < 60)
 			_OrgasmCount = StorageUtil.GetIntValue(None, ("LastOrgasmCount_" + ActorName))
 			int LastEnjoyment = StorageUtil.GetIntValue(None, ("LastEnjoyment_" + ActorName))
-			_FullEnjoyment = (LastEnjoyment as float * (1 - (TimeSinceEnjBackup/60))) as int
+			; Decay the saved enjoyment, then keep it in the normal range.
+			_FullEnjoyment = PapyrusUtil.ClampInt((LastEnjoyment as float * (1 - (TimeSinceEnjBackup/60))) as int, -100, 100)
 		EndIf
 	EndIf
 EndFunction
 
 Function InitRaiseEnjAttempt()
 	If (_ActorRef != _PlayerRef)
+		return
+	EndIf
+	If (_FullEnjoyment >= 100)
+		_FullEnjoyment = 100
+		DoOrgasm()
 		return
 	EndIf
 	; As enjoyment gets higher, the "green zone" gets narrower
@@ -1479,16 +1493,20 @@ Function InitRaiseEnjAttempt()
 EndFunction
 
 Function OnRaiseEnjAttemptResult(bool abSuccess)
+	; Hits and spam penalties move several points at once, so don't let them skip past either end.
 	If (abSuccess)
-		_FullEnjoyment += _Config.GameEnjAdjAmount * 2
+		_FullEnjoyment = PapyrusUtil.ClampInt(_FullEnjoyment + _Config.GameEnjAdjAmount * 2, -100, 100)
 		_PlayerRef.RestoreActorValue("Stamina", _Config.GameStaminaCost)
 		_PlayerRef.RestoreActorValue("Magicka", _Config.GameMagickaCost)
+		If (_FullEnjoyment == 100)
+			DoOrgasm()
+		EndIf
 	ElseIf (_Config.GameSpamDelayPenalty)
 		If (_EnjFactor > 0)
-			_FullEnjoyment -= _Config.GameEnjAdjAmount * 2
+			_FullEnjoyment = PapyrusUtil.ClampInt(_FullEnjoyment - _Config.GameEnjAdjAmount * 2, -100, 100)
 			_EnjFactor -= 0.04
 		Else ; penalty for too many badly timed atttempts
-			_FullEnjoyment -= 50
+			_FullEnjoyment = PapyrusUtil.ClampInt(_FullEnjoyment - 50, -100, 100)
 			_EnjFactor = (_BaseFactor / 2)
 		EndIf
 		If (!SexLabUtil.IsGodModeEnabled())

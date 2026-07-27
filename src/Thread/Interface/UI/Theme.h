@@ -90,10 +90,9 @@ namespace Thread::Interface::UI::Theme
 
     struct EnjoymentValues final
     {
+        ImGuiMCP::ImU32 interactionText = IM_COL32(136, 128, 120, 255);
         ImGuiMCP::ImU32 normalLow = IM_COL32(122, 40, 40, 255);
         ImGuiMCP::ImU32 normalHigh = IM_COL32(208, 104, 88, 255);
-        ImGuiMCP::ImU32 overflowLow = IM_COL32(138, 96, 16, 255);
-        ImGuiMCP::ImU32 overflowHigh = IM_COL32(232, 184, 64, 255);
         ImGuiMCP::ImU32 negativeLow = IM_COL32(30, 58, 88, 255);
         ImGuiMCP::ImU32 negativeHigh = IM_COL32(72, 128, 192, 255);
         ImGuiMCP::ImU32 zoneIdle = IM_COL32(50, 155, 60, 41);
@@ -250,13 +249,15 @@ namespace Thread::Interface::UI
         return clicked;
     }
 
-    inline void DrawTextShadowed(ImGuiMCP::ImDrawList* a_drawList, ImGuiMCP::ImVec2 a_position,
-        ImGuiMCP::ImU32 a_color, const char* a_text)
+    inline void DrawTextShadowed(ImGuiMCP::ImDrawList* a_drawList, ImGuiMCP::ImVec2 a_position, ImGuiMCP::ImU32 a_color, const char* a_text)
     {
-        ImGuiMCP::ImDrawListManager::AddText(a_drawList, { a_position.x - 1, a_position.y - 1 }, Theme::Color.shadow, a_text, nullptr);
-        ImGuiMCP::ImDrawListManager::AddText(a_drawList, { a_position.x + 1, a_position.y - 1 }, Theme::Color.shadow, a_text, nullptr);
-        ImGuiMCP::ImDrawListManager::AddText(a_drawList, { a_position.x - 1, a_position.y + 1 }, Theme::Color.shadow, a_text, nullptr);
-        ImGuiMCP::ImDrawListManager::AddText(a_drawList, { a_position.x + 1, a_position.y + 1 }, Theme::Color.shadow, a_text, nullptr);
+        const auto textAlpha = (a_color & IM_COL32_A_MASK) >> IM_COL32_A_SHIFT;
+        const auto shadowAlpha = ((Theme::Color.shadow & IM_COL32_A_MASK) >> IM_COL32_A_SHIFT) * textAlpha / 255;
+        const auto shadow = (Theme::Color.shadow & ~IM_COL32_A_MASK) | (shadowAlpha << IM_COL32_A_SHIFT);
+        ImGuiMCP::ImDrawListManager::AddText(a_drawList, { a_position.x - 1, a_position.y - 1 }, shadow, a_text, nullptr);
+        ImGuiMCP::ImDrawListManager::AddText(a_drawList, { a_position.x + 1, a_position.y - 1 }, shadow, a_text, nullptr);
+        ImGuiMCP::ImDrawListManager::AddText(a_drawList, { a_position.x - 1, a_position.y + 1 }, shadow, a_text, nullptr);
+        ImGuiMCP::ImDrawListManager::AddText(a_drawList, { a_position.x + 1, a_position.y + 1 }, shadow, a_text, nullptr);
         ImGuiMCP::ImDrawListManager::AddText(a_drawList, a_position, a_color, a_text, nullptr);
     }
 }

@@ -101,6 +101,7 @@ namespace Thread
         } else if (niInstance == nullptr) {
             niInstance = NiNode::NiUpdate::Register(linkedQst->formID, *activeAssignment, activeScene);
         }
+        fixedLengthTimer.state = FixedLengthTimer::State::Stopped;
         activeStage = a_nextStage;
         ReleaseAnimations();
         pendingAnimations.clear();
@@ -138,6 +139,7 @@ namespace Thread
             logger::warn("Scene {} has no valid assignments.", a_scene->id);
             return false;
         }
+        CancelFixedLengthTimer();
         assignments = newAssignments;
         activeScene = a_scene;
         ReleaseAnimations();

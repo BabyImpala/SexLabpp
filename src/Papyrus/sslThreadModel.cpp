@@ -793,6 +793,30 @@ namespace Papyrus::ThreadModel
         instance->SetAnimationPlaybackSpeed(a_playbackSpeed);
     }
 
+    bool RestartFixedLengthTimer(QUESTARGS)
+    {
+        GET_INSTANCE(false);
+        return instance->RestartFixedLengthTimer();
+    }
+
+    bool AdjustFixedLengthTimer(QUESTARGS, float a_delta)
+    {
+        GET_INSTANCE(false);
+        return instance->AdjustFixedLengthTimer(a_delta);
+    }
+
+    void SetFixedLengthTimerPaused(QUESTARGS, bool a_paused)
+    {
+        GET_INSTANCE();
+        instance->SetFixedLengthTimerPaused(a_paused);
+    }
+
+    bool ConsumeFixedLengthTimerExpiration(QUESTARGS)
+    {
+        GET_INSTANCE(false);
+        return instance->ConsumeFixedLengthTimerExpiration();
+    }
+
     void AddExperience(QUESTARGS, std::vector<RE::Actor*> a_positions, RE::BSFixedString a_scene, std::vector<RE::BSFixedString> a_playedstages)
     {
         const auto scene = Registry::Library::GetSingleton()->GetSceneById(a_scene);

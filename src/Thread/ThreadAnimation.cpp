@@ -148,6 +148,7 @@ namespace Thread
                 if (instance->linkedQst != a_linkedQst) {
                     continue;
                 }
+                instance->CancelFixedLengthTimer();
                 instance->ReleaseAnimations();
                 if (!instance->pendingAnimations.empty()) {
                     logger::info("Cancelled {} pending animation synchronization(s).", instance->pendingAnimations.size());
@@ -302,11 +303,82 @@ namespace Thread
         return false;
     }
 
+    bool Instance::StartFixedLengthTimer()
+    {
+        fixedLengthTimer.state = FixedLengthTimer::State::Stopped;
+        if (!activeStage || activeStage->fixedlength == 0.0f) {
+            return false;
+        }
+        const auto duration = activeStage->fixedlength / 1000.0f;
+        fixedLengthTimer.duration = duration;
+        fixedLengthTimer.remaining = duration;
+        fixedLengthTimer.state = FixedLengthTimer::State::Running;
+        UpdateMenuTimerDisplay(duration, duration);
+        return true;
+    }
+
+    void Instance::CancelFixedLengthTimer()
+    {
+        fixedLengthTimer.state = FixedLengthTimer::State::Stopped;
+    }
+
+    bool Instance::RestartFixedLengthTimer()
+    {
+        return StartFixedLengthTimer();
+    }
+
+    bool Instance::AdjustFixedLengthTimer(float a_delta)
+    {
+        if (fixedLengthTimer.state == FixedLengthTimer::State::Stopped) {
+            return false;
+        }
+        fixedLengthTimer.remaining += a_delta;
+        fixedLengthTimer.state = FixedLengthTimer::State::Running;
+        UpdateMenuTimerDisplay(fixedLengthTimer.duration, std::max(0.0f, fixedLengthTimer.remaining));
+        return true;
+    }
+
+    void Instance::SetFixedLengthTimerPaused(bool a_paused)
+    {
+        fixedLengthTimer.paused = a_paused;
+    }
+
+    bool Instance::ConsumeFixedLengthTimerExpiration()
+    {
+        if (fixedLengthTimer.state != FixedLengthTimer::State::Expired) {
+            return false;
+        }
+        fixedLengthTimer.state = FixedLengthTimer::State::Stopped;
+        return true;
+    }
+
+    void Instance::UpdateFixedLengthTimer(float a_delta)
+    {
+        if (fixedLengthTimer.state != FixedLengthTimer::State::Running || fixedLengthTimer.paused || a_delta <= 0.0f) {
+            return;
+        }
+        fixedLengthTimer.remaining = std::max(0.0f, fixedLengthTimer.remaining - a_delta);
+        const auto expired = fixedLengthTimer.remaining <= 0.0f;
+        if (expired) {
+            fixedLengthTimer.state = FixedLengthTimer::State::Expired;
+        }
+        UpdateMenuTimerDisplay(fixedLengthTimer.duration, fixedLengthTimer.remaining);
+        if (!expired) {
+            return;
+        }
+        const auto scriptObject = Script::GetScriptObject(linkedQst, "sslThreadModel");
+        Script::CallbackPtr callbackPtr{};
+        if (!scriptObject || !Script::DispatchMethodCall(scriptObject, "OnFixedLengthStageComplete", callbackPtr)) {
+            logger::error("Failed to notify Papyrus of fixed-length timer completion for thread {:X}.", linkedQst->GetFormID());
+        }
+    }
+
     void Instance::UpdateAnimations(float a_delta)
     {
         const auto timeoutDelta = Util::IsGamePausedOrFrozen() ? 0.0f : a_delta;
         std::shared_lock lock{ _mInstances };
         for (auto&& instance : instances) {
+            instance->UpdateFixedLengthTimer(timeoutDelta);
             instance->UpdatePendingAnimations(timeoutDelta);
         }
     }
@@ -687,6 +759,7 @@ namespace Thread
             ReleaseAnimations();
             logger::info("Released {} synchronized animation clips.", pendingAnimations.size());
             pendingAnimations.clear();
+            StartFixedLengthTimer();
             const auto scriptObject = Script::GetScriptObject(linkedQst, "sslThreadModel");
             Script::CallbackPtr callbackPtr{};
             if (!scriptObject || !Script::DispatchMethodCall(scriptObject, "OnAnimationSynchronized", callbackPtr)) {
