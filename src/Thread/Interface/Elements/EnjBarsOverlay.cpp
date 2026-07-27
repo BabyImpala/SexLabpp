@@ -75,7 +75,8 @@ namespace Thread::Interface
         for (auto& b : _bars) {
             if (b.formId != actorID)
                 continue;
-            b.enjoyment = a_enjoyment;
+            // Enjoyment stays between -100 and 100. This also keeps stale script values from showing as overflow.
+            b.enjoyment = std::clamp(a_enjoyment, -100.0f, 100.0f);
             std::snprintf(b.interactions, sizeof(b.interactions), "%s", intrBuf);
             if (b.isGameDpt && a_enjoyment < kGameEnjThresh)
                 b.isGameDpt = false;
@@ -109,7 +110,7 @@ namespace Thread::Interface
             _feedbackActorId = actorID;
             _feedbackHit = hit;
             _feedbackUntil = ImGuiMCP::GetTime() + kFeedbackSec;
-            _timeCycle = a_nextTimeCycle;
+            _timeCycle = std::max(a_nextTimeCycle, kGameMinTimeCycle);
 
             if (!a_hud.GetThreadScript())
                 return;
@@ -132,28 +133,23 @@ namespace Thread::Interface
             a_hud.GetCallback(), std::move(actor));
     }
 
-    float EnjBarsOverlay::FillFraction(float enj)
+    float EnjBarsOverlay::FillFraction(float a_enjoyment)
     {
-        if (enj < 0.0f)
-            return std::min(std::abs(enj) / 100.0f, 1.0f);
-        const float m = std::fmod(enj, 100.0f);
-        return (m == 0.0f && enj > 0.0f) ? 1.0f : std::min(m / 100.0f, 1.0f);
+        // Negative enjoyment fills from the right, but both sides still stop at a full bar.
+        if (a_enjoyment < 0.0f)
+            return std::min(std::abs(a_enjoyment) / 100.0f, 1.0f);
+        return std::min(a_enjoyment / 100.0f, 1.0f);
     }
 
-    void EnjBarsOverlay::FillGradient(float enj, ImGuiMCP::ImU32& lo, ImGuiMCP::ImU32& hi)
+    void EnjBarsOverlay::FillGradient(float a_enjoyment, ImGuiMCP::ImU32& a_low, ImGuiMCP::ImU32& a_high)
     {
-        if (enj < 0.0f) {
-            lo = UI::Theme::Enjoyment.negativeHigh;
-            hi = UI::Theme::Enjoyment.negativeLow;
+        if (a_enjoyment < 0.0f) {
+            a_low = UI::Theme::Enjoyment.negativeHigh;
+            a_high = UI::Theme::Enjoyment.negativeLow;
             return;
         }
-        if (enj > 100.0f) {
-            lo = UI::Theme::Enjoyment.overflowLow;
-            hi = UI::Theme::Enjoyment.overflowHigh;
-            return;
-        }
-        lo = UI::Theme::Enjoyment.normalLow;
-        hi = UI::Theme::Enjoyment.normalHigh;
+        a_low = UI::Theme::Enjoyment.normalLow;
+        a_high = UI::Theme::Enjoyment.normalHigh;
     }
 
     float EnjBarsOverlay::GreenZoneHalfWidth(float a_enjoyment)
@@ -288,8 +284,7 @@ namespace Thread::Interface
             char valBuf[12];
             std::snprintf(valBuf, sizeof(valBuf), "%d",
                 static_cast<int>(std::round(b.enjoyment)));
-            const ImGuiMCP::ImU32 valCol = b.enjoyment > 100.0f ? UI::Theme::Enjoyment.overflowLow : b.enjoyment < 0.0f ? UI::Theme::Enjoyment.negativeHigh :
-                                                                                                                          UI::Theme::Color.textSecondary;
+            const ImGuiMCP::ImU32 valCol = b.enjoyment < 0.0f ? UI::Theme::Enjoyment.negativeHigh : UI::Theme::Color.textSecondary;
             const float valX = rowStart.x + zoneW - ImGuiMCP::CalcTextSize(valBuf).x - lblPad;
             ImGuiMCP::ImDrawListManager::PushClipRect(dl,
                 ImGuiMCP::ImVec2{ valueMinX, rowStart.y }, ImGuiMCP::ImVec2{ rowStart.x + zoneW, rowMaxY }, true);
