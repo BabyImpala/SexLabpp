@@ -138,19 +138,19 @@ namespace Thread::NiNode
 
     void NiInstance::EvaluateRuleBased(PairInteractionState& state, const NiActor& a, const NiActor& b) const
     {
-        const auto& mA = a.Motion();
-        const auto& mB = b.Motion();
+        auto mA = a.Motion();
+        auto mB = b.Motion();
         if (!mA.HasSufficientData() || !mB.HasSufficientData())
             return;
 
         if (b.IsSex(Registry::Sex::Male)) {
-            state.interactionClusters[static_cast<size_t>(NiType::Cluster::Crotch)] = EvaluateCrotchInteractions(mA, mB);
-            state.interactionClusters[static_cast<size_t>(NiType::Cluster::Head)] = EvaluateHeadInteractions(mA, mB);
+            state.interactionClusters[static_cast<size_t>(NiType::Cluster::ClusterCrotch)] = EvaluateCrotchInteractions(mA, mB);
+            state.interactionClusters[static_cast<size_t>(NiType::Cluster::ClusterHead)] = EvaluateHeadInteractions(mA, mB);
         }
         if (a == b) {
             return;
         }
-        state.interactionClusters[static_cast<size_t>(NiType::Cluster::KissingCl)] = EvaluateKissingCluster(mA, mB);
+        state.interactionClusters[static_cast<size_t>(NiType::Cluster::ClusterKissing)] = EvaluateKissingCluster(mA, mB);
     }
 
     void NiInstance::UpdateHysteresis(PairInteractionState& a_state, float a_timeStamp)

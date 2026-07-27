@@ -38,6 +38,7 @@ namespace Thread::NiNode
             const auto sSchlong = nodes.schlongs.front()->GetReferenceSegment();
             _moments[Anchor::pSchlongBase][idx] = sSchlong.first;
             _moments[Anchor::pSchlongTip][idx] = sSchlong.second;
+            _moments[Anchor::vSchlong][idx] = sSchlong.second - sSchlong.first;
         }
 
         if (const auto sVaginal = nodes.GetVaginalSegment()) {
@@ -59,6 +60,8 @@ namespace Thread::NiNode
 
         _writeIndex = (_writeIndex + 1) % _capacity;
         _size = std::min(_size + 1, _capacity);
+
+        _motionDescriptorsValid.reset();
     }
 
     void NiMotion::ForEachMoment(Anchor c, const std::function<bool(const RE::NiPoint3&, float)>& func) const
@@ -70,17 +73,25 @@ namespace Thread::NiNode
         }
     }
 
-    NiMath::Segment NiMotion::GetMotion(Anchor c) const
+    NiMath::Segment NiMotion::GetMotion(Anchor c)
     {
-        if (_size < 2) {
-            return NiMath::Segment(_size == 1 ? GetNthMoment(c, 0) : RE::NiPoint3::Zero());
+        return GetMotionDescriptor(c).trajectory;
+    }
+
+    const MotionDescriptor& NiMotion::GetMotionDescriptor(Anchor c)
+    {
+        if (!_motionDescriptorsValid.test(c)) {
+            _motionDescriptors[c] = std::make_shared<MotionDescriptor>(DescribeMotion(c));
+            _motionDescriptorsValid.set(c);
         }
-        return NiMath::BestFit(_moments[c]);
+        return *_motionDescriptors[c];
     }
 
     MotionDescriptor NiMotion::DescribeMotion(Anchor c) const
     {
-        MotionDescriptor out{ GetMotion(c) };
+        MotionDescriptor out{
+            _size < 2 ? NiMath::Segment(_size == 1 ? GetNthMoment(c, 0) : RE::NiPoint3::Zero()) : NiMath::BestFit(_moments[c])
+        };
 
         if (!HasSufficientData()) {
             return out;
@@ -91,7 +102,7 @@ namespace Thread::NiNode
         axis.Unitize();
         const auto mean = out.Mean();
 
-        // Initialize accumulators
+        // Accumulators
         float totalDist = 0.0f;
         float peakSpeed = 0.0f;
         float posVar = 0.0f;

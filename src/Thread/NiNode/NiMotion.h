@@ -4,6 +4,8 @@
 #include "Node.h"
 #include "Registry/Util/RayCast/ObjectBound.h"
 
+#include <limits>
+
 namespace Thread::NiNode
 {
     constexpr size_t WINDOW_SIZE = 60;
@@ -50,11 +52,14 @@ namespace Thread::NiNode
 
             pSchlongBase,
             pSchlongTip,
+            vSchlong,
             pVaginalStart,
             pVaginalEnd,
+            vVaginal,
             pClitoris,
             pAnalStart,
             pAnalEnd,
+            vAnal,
 
             pSpineLower,
             pPelvis,
@@ -95,14 +100,15 @@ namespace Thread::NiNode
 
         /// @brief Get best-fit motion segment for the given anchor
         /// @param c Anchor to analyze
-        NiMath::Segment GetMotion(Anchor c) const;
+        NiMath::Segment GetMotion(Anchor c);
 
         /// @brief Describe the motion for the given anchor
         /// @param c Anchor to analyze
-        MotionDescriptor DescribeMotion(Anchor c) const;
+        const MotionDescriptor& GetMotionDescriptor(Anchor c);
 
       private:
         size_t AbsoluteToRelativeIndex(size_t n) const;
+        MotionDescriptor DescribeMotion(Anchor c) const;
 
       private:
         const size_t _capacity;
@@ -111,6 +117,8 @@ namespace Thread::NiNode
         size_t _size{ 0 };
 
         std::array<std::vector<RE::NiPoint3>, NUM_ANCHORS> _moments;
+        std::array<std::shared_ptr<MotionDescriptor>, NUM_ANCHORS> _motionDescriptors;
+        std::bitset<NUM_ANCHORS> _motionDescriptorsValid;
         std::vector<ObjectBound> _headBounds;
         std::vector<float> _timestamps;
     };
