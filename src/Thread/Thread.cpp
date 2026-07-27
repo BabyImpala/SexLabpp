@@ -4,6 +4,7 @@
 #include "Registry/Util/RayCast/Offsets.h"
 #include "Thread/Hooks.h"
 #include "Thread/Interface/SceneHUD.h"
+#include "Thread/Interface/StageSelectMenu.h"
 #include "Util/Script.h"
 
 namespace Thread
@@ -519,10 +520,24 @@ namespace Thread
             sceneHUD->RegisterRaiseEnjoymentAttempt(a_position, a_nextTimeCycle);
     }
 
-    void Instance::UpdateOffsetSlidersDisplay()
+    void Instance::OnStageChangedUpdateHUD()
     {
         if (auto* sceneHUD = Interface::SceneHUD::GetSingleton().GetForThread(linkedQst))
-            sceneHUD->OnStageChanged();
+            sceneHUD->RefreshStageOffsets();
+            Interface::StageSelectMenu::GetSingleton().RefreshSceneGraphView(linkedQst);
+    }
+
+    bool Instance::OpenStageSelectMenuImpl()
+    {
+        if (!Interface::SceneHUD::GetSingleton().GetForThread(linkedQst))
+            return false;
+        return Interface::StageSelectMenu::GetSingleton().OpenStageSelectMenu(linkedQst);
+    }
+
+    void Instance::SetVisibilitySceneGraphImpl(bool a_open)
+    {
+        if (Interface::SceneHUD::GetSingleton().GetForThread(linkedQst))
+            Interface::StageSelectMenu::GetSingleton().SetVisibilitySceneGraph(linkedQst, a_open);
     }
 
 }  // namespace Thread

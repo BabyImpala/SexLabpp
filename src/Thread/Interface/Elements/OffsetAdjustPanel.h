@@ -9,7 +9,7 @@ namespace Thread::Interface
         void Open(SceneHUD& a_hud);
         void Close();
         void Render(SceneHUD& a_hud);
-        void OnStageChanged(SceneHUD& a_hud);
+        void RefreshStageOffsets(SceneHUD& a_hud);
 
       private:
         struct ActorItem

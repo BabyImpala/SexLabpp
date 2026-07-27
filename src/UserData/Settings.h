@@ -21,6 +21,7 @@ struct Settings
         Modifier,
         Scene,
         Move,
+        Graph,
         Position,
         Thread,
         FreeCam,

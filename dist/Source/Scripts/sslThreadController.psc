@@ -41,18 +41,20 @@ EndFunction
 int[] Hotkeys
 int Property kToggleSceneHUD    = 0  AutoReadOnly
 int Property kFocusSceneHUD     = 1  AutoReadOnly
-int Property kAdvanceAnimation  = 2  AutoReadOnly
-int Property kEndAnimation      = 3  AutoReadOnly
-int Property kGameRaiseEnj      = 4  AutoReadOnly
-int Property kGameHoldback      = 5  AutoReadOnly
-int Property kChangeAnimation   = 6  AutoReadOnly
-int Property kMoveScene         = 7  AutoReadOnly
-int Property kChangePartner     = 8  AutoReadOnly
+int Property kToggleSceneGraph  = 2  AutoReadOnly
+int Property kAdvanceAnimation  = 3  AutoReadOnly
+int Property kEndAnimation      = 4  AutoReadOnly
+int Property kGameRaiseEnj      = 5  AutoReadOnly
+int Property kGameHoldback      = 6  AutoReadOnly
+int Property kChangeAnimation   = 7  AutoReadOnly
+int Property kMoveScene         = 8  AutoReadOnly
+int Property kChangePartner     = 9  AutoReadOnly
 
 Function InitHotkeys()
-	Hotkeys = new int[9]
+	Hotkeys = new int[10]
 	Hotkeys[kToggleSceneHUD]    = Config.ToggleSceneHUD
-	Hotkeys[kFocusSceneHUD]     = Config.FocusSceneHUD	
+	Hotkeys[kFocusSceneHUD]     = Config.FocusSceneHUD
+	Hotkeys[kToggleSceneGraph]  = Config.ToggleSceneGraph
 	Hotkeys[kAdvanceAnimation]  = Config.AdvanceAnimation
 	Hotkeys[kEndAnimation]      = Config.EndAnimation
 	Hotkeys[kGameRaiseEnj]      = Config.GameRaiseEnjKey
@@ -70,6 +72,7 @@ Function RegisterHotkeys()
 	; register for hotkeys
 	RegisterForKey(Hotkeys[kToggleSceneHUD])
 	RegisterForKey(Hotkeys[kFocusSceneHUD])
+	RegisterForKey(Hotkeys[kToggleSceneGraph])
 	RegisterForKey(Hotkeys[kAdvanceAnimation])
 	RegisterForKey(Hotkeys[kEndAnimation])
 	If (Config.GameEnabled && HasPlayer)
@@ -109,7 +112,11 @@ Event OnKeyDown(int aiKey)
 		ToggleFocusSceneHUD()
 		return
 	EndIf
-	If (_bFocusedSceneHUD)
+	If (aiKey == Hotkeys[kToggleSceneGraph])
+		ToggleVisibilitySceneGraph()
+		return
+	EndIf
+	If (_bFocusedSceneHUD || _bOpenedSceneGraph)
 		return
 	EndIf
 	; Generic
@@ -142,12 +149,16 @@ EndEvent
 ; ------------------------------------------------------- ;
 bool _bOpenedSceneHUD = false
 bool _bFocusedSceneHUD = false
+bool _bOpenedSceneGraph = false
 
 Function ToggleVisibilitySceneHUD(int aiForceState = 0)
 	;[-1:ForceClose, 0:Toggle, 1:ForceOpen]
 	If (aiForceState == -1 || (aiForceState == 0 && _bOpenedSceneHUD))
 		If (_bFocusedSceneHUD)
 			ToggleFocusSceneHUD(-1)
+		EndIf
+		If (_bOpenedSceneGraph)
+			ToggleVisibilitySceneGraph(-1)
 		EndIf
 		TryCloseSceneHUD()
 		_bOpenedSceneHUD = false
@@ -162,6 +173,9 @@ Function ToggleFocusSceneHUD(int aiForceState = 0)
 	If (!_bOpenedSceneHUD)
 		return
 	EndIf
+	If (_bOpenedSceneGraph)
+		ToggleVisibilitySceneGraph(-1)
+	EndIf
 	If (aiForceState == -1 || (aiForceState == 0 && _bFocusedSceneHUD))
 		SetFocusSceneHUDImpl(false)
 		_bFocusedSceneHUD = false
@@ -170,6 +184,27 @@ Function ToggleFocusSceneHUD(int aiForceState = 0)
 	ElseIf (aiForceState == 1 || (aiForceState == 0 && !_bFocusedSceneHUD))
 		SetFocusSceneHUDImpl(true)
 		_bFocusedSceneHUD = true
+		EnjoymentPaused = true
+		PauseTimer(true)
+	EndIf
+EndFunction
+
+Function ToggleVisibilitySceneGraph(int aiForceState = 0)
+	;[-1:ForceClose, 0:Toggle, 1:ForceOpen]
+	If (!_bOpenedSceneHUD)
+		return
+	EndIf
+	If (_bFocusedSceneHUD)
+		ToggleFocusSceneHUD(-1)
+	EndIf
+	If (aiForceState == -1 || (aiForceState == 0 && _bOpenedSceneGraph))
+		SetVisibilitySceneGraphImpl(false)
+		_bOpenedSceneGraph = false
+		EnjoymentPaused = false
+		PauseTimer(false)
+	ElseIf (aiForceState == 1 || (aiForceState == 0 && !_bOpenedSceneGraph))
+		SetVisibilitySceneGraphImpl(true)
+		_bOpenedSceneGraph = true
 		EnjoymentPaused = true
 		PauseTimer(true)
 	EndIf

@@ -296,6 +296,7 @@ $SSL_SceneManipulation	Scene Manipulation
 
 $SSL_iToggleSceneHUD	Toggle SceneHUD
 $SSL_iFocusSceneHUD	Focus SceneHUD
+$SSL_iToggleSceneGraph	Toggle Scene Graph
 $SSL_iKeyAdvance	Advance Scene
 $SSL_iKeyEnd	End Scene
 $SSL_iKeyMod	Modifier

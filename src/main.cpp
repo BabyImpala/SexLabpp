@@ -6,6 +6,7 @@
 #include "Thread/Hooks.h"
 #include "Thread/Interface/FurnSelectMenu.h"
 #include "Thread/Interface/SceneHUD.h"
+#include "Thread/Interface/StageSelectMenu.h"
 #include "Thread/Interface/UI/Theme.h"
 #include "Thread/NiNode/Legacy/LegacyNiUpdate.h"
 #include "Thread/NiNode/NiUpdate.h"
@@ -75,8 +76,10 @@ static void SKSEMessageHandler(SKSE::MessagingInterface::Message* message)
 {
     switch (message->type) {
     case SKSE::MessagingInterface::kPostLoad:
-        if (Thread::Interface::SceneHUD::GetSingleton().Register())
+        if (Thread::Interface::SceneHUD::GetSingleton().Register()) {
             Thread::Interface::FurnSelectMenu::GetSingleton().Register();
+            Thread::Interface::StageSelectMenu::GetSingleton().Register();
+        }
         break;
     case SKSE::MessagingInterface::kDataLoaded:
         Thread::Interface::UI::Theme::Load();

@@ -303,6 +303,8 @@ $SSL_SceneManipulation	Control de escena
 $SSL_iToggleSceneHUD	Toggle SceneHUD
 # TODO: $SSL_iFocusSceneHUD
 $SSL_iFocusSceneHUD	Focus SceneHUD
+# TODO: $SSL_iToggleSceneGraph
+$SSL_iToggleSceneGraph	Toggle Scene Graph
 $SSL_iKeyAdvance	Avanzar escena / Seleccionar
 $SSL_iKeyEnd	Finalizar escena / Atrás
 $SSL_iKeyMod	Modificador

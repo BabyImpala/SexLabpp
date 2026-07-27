@@ -1234,8 +1234,14 @@ State Animating
 		If (ToStage <= 1)
 			ResetScene(GetActiveScene())
 		ElseIf (ToStage > Stage)
-			int idx = SelectNextStage(_ThreadTags)
-			PlayNext(idx)
+			bool abChoiceOffered = false
+			If (HasPlayer && SexLabRegistry.GetNumBranches(GetActiveScene(), GetActiveStage()) > 1)
+				abChoiceOffered = OpenStageSelectMenuImpl() ; opens Thread::Interface::StageSelectMenu
+			EndIf
+			If (!abChoiceOffered)
+				int idx = SelectNextStage(_ThreadTags)
+				PlayNext(idx)
+			EndIf
 		ElseIf (ToStage == Stage)
 			ReStartTimer()
 		Else	; Skip stripping for already played stages
@@ -1512,7 +1518,7 @@ State Animating
 			ResetScene(queuedScene)
 			return
 		EndIf
-		UpdateOffsetSlidersDisplay()
+		OnStageChangedUpdateHUD()
 		ConfigureStageTimer(false)
 		If (!_animationStarted)
 			_animationStarted = true
@@ -2072,8 +2078,11 @@ Function DestroySceneHUDImpl() native
 Function SetFocusSceneHUDImpl(bool abFocused) native
 
 Function UpdateMenuTimerDisplay(float afDuration, float afTime) native
-Function UpdateOffsetSlidersDisplay() native ;call on stage change
+Function OnStageChangedUpdateHUD() native
 Function EnjBarsChangeHighlightedPartner(Actor akActor) native
+
+bool Function OpenStageSelectMenuImpl() native
+Function SetVisibilitySceneGraphImpl(bool abOpen) native
 
 ; -------------------------------------------------- ;
 ; --- Interactions Info - INTERNAL               --- ;

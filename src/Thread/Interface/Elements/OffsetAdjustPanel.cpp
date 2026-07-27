@@ -121,7 +121,7 @@ namespace Thread::Interface
         }
     }
 
-    void OffsetAdjustPanel::OnStageChanged(SceneHUD& a_hud)
+    void OffsetAdjustPanel::RefreshStageOffsets(SceneHUD& a_hud)
     {
         if (!_selectedId)
             return;
