@@ -206,14 +206,23 @@ namespace Thread
         for (auto recovery = pendingRecoveries.begin(); recovery != pendingRecoveries.end();) {
             recovery->elapsed += a_delta;
             const auto actor = recovery->actor;
-            if (!actor || !actor->Is3DLoaded() || actor->IsDead() || actor->IsOnMount()) {
+            if (!actor || !actor->Is3DLoaded() || actor->IsOnMount()) {
                 if (actor) {
-                    logger::error("Actor {:X} recovery prerequisites failed: loaded={}, dead={}, mounted={}.", actor->GetFormID(), actor->Is3DLoaded(), actor->IsDead(), actor->IsOnMount());
+                    logger::error("Actor {:X} recovery prerequisites failed: loaded={}, mounted={}.", actor->GetFormID(), actor->Is3DLoaded(), actor->IsOnMount());
                 } else {
                     logger::error("Actor recovery failed because the actor is unavailable.");
                 }
                 recoveryFailed = true;
                 break;
+            }
+            if (actor->IsDead()) {
+                const auto position = GetPosition(actor);
+                if (!position || !PrepareActorForAnimation(linkedQst, actor, position->data.IsHuman()) || actor->IsDead()) {
+                    logger::error("Actor {:X} could not be temporarily resurrected for native recovery.", actor->GetFormID());
+                    recoveryFailed = true;
+                    break;
+                }
+                logger::info("Temporarily resurrected actor {:X} for native recovery.", actor->GetFormID());
             }
             const auto actorState = actor->AsActorState();
             const auto knockState = actorState->GetKnockState();
