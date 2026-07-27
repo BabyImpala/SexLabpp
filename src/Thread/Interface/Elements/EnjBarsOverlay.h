@@ -29,6 +29,9 @@ namespace Thread::Interface
             uint32_t formId{};
             char name[64]{};
             float enjoyment{ 0.0f };
+            float targetFill{ 0.0f };
+            float displayedFill{ 0.0f };
+            float trailingFill{ 0.0f };
             char interactions[128]{};
             bool isTarget{ false };
             bool isGameDpt{ false };

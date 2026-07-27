@@ -13,6 +13,41 @@ namespace Thread::Interface
             ImGuiMCP::ImGuiColorEditFlags_AlphaBar |
             ImGuiMCP::ImGuiColorEditFlags_AlphaPreviewHalf;
 
+        // Fit the editor to its reflected labels and controls because text and UI geometry scale independently
+        template <class T>
+        float MeasureThemeFieldsWidth(T& a_values, ImGuiMCP::ImFont* a_font, float a_fontSize, const ImGuiMCP::ImGuiStyle& a_style)
+        {
+            const char* valueText = "-00000.000";
+            const float valueTextWidth = ImGuiMCP::ImFontManger::CalcTextSizeA(
+                a_font, a_fontSize, FLT_MAX, 0.0f, valueText, nullptr, nullptr)
+                                             .x;
+            const char* bufferText = "0";
+            const float bufferWidth = ImGuiMCP::ImFontManger::CalcTextSizeA(
+                a_font, a_fontSize, FLT_MAX, 0.0f, bufferText, nullptr, nullptr)
+                                          .x;
+            const float frameHeight = a_fontSize + a_style.FramePadding.y * 2.0f;
+            const float floatFieldWidth = valueTextWidth + bufferWidth + a_style.FramePadding.x * 2.0f +
+                                          (frameHeight + a_style.ItemInnerSpacing.x) * 2.0f;
+            float width = 0.0f;
+            std::size_t index = 0;
+            glz::for_each_field(a_values, [&](auto& a_field) {
+                using Field = std::remove_cvref_t<decltype(a_field)>;
+
+                const auto fieldName = glz::reflect<T>::keys[index++];
+                const float labelWidth = ImGuiMCP::ImFontManger::CalcTextSizeA(
+                    a_font, a_fontSize, FLT_MAX, 0.0f, fieldName.data(), fieldName.data() + fieldName.size(), nullptr)
+                                             .x;
+                if constexpr (std::is_same_v<Field, ImGuiMCP::ImU32>) {
+                    width = std::max(width, frameHeight + a_style.ItemInnerSpacing.x + labelWidth);
+                } else if constexpr (std::is_same_v<Field, float>) {
+                    width = std::max(width, labelWidth + a_style.ItemInnerSpacing.x + floatFieldWidth);
+                } else if constexpr (glz::reflectable<Field>) {
+                    width = std::max({ width, labelWidth, MeasureThemeFieldsWidth(a_field, a_font, a_fontSize, a_style) });
+                }
+            });
+            return width;
+        }
+
         template <class T>
         void DrawThemeFields(T& a_values)
         {
@@ -25,16 +60,27 @@ namespace Thread::Interface
                 ImGuiMCP::PushID(static_cast<int>(fieldIndex));
 
                 if constexpr (std::is_same_v<Field, ImGuiMCP::ImU32>) {
-                    auto color = UI::Theme::ToVec4(a_field);
-                    if (ImGuiMCP::ColorEdit4(fieldName.data(), &color.x, COLOR_EDIT_FLAGS))
-                        a_field = ImGuiMCP::ColorConvertFloat4ToU32(color);
-                } else if constexpr (std::is_same_v<Field, float>) {
-                    const float fieldWidth = ImGuiMCP::CalcItemWidth() * 0.45f;
+                    const float fieldWidth = ImGuiMCP::GetFrameHeight();
                     const float fieldX = ImGuiMCP::GetCursorPosX() + ImGuiMCP::GetContentRegionAvail().x - fieldWidth;
+                    auto color = UI::Theme::ToVec4(a_field);
+                    ImGuiMCP::AlignTextToFramePadding();
                     ImGuiMCP::TextUnformatted(fieldName.data());
                     ImGuiMCP::SameLine(fieldX);
                     ImGuiMCP::SetNextItemWidth(fieldWidth);
-                    ImGuiMCP::InputFloat("##value", &a_field, 0.1f, 0.1f, "%.1f");
+                    if (ImGuiMCP::ColorEdit4("##value", &color.x, COLOR_EDIT_FLAGS))
+                        a_field = ImGuiMCP::ColorConvertFloat4ToU32(color);
+                } else if constexpr (std::is_same_v<Field, float>) {
+                    const auto* style = ImGuiMCP::GetStyle();
+                    const float fieldWidth = ImGuiMCP::CalcTextSize("-00000.0000").x + style->FramePadding.x * 2.0f +
+                                             (ImGuiMCP::GetFrameHeight() + style->ItemInnerSpacing.x) * 2.0f;
+                    const float fieldX = ImGuiMCP::GetCursorPosX() + ImGuiMCP::GetContentRegionAvail().x - fieldWidth;
+                    ImGuiMCP::AlignTextToFramePadding();
+                    ImGuiMCP::TextUnformatted(fieldName.data());
+                    ImGuiMCP::SameLine(fieldX);
+                    ImGuiMCP::SetNextItemWidth(fieldWidth);
+                    const auto thousandths = std::llround(std::abs(a_field) * 1000.0f);
+                    const char* format = thousandths % 100 == 0 ? "%.1f" : thousandths % 10 == 0 ? "%.2f" : "%.3f";
+                    ImGuiMCP::InputFloat("##value", &a_field, 0.1f, 0.1f, format);
                 } else if constexpr (glz::reflectable<Field>) {
                     if (ImGuiMCP::CollapsingHeader(fieldName.data(), ImGuiMCP::ImGuiTreeNodeFlags_DefaultOpen))
                         DrawThemeFields(a_field);
@@ -217,14 +263,20 @@ namespace Thread::Interface
 
         auto& scale = a_hud.GetScale();
         auto* io = ImGuiMCP::GetIO();
-        const float editorWidth = std::min(scale.Px(200.0f), io->DisplaySize.x * 0.8f);
         const float editorMinHeight = scale.Px(100.0f);
         const float editorMaxHeight = std::max(editorMinHeight, io->DisplaySize.y * 0.75f);
         const float panelOffset = scale.Px(UI::Theme::Geometry.panelTabWidth + UI::Theme::Geometry.panelTabGap);
         const float editorRight = io->DisplaySize.x - panelOffset - scale.Px(220.0f) - scale.Px(UI::Theme::Spacing.sm);
+        const float editorMaxWidth = std::min(editorRight, io->DisplaySize.x * 0.8f);
+        const float fontSize = scale.TextPx(UI::Theme::FontSize.body);
+        const auto* style = ImGuiMCP::GetStyle();
+        const float editorWidth = std::ceil(std::min(
+            MeasureThemeFieldsWidth(UI::Theme::data, ImGuiMCP::GetFont(), fontSize, *style) +
+                style->WindowPadding.x * 2.0f + style->ScrollbarSize,
+            editorMaxWidth));
 
         ImGuiMCP::SetNextWindowPos(ImGuiMCP::ImVec2{ editorRight, io->DisplaySize.y * 0.5f },
-            ImGuiMCP::ImGuiCond_FirstUseEver, ImGuiMCP::ImVec2{ 1.0f, 0.5f });
+            ImGuiMCP::ImGuiCond_Always, ImGuiMCP::ImVec2{ 1.0f, 0.5f });
         ImGuiMCP::SetNextWindowSizeConstraints(
             ImGuiMCP::ImVec2{ editorWidth, editorMinHeight }, ImGuiMCP::ImVec2{ editorWidth, editorMaxHeight });
 
@@ -234,7 +286,7 @@ namespace Thread::Interface
             return;
         }
 
-        SetWindowFontSize(scale.TextPx(UI::Theme::FontSize.body));
+        SetWindowFontSize(fontSize);
         ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_Text, UI::Theme::ToVec4(UI::Theme::Color.textSecondary));
         DrawThemeFields(UI::Theme::data);
         ImGuiMCP::PopStyleColor();
