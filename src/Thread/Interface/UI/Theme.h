@@ -250,13 +250,15 @@ namespace Thread::Interface::UI
         return clicked;
     }
 
-    inline void DrawTextShadowed(ImGuiMCP::ImDrawList* a_drawList, ImGuiMCP::ImVec2 a_position,
-        ImGuiMCP::ImU32 a_color, const char* a_text)
+    inline void DrawTextShadowed(ImGuiMCP::ImDrawList* a_drawList, ImGuiMCP::ImVec2 a_position, ImGuiMCP::ImU32 a_color, const char* a_text)
     {
-        ImGuiMCP::ImDrawListManager::AddText(a_drawList, { a_position.x - 1, a_position.y - 1 }, Theme::Color.shadow, a_text, nullptr);
-        ImGuiMCP::ImDrawListManager::AddText(a_drawList, { a_position.x + 1, a_position.y - 1 }, Theme::Color.shadow, a_text, nullptr);
-        ImGuiMCP::ImDrawListManager::AddText(a_drawList, { a_position.x - 1, a_position.y + 1 }, Theme::Color.shadow, a_text, nullptr);
-        ImGuiMCP::ImDrawListManager::AddText(a_drawList, { a_position.x + 1, a_position.y + 1 }, Theme::Color.shadow, a_text, nullptr);
+        const auto textAlpha = (a_color & IM_COL32_A_MASK) >> IM_COL32_A_SHIFT;
+        const auto shadowAlpha = ((Theme::Color.shadow & IM_COL32_A_MASK) >> IM_COL32_A_SHIFT) * textAlpha / 255;
+        const auto shadow = (Theme::Color.shadow & ~IM_COL32_A_MASK) | (shadowAlpha << IM_COL32_A_SHIFT);
+        ImGuiMCP::ImDrawListManager::AddText(a_drawList, { a_position.x - 1, a_position.y - 1 }, shadow, a_text, nullptr);
+        ImGuiMCP::ImDrawListManager::AddText(a_drawList, { a_position.x + 1, a_position.y - 1 }, shadow, a_text, nullptr);
+        ImGuiMCP::ImDrawListManager::AddText(a_drawList, { a_position.x - 1, a_position.y + 1 }, shadow, a_text, nullptr);
+        ImGuiMCP::ImDrawListManager::AddText(a_drawList, { a_position.x + 1, a_position.y + 1 }, shadow, a_text, nullptr);
         ImGuiMCP::ImDrawListManager::AddText(a_drawList, a_position, a_color, a_text, nullptr);
     }
 }
