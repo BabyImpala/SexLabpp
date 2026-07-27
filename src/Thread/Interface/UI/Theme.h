@@ -90,6 +90,7 @@ namespace Thread::Interface::UI::Theme
 
     struct EnjoymentValues final
     {
+        ImGuiMCP::ImU32 interactionText = IM_COL32(136, 128, 120, 255);
         ImGuiMCP::ImU32 normalLow = IM_COL32(122, 40, 40, 255);
         ImGuiMCP::ImU32 normalHigh = IM_COL32(208, 104, 88, 255);
         ImGuiMCP::ImU32 overflowLow = IM_COL32(138, 96, 16, 255);

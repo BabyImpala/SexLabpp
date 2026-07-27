@@ -304,7 +304,7 @@ namespace Thread::Interface
                 ImGuiMCP::ImDrawListManager::PushClipRect(dl,
                     ImGuiMCP::ImVec2{ nameMaxX, rowStart.y }, ImGuiMCP::ImVec2{ valueMinX, rowMaxY }, true);
                 DrawTextShadowed(dl, ImGuiMCP::ImVec2{ intrX, rowStart.y + lblPad },
-                    UI::Theme::Color.textMuted, b.interactions);
+                    UI::Theme::Enjoyment.interactionText, b.interactions);
                 ImGuiMCP::ImDrawListManager::PopClipRect(dl);
             }
 
