@@ -258,6 +258,14 @@ bool property SubmissiveTarget hidden
 	  SetSettingBool("bSubmissiveTarget", aSet)
 	EndFunction
 EndProperty
+bool property EnjInterText Hidden
+  bool Function Get()
+    return GetSettingBool("bEnjInterText")
+  EndFunction
+  Function Set(bool abSet)
+    SetSettingBool("bEnjInterText", abSet)
+  EndFunction
+EndProperty
 bool property AdjustStage Hidden
   bool Function Get()
     return GetSettingBool("bAdjustStage")

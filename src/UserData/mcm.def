@@ -19,6 +19,7 @@ MCM_SETTING(bSubmissivePlayer, false)
 MCM_SETTING(bSubmissiveTarget, false)
 MCM_SETTING(bMatchMakerActive, false)
 MCM_SETTING(bLipsFixedValue, true)
+MCM_SETTING(bEnjInterText, false)
 MCM_SETTING(bAdjustStage, true)
 
 MCM_SETTING(bHideHUD, true)

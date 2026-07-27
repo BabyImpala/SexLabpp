@@ -2026,6 +2026,7 @@ float Property VarUI_TextScaleMult    Auto Hidden
 bool Property  VarUI_SeparateOrgasm   Auto Hidden
 bool Property  VarUI_HasPlayer        Auto Hidden
 bool Property  VarUI_AdjustStage      Auto Hidden
+bool Property  VarUI_EnjInterText     Auto Hidden
 
 Function TryInitSceneHUD()
 	If (GetStatus() != STATUS_INSCENE)
@@ -2054,6 +2055,7 @@ Function RefreshPropertiesSceneHUD(string asMode)
 		VarUI_SeparateOrgasm       = (Config.ClimaxType == Config.CLIMAXTYPE_SLSO)
 		VarUI_HasPlayer            = HasPlayer
 		VarUI_AdjustStage          = Config.AdjustStage
+		VarUI_EnjInterText         = Config.EnjInterText
 		ElementUI_GameHUD          = !Config.HideHUD
 		ElementUI_AnimSpeed        = Config.ElementAnimSpeed
 		ElementUI_EnjBars          = Config.ElementEnjBars
@@ -2064,6 +2066,7 @@ Function RefreshPropertiesSceneHUD(string asMode)
 		Config.MenuScaleMult       = VarUI_MenuScaleMult
 		Config.MenuTextScaleMult   = VarUI_TextScaleMult
 		Config.AdjustStage         = VarUI_AdjustStage
+		Config.EnjInterText        = VarUI_EnjInterText
 		Config.HideHUD             = !ElementUI_GameHUD
 		Config.ElementAnimSpeed    = ElementUI_AnimSpeed
 		Config.ElementEnjBars      = ElementUI_EnjBars
