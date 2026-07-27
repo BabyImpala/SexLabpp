@@ -1112,10 +1112,14 @@ State Animating
 	EndEvent
 	Function AnimationStart()
 		_animationSyncCount += 1
-		Log("AnimationStart called " + _animationSyncCount + "/" + (_Positions.Length + 1) + " times")
-		If (_animationSyncCount < (_Positions.Length + 1))
+		int syncCount = _animationSyncCount
+		int syncTarget = _Positions.Length + 1
+		If (syncCount != syncTarget || _animationSyncPending)
+			Log("AnimationStart called " + syncCount + "/" + syncTarget + " times")
 			return
 		EndIf
+		_animationSyncPending = true
+		Log("AnimationStart called " + syncCount + "/" + syncTarget + " times")
 		Log("AnimationStart fully setup, begin animating")
 		If (HasPlayer)
 			If(IsVictim(PlayerRef) && Config.DisablePlayer)
