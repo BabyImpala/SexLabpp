@@ -1069,9 +1069,12 @@ String[] Function GetCustomScenes() native
 /;
 
 float Property ANIMATING_UPDATE_INTERVAL = 0.5 AutoReadOnly
+float Property SCENE_RESET_SETTLE_TIME = 0.5 AutoReadOnly
 int _animationSyncCount
 bool _animationStarted
 bool _animationSyncPending
+bool _sceneResetSyncPending
+float _nextSceneResetAt
 String _queuedSceneReset
 int _initialRealignTicks	; Placement is only asserted once per stage; if the first assert races with a busy
 							; actor (furniture exit, get-up, pathing) it silently fails until the next stage.
@@ -1103,6 +1106,8 @@ State Animating
 		SetFurnitureIgnored(true)
 		_SFXTimer = Config.SFXDelay
 		_animationSyncPending = false
+		_sceneResetSyncPending = false
+		_nextSceneResetAt = 0.0
 		_queuedSceneReset = ""
 		If (!_QuickResetScenes)
 			_animationSyncCount = 0
@@ -1138,11 +1143,17 @@ State Animating
 	EndFunction
 
 	bool Function ResetScene(String asNewScene)
+		float now = SexLabUtil.GetCurrentGameRealTime()
+		If (_sceneResetSyncPending || now < _nextSceneResetAt)
+			Log("Ignoring scene reset while the previous reset is still settling", "ResetScene()")
+			return true
+		EndIf
 		If (_animationSyncPending)
 			_queuedSceneReset = asNewScene
 			return true
 		EndIf
 		_animationSyncPending = true
+		_sceneResetSyncPending = true
 		UnregisterForUpdate()
 		String currentScene = GetActiveScene()
 		AddExperience(_Positions, currentScene, _StageHistory)
@@ -1150,7 +1161,7 @@ State Animating
 			If (!SetActiveScene(asNewScene))
 				Log("Unable to reset scene. New scene is invalid for this thread")
 				_animationSyncPending = false
-				_queuedSceneReset = ""
+				_sceneResetSyncPending = false
 				return false
 			EndIf
 			SortAliasesToPositions()
@@ -1487,6 +1498,8 @@ State Animating
 
 	Function OnAnimationSyncFailed()
 		_animationSyncPending = false
+		_sceneResetSyncPending = false
+		_nextSceneResetAt = 0.0
 		_queuedSceneReset = ""
 		Log("Animation synchronization failed; ending thread", "OnAnimationSyncFailed()")
 		EndAnimation()
@@ -1512,9 +1525,13 @@ State Animating
 
 	Function OnAnimationSynchronized()
 		_animationSyncPending = false
+		bool completedSceneReset = _sceneResetSyncPending
+		_sceneResetSyncPending = false
 		String queuedScene = _queuedSceneReset
 		_queuedSceneReset = ""
-		If (queuedScene && queuedScene != GetActiveScene())
+		If (completedSceneReset)
+			_nextSceneResetAt = SexLabUtil.GetCurrentGameRealTime() + SCENE_RESET_SETTLE_TIME
+		ElseIf (queuedScene && queuedScene != GetActiveScene())
 			ResetScene(queuedScene)
 			return
 		EndIf
@@ -2284,6 +2301,8 @@ Function Initialize()
 	_QuickResetScenes = false
 	_animationStarted = false
 	_animationSyncPending = false
+	_sceneResetSyncPending = false
+	_nextSceneResetAt = 0.0
 	_queuedSceneReset = ""
 	EnjoymentPaused = false
 	; Enter thread selection pool
