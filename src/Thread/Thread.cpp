@@ -323,7 +323,9 @@ namespace Thread
                 return false;
             });
         });
-        AdvanceScene(activeStage);
+        for (size_t i = 0; i < activeAssignment->size(); i++) {
+            ReassertPlacement(i, true);
+        }
     }
 
     const Registry::Expression* Instance::GetExpression(RE::Actor* a_actor)
