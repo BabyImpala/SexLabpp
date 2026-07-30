@@ -2183,8 +2183,12 @@ Function ApplyCumFX(Actor SourceRef)
 			bool aGrinding_ = interFlags[aGrinding]
 			bool aAnal_ = interFlags[aAnal]
 			bool any_oral = pOral_ || pDeepthroat_ || pLickingShaft_
-			; Comeback: reasses need for fallback
-			If (!any_oral && !aVaginal_ && !aGrinding_ && !aAnal_)
+			; Fall back to scene-wide tags only in a 1-on-1 pairing, where the sole target
+			; must be the recipient. In 3+ actor scenes these tags don't say WHICH actor the
+			; source finished on, so applying them sprays cum onto bystanders not interacting
+			; with the source (e.g. oral cum on a male partner in an Oral-tagged group scene).
+			; Leave aiType unset (-2) for such targets so they get none.
+			If (!any_oral && !aVaginal_ && !aGrinding_ && !aAnal_ && _Positions.Length <= 2)
 				any_oral = IsOral()
 				aVaginal_ = IsVaginal()
 				aAnal_ = IsAnal()
