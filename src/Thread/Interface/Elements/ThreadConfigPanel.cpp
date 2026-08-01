@@ -113,8 +113,6 @@ namespace Thread::Interface
         const float cardX = contentX + (availableW - cardW) * 0.5f;
         const float rowPadV = scale.Px(6.0f) * nestedScale;
         const float rowPadH = scale.Px(12.0f) * nestedScale;
-        const float hdrPadV = scale.Px(5.0f) * nestedScale;
-        const float hdrPadH = scale.Px(10.0f) * nestedScale;
         const float fieldGap = scale.Px(UI::Theme::Spacing.sm) * nestedScale;
         const float captionSize = scale.TextPx(UI::Theme::FontSize.caption) * nestedScale;
         const float subsectionHeaderSize = scale.TextPx(UI::Theme::FontSize.subsectionHeader) * nestedScale;
@@ -137,62 +135,12 @@ namespace Thread::Interface
 
         ImGuiMCP::PushID(static_cast<int>(actor->GetFormID()));
 
-        // ── Card header ─────────────────────────────────────────────────────
-        // An invisible-label Selectable provides the real user interaction here.
-        // The header's actual content (toggle, name, badge) is drawn on top of it afterward.
         ImGuiMCP::SetCursorPosX(cardX);
-        const ImGuiMCP::ImVec2 hdrMin = ImGuiMCP::GetCursorScreenPos();
-        const float hdrH = subsectionHeaderSize + hdrPadV * 2.0f;
-
-        ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_Header, UI::Theme::Color.nestedHeader);
-        ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_HeaderHovered, UI::Theme::Color.nestedHeaderHovered);
-        ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_HeaderActive, UI::Theme::Color.nestedControlActive);
-        if (ImGuiMCP::Selectable("##slpp_tcmCardHdr", false, 0, ImGuiMCP::ImVec2{ cardW, hdrH }))
-            state.cardOpen = !state.cardOpen;
-        ImGuiMCP::PopStyleColor(3);
-        const bool hdrHov = ImGuiMCP::IsItemHovered();
-
-        // Selectable only paints interaction states, so supply the idle header surface.
-        auto* dl = ImGuiMCP::GetWindowDrawList();
-        if (!hdrHov) {
-            const ImGuiMCP::ImVec2 hdrMax{ hdrMin.x + cardW, hdrMin.y + hdrH };
-            ImGuiMCP::ImDrawListManager::AddRectFilled(dl, hdrMin, hdrMax, UI::Theme::Color.nestedHeader, 0.0f, 0);
-        }
-
-        ImGuiMCP::SetCursorScreenPos(hdrMin);
         SetWindowFontSize(subsectionHeaderSize);
-
-        // Left accent bar to distinguish actor cards from section headers
-        const float accentBarW = scale.Px(2.0f) * nestedScale;
-        ImGuiMCP::ImDrawListManager::AddRectFilled(dl,
-            ImGuiMCP::ImVec2{ hdrMin.x, hdrMin.y },
-            ImGuiMCP::ImVec2{ hdrMin.x + accentBarW, hdrMin.y + hdrH },
-            hdrHov ? UI::Theme::Color.accent : UI::Theme::Color.borderSubtle, 0.0f, 0);
-
-        // Name at left with padding
-        ImGuiMCP::SetCursorScreenPos(ImGuiMCP::ImVec2{ hdrMin.x + hdrPadH, hdrMin.y + hdrPadV });
-        ImGuiMCP::TextColored(UI::Theme::ToVec4(hdrHov ? UI::Theme::Color.textPrimary : UI::Theme::Color.textSecondary),
-            "%s", actor->GetDisplayFullName());
-
-        // Right side: PLAYER badge then toggle icon, both flush-right
-        SKSEMenuFramework::PushFont(UI::Theme::Icon::solidFont);
-        const char* toggleIcon = state.cardOpen ? UI::Theme::Icon::minus : UI::Theme::Icon::plus;
-        const ImGuiMCP::ImVec2 toggleIconSize = ImGuiMCP::CalcTextSize(toggleIcon);
-        FontAwesome::Pop();
-
-        const float toggleIconX = hdrMin.x + cardW - hdrPadH - toggleIconSize.x;
-        if (actor->IsPlayerRef()) {
-            const ImGuiMCP::ImVec2 badgeSize = ImGuiMCP::CalcTextSize("PLAYER");
-            const float badgeX = toggleIconX - fieldGap - badgeSize.x;
-            ImGuiMCP::SetCursorScreenPos(ImGuiMCP::ImVec2{ badgeX, hdrMin.y + hdrPadV });
-            ImGuiMCP::TextColored(UI::Theme::ToVec4(UI::Theme::Color.accent), "PLAYER");
-        }
-        SKSEMenuFramework::PushFont(UI::Theme::Icon::solidFont);
-        ImGuiMCP::SetCursorScreenPos(ImGuiMCP::ImVec2{ toggleIconX, hdrMin.y + hdrPadV });
-        ImGuiMCP::TextColored(UI::Theme::ToVec4(UI::Theme::Color.textSecondary), "%s", toggleIcon);
-        FontAwesome::Pop();
-
-        ImGuiMCP::SetCursorScreenPos(ImGuiMCP::ImVec2{ hdrMin.x, hdrMin.y + hdrH });
+        if (UI::CollapsibleCardHeader(actor->GetDisplayFullName(), actor->IsPlayerRef() ? "PLAYER" : nullptr,
+                "##slpp_tcmCardHdr", state.cardOpen, cardW, scale.Factor() * nestedScale))
+            state.cardOpen = !state.cardOpen;
+        auto* dl = ImGuiMCP::GetWindowDrawList();
 
         // ── Card body (collapsible) ─────────────────────────────────────────
         if (!state.cardOpen) {
@@ -202,7 +150,7 @@ namespace Thread::Interface
             return;
         }
         auto* inst = a_hud.GetThreadInstance();
-        const ImGuiMCP::ImVec2 bodyMin{ hdrMin.x, hdrMin.y + hdrH };
+        const ImGuiMCP::ImVec2 bodyMin = ImGuiMCP::GetCursorScreenPos();
         ImGuiMCP::SetCursorScreenPos(bodyMin);
         ImGuiMCP::Dummy(ImGuiMCP::ImVec2{ 0.0f, scale.Px(UI::Theme::Spacing.xs) * nestedScale });
         ImGuiMCP::ImDrawListManager::ChannelsSplit(dl, 2);
@@ -370,7 +318,7 @@ namespace Thread::Interface
         ImGuiMCP::SetCursorPosY(ImGuiMCP::GetCursorPosY() + rowPadV);
         ImGuiMCP::PopStyleColor(6);
 
-        const ImGuiMCP::ImVec2 bodyMax{ hdrMin.x + cardW, ImGuiMCP::GetCursorScreenPos().y };
+        const ImGuiMCP::ImVec2 bodyMax{ cardX + cardW, ImGuiMCP::GetCursorScreenPos().y };
         ImGuiMCP::ImDrawListManager::ChannelsSetCurrent(dl, 0);
         ImGuiMCP::ImDrawListManager::AddRectFilled(
             dl, bodyMin, bodyMax, UI::Theme::Color.nestedSurface, 0.0f, 0);

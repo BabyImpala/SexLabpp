@@ -87,6 +87,9 @@ namespace Thread::Interface::UI::Theme
         float panelTabWidth = 78.0f;
         float panelTabGap = 8.0f;
         float nestedMenuScale = 0.90f;
+        float nestedHeaderPaddingX = 10.0f;
+        float nestedHeaderPaddingY = 5.0f;
+        float nestedHeaderAccentWidth = 2.0f;
     };
 
     struct EnjoymentValues final
@@ -125,6 +128,17 @@ namespace Thread::Interface::UI::Theme
         ImGuiMCP::ImU32 fill = IM_COL32(160, 160, 160, 56);
         ImGuiMCP::ImU32 track = IM_COL32(255, 255, 255, 10);
         ImGuiMCP::ImU32 centerTick = IM_COL32(255, 255, 255, 26);
+        float panelWidth = 300.0f;
+        float maxBodyHeight = 420.0f;
+        float trackHitExtension = 8.0f;
+        float trackValueWidth = 40.0f;
+        float trackLabelWidth = 20.0f;
+        float trackHeight = 4.0f;
+        float trackNeedleWidth = 3.0f;
+        float trackNeedleExtension = 5.0f;
+        float trackNeedleRounding = 1.5f;
+        float trackCenterTickExtension = 2.0f;
+        float dragDistance = 300.0f;
     };
 
     struct AnimationValues final
@@ -275,6 +289,55 @@ namespace Thread::Interface::UI
         FontAwesome::Pop();
 
         ImGuiMCP::SetCursorPos(cursorAfter);
+        return clicked;
+    }
+
+    inline bool CollapsibleCardHeader(const char* a_label, const char* a_badge, const char* a_id, bool a_open, float a_width, float a_scale)
+    {
+        const ImGuiMCP::ImVec2 headerMin = ImGuiMCP::GetCursorScreenPos();
+        const float paddingX = Theme::Geometry.nestedHeaderPaddingX * a_scale;
+        const float paddingY = Theme::Geometry.nestedHeaderPaddingY * a_scale;
+        const float headerHeight = ImGuiMCP::CalcTextSize(a_label).y + paddingY * 2.0f;
+
+        ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_Header, Theme::Color.nestedHeader);
+        ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_HeaderHovered, Theme::Color.nestedHeaderHovered);
+        ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_HeaderActive, Theme::Color.nestedControlActive);
+        const bool clicked = ImGuiMCP::Selectable(a_id, false, 0, { a_width, headerHeight });
+        ImGuiMCP::PopStyleColor(3);
+
+        const bool hovered = ImGuiMCP::IsItemHovered();
+        auto* drawList = ImGuiMCP::GetWindowDrawList();
+        if (!hovered)
+            ImGuiMCP::ImDrawListManager::AddRectFilled(drawList, headerMin, { headerMin.x + a_width, headerMin.y + headerHeight }, Theme::Color.nestedHeader, 0.0f, 0);
+
+        ImGuiMCP::ImDrawListManager::AddRectFilled(drawList, headerMin,
+            { headerMin.x + Theme::Geometry.nestedHeaderAccentWidth * a_scale, headerMin.y + headerHeight },
+            hovered ? Theme::Color.accent : Theme::Color.borderSubtle, 0.0f, 0);
+
+        const ImGuiMCP::ImVec4 textColor = Theme::ToVec4(hovered ? Theme::Color.textPrimary : Theme::Color.textSecondary);
+        const ImGuiMCP::ImVec2 labelSize = ImGuiMCP::CalcTextSize(a_label);
+        ImGuiMCP::SetCursorScreenPos({ headerMin.x + paddingX, headerMin.y + (headerHeight - labelSize.y) * 0.5f });
+        ImGuiMCP::TextColored(textColor, "%s", a_label);
+
+        SKSEMenuFramework::PushFont(Theme::Icon::solidFont);
+        const char* toggleIcon = a_open ? Theme::Icon::minus : Theme::Icon::plus;
+        const ImGuiMCP::ImVec2 toggleSize = ImGuiMCP::CalcTextSize(toggleIcon);
+        FontAwesome::Pop();
+        const float toggleX = headerMin.x + a_width - paddingX - toggleSize.x;
+
+        if (a_badge && *a_badge) {
+            const ImGuiMCP::ImVec2 badgeSize = ImGuiMCP::CalcTextSize(a_badge);
+            ImGuiMCP::SetCursorScreenPos({ toggleX - Theme::Spacing.sm * a_scale - badgeSize.x,
+                headerMin.y + (headerHeight - badgeSize.y) * 0.5f });
+            ImGuiMCP::TextColored(Theme::ToVec4(Theme::Color.accent), "%s", a_badge);
+        }
+
+        SKSEMenuFramework::PushFont(Theme::Icon::solidFont);
+        ImGuiMCP::SetCursorScreenPos({ toggleX, headerMin.y + (headerHeight - toggleSize.y) * 0.5f });
+        ImGuiMCP::TextColored(Theme::ToVec4(Theme::Color.textSecondary), "%s", toggleIcon);
+        FontAwesome::Pop();
+
+        ImGuiMCP::SetCursorScreenPos({ headerMin.x, headerMin.y + headerHeight });
         return clicked;
     }
 
