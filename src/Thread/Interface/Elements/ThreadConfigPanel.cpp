@@ -394,7 +394,7 @@ namespace Thread::Interface
         const float panelW = scale.Px(280.0f);
         const float offset = scale.Px(UI::Theme::Geometry.panelTabWidth + UI::Theme::Geometry.panelTabGap);
         const float rowMinH = scale.Px(28.0f);
-        const float rowPadH = scale.Px(12.0f);
+        const float rowPadH = scale.Px(UI::Theme::Spacing.lg);
         const float maxBodyH = scale.Px(340.0f);  // before scrolling
 
         ImGuiMCP::SetNextWindowPos(
@@ -417,34 +417,9 @@ namespace Thread::Interface
 
         // ── Auto Advance toggle
         SetWindowFontSize(scale.TextPx(UI::Theme::FontSize.body));
-        const float toggleRowH = scale.Px(24.0f);
-        const float availW = ImGuiMCP::GetContentRegionAvail().x - rowPadH * 2.0f;
-        const ImGuiMCP::ImVec2 toggleRowMin = ImGuiMCP::GetCursorScreenPos();
-        ImGuiMCP::SetCursorScreenPos({ toggleRowMin.x + rowPadH, toggleRowMin.y });
-
-        ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_HeaderHovered, UI::Theme::ToVec4(UI::Theme::Color.transparent));
-        if (UI::SelectableButton("##slpp_autoAdvanceRow", false, 0, ImGuiMCP::ImVec2{ availW, toggleRowH })) {
-            bool autoPlay = inst->GetThreadProperty<bool>("AutoAdvance");
-            OnAutoPlaySet(a_hud, !autoPlay);
-        }
-        ImGuiMCP::PopStyleColor();
-
         bool autoPlay = inst->GetThreadProperty<bool>("AutoAdvance");
-        const float cbSize = ImGuiMCP::GetFrameHeight();
-        const float cbX = toggleRowMin.x + rowPadH + availW - cbSize;
-        const float cbY = toggleRowMin.y + (toggleRowH - cbSize) * 0.5f + scale.Px(3.0f);
-        ImGuiMCP::SetCursorScreenPos({ cbX, cbY });
-        UI::PushCheckboxStyle(scale.Factor());
-        bool cbChanged = ImGuiMCP::Checkbox("##slpp_tcmAutoAdvance", &autoPlay);
-        UI::PopCheckboxStyle();
-        if (cbChanged)
+        if (UI::CheckboxRow("Auto Advance", "slpp_tcmAutoAdvance", autoPlay, scale.Factor()))
             OnAutoPlaySet(a_hud, autoPlay);
-
-        const ImGuiMCP::ImVec2 labelSize = ImGuiMCP::CalcTextSize("Auto Advance");
-        const float labelY = toggleRowMin.y + (toggleRowH - labelSize.y) * 0.5f;
-        ImGuiMCP::SetCursorScreenPos({ toggleRowMin.x + rowPadH, labelY });
-        ImGuiMCP::TextColored(UI::Theme::ToVec4(UI::Theme::Color.textSecondary), "Auto Advance");
-        ImGuiMCP::SetCursorScreenPos({ toggleRowMin.x, toggleRowMin.y + toggleRowH });
 
         ImGuiMCP::Dummy(ImGuiMCP::ImVec2{ 0.0f, scale.Px(UI::Theme::Spacing.md) });
 

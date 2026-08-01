@@ -83,6 +83,7 @@ namespace Thread::Interface::UI::Theme
         float roundingEnjBar = 3.0f;
         float borderThin = 1.0f;
         float checkboxPaddingY = 0.5f;
+        float checkboxRowHeight = 24.0f;
         float panelTabWidth = 78.0f;
         float panelTabGap = 8.0f;
         float nestedMenuScale = 0.90f;
@@ -122,12 +123,8 @@ namespace Thread::Interface::UI::Theme
     struct OffsetValues final
     {
         ImGuiMCP::ImU32 fill = IM_COL32(160, 160, 160, 56);
-        ImGuiMCP::ImU32 needle = IM_COL32(176, 168, 152, 255);
-        ImGuiMCP::ImU32 needleActive = IM_COL32(221, 216, 208, 255);
         ImGuiMCP::ImU32 track = IM_COL32(255, 255, 255, 10);
-        ImGuiMCP::ImU32 trackBorder = IM_COL32(58, 58, 58, 128);
         ImGuiMCP::ImU32 centerTick = IM_COL32(255, 255, 255, 26);
-        ImGuiMCP::ImU32 separator = IM_COL32(38, 38, 38, 115);
     };
 
     struct AnimationValues final
@@ -221,6 +218,38 @@ namespace Thread::Interface::UI
     inline void PopCheckboxStyle()
     {
         ImGuiMCP::PopStyleVar();
+    }
+
+    inline bool CheckboxRow(const char* a_label, const char* a_id, bool& a_value, float a_scale)
+    {
+        ImGuiMCP::PushID(a_id);
+        const float horizontalPadding = Theme::Spacing.lg * a_scale;
+        const float rowHeight = Theme::Geometry.checkboxRowHeight * a_scale;
+        const float availableWidth = ImGuiMCP::GetContentRegionAvail().x - horizontalPadding * 2.0f;
+        const ImGuiMCP::ImVec2 rowOrigin = ImGuiMCP::GetCursorScreenPos();
+        ImGuiMCP::SetCursorScreenPos({ rowOrigin.x + horizontalPadding, rowOrigin.y });
+
+        ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_HeaderHovered, Theme::Color.transparent);
+        const bool rowClicked = SelectableButton("##row", false, ImGuiMCP::ImGuiSelectableFlags_AllowOverlap, { availableWidth, rowHeight });
+        ImGuiMCP::PopStyleColor();
+
+        PushCheckboxStyle(a_scale);
+        const float checkboxSize = ImGuiMCP::GetFrameHeight();
+        ImGuiMCP::SetCursorScreenPos({ rowOrigin.x + horizontalPadding + availableWidth - checkboxSize,
+            rowOrigin.y + (rowHeight - checkboxSize) * 0.5f });
+        const bool checkboxChanged = ImGuiMCP::Checkbox("##checkbox", &a_value);
+        PopCheckboxStyle();
+
+        const ImGuiMCP::ImVec2 labelSize = ImGuiMCP::CalcTextSize(a_label);
+        ImGuiMCP::SetCursorScreenPos({ rowOrigin.x + horizontalPadding, rowOrigin.y + (rowHeight - labelSize.y) * 0.5f });
+        ImGuiMCP::TextColored(Theme::ToVec4(Theme::Color.textSecondary), "%s", a_label);
+
+        const bool rowChanged = rowClicked && !checkboxChanged;
+        if (rowChanged)
+            a_value = !a_value;
+        ImGuiMCP::SetCursorScreenPos({ rowOrigin.x, rowOrigin.y + rowHeight });
+        ImGuiMCP::PopID();
+        return rowChanged || checkboxChanged;
     }
 
     inline bool CollapsibleSectionHeader(const char* a_label, const char* a_id, bool a_open, ImGuiMCP::ImVec2 a_size)
