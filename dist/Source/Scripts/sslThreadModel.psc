@@ -886,11 +886,21 @@ EndState
 ; An immediate state to disallow setting additional data while aliases process setup
 State Making_M
 	Event OnBeginState()
+		If (!BeginPlayerDialogueWait())
+			return
+		EndIf
 		If (!BeginActorRecovery())
 			return
 		EndIf
 		BeginAliasPreparation()
 	EndEvent
+
+	Function OnPlayerDialogueComplete()
+		If (!BeginActorRecovery())
+			return
+		EndIf
+		BeginAliasPreparation()
+	EndFunction
 
 	Function OnNativeActorRecoveryComplete(bool abSucceeded)
 		If (!abSucceeded)
@@ -1055,6 +1065,7 @@ EndFunction
 
 Function CreateInstance(Actor[] akSubmissives, String[] asPrimaryScenes, String[] asLeadInScenes, String[] asCustomScenes, int aiFurnitureStatus) native
 bool Function BeginActorRecovery() native
+bool Function BeginPlayerDialogueWait() native
 bool Function BeginPlayerSheatheWait() native
 String[] Function GetLeadInScenes() native
 String[] Function GetPrimaryScenes() native
@@ -1855,6 +1866,9 @@ Function PrepareDone()
 EndFunction
 Function OnNativeActorRecoveryComplete(bool abSucceeded)
 	Log("OnNativeActorRecoveryComplete(), Function called from invalid state: " + GetState())
+EndFunction
+Function OnPlayerDialogueComplete()
+	Log("OnPlayerDialogueComplete(), Function called from invalid state: " + GetState())
 EndFunction
 Function BeginAliasPreparation()
 	Log("BeginAliasPreparation(), Function called from invalid state: " + GetState())

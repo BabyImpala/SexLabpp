@@ -55,6 +55,7 @@ namespace Papyrus::ThreadModel
     void DestroyInstance(RE::TESQuest* a_qst, bool a_preservePreparedActors);
     void CancelPendingAnimations(RE::TESQuest* a_qst);
     bool BeginActorRecovery(QUESTARGS);
+    bool BeginPlayerDialogueWait(QUESTARGS);
     bool BeginPlayerSheatheWait(QUESTARGS);
     std::vector<RE::BSFixedString> GetLeadInScenes(QUESTARGS);
     std::vector<RE::BSFixedString> GetPrimaryScenes(QUESTARGS);
@@ -109,6 +110,7 @@ namespace Papyrus::ThreadModel
         REGISTERFUNC(DestroyInstance, "sslThreadModel", true);
         REGISTERFUNC(CancelPendingAnimations, "sslThreadModel", true);
         REGISTERFUNC(BeginActorRecovery, "sslThreadModel", false);
+        REGISTERFUNC(BeginPlayerDialogueWait, "sslThreadModel", false);
         REGISTERFUNC(BeginPlayerSheatheWait, "sslThreadModel", false);
         REGISTERFUNC(GetLeadInScenes, "sslThreadModel", true);
         REGISTERFUNC(GetPrimaryScenes, "sslThreadModel", true);

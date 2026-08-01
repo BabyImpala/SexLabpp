@@ -81,6 +81,7 @@ namespace Thread
 
         void AdvanceScene(const Registry::Stage* a_nextStage);
         bool BeginActorRecovery();
+        bool BeginPlayerDialogueWait();
         bool BeginPlayerSheatheWait();
         void RealignActors();
         bool SetActiveScene(const Registry::Scene* a_scene);
@@ -203,6 +204,7 @@ namespace Thread
         RE::WEAPON_STATE playerSheathePreviousState{ RE::WEAPON_STATE::kSheathed };
         bool actorPreparationApplied{ false };
         bool actorRecoveryPreparationBarrier{ false };
+        bool playerDialoguePending{ false };
         bool playerSheatheActionSubmitted{ false };
         bool playerSheathePending{ false };
         float animationPlaybackSpeed{ 1.0f };

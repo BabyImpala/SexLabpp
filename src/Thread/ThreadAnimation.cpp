@@ -32,6 +32,12 @@ namespace Thread
         std::mutex actorPreparationLock;
         std::unordered_map<RE::FormID, ActorPreparation> actorPreparations;
 
+        bool IsPlayerDialogueActive()
+        {
+            const auto ui = RE::UI::GetSingleton();
+            return ui && ui->IsMenuOpen(RE::DialogueMenu::MENU_NAME);
+        }
+
         bool PrepareActorForAnimation(RE::TESQuest* a_owner, RE::Actor* a_actor, bool a_human)
         {
             std::scoped_lock lock{ actorPreparationLock };
@@ -53,15 +59,6 @@ namespace Thread
             a_actor->AddToFaction(const_cast<RE::TESFaction*>(GameForms::AnimatingFaction), 1);
             a_actor->EvaluatePackage();
             if (a_actor->IsPlayerRef()) {
-                if (const auto ui = RE::UI::GetSingleton(); ui) {
-                    const auto interfaceStrings = RE::InterfaceStrings::GetSingleton();
-                    if (interfaceStrings && ui->IsMenuOpen(interfaceStrings->dialogueMenu)) {
-                        if (auto view = ui->GetMovieView(interfaceStrings->dialogueMenu)) {
-                            RE::GFxValue argument{ interfaceStrings->dialogueMenu };
-                            view->InvokeNoReturn("_global.skse.CloseMenu", &argument, 1);
-                        }
-                    }
-                }
                 a_actor->AsActorState()->actorState1.lifeState = RE::ACTOR_LIFE_STATE::kAlive;
             } else {
                 if (inserted) {
@@ -156,6 +153,7 @@ namespace Thread
                 }
                 instance->pendingRecoveries.clear();
                 instance->actorRecoveryPreparationBarrier = false;
+                instance->playerDialoguePending = false;
                 instance->playerSheathePending = false;
                 instance->playerSheatheElapsed = 0.0f;
                 instance->playerSheathePreviousState = RE::WEAPON_STATE::kSheathed;
@@ -172,6 +170,22 @@ namespace Thread
     bool Instance::BeginActorRecovery()
     {
         return !QueueActorRecoveries(true);
+    }
+
+    // Player dialogue MUST be waited on. We can race with the engine's dialogue closure handler which
+    // leads to the player permanently being stuck since the dialogue handler fails to cleanup properly
+    bool Instance::BeginPlayerDialogueWait()
+    {
+        if (playerDialoguePending) {
+            return false;
+        }
+        const auto player = RE::PlayerCharacter::GetSingleton();
+        if (!player || !GetPosition(player) || !IsPlayerDialogueActive()) {
+            return true;
+        }
+        playerDialoguePending = true;
+        logger::info("Waiting for player dialogue to finish before preparing actors.");
+        return false;
     }
 
     bool Instance::QueueActorRecoveries(bool a_preparationBarrier)
@@ -648,6 +662,21 @@ namespace Thread
         constexpr float minimumClipWeight = 0.01f;
         constexpr float minimumTimeChange = 0.0001f;
 
+        if (playerDialoguePending) {
+            if (IsPlayerDialogueActive()) {
+                return;
+            }
+            playerDialoguePending = false;
+            logger::info("Player dialogue finished; continuing actor preparation.");
+            const auto scriptObject = Script::GetScriptObject(linkedQst, "sslThreadModel");
+            Script::CallbackPtr callbackPtr{};
+            if (!scriptObject || !Script::DispatchMethodCall(scriptObject, "OnPlayerDialogueComplete", callbackPtr)) {
+                logger::error("Failed to notify Papyrus of player dialogue completion for thread {:X}.", linkedQst->GetFormID());
+            }
+            return;
+        }
+
+        const auto player = RE::PlayerCharacter::GetSingleton();
         if (!pendingRecoveries.empty()) {
             UpdatePendingRecoveries(a_delta);
             return;
@@ -655,7 +684,6 @@ namespace Thread
 
         if (playerSheathePending) {
             playerSheatheElapsed += a_delta;
-            const auto player = RE::PlayerCharacter::GetSingleton();
             const auto weaponState = player ? player->AsActorState()->GetWeaponState() : RE::WEAPON_STATE::kSheathed;
             const bool sheathed = player && weaponState == RE::WEAPON_STATE::kSheathed;
             const bool timedOut = playerSheatheElapsed >= playerSheatheTimeout;
