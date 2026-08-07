@@ -886,11 +886,21 @@ EndState
 ; An immediate state to disallow setting additional data while aliases process setup
 State Making_M
 	Event OnBeginState()
+		If (!BeginPlayerDialogueWait())
+			return
+		EndIf
 		If (!BeginActorRecovery())
 			return
 		EndIf
 		BeginAliasPreparation()
 	EndEvent
+
+	Function OnPlayerDialogueComplete()
+		If (!BeginActorRecovery())
+			return
+		EndIf
+		BeginAliasPreparation()
+	EndFunction
 
 	Function OnNativeActorRecoveryComplete(bool abSucceeded)
 		If (!abSucceeded)
@@ -1055,6 +1065,7 @@ EndFunction
 
 Function CreateInstance(Actor[] akSubmissives, String[] asPrimaryScenes, String[] asLeadInScenes, String[] asCustomScenes, int aiFurnitureStatus) native
 bool Function BeginActorRecovery() native
+bool Function BeginPlayerDialogueWait() native
 bool Function BeginPlayerSheatheWait() native
 String[] Function GetLeadInScenes() native
 String[] Function GetPrimaryScenes() native
@@ -1069,9 +1080,12 @@ String[] Function GetCustomScenes() native
 /;
 
 float Property ANIMATING_UPDATE_INTERVAL = 0.5 AutoReadOnly
+float Property SCENE_RESET_SETTLE_TIME = 0.5 AutoReadOnly
 int _animationSyncCount
 bool _animationStarted
 bool _animationSyncPending
+bool _sceneResetSyncPending
+float _nextSceneResetAt
 String _queuedSceneReset
 
 bool _QuickResetScenes		; reinits thread without actor/center changes (e.g. to get new playing scenes)
@@ -1100,6 +1114,8 @@ State Animating
 		SetFurnitureIgnored(true)
 		_SFXTimer = Config.SFXDelay
 		_animationSyncPending = false
+		_sceneResetSyncPending = false
+		_nextSceneResetAt = 0.0
 		_queuedSceneReset = ""
 		If (!_QuickResetScenes)
 			_animationSyncCount = 0
@@ -1134,11 +1150,17 @@ State Animating
 	EndFunction
 
 	bool Function ResetScene(String asNewScene)
+		float now = SexLabUtil.GetCurrentGameRealTime()
+		If (_sceneResetSyncPending || now < _nextSceneResetAt)
+			Log("Ignoring scene reset while the previous reset is still settling", "ResetScene()")
+			return true
+		EndIf
 		If (_animationSyncPending)
 			_queuedSceneReset = asNewScene
 			return true
 		EndIf
 		_animationSyncPending = true
+		_sceneResetSyncPending = true
 		UnregisterForUpdate()
 		String currentScene = GetActiveScene()
 		AddExperience(_Positions, currentScene, _StageHistory)
@@ -1146,7 +1168,7 @@ State Animating
 			If (!SetActiveScene(asNewScene))
 				Log("Unable to reset scene. New scene is invalid for this thread")
 				_animationSyncPending = false
-				_queuedSceneReset = ""
+				_sceneResetSyncPending = false
 				return false
 			EndIf
 			SortAliasesToPositions()
@@ -1477,6 +1499,8 @@ State Animating
 
 	Function OnAnimationSyncFailed()
 		_animationSyncPending = false
+		_sceneResetSyncPending = false
+		_nextSceneResetAt = 0.0
 		_queuedSceneReset = ""
 		Log("Animation synchronization failed; ending thread", "OnAnimationSyncFailed()")
 		EndAnimation()
@@ -1502,9 +1526,13 @@ State Animating
 
 	Function OnAnimationSynchronized()
 		_animationSyncPending = false
+		bool completedSceneReset = _sceneResetSyncPending
+		_sceneResetSyncPending = false
 		String queuedScene = _queuedSceneReset
 		_queuedSceneReset = ""
-		If (queuedScene && queuedScene != GetActiveScene())
+		If (completedSceneReset)
+			_nextSceneResetAt = SexLabUtil.GetCurrentGameRealTime() + SCENE_RESET_SETTLE_TIME
+		ElseIf (queuedScene && queuedScene != GetActiveScene())
 			ResetScene(queuedScene)
 			return
 		EndIf
@@ -1828,6 +1856,9 @@ Function PrepareDone()
 EndFunction
 Function OnNativeActorRecoveryComplete(bool abSucceeded)
 	Log("OnNativeActorRecoveryComplete(), Function called from invalid state: " + GetState())
+EndFunction
+Function OnPlayerDialogueComplete()
+	Log("OnPlayerDialogueComplete(), Function called from invalid state: " + GetState())
 EndFunction
 Function BeginAliasPreparation()
 	Log("BeginAliasPreparation(), Function called from invalid state: " + GetState())
@@ -2278,6 +2309,8 @@ Function Initialize()
 	_QuickResetScenes = false
 	_animationStarted = false
 	_animationSyncPending = false
+	_sceneResetSyncPending = false
+	_nextSceneResetAt = 0.0
 	_queuedSceneReset = ""
 	EnjoymentPaused = false
 	; Enter thread selection pool

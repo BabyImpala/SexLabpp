@@ -1,496 +1,377 @@
 #include "OffsetAdjustPanel.h"
 
+#include <numbers>
+
 namespace Thread::Interface
 {
     using UI::SetWindowFontSize;
 
+    namespace
+    {
+        constexpr float kDegreesPerRadian = 180.0f / std::numbers::pi_v<float>;
+        constexpr auto kPanelWindowFlags =
+            ImGuiMCP::ImGuiWindowFlags_NoTitleBar | ImGuiMCP::ImGuiWindowFlags_NoResize |
+            ImGuiMCP::ImGuiWindowFlags_NoMove | ImGuiMCP::ImGuiWindowFlags_NoScrollbar |
+            ImGuiMCP::ImGuiWindowFlags_NoCollapse | ImGuiMCP::ImGuiWindowFlags_AlwaysAutoResize;
+
+        void DrawPanelHeader(UI::Scale& a_scale, const char* a_title)
+        {
+            SetWindowFontSize(a_scale.TextPx(UI::Theme::FontSize.sectionHeader));
+            const float titleWidth = ImGuiMCP::CalcTextSize(a_title).x;
+            ImGuiMCP::SetCursorPosX(ImGuiMCP::GetCursorPosX() + std::max((ImGuiMCP::GetContentRegionAvail().x - titleWidth) * 0.5f, 0.0f));
+            ImGuiMCP::TextColored(UI::Theme::ToVec4(UI::Theme::Color.textPrimary), "%s", a_title);
+            ImGuiMCP::Dummy({ 0.0f, a_scale.Px(UI::Theme::Spacing.xs) });
+            ImGuiMCP::Separator();
+        }
+    }
+
     void OffsetAdjustPanel::Open(SceneHUD& a_hud)
     {
-        auto* inst = a_hud.GetThreadInstance();
-        if (!inst)
+        Close();
+        auto* instance = a_hud.GetThreadInstance();
+        if (!instance)
             return;
-        _axes.clear();
-        auto* ctr = inst->GetCenterRef();
 
-        _hasFurniture = ctr && !ctr->IsPlayerRef();
-        _adjustStageOnly = inst->GetThreadProperty<bool>("VarUI_AdjustStage");
-        _selectedId.reset();
-        _pickerOpen = false;
-        _panelOpen = false;
-        _draggingAxis = -1;
-        _draggingId = 0;
-
-        RefreshSlots(a_hud);
-
-        if (_items.size() == 1) {
-            OnActorSelected(a_hud, _items.front());
-        } else if (!_items.empty()) {
-            _pickerOpen = true;
-        }
+        const auto* center = instance->GetCenterRef();
+        _hasFurnitureCenter = center && !center->IsPlayerRef();
+        _adjustStageOnly = instance->GetThreadProperty<bool>("VarUI_AdjustStage");
+        RefreshTargets(a_hud);
+        for (auto& target : _targets)
+            RefreshValues(a_hud, target);
     }
 
     void OffsetAdjustPanel::Close()
     {
-        _axes.clear();
-        _items.clear();
-        _selectedId.reset();
-        _pickerOpen = false;
-        _panelOpen = false;
-        _draggingAxis = -1;
-        _draggingId = 0;
+        _targets.clear();
+        _hasFurnitureCenter = false;
+        _adjustStageOnly = false;
     }
 
-    void OffsetAdjustPanel::RefreshSlots(SceneHUD& a_hud)
+    void OffsetAdjustPanel::RefreshTargets(SceneHUD& a_hud)
     {
-        _items.clear();
-        auto* inst = a_hud.GetThreadInstance();
-        if (!inst)
+        _targets.clear();
+        auto* instance = a_hud.GetThreadInstance();
+        if (!instance)
             return;
 
-        if (_hasFurniture) {
-            ActorItem fi;
-            fi.actor = nullptr;
-            fi.formId = 0;
-            fi.label = "Center";
-            fi.isScene = true;
-            _items.push_back(fi);
-        }
+        if (_hasFurnitureCenter)
+            _targets.push_back({ .label = "Center", .isCenter = true });
 
-        const auto actors = inst->GetActors();
-        for (size_t i = 0; i < actors.size(); ++i) {
-            auto* a = actors[i];
-            if (!a)
+        const auto actors = instance->GetActors();
+        for (std::size_t positionIndex = 0; positionIndex < actors.size(); ++positionIndex) {
+            auto* actor = actors[positionIndex];
+            if (!actor)
                 continue;
-            ActorItem item;
-            item.actor = a;
-            item.formId = a->GetFormID();
-            item.posIdx = i;
-            item.label = a->GetDisplayFullName();
-            item.isScene = false;
-            _items.push_back(item);
+            _targets.push_back({
+                .actor = actor,
+                .formId = actor->GetFormID(),
+                .positionIndex = positionIndex,
+                .label = actor->GetDisplayFullName(),
+            });
         }
 
-        std::ranges::sort(_items, [](const ActorItem& a, const ActorItem& b) {
-            if (a.isScene != b.isScene)
-                return a.isScene;  // sort center/player first
-            if (!a.actor || !b.actor)
-                return !a.actor;
-            if (a.actor->IsPlayerRef() != b.actor->IsPlayerRef())
-                return a.actor->IsPlayerRef();
-            return a.label < b.label;
+        std::ranges::sort(_targets, [](const TargetItem& a_left, const TargetItem& a_right) {
+            if (a_left.isCenter != a_right.isCenter)
+                return a_left.isCenter;
+            if (!a_left.actor || !a_right.actor)
+                return !a_left.actor && a_right.actor;
+            if (a_left.actor->IsPlayerRef() != a_right.actor->IsPlayerRef())
+                return a_left.actor->IsPlayerRef();
+            return a_left.label < a_right.label;
         });
     }
 
-    // ── RefreshValues ────────────────────────────────────────────────────────
-
-    void OffsetAdjustPanel::RefreshValues(SceneHUD& a_hud, uint32_t actorId)
+    void OffsetAdjustPanel::RefreshValues(SceneHUD& a_hud, TargetItem& a_target)
     {
-        auto* inst = a_hud.GetThreadInstance();
-        if (!inst)
+        auto* instance = a_hud.GetThreadInstance();
+        if (!instance)
             return;
-        auto* sc = inst->GetActiveScene();
-        auto* st = inst->GetActiveStage();
-        if (!sc || !st)
+        const auto* scene = instance->GetActiveScene();
+        const auto* stage = instance->GetActiveStage();
+        if (!scene || !stage)
             return;
 
-        std::array<float, 4> raw{};
-        if (actorId == 0) {
-            const auto v = sc->furnitureOffset.GetOffset().AsVector();
-            std::copy_n(v.begin(), 4, raw.begin());
-        } else {
-            for (const auto& item : _items) {
-                if (item.formId == actorId) {
-                    const auto v = st->positions[item.posIdx].offset.GetOffset().AsVector();
-                    std::copy_n(v.begin(), 4, raw.begin());
-                    break;
-                }
-            }
+        const Registry::Coordinate* offset = nullptr;
+        if (a_target.isCenter) {
+            offset = &scene->furnitureOffset.GetOffset();
+        } else if (a_target.positionIndex < stage->positions.size()) {
+            offset = &stage->positions[a_target.positionIndex].offset.GetOffset();
         }
+        if (!offset)
+            return;
 
-        auto& axes = _axes[actorId];
-        for (int i = 0; i < 4; ++i) {
-            const float val = (i == 3) ? raw[i] * kRadToDeg : raw[i];
-            if (!axes[i].hasBaseline) {
-                axes[i].baseline = val;
-                axes[i].hasBaseline = true;
+        const std::array rawValues{ offset->location.x, offset->location.y, offset->location.z, offset->rotation };
+        for (std::size_t axisIndex = 0; axisIndex < kAxisDefinitions.size(); ++axisIndex) {
+            auto& state = a_target.axes[axisIndex];
+            const float value = kAxisDefinitions[axisIndex].coordinate == Registry::CoordinateType::R ?
+                                    rawValues[axisIndex] * kDegreesPerRadian :
+                                    rawValues[axisIndex];
+            if (!state.hasBaseline) {
+                state.baseline = value;
+                state.hasBaseline = true;
             }
-            // Don't overwrite value while user is actively dragging this axis — that would fight the drag.
-            if (_draggingAxis == i && _draggingId == actorId)
-                continue;
-            axes[i].value = val;
+            if (a_target.draggingAxis != axisIndex)
+                state.value = value;
         }
     }
 
     void OffsetAdjustPanel::RefreshStageOffsets(SceneHUD& a_hud)
     {
-        if (!_selectedId)
-            return;
-        RefreshValues(a_hud, *_selectedId);
+        for (auto& target : _targets)
+            RefreshValues(a_hud, target);
     }
 
-    // ── Handlers ──────────────────────────────────────────────────────────────
-
-    void OffsetAdjustPanel::OnActorSelected(SceneHUD& a_hud, const ActorItem& item)
+    void OffsetAdjustPanel::OnSetOffset(SceneHUD& a_hud, Registry::CoordinateType a_axis, std::uint32_t a_targetId, float a_value)
     {
-        _selectedId = item.formId;
-        _pickerOpen = false;
-        _panelOpen = true;
-        if (!_axes.contains(item.formId) || !_axes[item.formId][0].hasBaseline)
-            RefreshValues(a_hud, item.formId);
-    }
-
-    void OffsetAdjustPanel::OnSetOffset(SceneHUD& a_hud, Registry::CoordinateType axis, uint32_t actorId, float value)
-    {
-        auto* inst = a_hud.GetThreadInstance();
-        if (inst)
-            inst->OffsetAdjustSet(actorId, axis, value);
+        if (auto* instance = a_hud.GetThreadInstance())
+            instance->OffsetAdjustSet(a_targetId, a_axis, a_value);
     }
 
     void OffsetAdjustPanel::OnResetOffsets(SceneHUD& a_hud)
     {
-        auto* inst = a_hud.GetThreadInstance();
-        if (!inst || !_selectedId)
+        auto* instance = a_hud.GetThreadInstance();
+        if (!instance)
             return;
-        inst->OffsetAdjustReset(_hasFurniture);
-        _axes.clear();
-        RefreshValues(a_hud, *_selectedId);
+        instance->OffsetAdjustReset(_hasFurnitureCenter);
+        for (auto& target : _targets) {
+            target.axes = {};
+            target.draggingAxis.reset();
+            RefreshValues(a_hud, target);
+        }
     }
 
-    void OffsetAdjustPanel::OnSetAdjustStageOnly(SceneHUD& a_hud, bool state)
+    void OffsetAdjustPanel::OnSetAdjustStageOnly(SceneHUD& a_hud, bool a_state)
     {
-        _adjustStageOnly = state;
-        auto* inst = a_hud.GetThreadInstance();
-        if (inst)
-            inst->SetThreadProperty<bool>("VarUI_AdjustStage", state);
+        _adjustStageOnly = a_state;
+        if (auto* instance = a_hud.GetThreadInstance())
+            instance->SetThreadProperty<bool>("VarUI_AdjustStage", a_state);
     }
 
-    // ── The offset track widget ───────────────────────────────────────────────
-    bool OffsetAdjustPanel::OffsetTrack(UI::Scale& a_scale, const char* axisLabel, AxisState& state, float range, bool& draggingOut)
+    bool OffsetAdjustPanel::OffsetTrack(UI::Scale& a_scale, const AxisDefinition& a_axis, AxisState& a_state, float a_width, bool& a_draggingOut)
     {
         bool changed = false;
-        draggingOut = false;
+        a_draggingOut = false;
 
-        const float rowPadH = a_scale.Px(12.0f);
-        const float trackH = a_scale.Px(4.0f);   // track thickness
-        const float needleW = a_scale.Px(3.0f);  // needle thickness
-        const float hitExt = a_scale.Px(10.0f);  // extends clickable/draggable area above and below visible track
-        const float valW = a_scale.Px(40.0f);    // width of the numeric value field
-        const float labelW = a_scale.Px(20.0f);  // width for axis label
-        const float labelFt = a_scale.TextPx(UI::Theme::FontSize.body);
-        const float valFt = a_scale.TextPx(UI::Theme::FontSize.body);
-        const float availW = ImGuiMCP::GetContentRegionAvail().x - rowPadH * 2.0f;
-        const float trackW = availW - labelW - valW - rowPadH * 2.0f;  // space between label and value
-
+        const float nestedScale = UI::Theme::Geometry.nestedMenuScale;
+        const float horizontalPadding = a_scale.Px(UI::Theme::Spacing.lg) * nestedScale;
+        const float trackHeight = a_scale.Px(UI::Theme::Offset.trackHeight) * nestedScale;
+        const float needleWidth = a_scale.Px(UI::Theme::Offset.trackNeedleWidth) * nestedScale;
+        const float hitExtension = a_scale.Px(UI::Theme::Offset.trackHitExtension) * nestedScale;
+        const float valueWidth = a_scale.Px(UI::Theme::Offset.trackValueWidth) * nestedScale;
+        const float labelWidth = a_scale.Px(UI::Theme::Offset.trackLabelWidth) * nestedScale;
+        const float availableWidth = a_width - horizontalPadding * 2.0f;
+        const float trackWidth = availableWidth - labelWidth - valueWidth - horizontalPadding * 2.0f;
+        const float rowHeight = hitExtension * 2.0f + trackHeight + a_scale.Px(UI::Theme::Spacing.md) * nestedScale;
         const ImGuiMCP::ImVec2 rowOrigin = ImGuiMCP::GetCursorScreenPos();
-        const float rowH = hitExt * 2.0f + trackH + a_scale.Px(8.0f);
-        const float rowCenterY = rowOrigin.y + rowH * 0.5f;
+        const float rowCenterY = rowOrigin.y + rowHeight * 0.5f;
+        const float rowEndY = rowOrigin.y + rowHeight;
 
-        // ────── All on one line: Label | Track | Value
+        ImGuiMCP::Dummy({ availableWidth, rowHeight });
+        ImGuiMCP::SetCursorScreenPos(rowOrigin);
+        SetWindowFontSize(a_scale.TextPx(UI::Theme::FontSize.body) * nestedScale);
 
-        // Reserve full row height so ImGui advances the cursor correctly at the end
-        ImGuiMCP::Dummy(ImGuiMCP::ImVec2{ availW, rowH });
-        ImGuiMCP::SetCursorScreenPos(rowOrigin);  // rewind; we draw manually below
-        SetWindowFontSize(labelFt);
-
-        // Label (double-click resets to baseline)
-        const float labelTextH = ImGuiMCP::CalcTextSize(axisLabel).y;
-        const ImGuiMCP::ImVec2 lblMin = { rowOrigin.x + rowPadH, rowCenterY - labelTextH * 0.5f };
-        ImGuiMCP::SetCursorScreenPos(lblMin);
-        ImGuiMCP::TextColored(UI::Theme::ToVec4(UI::Theme::Color.textSecondary), "%s", axisLabel);
-        const ImGuiMCP::ImVec2 lblMax = ImGuiMCP::ImVec2{ lblMin.x + ImGuiMCP::CalcTextSize(axisLabel).x, lblMin.y + labelTextH };
-        if (ImGuiMCP::IsMouseHoveringRect(lblMin, lblMax) &&
-            ImGuiMCP::IsMouseDoubleClicked(ImGuiMCP::ImGuiMouseButton_Left)) {
-            state.value = state.baseline;
+        const ImGuiMCP::ImVec2 labelSize = ImGuiMCP::CalcTextSize(a_axis.label);
+        const ImGuiMCP::ImVec2 labelMin{ rowOrigin.x + horizontalPadding, rowCenterY - labelSize.y * 0.5f };
+        const ImGuiMCP::ImVec2 labelMax{ labelMin.x + labelSize.x, labelMin.y + labelSize.y };
+        ImGuiMCP::SetCursorScreenPos(labelMin);
+        ImGuiMCP::TextColored(UI::Theme::ToVec4(UI::Theme::Color.textSecondary), "%s", a_axis.label);
+        if (ImGuiMCP::IsMouseHoveringRect(labelMin, labelMax) && ImGuiMCP::IsMouseDoubleClicked(ImGuiMCP::ImGuiMouseButton_Left)) {
+            a_state.value = a_state.baseline;
             changed = true;
         }
 
-        // Track (+ needle + fill)
-        const ImGuiMCP::ImVec2 trackMin = { rowOrigin.x + rowPadH + labelW + rowPadH, rowCenterY - trackH * 0.5f };
-        const ImGuiMCP::ImVec2 trackMax = ImGuiMCP::ImVec2{ trackMin.x + trackW, trackMin.y + trackH };
-
-        // Invisible button with extended hit area
-        const ImGuiMCP::ImVec2 hitMin = ImGuiMCP::ImVec2{ trackMin.x, trackMin.y - hitExt };
-        const ImGuiMCP::ImVec2 hitMax = ImGuiMCP::ImVec2{ trackMax.x, trackMax.y + hitExt };
+        const ImGuiMCP::ImVec2 trackMin{ rowOrigin.x + horizontalPadding * 2.0f + labelWidth, rowCenterY - trackHeight * 0.5f };
+        const ImGuiMCP::ImVec2 trackMax{ trackMin.x + trackWidth, trackMin.y + trackHeight };
+        const ImGuiMCP::ImVec2 hitMin{ trackMin.x, trackMin.y - hitExtension };
         ImGuiMCP::SetCursorScreenPos(hitMin);
-        ImGuiMCP::InvisibleButton("##slpp_oamTrack", ImGuiMCP::ImVec2{ trackW, trackH + hitExt * 2.0f });
-        const bool hovered = ImGuiMCP::IsItemHovered();
-        const bool active = ImGuiMCP::IsItemActive();
+        ImGuiMCP::InvisibleButton("##slpp_oamTrack", { trackWidth, trackHeight + hitExtension * 2.0f });
+        const bool trackHovered = ImGuiMCP::IsItemHovered();
+        const bool trackActive = ImGuiMCP::IsItemActive();
+        const bool trackActivated = ImGuiMCP::IsItemActivated();
 
-        // Value (input field)
-        const float inputH = ImGuiMCP::GetFrameHeight();
-        ImGuiMCP::SetCursorScreenPos({ rowOrigin.x + rowPadH + labelW + rowPadH + trackW + rowPadH, rowCenterY - inputH * 0.5f });
-        SetWindowFontSize(valFt);
-        char valBuf[16];
-        std::snprintf(valBuf, sizeof(valBuf),
-            "%d", static_cast<int>(std::round(state.value)));
-        ImGuiMCP::SetNextItemWidth(valW);
-        ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_FrameBg, UI::Theme::Color.transparent);
-        const ImGuiMCP::ImU32 valTextCol = UI::Theme::Color.textMuted;
-        ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_Text, valTextCol);
-        if (ImGuiMCP::InputText("##slpp_oamVal", valBuf, sizeof(valBuf),
-                ImGuiMCP::ImGuiInputTextFlags_EnterReturnsTrue | ImGuiMCP::ImGuiInputTextFlags_CharsDecimal)) {
-            float v = std::round(std::strtof(valBuf, nullptr));
-            if (std::isnan(v))
-                v = state.value;
-            if (range == kRangeR)
-                v = std::clamp(v, -kRangeR, kRangeR);
-            state.value = v;
-            changed = true;
-        }
-        if (ImGuiMCP::IsItemDeactivatedAfterEdit()) {
-            float v = std::round(std::strtof(valBuf, nullptr));
-            if (!std::isnan(v)) {
-                if (range == kRangeR)
-                    v = std::clamp(v, -kRangeR, kRangeR);
-                state.value = v;
-                changed = true;
-            }
-        }
-        ImGuiMCP::PopStyleColor(2);
-
-        // Drag (activated on first frame, captures start value)
-        if (ImGuiMCP::IsItemActivated()) {
-            state.dragStartValue = state.value;
-            _draggingAxis = -1;  // will be set by caller
-            draggingOut = true;
-        }
-        if (active) {
-            const float dx = ImGuiMCP::GetMouseDragDelta(ImGuiMCP::ImGuiMouseButton_Left).x;
-            float v = std::round(state.dragStartValue + dx * (range / kDragScale));
-            if (range == kRangeR)
-                v = std::clamp(v, -kRangeR, kRangeR);
-            state.value = v;
-            draggingOut = true;  // Notify on every frame while dragging
+        if (trackActivated)
+            a_state.dragStartValue = a_state.value;
+        if (trackActive) {
+            const float dragDelta = ImGuiMCP::GetMouseDragDelta(ImGuiMCP::ImGuiMouseButton_Left).x;
+            float value = std::round(a_state.dragStartValue + dragDelta * (a_axis.displayRange / (a_scale.Px(UI::Theme::Offset.dragDistance) * nestedScale)));
+            if (a_axis.coordinate == Registry::CoordinateType::R)
+                value = std::clamp(value, -kRotationDisplayRange, kRotationDisplayRange);
+            a_state.value = value;
+            a_draggingOut = true;
             changed = true;
         }
 
-        // Drag released: final notification
-        if (ImGuiMCP::IsItemDeactivated() && !active) {
-            changed = true;
-        }
-
-        // Arrow keys nudge the value by 1 while the slider is hovered.
-        if (hovered) {
+        if (trackHovered) {
             float delta = 0.0f;
             if (ImGuiMCP::IsKeyPressed(ImGuiMCP::ImGuiKey_RightArrow))
                 delta = 1.0f;
             else if (ImGuiMCP::IsKeyPressed(ImGuiMCP::ImGuiKey_LeftArrow))
                 delta = -1.0f;
             if (delta != 0.0f) {
-                float v = state.value + delta;
-                if (range == kRangeR)
-                    v = std::clamp(v, -kRangeR, kRangeR);
-                state.value = v;
+                a_state.value += delta;
+                if (a_axis.coordinate == Registry::CoordinateType::R)
+                    a_state.value = std::clamp(a_state.value, -kRotationDisplayRange, kRotationDisplayRange);
                 changed = true;
             }
         }
 
-        // ── Draw track ─────────────────────────────────────────────────────────
-        auto* dl = ImGuiMCP::GetWindowDrawList();
+        const float inputHeight = ImGuiMCP::GetFrameHeight();
+        ImGuiMCP::SetCursorScreenPos({ trackMax.x + horizontalPadding, rowCenterY - inputHeight * 0.5f });
+        int inputValue = static_cast<int>(std::round(a_state.value));
+        ImGuiMCP::SetNextItemWidth(valueWidth);
+        ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_FrameBg, UI::Theme::Color.transparent);
+        ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_Text, UI::Theme::Color.textMuted);
+        const bool inputSubmitted = ImGuiMCP::InputInt("##slpp_oamValue", &inputValue, 0, 0, ImGuiMCP::ImGuiInputTextFlags_EnterReturnsTrue);
+        const bool inputDeactivated = ImGuiMCP::IsItemDeactivatedAfterEdit();
+        ImGuiMCP::PopStyleColor(2);
+        if (inputSubmitted || inputDeactivated) {
+            a_state.value = static_cast<float>(inputValue);
+            if (a_axis.coordinate == Registry::CoordinateType::R)
+                a_state.value = std::clamp(a_state.value, -kRotationDisplayRange, kRotationDisplayRange);
+            changed = true;
+        }
 
-        // Track background
-        ImGuiMCP::ImDrawListManager::AddRectFilled(dl, trackMin, trackMax, UI::Theme::Offset.track, a_scale.Px(2.0f), 0);
-        ImGuiMCP::ImDrawListManager::AddRect(dl, trackMin, trackMax, UI::Theme::Offset.trackBorder, a_scale.Px(2.0f), 0, 1.0f);
+        auto* drawList = ImGuiMCP::GetWindowDrawList();
+        const float trackRounding = a_scale.Px(UI::Theme::Geometry.roundingSmall) * nestedScale;
+        ImGuiMCP::ImDrawListManager::AddRectFilled(drawList, trackMin, trackMax, UI::Theme::Offset.track, trackRounding, 0);
+        ImGuiMCP::ImDrawListManager::AddRect(drawList, trackMin, trackMax, UI::Theme::Color.borderSubtle,
+            trackRounding, 0, a_scale.Px(UI::Theme::Geometry.borderThin) * nestedScale);
 
-        // Center tick
-        const float cx = trackMin.x + trackW * 0.5f;
-        ImGuiMCP::ImDrawListManager::AddLine(dl,
-            ImGuiMCP::ImVec2{ cx, trackMin.y - a_scale.Px(2.0f) }, ImGuiMCP::ImVec2{ cx, trackMax.y + a_scale.Px(2.0f) },
-            UI::Theme::Offset.centerTick, 1.0f);
+        const float centerX = trackMin.x + trackWidth * 0.5f;
+        const float centerTickExtension = a_scale.Px(UI::Theme::Offset.trackCenterTickExtension) * nestedScale;
+        ImGuiMCP::ImDrawListManager::AddLine(drawList,
+            { centerX, trackMin.y - centerTickExtension }, { centerX, trackMax.y + centerTickExtension },
+            UI::Theme::Offset.centerTick, a_scale.Px(UI::Theme::Geometry.borderThin) * nestedScale);
 
-        // Fill grows from the center out toward the needle, in either direction.
-        const float pct = std::clamp(0.5f + (state.value / range) * 0.5f, 0.0f, 1.0f);
-        const float needleX = trackMin.x + pct * trackW;
-        if (state.value != 0.0f) {
-            const float fillL = std::min(cx, needleX);
-            const float fillR = std::max(cx, needleX);
-            ImGuiMCP::ImDrawListManager::AddRectFilled(dl,
-                ImGuiMCP::ImVec2{ fillL, trackMin.y }, ImGuiMCP::ImVec2{ fillR, trackMax.y },
+        const float trackPercent = std::clamp(0.5f + (a_state.value / a_axis.displayRange) * 0.5f, 0.0f, 1.0f);
+        const float needleX = trackMin.x + trackPercent * trackWidth;
+        if (a_state.value != 0.0f) {
+            ImGuiMCP::ImDrawListManager::AddRectFilled(drawList,
+                { std::min(centerX, needleX), trackMin.y }, { std::max(centerX, needleX), trackMax.y },
                 UI::Theme::Offset.fill, 0.0f, 0);
         }
 
-        // Needle extends slightly above and below the track so it stays visible
-        const float nTop = trackMin.y - a_scale.Px(5.0f);
-        const float nBot = trackMax.y + a_scale.Px(5.0f);
-        const ImGuiMCP::ImU32 nCol = active ? UI::Theme::Offset.needleActive : UI::Theme::Offset.needle;
-        ImGuiMCP::ImDrawListManager::AddRectFilled(dl,
-            ImGuiMCP::ImVec2{ needleX - needleW * 0.5f, nTop },
-            ImGuiMCP::ImVec2{ needleX + needleW * 0.5f, nBot },
-            nCol, a_scale.Px(1.5f), 0);
+        const float needleExtension = a_scale.Px(UI::Theme::Offset.trackNeedleExtension) * nestedScale;
+        ImGuiMCP::ImDrawListManager::AddRectFilled(drawList,
+            { needleX - needleWidth * 0.5f, trackMin.y - needleExtension },
+            { needleX + needleWidth * 0.5f, trackMax.y + needleExtension },
+            trackActive ? UI::Theme::Color.textPrimary : UI::Theme::Color.textSecondary,
+            a_scale.Px(UI::Theme::Offset.trackNeedleRounding) * nestedScale, 0);
 
-        // Separator
-        const ImGuiMCP::ImVec2 sepPos = ImGuiMCP::GetCursorScreenPos();
-        ImGuiMCP::ImDrawListManager::AddLine(dl,
-            ImGuiMCP::ImVec2{ rowOrigin.x + rowPadH, sepPos.y },
-            ImGuiMCP::ImVec2{ rowOrigin.x + rowPadH + availW, sepPos.y },
-            UI::Theme::Offset.separator, 1.0f);
+        ImGuiMCP::SetCursorScreenPos({ rowOrigin.x, rowEndY });
 
         return changed;
     }
 
-    // ── Render ────────────────────────────────────────────────────────────────
-
     void OffsetAdjustPanel::Render(SceneHUD& a_hud)
     {
+        if (_targets.empty())
+            return;
         auto& scale = a_hud.GetScale();
+        const auto* io = ImGuiMCP::GetIO();
+        const float panelOffset = scale.Px(UI::Theme::Geometry.panelTabWidth + UI::Theme::Geometry.panelTabGap);
+        const float panelWidth = scale.Px(UI::Theme::Offset.panelWidth);
+        ImGuiMCP::SetNextWindowPos({ io->DisplaySize.x - panelOffset, io->DisplaySize.y * 0.5f }, ImGuiMCP::ImGuiCond_Always, { 1.0f, 0.5f });
+        ImGuiMCP::SetNextWindowSizeConstraints({ panelWidth, 0.0f }, { panelWidth, io->DisplaySize.y * 0.8f });
+        ImGuiMCP::SetNextWindowSize({ panelWidth, 0.0f }, ImGuiMCP::ImGuiCond_Always);
 
-        auto* io = ImGuiMCP::GetIO();
-        const float dw = io->DisplaySize.x;
-        const float dh = io->DisplaySize.y;
-
-        const float offset = scale.Px(UI::Theme::Geometry.panelTabWidth + UI::Theme::Geometry.panelTabGap);
-        const float pickerW = scale.Px(200.0f);
-        const float panelW = scale.Px(300.0f);
-
-        // ── Target picker
-        if (!_panelOpen && !_items.empty()) {
-            ImGuiMCP::SetNextWindowPos(
-                ImGuiMCP::ImVec2{ dw - offset, dh * 0.5f }, ImGuiMCP::ImGuiCond_Always, ImGuiMCP::ImVec2{ 1.0f, 0.5f });
-            ImGuiMCP::SetNextWindowSize(ImGuiMCP::ImVec2{ pickerW, 0.0f }, ImGuiMCP::ImGuiCond_Always);
-            constexpr auto pFlags =
-                ImGuiMCP::ImGuiWindowFlags_NoTitleBar | ImGuiMCP::ImGuiWindowFlags_NoResize |
-                ImGuiMCP::ImGuiWindowFlags_NoMove | ImGuiMCP::ImGuiWindowFlags_NoScrollbar |
-                ImGuiMCP::ImGuiWindowFlags_NoCollapse | ImGuiMCP::ImGuiWindowFlags_AlwaysAutoResize;
-
-            if (ImGuiMCP::Begin("##slpp_OAMPicker", nullptr, pFlags)) {
-                SetWindowFontSize(scale.TextPx(UI::Theme::FontSize.sectionHeader));
-                const float titleW = ImGuiMCP::CalcTextSize("PICK TARGET").x;
-                ImGuiMCP::SetCursorPosX((pickerW - titleW) * 0.5f);
-                ImGuiMCP::TextColored(UI::Theme::ToVec4(UI::Theme::Color.textPrimary), "PICK TARGET");
-                ImGuiMCP::Dummy(ImGuiMCP::ImVec2{ 0.0f, scale.Px(4.0f) });
-                ImGuiMCP::Separator();
-
-                if (_pickerOpen) {
-                    SetWindowFontSize(scale.TextPx(UI::Theme::FontSize.body));
-                    for (const auto& item : _items) {
-                        ImGuiMCP::PushID(static_cast<int>(item.formId));
-                        const bool isSel = _selectedId && *_selectedId == item.formId;
-
-                        std::string lbl = item.label;
-                        if (item.isScene)
-                            lbl += " [SCENE]";
-
-                        if (isSel)
-                            ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_Header, UI::Theme::Color.selectionFill);
-                        if (UI::SelectableButton(lbl.c_str(), isSel, 0, ImGuiMCP::ImVec2{ 0, scale.Px(28.0f) }))
-                            OnActorSelected(a_hud, item);
-                        if (isSel)
-                            ImGuiMCP::PopStyleColor();
-                        ImGuiMCP::PopID();
-                    }
-                }
-                ImGuiMCP::SetWindowFontScale(1.0f);
-            }
+        if (!ImGuiMCP::Begin("##slpp_OAMPanel", nullptr, kPanelWindowFlags)) {
             ImGuiMCP::End();
+            return;
         }
 
-        // ── Adjustment panel
-        if (_panelOpen && _selectedId) {
-            const uint32_t actorId = *_selectedId;
-            auto& axes = _axes[actorId];
-            if (!axes[0].hasBaseline)
-                RefreshValues(a_hud, actorId);
+        DrawPanelHeader(scale, "ADJUST OFFSETS");
+        ImGuiMCP::Dummy({ 0.0f, scale.Px(UI::Theme::Spacing.sm) });
+        SetWindowFontSize(scale.TextPx(UI::Theme::FontSize.body));
+        if (UI::CheckboxRow("Adjust Stage Only", "slpp_oamStageOnly", _adjustStageOnly, scale.Factor()))
+            OnSetAdjustStageOnly(a_hud, _adjustStageOnly);
 
-            std::string panelTitle;
-            for (const auto& item : _items) {
-                if (item.formId == actorId) {
-                    panelTitle = item.label;
-                    if (item.isScene)
-                        panelTitle += " [SCENE]";
-                    break;
-                }
-            }
+        ImGuiMCP::Dummy({ 0.0f, scale.Px(UI::Theme::Spacing.sm) });
+        const float horizontalPadding = scale.Px(UI::Theme::Spacing.lg);
+        const float availableWidth = ImGuiMCP::GetContentRegionAvail().x;
+        ImGuiMCP::SetCursorPosX(ImGuiMCP::GetCursorPosX() + horizontalPadding);
+        if (UI::ActionButton("Reset Offsets", availableWidth - horizontalPadding * 2.0f))
+            OnResetOffsets(a_hud);
 
-            ImGuiMCP::SetNextWindowPos(
-                ImGuiMCP::ImVec2{ dw - offset, dh * 0.5f }, ImGuiMCP::ImGuiCond_Always, ImGuiMCP::ImVec2{ 1.0f, 0.5f });
-            ImGuiMCP::SetNextWindowSize(ImGuiMCP::ImVec2{ panelW, 0.0f }, ImGuiMCP::ImGuiCond_Always);
-            constexpr auto panelFlags =
-                ImGuiMCP::ImGuiWindowFlags_NoTitleBar | ImGuiMCP::ImGuiWindowFlags_NoResize |
-                ImGuiMCP::ImGuiWindowFlags_NoMove | ImGuiMCP::ImGuiWindowFlags_NoScrollbar |
-                ImGuiMCP::ImGuiWindowFlags_NoCollapse | ImGuiMCP::ImGuiWindowFlags_AlwaysAutoResize;
+        ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_Separator, UI::Theme::Color.nestedSeparator);
+        ImGuiMCP::Dummy({ 0.0f, scale.Px(UI::Theme::Spacing.sm) });
+        ImGuiMCP::Separator();
+        ImGuiMCP::Dummy({ 0.0f, scale.Px(UI::Theme::Spacing.xs) });
 
-            if (ImGuiMCP::Begin("##slpp_OAMPanel", nullptr, panelFlags)) {
-                // ────── Title
-                SetWindowFontSize(scale.TextPx(UI::Theme::FontSize.sectionHeader));
-                const float titleW = ImGuiMCP::CalcTextSize(panelTitle.c_str()).x;
-                ImGuiMCP::SetCursorPosX((panelW - titleW) * 0.5f);
-                ImGuiMCP::TextColored(UI::Theme::ToVec4(UI::Theme::Color.textPrimary), "%s", panelTitle.c_str());
-                ImGuiMCP::Dummy(ImGuiMCP::ImVec2{ 0.0f, scale.Px(4.0f) });
+        ImGuiMCP::PushStyleVar(ImGuiMCP::ImGuiStyleVar_ScrollbarSize, scale.Px(UI::Theme::Spacing.sm));
+        ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_ScrollbarBg, UI::Theme::Color.panelBackground);
+        ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_ScrollbarGrab, UI::Theme::Color.borderSubtle);
+        ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_ScrollbarGrabHovered, UI::Theme::Color.borderHovered);
+        ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_ScrollbarGrabActive, UI::Theme::Color.borderActive);
+        ImGuiMCP::SetNextWindowSizeConstraints({ 0.0f, 0.0f }, { FLT_MAX, scale.Px(UI::Theme::Offset.maxBodyHeight) });
+        ImGuiMCP::BeginChild("##slpp_oamTargets", { -FLT_MIN, 0.0f }, ImGuiMCP::ImGuiChildFlags_AutoResizeY, ImGuiMCP::ImGuiWindowFlags_None);
+
+        for (std::size_t targetIndex = 0; targetIndex < _targets.size(); ++targetIndex) {
+            if (targetIndex != 0)
                 ImGuiMCP::Separator();
-
-                // ────── Stage Only
-                ImGuiMCP::Dummy(ImGuiMCP::ImVec2{ 0.0f, scale.Px(6.0f) });
-                // toggle row
-                SetWindowFontSize(scale.TextPx(UI::Theme::FontSize.body));
-                const float toggleRowH = scale.Px(24.0f);
-                const float rowPadH = scale.Px(12.0f);
-                const float availW = ImGuiMCP::GetContentRegionAvail().x - rowPadH * 2.0f;
-                const ImGuiMCP::ImVec2 toggleRowMin = ImGuiMCP::GetCursorScreenPos();
-                ImGuiMCP::SetCursorScreenPos({ toggleRowMin.x + rowPadH, toggleRowMin.y });
-                ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_HeaderHovered, UI::Theme::ToVec4(UI::Theme::Color.transparent));
-                if (UI::SelectableButton("##slpp_stageOnlyRow", false, 0, ImGuiMCP::ImVec2{ availW, toggleRowH })) {
-                    OnSetAdjustStageOnly(a_hud, !_adjustStageOnly);
-                }
-                ImGuiMCP::PopStyleColor();
-                // checkbox
-                bool stageOnly = _adjustStageOnly;
-                const float cbSize = ImGuiMCP::GetFrameHeight();
-                const float cbX = toggleRowMin.x + rowPadH + availW - cbSize;
-                const float cbY = toggleRowMin.y + (toggleRowH - cbSize) * 0.5f + scale.Px(3.0f);
-                ImGuiMCP::SetCursorScreenPos({ cbX, cbY });
-                UI::PushCheckboxStyle(scale.Factor());
-                bool cbChanged = ImGuiMCP::Checkbox("##slpp_oamStageOnly", &stageOnly);
-                UI::PopCheckboxStyle();
-                if (cbChanged)
-                    OnSetAdjustStageOnly(a_hud, stageOnly);
-                // label
-                const ImGuiMCP::ImVec2 labelSize = ImGuiMCP::CalcTextSize("Adjust Stage Only");
-                const float labelY = toggleRowMin.y + (toggleRowH - labelSize.y) * 0.5f;
-                ImGuiMCP::SetCursorScreenPos({ toggleRowMin.x + rowPadH, labelY });
-                ImGuiMCP::TextColored(UI::Theme::ToVec4(UI::Theme::Color.textSecondary), "Adjust Stage Only");
-                ImGuiMCP::SetCursorScreenPos({ toggleRowMin.x, toggleRowMin.y + toggleRowH });
-
-                ImGuiMCP::PushStyleColor(ImGuiMCP::ImGuiCol_Separator, UI::Theme::Offset.separator);
-                ImGuiMCP::Dummy(ImGuiMCP::ImVec2{ 0.0f, scale.Px(6.0f) });
-                ImGuiMCP::Separator();
-                ImGuiMCP::PopStyleColor();
-
-                // ────── Axis Sliders
-                static constexpr const char* kLabels[4] = { "X", "Y", "Z", "R" };
-                static constexpr Registry::CoordinateType kAxisEnums[4] = {
-                    Registry::CoordinateType::X, Registry::CoordinateType::Y,
-                    Registry::CoordinateType::Z, Registry::CoordinateType::R
-                };
-
-                for (int i = 0; i < 4; ++i) {
-                    ImGuiMCP::PushID(i);
-                    const float range = (i == 3) ? kRangeR : kRangeXYZ;
-                    bool drag = false;
-
-                    if (OffsetTrack(scale, kLabels[i], axes[i], range, drag)) {
-                        OnSetOffset(a_hud, kAxisEnums[i], actorId, axes[i].value);
-                    }
-
-                    if (drag) {
-                        _draggingAxis = i;
-                        _draggingId = actorId;
-                    } else if (_draggingAxis == i && _draggingId == actorId && !ImGuiMCP::IsMouseDown(ImGuiMCP::ImGuiMouseButton_Left)) {
-                        _draggingAxis = -1;
-                    }
-                    ImGuiMCP::PopID();
-                }
-
-                // ────── Reset offsets button
-                ImGuiMCP::Dummy(ImGuiMCP::ImVec2{ 0.0f, scale.Px(6.0f) });
-                const float btnW = panelW - scale.Px(24.0f);
-                ImGuiMCP::SetCursorPosX(scale.Px(12.0f));
-                if (UI::ActionButton("Reset Offsets", btnW))
-                    OnResetOffsets(a_hud);
-                ImGuiMCP::Dummy(ImGuiMCP::ImVec2{ 0.0f, scale.Px(6.0f) });
-
-                ImGuiMCP::SetWindowFontScale(1.0f);
-            }
-            ImGuiMCP::End();
+            RenderTargetCard(a_hud, _targets[targetIndex], targetIndex);
         }
+
+        ImGuiMCP::EndChild();
+        ImGuiMCP::PopStyleColor(5);
+        ImGuiMCP::PopStyleVar();
+
+        ImGuiMCP::SetWindowFontScale(1.0f);
+        ImGuiMCP::End();
+    }
+
+    void OffsetAdjustPanel::RenderTargetCard(SceneHUD& a_hud, TargetItem& a_target, std::size_t a_targetIndex)
+    {
+        auto& scale = a_hud.GetScale();
+        const float nestedScale = UI::Theme::Geometry.nestedMenuScale;
+        const float contentX = ImGuiMCP::GetCursorPosX();
+        const float availableWidth = ImGuiMCP::GetContentRegionAvail().x;
+        const float cardWidth = availableWidth * nestedScale;
+        const float cardX = contentX + (availableWidth - cardWidth) * 0.5f;
+
+        ImGuiMCP::PushID(static_cast<int>(a_targetIndex));
+        ImGuiMCP::SetCursorPosX(cardX);
+        SetWindowFontSize(scale.TextPx(UI::Theme::FontSize.subsectionHeader) * nestedScale);
+        const char* badge = a_target.isCenter                               ? "SCENE" :
+                            a_target.actor && a_target.actor->IsPlayerRef() ? "PLAYER" :
+                                                                              nullptr;
+        if (UI::CollapsibleCardHeader(a_target.label.c_str(), badge, "##slpp_oamCardHeader", a_target.open,
+                cardWidth, scale.Factor() * nestedScale))
+            a_target.open = !a_target.open;
+
+        if (!a_target.open) {
+            ImGuiMCP::SetCursorPosX(contentX);
+            ImGuiMCP::PopID();
+            return;
+        }
+
+        auto* drawList = ImGuiMCP::GetWindowDrawList();
+        const ImGuiMCP::ImVec2 bodyMin = ImGuiMCP::GetCursorScreenPos();
+        ImGuiMCP::Dummy({ 0.0f, scale.Px(UI::Theme::Spacing.xs) * nestedScale });
+        ImGuiMCP::ImDrawListManager::ChannelsSplit(drawList, 2);
+        ImGuiMCP::ImDrawListManager::ChannelsSetCurrent(drawList, 1);
+
+        for (std::size_t axisIndex = 0; axisIndex < kAxisDefinitions.size(); ++axisIndex) {
+            ImGuiMCP::PushID(static_cast<int>(axisIndex));
+            ImGuiMCP::SetCursorPosX(cardX);
+            bool dragging = false;
+            if (OffsetTrack(scale, kAxisDefinitions[axisIndex], a_target.axes[axisIndex], cardWidth, dragging))
+                OnSetOffset(a_hud, kAxisDefinitions[axisIndex].coordinate, a_target.formId, a_target.axes[axisIndex].value);
+            if (dragging)
+                a_target.draggingAxis = axisIndex;
+            else if (a_target.draggingAxis == axisIndex && !ImGuiMCP::IsMouseDown(ImGuiMCP::ImGuiMouseButton_Left))
+                a_target.draggingAxis.reset();
+            ImGuiMCP::PopID();
+        }
+
+        ImGuiMCP::SetCursorPosX(cardX);
+        ImGuiMCP::Dummy({ 0.0f, scale.Px(UI::Theme::Spacing.xs) * nestedScale });
+        const ImGuiMCP::ImVec2 bodyMax{ bodyMin.x + cardWidth, ImGuiMCP::GetCursorScreenPos().y };
+        ImGuiMCP::ImDrawListManager::ChannelsSetCurrent(drawList, 0);
+        ImGuiMCP::ImDrawListManager::AddRectFilled(drawList, bodyMin, bodyMax, UI::Theme::Color.nestedSurface, 0.0f, 0);
+        ImGuiMCP::ImDrawListManager::ChannelsMerge(drawList);
+
+        ImGuiMCP::SetCursorPosX(contentX);
+        ImGuiMCP::PopID();
     }
 }

@@ -79,7 +79,8 @@ namespace Thread::Interface
                     ImGuiMCP::SameLine(fieldX);
                     ImGuiMCP::SetNextItemWidth(fieldWidth);
                     const auto thousandths = std::llround(std::abs(a_field) * 1000.0f);
-                    const char* format = thousandths % 100 == 0 ? "%.1f" : thousandths % 10 == 0 ? "%.2f" : "%.3f";
+                    const char* format = thousandths % 100 == 0 ? "%.1f" : thousandths % 10 == 0 ? "%.2f" :
+                                                                                                   "%.3f";
                     ImGuiMCP::InputFloat("##value", &a_field, 0.1f, 0.1f, format);
                 } else if constexpr (glz::reflectable<Field>) {
                     if (ImGuiMCP::CollapsingHeader(fieldName.data(), ImGuiMCP::ImGuiTreeNodeFlags_DefaultOpen))
@@ -275,8 +276,7 @@ namespace Thread::Interface
                 style->WindowPadding.x * 2.0f + style->ScrollbarSize,
             editorMaxWidth));
 
-        ImGuiMCP::SetNextWindowPos(ImGuiMCP::ImVec2{ editorRight, io->DisplaySize.y * 0.5f },
-            ImGuiMCP::ImGuiCond_Always, ImGuiMCP::ImVec2{ 1.0f, 0.5f });
+        ImGuiMCP::SetNextWindowPos({ editorRight, io->DisplaySize.y * 0.5f }, ImGuiMCP::ImGuiCond_Appearing, { 1.0f, 0.5f });
         ImGuiMCP::SetNextWindowSizeConstraints(
             ImGuiMCP::ImVec2{ editorWidth, editorMinHeight }, ImGuiMCP::ImVec2{ editorWidth, editorMaxHeight });
 

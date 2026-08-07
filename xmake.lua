@@ -2,7 +2,7 @@ set_xmakever("2.9.5")
 
 -- Globals
 PROJECT_NAME = "SexLabUtil"
-PROJECT_VERSION = "2.17.2"
+PROJECT_VERSION = "2.18.1"
 
 -- Includes
 includes("lib/CommonLibSSE-NG/xmake.lua")
@@ -99,6 +99,9 @@ set_policy("package.requires_lock", true)
 
 -- rules
 add_rules("mode.debug", "mode.release")
+
+set_runtimes("MD")
+add_defines("_ITERATOR_DEBUG_LEVEL=0")
 
 if is_mode("debug") then
     add_defines("DEBUG")

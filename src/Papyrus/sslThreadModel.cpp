@@ -308,6 +308,12 @@ namespace Papyrus::ThreadModel
         return instance->BeginActorRecovery();
     }
 
+    bool BeginPlayerDialogueWait(QUESTARGS)
+    {
+        GET_INSTANCE(false);
+        return instance->BeginPlayerDialogueWait();
+    }
+
     bool BeginPlayerSheatheWait(QUESTARGS)
     {
         GET_INSTANCE(false);
