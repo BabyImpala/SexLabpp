@@ -67,6 +67,7 @@ namespace Papyrus::ThreadModel
     bool SetNextPermutation(QUESTARGS, RE::Actor* a_position);
     void UpdatePlacement(QUESTARGS, RE::Actor* a_position);
 
+    // Collision/Interaction detection - now delegated to C++ InterType system
     bool IsCollisionRegistered(QUESTARGS);
     void UnregisterCollision(QUESTARGS);
     std::vector<int> GetCollisionActions(QUESTARGS, RE::Actor* a_position, RE::Actor* a_partner);

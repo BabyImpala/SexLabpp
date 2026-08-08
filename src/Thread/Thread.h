@@ -3,6 +3,8 @@
 #include "Registry/Library.h"
 #include "Thread/NiNode/Legacy/LegacyNiUpdate.h"
 #include "Thread/NiNode/NiUpdate.h"
+#include "Thread/Interactions/InterType.h"
+#include "Thread/Interactions/InteractionDetector.h"
 
 namespace Thread
 {
@@ -73,11 +75,37 @@ namespace Thread
       public:
         bool HasNiInstance() const { return niInstance != nullptr; }
         NiNode::NiInstance* GetNiInstance() { return niInstance.get(); }
-        void UnregisterNiInstance() { (NiNode::NiUpdate::Unregister(linkedQst->GetFormID()), niInstance = nullptr); }
+        void UnregisterNiInstance() { 
+            if (niInstance) {
+                NiNode::NiUpdate::Unregister(linkedQst->GetFormID());
+                Interactions::InteractionDetector::GetSingleton()->Unregister(linkedQst->GetFormID());
+                niInstance = nullptr; 
+            }
+        }
 
         bool HasNiInstanceLegacy() const { return niInstanceLegacy != nullptr; }
         LegacyNiNode::NiInstance* GetNiInstanceLegacy() { return niInstanceLegacy.get(); }
-        void UnregisterNiInstanceLegacy() { (LegacyNiNode::NiUpdate::Unregister(linkedQst->GetFormID()), niInstanceLegacy = nullptr); }
+        void UnregisterNiInstanceLegacy() { 
+            if (niInstanceLegacy) {
+                LegacyNiNode::NiUpdate::Unregister(linkedQst->GetFormID());
+                Interactions::InteractionDetector::GetSingleton()->Unregister(linkedQst->GetFormID());
+                niInstanceLegacy = nullptr; 
+            }
+        }
+        
+        // Interaction detection via standardized InterType system
+        std::vector<int> GetInteractionTypes(RE::Actor* position, RE::Actor* partner);
+        bool HasInteractionType(int interTypeValue, RE::Actor* position, RE::Actor* partner);
+        RE::Actor* GetPartnerByType(RE::Actor* position, int interTypeValue);
+        std::vector<RE::Actor*> GetPartnersByType(RE::Actor* position, int interTypeValue);
+        RE::Actor* GetPartnerByTypeRev(RE::Actor* partner, int interTypeValue);
+        std::vector<RE::Actor*> GetPartnersByTypeRev(RE::Actor* partner, int interTypeValue);
+        float GetActionVelocity(RE::Actor* position, RE::Actor* partner, int interTypeValue);
+        std::array<bool, Interactions::SUPPORTED_INTER_COUNT> GetCurrentInteractionFlags(RE::Actor* position);
+
+        // Position tag support - fallback to tags when collision data unavailable
+        std::vector<int> GetInteractionTypesByTags(RE::Actor* position, RE::Actor* partner) const;
+        bool HasTag(Registry::Tag tag) const;
 
         void AdvanceScene(const Registry::Stage* a_nextStage);
         bool BeginActorRecovery();

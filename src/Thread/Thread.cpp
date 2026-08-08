@@ -451,95 +451,100 @@ namespace Thread
         return false;
     }
 
-    // ── CONFIGS STATE COMMUNICATION
+    // ── INTERACTION DETECTION (InterType System)
 
-    template <typename T>
-    T Instance::GetThreadProperty(const std::string& a_property)
+    std::vector<int> Instance::GetInteractionTypes(RE::Actor* position, RE::Actor* partner)
     {
-        const auto scriptObj = Script::GetScriptObject(linkedQst, "sslThreadModel");
-        if (!scriptObj)
-            return T{};
-        return Script::GetTrivialProperty<T>(scriptObj, a_property);
-    }
-    template bool Instance::GetThreadProperty<bool>(const std::string&);
-    template float Instance::GetThreadProperty<float>(const std::string&);
-    template int32_t Instance::GetThreadProperty<int32_t>(const std::string&);
-
-    template <typename T>
-    void Instance::SetThreadProperty(const std::string& a_property, T a_val)
-    {
-        const auto scriptObj = Script::GetScriptObject(linkedQst, "sslThreadModel");
-        if (!scriptObj)
-            return;
-        Script::SetProperty<T>(scriptObj, a_property, a_val);
-    }
-    template void Instance::SetThreadProperty<bool>(const std::string&, bool);
-    template void Instance::SetThreadProperty<float>(const std::string&, float);
-    template void Instance::SetThreadProperty<int32_t>(const std::string&, int32_t);
-
-    // ── SCENE HUD
-
-    void Instance::InitSceneHUDImpl()
-    {
-        auto& sceneHUD = Interface::SceneHUD::GetSingleton();
-        if (!sceneHUD.IsActive() || sceneHUD.GetForThread(linkedQst))
-            sceneHUD.Init(linkedQst);
+        return Interactions::InteractionDetector::GetSingleton()->GetInteractionTypes(
+            linkedQst->GetFormID(), position, partner);
     }
 
-    void Instance::DestroySceneHUDImpl()
+    bool Instance::HasInteractionType(int interTypeValue, RE::Actor* position, RE::Actor* partner)
     {
-        if (auto* sceneHUD = Interface::SceneHUD::GetSingleton().GetForThread(linkedQst))
-            sceneHUD->Destroy();
+        return Interactions::InteractionDetector::GetSingleton()->HasInteractionType(
+            linkedQst->GetFormID(), interTypeValue, position, partner);
     }
 
-    void Instance::SetFocusSceneHUDImpl(bool a_focused)
+    RE::Actor* Instance::GetPartnerByType(RE::Actor* position, int interTypeValue)
     {
-        if (auto* sceneHUD = Interface::SceneHUD::GetSingleton().GetForThread(linkedQst))
-            sceneHUD->SetFocus(a_focused);
+        return Interactions::InteractionDetector::GetSingleton()->GetPartnerByType(
+            linkedQst->GetFormID(), position, interTypeValue);
     }
 
-    void Instance::UpdateMenuTimerDisplay(float a_duration, float a_left)
+    std::vector<RE::Actor*> Instance::GetPartnersByType(RE::Actor* position, int interTypeValue)
     {
-        if (auto* sceneHUD = Interface::SceneHUD::GetSingleton().GetForThread(linkedQst))
-            sceneHUD->UpdateStageTimer(a_duration, a_left);
+        return Interactions::InteractionDetector::GetSingleton()->GetPartnersByType(
+            linkedQst->GetFormID(), position, interTypeValue);
     }
 
-    void Instance::EnjBarsChangeHighlightedPartner(RE::Actor* a_partner)
+    RE::Actor* Instance::GetPartnerByTypeRev(RE::Actor* partner, int interTypeValue)
     {
-        if (auto* sceneHUD = Interface::SceneHUD::GetSingleton().GetForThread(linkedQst))
-            sceneHUD->UpdateHighlightedPartner(a_partner);
+        return Interactions::InteractionDetector::GetSingleton()->GetPartnerByTypeRev(
+            linkedQst->GetFormID(), partner, interTypeValue);
     }
 
-    void Instance::EnjBarsUpdateSlider(RE::Actor* a_position, float a_enjoyment, RE::BSFixedString a_interactions)
+    std::vector<RE::Actor*> Instance::GetPartnersByTypeRev(RE::Actor* partner, int interTypeValue)
     {
-        if (auto* sceneHUD = Interface::SceneHUD::GetSingleton().GetForThread(linkedQst))
-            sceneHUD->UpdateEnjoyment(a_position, a_enjoyment, a_interactions);
+        return Interactions::InteractionDetector::GetSingleton()->GetPartnersByTypeRev(
+            linkedQst->GetFormID(), partner, interTypeValue);
     }
 
-    void Instance::RegisterRaiseEnjAttempt(RE::Actor* a_position, float a_nextTimeCycle)
+    float Instance::GetActionVelocity(RE::Actor* position, RE::Actor* partner, int interTypeValue)
     {
-        if (auto* sceneHUD = Interface::SceneHUD::GetSingleton().GetForThread(linkedQst))
-            sceneHUD->RegisterRaiseEnjoymentAttempt(a_position, a_nextTimeCycle);
+        return Interactions::InteractionDetector::GetSingleton()->GetActionVelocity(
+            linkedQst->GetFormID(), position, partner, interTypeValue);
     }
 
-    void Instance::OnStageChangedUpdateHUD()
+    std::array<bool, Interactions::SUPPORTED_INTER_COUNT> Instance::GetCurrentInteractionFlags(RE::Actor* position)
     {
-        if (auto* sceneHUD = Interface::SceneHUD::GetSingleton().GetForThread(linkedQst))
-            sceneHUD->RefreshStageOffsets();
-            Interface::StageSelectMenu::GetSingleton().RefreshSceneGraphView(linkedQst);
+        return Interactions::InteractionDetector::GetSingleton()->GetCurrentInteractionFlags(
+            linkedQst->GetFormID(), position);
     }
 
-    bool Instance::OpenStageSelectMenuImpl()
+    std::vector<int> Instance::GetInteractionTypesByTags(RE::Actor* position, RE::Actor* partner) const
     {
-        if (!Interface::SceneHUD::GetSingleton().GetForThread(linkedQst))
+        if (!activeStage || !position || !partner) {
+            return {};
+        }
+
+        std::vector<int> result;
+        const auto& tags = activeStage->tags;
+
+        // Map stage tags to InterType based on actor roles
+        const auto posInfo = GetPositionInfo(position);
+        if (!posInfo) {
+            return {};
+        }
+
+        // Check for penetration tags
+        if (tags.HasTag(Registry::Tag::Vaginal)) {
+            result.push_back(static_cast<int>(Interactions::InterType::pVaginal));
+        }
+        if (tags.HasTag(Registry::Tag::Anal)) {
+            result.push_back(static_cast<int>(Interactions::InterType::pAnal));
+        }
+        if (tags.HasTag(Registry::Tag::Oral)) {
+            result.push_back(static_cast<int>(Interactions::InterType::pOral));
+        }
+        if (tags.HasTag(Registry::Tag::Grinding)) {
+            result.push_back(static_cast<int>(Interactions::InterType::pGrinding));
+        }
+        if (tags.HasTag(Registry::Tag::Kissing)) {
+            result.push_back(static_cast<int>(Interactions::InterType::bKissing));
+        }
+        if (tags.HasTag(Registry::Tag::Deepthroat)) {
+            result.push_back(static_cast<int>(Interactions::InterType::pDeepthroat));
+        }
+
+        return result;
+    }
+
+    bool Instance::HasTag(Registry::Tag tag) const
+    {
+        if (!activeStage) {
             return false;
-        return Interface::StageSelectMenu::GetSingleton().OpenStageSelectMenu(linkedQst);
+        }
+        return activeStage->tags.HasTag(tag);
     }
 
-    void Instance::SetVisibilitySceneGraphImpl(bool a_open)
-    {
-        if (Interface::SceneHUD::GetSingleton().GetForThread(linkedQst))
-            Interface::StageSelectMenu::GetSingleton().SetVisibilitySceneGraph(linkedQst, a_open);
-    }
-
-}  // namespace Thread
+    // ── CONFIGS STATE COMMUNICATION

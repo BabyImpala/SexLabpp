@@ -391,32 +391,32 @@ EndFunction
 ; ------------------------------------------------------- ;
 
 bool Function IsInteractionRegistered()
-	return IsCollisionRegistered()
+	return IsInteractionRegistered()
 EndFunction
 
 int[] Function GetInteractionTypes(Actor akPosition, Actor akPartner)
-	return GetCollisionActions(akPosition, akPartner)
+	return GetInteractionTypes(akPosition, akPartner)
 EndFunction
 
 bool Function HasInteractionType(int aiType, Actor akPosition, Actor akPartner)
-	return HasCollisionAction(aiType, akPosition, akPartner)
+	return HasInteractionType(aiType, akPosition, akPartner)
 EndFunction
 
 Actor Function GetPartnerByType(Actor akPosition, int aiType)
-	return GetPartnerByAction(akPosition, aiType)
+	return GetPartnerByType(akPosition, aiType)
 EndFUnction
 Actor[] Function GetPartnersByType(Actor akPosition, int aiType)
-	return GetPartnersByAction(akPosition, aiType)
+	return GetPartnersByType(akPosition, aiType)
 EndFUnction
 Actor Function GetPartnerByTypeRev(Actor akPartner, int aiType)
-	return GetPartnerByActionRev(akPartner, aiType)
+	return GetPartnerByTypeRev(akPartner, aiType)
 EndFunction
 Actor[] Function GetPartnersByTypeRev(Actor akPartner, int aiType)
-	return GetPartnersByActionRev(akPartner, aiType)
+	return GetPartnersByTypeRev(akPartner, aiType)
 EndFunction
 
 float Function GetVelocity(Actor akPosition, Actor akPartner, int aiType)
-	return GetActionVelocity(akPosition, akPartner, aiType)
+	return GetVelocity(akPosition, akPartner, aiType)
 EndFunction
 
 ; ------------------------------------------------------- ;
@@ -1661,15 +1661,15 @@ bool Function AdjustFixedLengthTimer(float afDelta) native
 Function SetFixedLengthTimerPaused(bool abPaused) native
 bool Function ConsumeFixedLengthTimerExpiration() native
 ; Physics/SFX Related
-bool Function IsCollisionRegistered() native
-Function UnregisterCollision() native
-int[] Function GetCollisionActions(Actor akPosition, Actor akPartner) native
-bool Function HasCollisionAction(int aiType, Actor akPosition, Actor akPartner) native
-Actor Function GetPartnerByAction(Actor akPosition, int aiType) native
-Actor[] Function GetPartnersByAction(Actor akPosition, int aiType) native
-Actor Function GetPartnerByActionRev(Actor akPartner, int aiType) native
-Actor[] Function GetPartnersByActionRev(Actor akPartner, int aiType) native
-float Function GetActionVelocity(Actor akPosition, Actor akPartner, int aiType) native
+bool Function IsInteractionRegistered() native
+Function UnregisterInteraction() native
+int[] Function GetInteractionTypes(Actor akPosition, Actor akPartner) native
+bool Function HasInteractionType(int aiType, Actor akPosition, Actor akPartner) native
+Actor Function GetPartnerByType(Actor akPosition, int aiType) native
+Actor[] Function GetPartnersByType(Actor akPosition, int aiType) native
+Actor Function GetPartnerByTypeRev(Actor akPartner, int aiType) native
+Actor[] Function GetPartnersByTypeRev(Actor akPartner, int aiType) native
+float Function GetVelocity(Actor akPosition, Actor akPartner, int aiType) native
 
 ; ------------------------------------------------------- ;
 ; --- Thread END                                      --- ;
@@ -1689,7 +1689,7 @@ State Ending
 		Config.DisableThreadControl(self as sslThreadController)
 		SendModEvent("SSL_CLEAR_Thread" + tid, "", 1.0)
 		MoveActorsAwayFromPlayer()
-		UnregisterCollision()
+		UnregisterInteraction()
 		If(IsObjectiveDisplayed(0))
 			SetObjectiveDisplayed(0, False)
 		EndIf
@@ -2127,33 +2127,33 @@ EndFunction
 
 bool[] Function ListDetectedPhysicsInteractionsInternal(Actor akPosition, Actor akPartner)
 	bool[] phyActive = Utility.CreateBoolArray(SUPPORTED_INTER_COUNT, False)
-	phyActive[aAnimObjFace] = HasCollisionAction(CTYPE_AnimObjFace, akPartner, akPosition)
-	phyActive[pAnimObjFace] = HasCollisionAction(CTYPE_AnimObjFace, akPosition, akPartner)
-	phyActive[bKissing] = HasCollisionAction(CTYPE_Kissing, akPosition, akPartner)
-	phyActive[aSuckingToes] = HasCollisionAction(CTYPE_SuckingToes, akPosition, akPartner)
-	phyActive[pSuckingToes] = HasCollisionAction(CTYPE_SuckingToes, akPartner, akPosition)
-	phyActive[aFacial] = HasCollisionAction(CTYPE_Facial, akPartner, akPosition)
-	phyActive[pFacial] = HasCollisionAction(CTYPE_Facial, akPosition, akPartner)
-	phyActive[aGrinding] = HasCollisionAction(CTYPE_Grinding, akPartner, akPosition)
-	phyActive[pGrinding] = HasCollisionAction(CTYPE_Grinding, akPosition, akPartner)
-	phyActive[aHandJob] = HasCollisionAction(CTYPE_HandJob, akPosition, akPartner)
-	phyActive[pHandJob] = HasCollisionAction(CTYPE_HandJob, akPartner, akPosition)
-	phyActive[aFootJob] = HasCollisionAction(CTYPE_FootJob, akPosition, akPartner)
-	phyActive[pFootJob] = HasCollisionAction(CTYPE_FootJob, akPartner, akPosition)
+	phyActive[t01] = HasInteractionType(t01, akPartner, akPosition)
+	phyActive[t02] = HasInteractionType(t02, akPosition, akPartner)
+	phyActive[t09] = HasInteractionType(t09, akPosition, akPartner)
+	phyActive[t10] = HasInteractionType(t10, akPosition, akPartner)
+	phyActive[t03] = HasInteractionType(t03, akPartner, akPosition)
+	phyActive[t17] = HasInteractionType(t17, akPartner, akPosition)
+	phyActive[t11] = HasInteractionType(t11, akPosition, akPartner)
+	phyActive[t18] = HasInteractionType(t18, akPartner, akPosition)
+	phyActive[t04] = HasInteractionType(t04, akPosition, akPartner)
+	phyActive[t06] = HasInteractionType(t06, akPosition, akPartner)
+	phyActive[t19] = HasInteractionType(t19, akPartner, akPosition)
+	phyActive[t07] = HasInteractionType(t07, akPosition, akPartner)
+	phyActive[t20] = HasInteractionType(t20, akPartner, akPosition)
 	;phyActive[aBoobJob] = False 	; awaiting support
 	;phyActive[pBoobJob] = False	; awaiting support
-	phyActive[aLickingShaft] = HasCollisionAction(CTYPE_LickingShaft, akPosition, akPartner)
-	phyActive[pLickingShaft] = HasCollisionAction(CTYPE_LickingShaft, akPartner, akPosition)
-	phyActive[aOral] = HasCollisionAction(CTYPE_Oral, akPosition, akPartner)
-	phyActive[pOral] = HasCollisionAction(CTYPE_Oral, akPartner, akPosition)
-	phyActive[aDeepthroat] = HasCollisionAction(CTYPE_Deepthroat, akPosition, akPartner)
-	phyActive[pDeepthroat] = HasCollisionAction(CTYPE_Deepthroat, akPartner, akPosition)
-	phyActive[aSkullfuck] = HasCollisionAction(CTYPE_Skullfuck, akPartner, akPosition)
-	phyActive[pSkullfuck] = HasCollisionAction(CTYPE_Skullfuck, akPosition, akPartner)
-	phyActive[aVaginal] = HasCollisionAction(CTYPE_Vaginal, akPartner, akPosition)
-	phyActive[pVaginal] = HasCollisionAction(CTYPE_Vaginal, akPosition, akPartner)
-	phyActive[aAnal] = HasCollisionAction(CTYPE_Anal, akPartner, akPosition)
-	phyActive[pAnal] = HasCollisionAction(CTYPE_Anal, akPosition, akPartner)
+	phyActive[t13] = HasInteractionType(t13, akPosition, akPartner)
+	phyActive[t22] = HasInteractionType(t22, akPartner, akPosition)
+	phyActive[t12] = HasInteractionType(t12, akPosition, akPartner)
+	phyActive[t23] = HasInteractionType(t23, akPartner, akPosition)
+	phyActive[t14] = HasInteractionType(t14, akPosition, akPartner)
+	phyActive[t24] = HasInteractionType(t24, akPartner, akPosition)
+	phyActive[t25] = HasInteractionType(t25, akPartner, akPosition)
+	phyActive[t05] = HasInteractionType(t05, akPosition, akPartner)
+	phyActive[t26] = HasInteractionType(t26, akPartner, akPosition)
+	phyActive[t15] = HasInteractionType(t15, akPosition, akPartner)
+	phyActive[t27] = HasInteractionType(t27, akPartner, akPosition)
+	phyActive[t16] = HasInteractionType(t16, akPosition, akPartner)
 	return phyActive
 EndFunction
 
@@ -2421,7 +2421,7 @@ float Function CalcInterVelocityFactor(Actor akActor, int interType)
 	EndIf
 	;calculate velocity multiplier... have seen velActual upto 0.097075
 	;after adjustments: 0.01-->1.11, 0.05-->1.55, 0.09-->1.99
-	float velActual = Math.Abs(GetActionVelocity(akActor, None, CType))
+	float velActual = Math.Abs(GetVelocity(akActor, None, CType))
 	float velAdjusted = 1.0 + (velActual * 11.0)
 	return velAdjusted
 EndFunction
