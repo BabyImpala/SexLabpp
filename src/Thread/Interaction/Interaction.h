@@ -1,7 +1,5 @@
 #pragma once
 
-#include "Thread/Thread.h"
-
 namespace Thread
 {
     class Instance;

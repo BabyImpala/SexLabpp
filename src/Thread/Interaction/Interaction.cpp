@@ -1,6 +1,7 @@
 #include "Interaction.h"
 
 #include "Registry/Define/Animation.h"
+#include "Thread/Thread.h"
 
 using namespace Thread::NiNode;
 using namespace Thread::LegacyNiNode;

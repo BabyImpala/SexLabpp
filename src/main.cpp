@@ -8,8 +8,8 @@
 #include "Thread/Interface/SceneHUD.h"
 #include "Thread/Interface/StageSelectMenu.h"
 #include "Thread/Interface/UI/Theme.h"
-#include "Thread/NiNode/Legacy/LegacyNiUpdate.h"
-#include "Thread/NiNode/NiUpdate.h"
+#include "Thread/Interaction/NodeLegacy/LegacyNiUpdate.h"
+#include "Thread/Interaction/NodeML/NiUpdate.h"
 #include "UserData/StripData.h"
 
 // class EventHandler :

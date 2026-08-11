@@ -1,8 +1,8 @@
 #pragma once
 
 #include "Registry/Library.h"
-#include "Thread/NiNode/Legacy/LegacyNiUpdate.h"
-#include "Thread/NiNode/NiUpdate.h"
+#include "Thread/Interaction/NodeLegacy/LegacyNiUpdate.h"
+#include "Thread/Interaction/NodeML/NiUpdate.h"
 
 namespace Thread
 {

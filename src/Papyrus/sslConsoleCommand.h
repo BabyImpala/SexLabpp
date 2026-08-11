@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Thread/NiNode/NiUpdate.h"
+#include "Thread/Interaction/NodeML/NiUpdate.h"
 
 namespace Papyrus::ConsoleCommand
 {
