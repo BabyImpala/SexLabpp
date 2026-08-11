@@ -2,140 +2,50 @@
 
 #include <SimpleIni.h>
 
+#include "NiType.h"
 #include "Util/StringUtil.h"
 
 namespace Thread::NiNode
 {
-    namespace NiType
-    {
-        enum class Cluster
-        {
-            None = 0,
-            Crotch,
-            Head,
-            KissingCl,
-        };
-        constexpr static inline size_t NUM_CLUSTERS = magic_enum::enum_count<Cluster>();
-
-        enum class Type
-        {
-            None = 0,
-#define NI_TYPE(name, cluster) name,
-
-#include "NiType.def"
-
-#undef NI_TYPE
-        };
-        constexpr static inline size_t NUM_TYPES = magic_enum::enum_count<Type>();
-
-        inline Cluster GetClusterForType(Type type)
-        {
-#define NI_TYPE(name, cluster)   \
-    if (type == Type::name) {    \
-        return Cluster::cluster; \
-    }
-#include "NiType.def"
-#undef NI_TYPE
-            return Cluster::None;
-        }
-
-        inline std::vector<Type> GetTypesForCluster(Cluster a_cluster)
-        {
-            std::vector<Type> types;
-#define NI_TYPE(name, cluster)           \
-    if (a_cluster == Cluster::cluster) { \
-        types.push_back(Type::name);     \
-    }
-#include "NiType.def"
-#undef NI_TYPE
-            return types;
-        }
-    }  // namespace NiType
-
     class INiDescriptor
     {
-      public:
-        enum class Feature : uint8_t
-        {
-            Distance01,
-            Time01,
-            Velocity01,
-            Oscillation01,
-            Impulse01,
-            Stability01,
-            StabilityVariance01,
-
-            Distance02,
-            Time02,
-            Velocity02,
-            Oscillation02,
-            Impulse02,
-            Stability02,
-            StabilityVariance02,
-
-            Distance03,
-            Time03,
-            Velocity03,
-            Oscillation03,
-            Impulse03,
-            Stability03,
-            StabilityVariance03,
-
-            Distance04,
-
-            Angle01,
-            Angle02,
-            Angle03,
-        };
-        constexpr static inline size_t NUM_FEATURES = magic_enum::enum_count<Feature>();
-
       public:
         virtual ~INiDescriptor() = default;
 
         virtual float Predict() const = 0;
-        virtual std::string CsvRow() const = 0;
         virtual NiType::Type GetType() const = 0;
 
       public:
-        static std::string CreateCsvHeader(std::vector<INiDescriptor*> descriptors)
+        std::string GetCsvFeatureHeader() const
         {
-            std::ranges::sort(descriptors, [](const INiDescriptor* a, const INiDescriptor* b) {
-                assert(a && b);
-                return a->GetType() < b->GetType();
-            });
+            const auto numColumns = GetNumFeatures();
             std::string header = "";
-            const auto featureNames = magic_enum::enum_names<Feature>();
-            for (const auto& descriptor : descriptors) {
-                assert(descriptor);
-                const auto dType = descriptor->GetType();
-                const auto dTypeName = magic_enum::enum_name(dType);
-                header += std::format("{}_{},", "Id", dTypeName);
-                for (const auto& featureName : featureNames) {
-                    header += std::format("{}_{},", dTypeName, featureName);
-                }
-                header += std::format("{}_Prediction", dTypeName);
-                if (descriptor != descriptors.back()) {
+            for (size_t i = 0; i < numColumns; i++) {
+                header += std::format("f{}", i);
+                if (i < numColumns - 1) {
                     header += ",";
                 }
             }
             return header;
         }
 
-        static std::string CreateCsvRow(std::vector<INiDescriptor*> descriptors)
+        std::string GetCsvFeatureRow() const
         {
-            std::ranges::sort(descriptors, [](const INiDescriptor* a, const INiDescriptor* b) {
-                assert(a && b);
-                return a->GetType() < b->GetType();
-            });
+            const auto features = GetFeatures();
+            assert(features.size() == GetNumFeatures());
             std::string row = "";
-            for (const auto& descriptor : descriptors) {
-                row += descriptor->CsvRow();
-                if (descriptor != descriptors.back()) {
+            for (size_t i = 0; i < features.size(); i++) {
+                row += std::format("{}", features[i]);
+                if (i < features.size() - 1) {
                     row += ",";
                 }
             }
             return row;
         }
+
+      protected:
+        virtual std::vector<float> GetFeatures() const = 0;
+        virtual size_t GetNumFeatures() const = 0;
     };
 
     template <NiType::Type Id = NiType::Type::None>
@@ -143,32 +53,15 @@ namespace Thread::NiNode
       public INiDescriptor
     {
       public:
-        void AddValue(Feature feature, float value)
+        NiDescriptor(std::vector<float> featureValues) : features(std::move(featureValues))
         {
-            features[static_cast<size_t>(feature)] = value;
-        }
-
-        float Predict() const override
-        {
-            return std::inner_product(coefficients.begin(), coefficients.end(), features.begin(), bias);
-        }
-
-        std::string CsvRow() const override
-        {
-            const auto prediction = Predict();
-            std::string row = std::format("{},", magic_enum::enum_name(Id));
-            const auto allFeatures = magic_enum::enum_values<Feature>();
-            for (const auto& feature : allFeatures) {
-                const auto featureValue = features[static_cast<size_t>(feature)];
-                row += std::to_string(featureValue) + ",";
+            if (features.size() != GetNumFeatures()) {
+                throw std::invalid_argument("Feature vector size does not match expected number of features");
             }
-            return std::format("{}{}", row, prediction);
         }
 
-        NiType::Type GetType() const override
-        {
-            return Id;
-        }
+        float Predict() const override { return std::inner_product(coefficients.begin(), coefficients.end(), features.begin(), bias); }
+        NiType::Type GetType() const override { return Id; }
 
       public:
         static void Initialize(CSimpleIniA& inifile)
@@ -180,22 +73,31 @@ namespace Thread::NiNode
                 const auto err = std::format("Descriptor '{}': Missing bias value", section);
                 throw std::runtime_error(err);
             }
-            const auto features = magic_enum::enum_entries<Feature>();
-            for (const auto& [feature, name] : features) {
-                const auto lowerName = Util::CastLower(std::string{ name });
-                const auto value = static_cast<float>(inifile.GetDoubleValue(section.c_str(), lowerName.c_str(), NaN));
-                if (std::isnan(value)) {
-                    const auto err = std::format("Descriptor '{}': Missing value for feature '{}'", section, name);
-                    throw std::runtime_error(err);
-                }
-                coefficients[static_cast<size_t>(feature)] = value;
+            const auto numFeatures = inifile.GetLongValue(section.c_str(), "num_features", 0);
+            if (numFeatures <= 0) {
+                const auto err = std::format("Descriptor '{}': Invalid number of features: {}", section, numFeatures);
+                throw std::runtime_error(err);
             }
-            logger::info("{}: Loaded {} coefficients, bias={:.3f}", section, coefficients, bias);
+            const auto weightsStr = inifile.GetValue(section.c_str(), "weights", "");
+            std::string_view weightsView{ weightsStr };
+            const auto weightsVec = Util::StringSplit(weightsView, ";"sv);
+            if (weightsVec.size() != static_cast<size_t>(numFeatures)) {
+                const auto err = std::format("Descriptor '{}': Number of weights ({}) does not match num_features ({})", section, weightsVec.size(), numFeatures);
+                throw std::runtime_error(err);
+            }
+            for (size_t i = 0; i < weightsVec.size(); i++) {
+                coefficients[i] = std::stof(weightsVec[i].data());
+            }
+            logger::info("{}: Loaded [{}] ({}) coefficients, bias={:.3f}", section, coefficients, coefficients.size(), bias);
         }
 
+      protected:
+        std::vector<float> GetFeatures() const override { return features; }
+        size_t GetNumFeatures() const override { return coefficients.size(); }
+
       private:
-        std::array<float, NUM_FEATURES> features{ 0.0f };
-        static inline std::array<float, NUM_FEATURES> coefficients{ 0.0f };
+        std::vector<float> features{};
+        static inline std::vector<float> coefficients{};
         static inline float bias{ 0.0f };
     };
 

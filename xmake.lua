@@ -98,12 +98,12 @@ add_requires("yaml-cpp", "magic_enum", "glaze", "simpleini", "glm", "eigen")
 set_policy("package.requires_lock", true)
 
 -- rules
-add_rules("mode.debug", "mode.release")
+add_rules("mode.debug", "mode.release", "mode.releasedbg")
 
 set_runtimes("MD")
 add_defines("_ITERATOR_DEBUG_LEVEL=0")
 
-if is_mode("debug") then
+if is_mode("debug") or is_mode("releasedbg") then
     add_defines("DEBUG")
     set_optimize("none")
 elseif is_mode("release") then
