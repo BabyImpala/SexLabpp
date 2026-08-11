@@ -91,6 +91,9 @@ INI_SETTING(fAdjustHeadLimit, 33.0f, "Distance")
 INI_SETTING(fAdjustSchlongLimit, 90.0f, "Distance")
 INI_SETTING(fAdjustSchlongVaginalLimit, 55.0f, "Distance")
 
+INI_SETTING(bUseLegacyNiType, true, "Interaction")
+INI_SETTING(bFallbackToTagsForDetection, true, "Interaction")
+
 INI_SETTING(fCloseToHead, 13.5f, "Distance")
 INI_SETTING(fDistanceMouth, 5.4f, "NiType") 
 INI_SETTING(fDistanceCrotch, 8.0f, "NiType")
@@ -104,7 +107,6 @@ INI_SETTING(fEnterThresholdSoftmax, 0.4f, "NiType")
 INI_SETTING(fEnterThreshold, 0.6f, "NiType")
 INI_SETTING(fExitThreshold, 0.35f, "NiType")
 
-INI_SETTING(bUseLegacyNiType, false, "Legacy_NiType")
 INI_SETTING(fThroatToleranceRadius, 0.25f, "Legacy_NiType")
 INI_SETTING(fAngleKissing, 70.0f, "Legacy_NiType")
 INI_SETTING(fAngleGrinding, 70.0f, "Legacy_NiType")
