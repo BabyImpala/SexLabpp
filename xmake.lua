@@ -1,4 +1,4 @@
-set_xmakever("2.9.5")
+set_xmakever("3.0.0")
 
 -- Globals
 PROJECT_NAME = "SexLabUtil"
@@ -96,6 +96,7 @@ add_requires("yaml-cpp", "magic_enum", "glaze", "simpleini", "glm", "eigen")
 
 -- policies
 set_policy("package.requires_lock", true)
+set_policy("check.auto_ignore_flags", false)
 
 -- rules
 add_rules("mode.debug", "mode.release", "mode.releasedbg")
