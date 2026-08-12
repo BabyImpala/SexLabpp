@@ -24,7 +24,9 @@ namespace Thread::Hooks
                 const auto frameDelta = *deltaTime;
                 Instance::UpdateAnimations(frameDelta);
                 original();
-                LegacyNiNode::NiUpdate::OnFrameUpdate(frameDelta);
+                if (!Util::IsGamePausedOrFrozen()) {
+                    LegacyNiNode::NiUpdate::OnFrameUpdate(frameDelta);
+                }
             }
 
             static inline REL::Relocation<decltype(Thunk)> original;
