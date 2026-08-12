@@ -6,6 +6,64 @@
 
 namespace Thread::LegacyNiNode
 {
+    namespace
+    {
+        float DistanceToOpening(const NiMath::Segment& a_segment, const Node::Opening& a_opening, float a_startRadius = 0.0f, float a_endRadius = 0.0f)
+        {
+            const auto vector = a_segment.Vector();
+            const auto lengthSq = vector.SqrLength();
+            if (lengthSq <= FLT_EPSILON) {
+                const auto offset = a_segment.first - a_opening.center;
+                const auto planeDistance = offset.Dot(a_opening.axis);
+                const auto radialDistance = (offset - a_opening.axis * planeDistance).Length();
+                const auto radialMiss = std::max(radialDistance - a_opening.radius - a_startRadius, 0.0f);
+                return std::sqrt(radialMiss * radialMiss + planeDistance * planeDistance);
+            }
+
+            const auto planeDenominator = vector.Dot(a_opening.axis);
+            const auto toCenter = a_opening.center - a_segment.first;
+            const auto t = std::clamp(
+                std::abs(planeDenominator) > FLT_EPSILON ? toCenter.Dot(a_opening.axis) / planeDenominator : toCenter.Dot(vector) / lengthSq,
+                0.0f,
+                1.0f);
+            const auto offset = a_segment.first + vector * t - a_opening.center;
+            const auto planeDistance = offset.Dot(a_opening.axis);
+            const auto radialDistance = (offset - a_opening.axis * planeDistance).Length();
+            const auto shaftRadius = a_startRadius + (a_endRadius - a_startRadius) * t;
+            const auto radialMiss = std::max(radialDistance - a_opening.radius - shaftRadius, 0.0f);
+            return std::sqrt(radialMiss * radialMiss + planeDistance * planeDistance);
+        }
+
+        float DistanceToOpening(const Node::ShaftShape& a_shaft, const Node::Opening& a_opening)
+        {
+            if (a_shaft.sections.size() < 2) {
+                return std::numeric_limits<float>::max();
+            }
+            // Before entry, only the physical tip can approach the opening; after entry, test the inserted capsule chain.
+            if ((a_shaft.tip - a_opening.center).Dot(a_opening.axis) < 0.0f) {
+                return DistanceToOpening({ a_shaft.tip }, a_opening);
+            }
+            float distance = std::numeric_limits<float>::max();
+            for (std::size_t i = 1; i < a_shaft.sections.size(); ++i) {
+                distance = std::min(distance, DistanceToOpening({ a_shaft.sections[i - 1].center, a_shaft.sections[i].center }, a_opening,
+                                                  a_shaft.sections[i - 1].radius, a_shaft.sections[i].radius));
+            }
+            return std::min(distance, DistanceToOpening({ a_shaft.sections.back().center, a_shaft.tip }, a_opening, a_shaft.sections.back().radius, 0.0f));
+        }
+
+        RE::NiPoint3 GetShaftTipDirection(const Node::ShaftShape& a_shaft)
+        {
+            if (a_shaft.sections.empty()) {
+                return {};
+            }
+            auto direction = a_shaft.tip - a_shaft.sections.back().center;
+            if (direction.SqrLength() <= FLT_EPSILON && a_shaft.sections.size() >= 2) {
+                direction = a_shaft.sections.back().center - a_shaft.sections[a_shaft.sections.size() - 2].center;
+            }
+            return direction;
+        }
+    }
+
     bool RotateNode(RE::NiPointer<RE::NiNode> niNode, const NiMath::Segment& sNode, const RE::NiPoint3& pTarget, float maxAngleAdjust)
     {
         const auto vTarget = pTarget - sNode.first;
@@ -53,8 +111,12 @@ namespace Thread::LegacyNiNode
               return ObjectBound{};
           auto ret = ObjectBound::MakeBoundingBox(nihead);
           return ret ? *ret : ObjectBound{};
-      }())
-    {}
+      }()),
+      vaginalOpening(a_position.nodes.GetVaginalOpening()),
+      analOpening(a_position.nodes.GetAnalOpening())
+    {
+        a_position.nodes.UpdateSchlongs();
+    }
 
     bool NiPosition::Snapshot::GetHeadHeadInteractions(const Snapshot& a_partner)
     {
@@ -174,10 +236,8 @@ namespace Thread::LegacyNiNode
     {
         const auto sSchlong = a_schlong->GetReferenceSegment();
         const auto nSchlong = a_schlong->GetBaseReferenceNode();
-        const auto sVaginal = position.nodes.GetVaginalSegment();
-        const auto sAnal = position.nodes.GetAnalSegment();
-        const auto& nClitoris = position.nodes.clitoris;
-        if (sVaginal && sAnal && nClitoris) {  // 3BA & female
+        const auto* shaftShape = a_schlong->GetCollisionShape();
+        if (vaginalOpening && analOpening) {  // 3BA & female
             const auto [type, segment, distance] = [&]() {
                 enum
                 {
@@ -197,8 +257,8 @@ namespace Thread::LegacyNiNode
                         return tAnal;
                     }
                 }();
-                const auto dVaginal = NiMath::ClosestSegmentBetweenSegments(sSchlong, sVaginal->first).Length();
-                const auto dAnal = NiMath::ClosestSegmentBetweenSegments(sSchlong, sAnal->first).Length();
+                const auto dVaginal = shaftShape ? DistanceToOpening(*shaftShape, *vaginalOpening) : DistanceToOpening(sSchlong, *vaginalOpening);
+                const auto dAnal = shaftShape ? DistanceToOpening(*shaftShape, *analOpening) : DistanceToOpening(sSchlong, *analOpening);
                 const auto dif = dVaginal - dAnal;
                 bool branchVaginal = true;
                 switch (tLast) {
@@ -217,24 +277,25 @@ namespace Thread::LegacyNiNode
                 if (branchVaginal) {
                     return std::tuple{
                         Interaction::Action::Vaginal,
-                        *sVaginal,
+                        *vaginalOpening,
                         dVaginal
                     };
                 } else {
                     return std::tuple{
                         Interaction::Action::Anal,
-                        *sAnal,
+                        *analOpening,
                         dAnal
                     };
                 }
             }();
             if (distance <= Settings::fDistanceCrotch) {
-                const auto aSegment = NiMath::GetAngleDegree(segment.Vector(), sSchlong.Vector());
-                if (aSegment <= Settings::fAnglePenetration && (!nSchlong || RotateNode(nSchlong, sSchlong, segment.second, Settings::fAdjustSchlongVaginalLimit))) {
+                const auto shaftDirection = shaftShape ? GetShaftTipDirection(*shaftShape) : sSchlong.Vector();
+                const auto aSegment = NiMath::GetAngleDegree(segment.axis, shaftDirection);
+                if (aSegment <= Settings::fAnglePenetration && (!nSchlong || RotateNode(nSchlong, sSchlong, segment.deep, Settings::fAdjustSchlongVaginalLimit))) {
                     interactions.emplace_back(a_partner.position.actor, type, distance);
                     return true;
                 }
-                const auto sCrotch = NiMath::Segment{ sAnal->first, sVaginal->first };
+                const auto sCrotch = NiMath::Segment{ analOpening->center, vaginalOpening->center };
                 const auto aCrotch = NiMath::GetAngleDegree(sCrotch.Vector(), sSchlong.Vector());
                 if (std::abs(aCrotch - 180.0f) <= Settings::fAngleGrinding) {
                     interactions.emplace_back(a_partner.position.actor, Interaction::Action::Grinding, distance);
@@ -312,17 +373,15 @@ namespace Thread::LegacyNiNode
         const auto mouthstart = GetMouthStartPoint();
         if (!mouthstart)
             return false;
-        const auto& nClitoris = a_partner.position.nodes.clitoris;
-        const auto sVaginal = a_partner.position.nodes.GetVaginalSegment();
-        if (!sVaginal || !nClitoris)
+        if (!a_partner.vaginalOpening)
             return false;
-        float distance = nClitoris->world.translate.GetDistance(*mouthstart);
+        float distance = a_partner.vaginalOpening->center.GetDistance(*mouthstart);
         if (distance > Settings::fDistanceMouth)
             return false;
         assert(position.nodes.head);
         const auto& headworld = position.nodes.head->world;
         const auto vHead = headworld.rotate.GetVectorY();
-        const auto angle = NiMath::GetAngleDegree(sVaginal->Vector(), vHead);
+        const auto angle = NiMath::GetAngleDegree(a_partner.vaginalOpening->axis, vHead);
         if (angle > Settings::fAngleCunnilingus)
             return false;
         interactions.emplace_back(a_partner.position.actor, Interaction::Action::Oral, distance);
@@ -331,17 +390,12 @@ namespace Thread::LegacyNiNode
 
     bool NiPosition::Snapshot::GetVaginaVaginaInteractions(const Snapshot& a_partner)
     {
-        const auto &c1 = position.nodes.clitoris, &c2 = a_partner.position.nodes.clitoris;
-        if (!c1 || !c2)
+        if (!vaginalOpening || !a_partner.vaginalOpening)
             return false;
-        const auto distance = c1->world.translate.GetDistance(c2->world.translate);
+        const auto distance = vaginalOpening->center.GetDistance(a_partner.vaginalOpening->center);
         if (distance > Settings::fDistanceCrotch)
             return false;
-        const auto sVaginal = position.nodes.GetVaginalSegment();
-        const auto sVaginalPartner = a_partner.position.nodes.GetVaginalSegment();
-        if (!sVaginal || !sVaginalPartner)
-            return false;
-        const auto angle = NiMath::GetAngleDegree(sVaginal->Vector(), sVaginalPartner->Vector());
+        const auto angle = NiMath::GetAngleDegree(vaginalOpening->axis, a_partner.vaginalOpening->axis);
         if (std::abs(angle - 180) > Settings::fAngleGrindingFF)
             return false;
         interactions.emplace_back(a_partner.position.actor, Interaction::Action::Grinding, distance);
@@ -350,14 +404,13 @@ namespace Thread::LegacyNiNode
 
     bool NiPosition::Snapshot::GetVaginaLimbInteractions(const Snapshot& a_partner)
     {
-        const auto& nClitoris = a_partner.position.nodes.clitoris;
-        if (!nClitoris)
+        if (!a_partner.vaginalOpening)
             return false;
         const auto get = [&](const auto& limb, auto type, float maxDist) {
             if (!limb)
                 return false;
             const auto pLimb = limb->world.translate;
-            const auto d = pLimb.GetDistance(nClitoris->world.translate);
+            const auto d = pLimb.GetDistance(a_partner.vaginalOpening->center);
             if (d > maxDist)
                 return false;
             interactions.emplace_back(position.actor, type, d);

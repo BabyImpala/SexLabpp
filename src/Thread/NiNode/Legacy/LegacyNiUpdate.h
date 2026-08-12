@@ -17,7 +17,7 @@ namespace Thread::LegacyNiNode
         bool VisitPositions(std::function<bool(const NiPosition&)> a_visitor) const;
 
       private:
-        void UpdateInteractions(float a_delta);
+        void UpdateInteractions(float a_delta, bool a_drawCollision);
         void GetInteractionsMale(std::vector<NiPosition::Snapshot>& list, const NiPosition::Snapshot& it);
         void GetInteractionsFemale(std::vector<NiPosition::Snapshot>& list, const NiPosition::Snapshot& it);
         void GetInteractionsNeutral(std::vector<NiPosition::Snapshot>& list, const NiPosition::Snapshot& it);

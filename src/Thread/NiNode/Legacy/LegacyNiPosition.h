@@ -79,6 +79,8 @@ namespace Thread::LegacyNiNode
           public:
             NiPosition& position;
             ObjectBound bHead;
+            std::optional<Node::Opening> vaginalOpening;
+            std::optional<Node::Opening> analOpening;
             std::vector<Interaction> interactions{};
 
           public:

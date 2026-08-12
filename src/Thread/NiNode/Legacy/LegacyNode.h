@@ -37,36 +37,38 @@ namespace Thread::LegacyNiNode::Node
     static constexpr std::string_view ANIMOBJECTL{ "AnimObjectL"sv };
     struct SchlongInfo
     {
-        constexpr SchlongInfo(std::string_view a_base, std::string_view a_mid, std::string_view a_tip) :
-          base(a_base), mid(a_mid), tip(a_tip), rot(glm::mat3(1.0f)) {}
+        constexpr SchlongInfo(std::string_view a_base) :
+          base(a_base), rot(glm::mat3(1.0f)) {}
         constexpr SchlongInfo(std::string_view a_base, glm::mat3 a_rotation) :
-          base(a_base), mid(""), tip(""), rot(a_rotation) {}
+          base(a_base), rot(a_rotation) {}
 
-        std::string_view base, mid, tip;
+        std::string_view base;
         glm::mat3 rot;
     };
     static constexpr std::array SCHLONG_NODES{
-        SchlongInfo("NPC Genitals01 [Gen01]", "NPC Genitals04 [Gen04]", "NPC Genitals06 [Gen06]"),
-        SchlongInfo("AH Base", "AH 3", "AH 6"),
-        SchlongInfo("DD 2", "DD 3", "DD 6"),
-        SchlongInfo("NPC IceGenital02", "NPC IceGenital03", ""),
-        SchlongInfo("BearD 3", "BearD 6", "BearD 8"),
-        SchlongInfo("GS 3", "GS 4", "GS 7"),
-        SchlongInfo("BoarDick01", "BoarDick03", "BoarDick06"),
-        SchlongInfo("RD 2", "RD 3", "RD 5"),
-        SchlongInfo("CDPenis 2", "CDPenis 5", "CDPenis 7"),
-        SchlongInfo("CO 2", "CO 5", "CO 9"),
-        SchlongInfo("ElkD03", "ElkD04", "ElkD06"),
-        SchlongInfo("DwarvenSpiderDildo01", "DwarvenSpiderDildo02", "DwarvenSpiderDildo03"),
-        SchlongInfo("FD 3", "FD 4", "FD 7"),
-        SchlongInfo("GD 3", "GD 4", "GD 7"),
-        SchlongInfo("Goat_Penis02", "Goat_Penis04", "Goat_Penis06"),
-        SchlongInfo("Horker_Penis04", "Horker_Penis06", "Horker_Penis10"),
-        SchlongInfo("HS 3", "HS 6", "HS 7"),
-        SchlongInfo("SCD 3", "SCD 4", "SCD 7"),
-        SchlongInfo("SkeeverD 03", "SkeeverD 05", "SkeeverD 07"),
-        SchlongInfo("TD 3", "TD 5", "TD 7"),
-        SchlongInfo("VLDick03", "VLDick05", "VLDick06"),
+
+		// Only the base of the schlong is needed, the system will discover the children automatically
+        SchlongInfo("NPC Genitals01 [Gen01]"),
+        SchlongInfo("AH Base"),
+        SchlongInfo("DD 2"),
+        SchlongInfo("NPC IceGenital02"),
+        SchlongInfo("BearD 3"),
+        SchlongInfo("GS 3"),
+        SchlongInfo("BoarDick01"),
+        SchlongInfo("RD 2"),
+        SchlongInfo("CDPenis 2"),
+        SchlongInfo("CO 2"),
+        SchlongInfo("ElkD03"),
+        SchlongInfo("DwarvenSpiderDildo01"),
+        SchlongInfo("FD 3"),
+        SchlongInfo("GD 3"),
+        SchlongInfo("Goat_Penis02"),
+        SchlongInfo("Horker_Penis04"),
+        SchlongInfo("HS 3"),
+        SchlongInfo("SCD 3"),
+        SchlongInfo("SkeeverD 03"),
+        SchlongInfo("TD 3"),
+        SchlongInfo("VLDick03"),
         // Default Euler = (-158.18, -1.51, -54.54), facing Y at approx (0, 0, 90)
         SchlongInfo("NPC Torso Rock 01", glm::mat3{ 0.76184751, 0.28855865, 0.579933, 0.37156284, -0.92803376, -0.02635142, 0.53059347, 0.23555732, -0.81423788 }),
         // Default Euler = (-176.49, 22.60, -131.08), facing Y at approx (0, 0, 90)
@@ -81,12 +83,75 @@ namespace Thread::LegacyNiNode::Node
     };
     static constexpr float MIN_SCHLONG_LEN{ 13.0f };
 
+    struct Opening
+    {
+        RE::NiPoint3 center;
+        RE::NiPoint3 deep;
+        RE::NiPoint3 axis;
+        RE::NiPoint3 right;
+        RE::NiPoint3 up;
+        float radius{ 0.0f };
+        bool skinned{ false };
+    };
+
+    struct ShaftSection
+    {
+        RE::NiPoint3 center;
+        float radius{ 0.0f };
+    };
+
+    struct ShaftShape
+    {
+        std::vector<ShaftSection> sections;
+        RE::NiPoint3 tip;
+        bool skinned{ false };
+    };
+
+    struct SurfaceOpening
+    {
+        struct Influence
+        {
+            std::uint16_t bone;
+            float weight;
+        };
+
+        struct Sample
+        {
+            std::uint16_t vertex;
+            RE::NiPoint3 local;
+            std::vector<Influence> influences;
+        };
+
+        struct Landmark
+        {
+            std::vector<Sample> samples;
+        };
+
+        struct Bone
+        {
+            std::uint16_t skinIndex;
+            RE::NiTransform transform;
+        };
+
+        bool Bind(RE::BSGeometry* a_geometry, std::string_view a_modelPath, std::string_view a_name, const std::array<RE::NiAVObject*, 2>& a_targets, RE::NiAVObject* a_deep);
+        std::optional<Opening> Update();
+
+        RE::NiPointer<RE::BSGeometry> geometry;
+		// Careful with this raw pointer. Should be verified it's alive before trusting
+        RE::NiSkinInstance* skinInstance{ nullptr };
+        RE::NiPointer<RE::NiAVObject> deep;
+        std::array<Landmark, 2> landmarks;
+        std::vector<Bone> bones;
+    };
+
     struct NodeData
     {
         struct Schlong
         {
             virtual NiMath::Segment GetReferenceSegment() const = 0;
             virtual RE::NiPointer<RE::NiNode> GetBaseReferenceNode() const = 0;
+            virtual void UpdateCollisionShape() {}
+            virtual const ShaftShape* GetCollisionShape() const { return nullptr; }
         };
 
         struct FakeSchlong : public Schlong
@@ -109,15 +174,61 @@ namespace Thread::LegacyNiNode::Node
 
         struct SchlongData : public Schlong
         {
-            SchlongData(RE::NiPointer<RE::NiNode> a_basenode, const glm::mat3& a_rot);
+            SchlongData(RE::Actor* a_actor, RE::NiPointer<RE::NiNode> a_basenode, const glm::mat3& a_rot);
             ~SchlongData() = default;
 
             virtual NiMath::Segment GetReferenceSegment() const override;
             virtual RE::NiPointer<RE::NiNode> GetBaseReferenceNode() const override;
+            virtual void UpdateCollisionShape() override;
+            virtual const ShaftShape* GetCollisionShape() const override { return collisionShape ? std::addressof(*collisionShape) : nullptr; }
 
           private:
+            struct Influence
+            {
+                std::uint16_t bone;
+                float weight;
+            };
+
+            struct Sample
+            {
+                std::uint16_t vertex;
+                RE::NiPoint3 local;
+                std::vector<Influence> influences;
+            };
+
+            struct Ring
+            {
+                std::vector<Sample> samples;
+                std::vector<RE::NiPoint3> worldPositions;
+            };
+
+            struct Bone
+            {
+                std::uint16_t skinIndex;
+                RE::NiTransform transform;
+            };
+
+            struct Surface
+            {
+                RE::NiPointer<RE::BSGeometry> geometry;
+                RE::NiSkinInstance* skinInstance{ nullptr };
+                std::vector<Ring> rings;
+                Ring tip;
+                std::vector<Bone> bones;
+            };
+
+            // NiPosition keeps the actor alive longer than this object; retain it for delayed equipment discovery.
+            RE::Actor* actor{ nullptr };
             std::vector<RE::NiPointer<RE::NiNode>> nodes{};
             RE::NiMatrix3 rot;
+            std::optional<Surface> surface;
+            std::optional<ShaftShape> collisionShape;
+            std::uint64_t equipmentSignature{ 0 };
+            std::uint8_t stableEquipmentFrames{ 0 };
+            bool surfaceSearchPending{ false };
+
+            void FindSurface(RE::Actor* a_actor);
+            bool BindSurface(RE::BSGeometry* a_geometry, std::string_view a_modelPath, const std::vector<std::uint16_t>* a_knownChain = nullptr);
 
           public:
             bool operator==(const SchlongData& a_rhs) const { return this->nodes.size() == a_rhs.nodes.size() && this->nodes.front() == a_rhs.nodes.front(); }
@@ -158,9 +269,16 @@ namespace Thread::LegacyNiNode::Node
       public:
         std::optional<NiMath::Segment> GetVaginalSegment() const;
         std::optional<NiMath::Segment> GetAnalSegment() const;
+        std::optional<Opening> GetVaginalOpening();
+        std::optional<Opening> GetAnalOpening();
+        void UpdateSchlongs();
         std::optional<RE::NiPoint3> GetToeVectorLeft() const;
         std::optional<RE::NiPoint3> GetToeVectorRight() const;
         NiMath::Segment GetCrotchSegment() const;
+
+      private:
+        std::optional<SurfaceOpening> vaginalSurface;
+        std::optional<SurfaceOpening> analSurface;
     };
 
 }

@@ -1,9 +1,15 @@
 #include "LegacyNiUpdate.h"
 
 #include "LegacyNiMath.h"
+#include "Thread/Interface/SceneHUD.h"
 
 namespace Thread::LegacyNiNode
 {
+    namespace
+    {
+        constexpr std::uint32_t PROTOTYPE_TIMING_INTERVAL{ 30 };
+    }
+
     NiInstance::NiInstance(const std::vector<RE::Actor*>& a_positions, const Registry::Scene* a_scene) :
       positions([&]() {
           std::vector<LegacyNiNode::NiPosition> v{};
@@ -14,7 +20,8 @@ namespace Thread::LegacyNiNode
               v.emplace_back(it, sex);
           }
           return v;
-      }()) {}
+      }())
+    {}
 
     bool NiInstance::VisitPositions(std::function<bool(const NiPosition&)> a_visitor) const
     {
@@ -26,7 +33,7 @@ namespace Thread::LegacyNiNode
         return false;
     }
 
-    void NiInstance::UpdateInteractions(float a_delta)
+    void NiInstance::UpdateInteractions(float a_delta, bool a_drawCollision)
     {
         std::unique_lock lk{ _m, std::defer_lock };
         if (!lk.try_lock()) {
@@ -36,6 +43,29 @@ namespace Thread::LegacyNiNode
         snapshots.reserve(positions.size());
         for (auto&& it : positions) {
             snapshots.emplace_back(it);
+        }
+        if (a_drawCollision) {
+            auto& debugDraw = Interface::SceneHUD::GetSingleton().GetDebugDraw();
+            for (const auto& snapshot : snapshots) {
+                if (snapshot.vaginalOpening) {
+                    debugDraw.AddRing(snapshot.vaginalOpening->center, snapshot.vaginalOpening->right, snapshot.vaginalOpening->up, snapshot.vaginalOpening->radius);
+                }
+                if (snapshot.analOpening) {
+                    debugDraw.AddRing(snapshot.analOpening->center, snapshot.analOpening->right, snapshot.analOpening->up, snapshot.analOpening->radius);
+                }
+                for (const auto& schlong : snapshot.position.nodes.schlongs) {
+                    if (const auto* shaft = schlong->GetCollisionShape()) {
+                        // Draw the same tapered segment chain consumed by the opening collision test.
+                        for (std::size_t section = 1; section < shaft->sections.size(); ++section) {
+                            debugDraw.AddTaperedCapsule(shaft->sections[section - 1].center, shaft->sections[section].center, shaft->sections[section - 1].radius,
+                                shaft->sections[section].radius);
+                        }
+                        if (!shaft->sections.empty()) {
+                            debugDraw.AddTaperedCapsule(shaft->sections.back().center, shaft->tip, shaft->sections.back().radius, 0.0f);
+                        }
+                    }
+                }
+            }
         }
         for (auto&& fst : snapshots) {
             GetInteractionsMale(snapshots, fst);
@@ -124,12 +154,23 @@ namespace Thread::LegacyNiNode
             return;
         }
         std::scoped_lock lk{ _m };
+        static std::uint32_t prototypeFrame = 0;
         const auto ms_passed = gameDaysPassed->value * 24 * 60'000;
         static float ms_passed_last = ms_passed;
         const auto delta = ms_passed - ms_passed_last;
+        const bool logPrototypeTiming = prototypeFrame++ % PROTOTYPE_TIMING_INTERVAL == 1;
+        const auto start = std::chrono::high_resolution_clock::now();
         ms_passed_last = ms_passed;
-        for (auto&& [_, process] : processes) {
-            process->UpdateInteractions(delta);
+        auto& debugDraw = Interface::SceneHUD::GetSingleton().GetDebugDraw();
+        debugDraw.BeginFrame();
+        const auto* linkedThread = Interface::SceneHUD::GetSingleton().GetLinkedThread();
+        for (auto&& [id, process] : processes) {
+            process->UpdateInteractions(delta, linkedThread && id == linkedThread->GetFormID());
+        }
+        debugDraw.Publish();
+        if (logPrototypeTiming && !processes.empty()) {
+            const auto elapsed = std::chrono::duration<double, std::milli>(std::chrono::high_resolution_clock::now() - start);
+            logger::info("Legacy surface collision frame: {:.2f}ms", elapsed.count());
         }
     }
 
@@ -142,7 +183,10 @@ namespace Thread::LegacyNiNode
                 std::swap(*where, processes.back());
                 processes.pop_back();
             }
+            const auto start = std::chrono::high_resolution_clock::now();
             auto process = std::make_shared<NiInstance>(a_positions, a_scene);
+            const auto elapsed = std::chrono::duration<double, std::milli>(std::chrono::high_resolution_clock::now() - start);
+            logger::info("Legacy surface collision initialization: {:.2f}ms", elapsed.count());
             return processes.emplace_back(a_id, process).second;
         } catch (const std::exception& e) {
             logger::error("Failed to register NiInstance: {}", e.what());
