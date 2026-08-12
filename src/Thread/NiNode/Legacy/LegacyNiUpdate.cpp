@@ -87,6 +87,12 @@ namespace Thread::LegacyNiNode
                 }
             }
             positions[i].interactions = { snapshots[i].interactions.begin(), snapshots[i].interactions.end() };
+
+			// [DEBUG] Remove me plss
+            for (const auto& interaction : positions[i].interactions) {
+                logger::info("Legacy interaction: actor={}, partner={}, action={}, distance={:.2f}, velocity={:.2f}", pos.actor->GetName(),
+                    interaction.partner->GetName(), magic_enum::enum_name(interaction.action), interaction.distance, interaction.velocity);
+            }
         }
     }
 
