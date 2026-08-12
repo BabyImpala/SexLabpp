@@ -1275,6 +1275,8 @@ namespace Thread::LegacyNiNode::Node
                         weightedPointerMatches += weighted;
                     }
                     const auto boneName = std::string_view(bone->name.c_str());
+					// Todo: Remove debug jank after testing more!
+					// This is just debug jank, along with a lot of the other code around here.
                     if (boneName.starts_with("NPC Genitals0") && boneName.contains("[Gen0")) {
                         ++genitalNameMatches;
                         weightedGenitalNameMatches += weighted;
