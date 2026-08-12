@@ -903,6 +903,7 @@ namespace Thread::LegacyNiNode::Node
             target = RE::NiPointer{ ninode };
             return true;
         };
+		// This is likely a mistake? It will always miss non-human actors
         if (!get(PELVIS, pelvis, true) || !get(SPINELOWER, spine_lower, true)) {
             throw std::exception("Missing mandatory 3d object (body)");
         }

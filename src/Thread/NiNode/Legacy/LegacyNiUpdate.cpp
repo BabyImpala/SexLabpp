@@ -134,38 +134,17 @@ namespace Thread::LegacyNiNode
         }
     }
 
-    void NiUpdate::Install()
+    void NiUpdate::OnFrameUpdate(float a_delta)
     {
-        // UpdateThirdPerson
-        if (REL::Module::IsVR()) {
-            stl::write_thunk_call<NiUpdate>(REL::Offset(0x6c6a7d).address());
-        } else {
-            REL::Relocation<std::uintptr_t> addr{ RELOCATION_ID(39446, 40522), 0x94 };
-            stl::write_thunk_call<NiUpdate>(addr.address());
-        }
-        logger::info("Registered Functions");
-    }
-
-    void NiUpdate::thunk(RE::NiAVObject* a_obj, RE::NiUpdateData* updateData)
-    {
-        func(a_obj, updateData);
-        static const auto gameDaysPassed = RE::Calendar::GetSingleton()->gameDaysPassed;
-        if (!gameDaysPassed) {
-            return;
-        }
         std::scoped_lock lk{ _m };
         static std::uint32_t prototypeFrame = 0;
-        const auto ms_passed = gameDaysPassed->value * 24 * 60'000;
-        static float ms_passed_last = ms_passed;
-        const auto delta = ms_passed - ms_passed_last;
         const bool logPrototypeTiming = prototypeFrame++ % PROTOTYPE_TIMING_INTERVAL == 1;
         const auto start = std::chrono::high_resolution_clock::now();
-        ms_passed_last = ms_passed;
         auto& debugDraw = Interface::SceneHUD::GetSingleton().GetDebugDraw();
         debugDraw.BeginFrame();
         const auto* linkedThread = Interface::SceneHUD::GetSingleton().GetLinkedThread();
         for (auto&& [id, process] : processes) {
-            process->UpdateInteractions(delta, linkedThread && id == linkedThread->GetFormID());
+            process->UpdateInteractions(a_delta, linkedThread && id == linkedThread->GetFormID());
         }
         debugDraw.Publish();
         if (logPrototypeTiming && !processes.empty()) {
