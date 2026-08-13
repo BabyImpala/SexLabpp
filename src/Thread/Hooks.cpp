@@ -25,7 +25,7 @@ namespace Thread::Hooks
                 Instance::UpdateAnimations(frameDelta);
                 original();
                 if (!Util::IsGamePausedOrFrozen()) {
-                    LegacyNiNode::NiUpdate::OnFrameUpdate(frameDelta);
+                    NiNode::Surface::Manager::OnFrameUpdate(frameDelta);
                 }
             }
 
