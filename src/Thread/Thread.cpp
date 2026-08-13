@@ -94,12 +94,12 @@ namespace Thread
     void Instance::AdvanceScene(const Registry::Stage* a_nextStage)
     {
         assert(activeScene && activeScene->GetStageNodeType(a_nextStage) != Registry::Scene::NodeType::None);
-        if (Settings::bUseLegacyNiType) {
-            if (surfaceCollision == nullptr) {
-                surfaceCollision = NiNode::Surface::Manager::Register(linkedQst->formID, *activeAssignment, activeScene);
+        if (Settings::bUseNiSurface) {
+            if (instanceNiSurface == nullptr) {
+                instanceNiSurface = Interaction::NiSurface::Manager::Register(linkedQst->formID, *activeAssignment, activeScene);
             }
-        } else if (niInstance == nullptr) {
-            niInstance = NiNode::NiUpdate::Register(linkedQst->formID, *activeAssignment, activeScene);
+        } else if (instanceNiML == nullptr) {
+            instanceNiML = Interaction::NiML::NiUpdate::Register(linkedQst->formID, *activeAssignment, activeScene);
         }
         fixedLengthTimer.state = FixedLengthTimer::State::Stopped;
         activeStage = a_nextStage;
@@ -281,7 +281,7 @@ namespace Thread
             activeScene->furnitureOffset.Apply(baseCoordinates);
             AdvanceScene(activeStage);
 
-            // position offset
+        // position offset
         } else {
             const auto it = std::find_if(activeAssignment->begin(), activeAssignment->end(),
                 [&](RE::Actor* a) { return a && a->GetFormID() == actorFormId; });

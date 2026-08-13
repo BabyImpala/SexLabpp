@@ -3,19 +3,19 @@
 #include "Registry/Define/Animation.h"
 #include "Thread/Thread.h"
 
-using namespace Thread::NiNode;
-using namespace Thread::LegacyNiNode;
+using namespace Thread::Interaction::NiML;
+using namespace Thread::Interaction::NiSurface;
 
 namespace Thread::Interaction
 {
-    // ============ ML NiInstance ============ //
+    // ============ NiML Interaction ============ //
 
     static NiType::Type ToNiType(CType ct)
     {
         return static_cast<NiType::Type>(static_cast<int32_t>(ct));
     }
 
-    static std::vector<int32_t> GetCollisionActionsML(NiNode::NiInstance* ni, RE::Actor* a_actor, RE::Actor* a_partner)
+    static std::vector<int32_t> GetCollisionActionsNiML(Interaction::NiML::NiInstance* ni, RE::Actor* a_actor, RE::Actor* a_partner)
     {
         const uint32_t idxA = a_actor ? a_actor->formID : 0;
         const uint32_t idxB = a_partner ? a_partner->formID : 0;
@@ -35,7 +35,7 @@ namespace Thread::Interaction
         return result;
     }
 
-    static bool HasCollisionActionML(NiNode::NiInstance* ni, RE::Actor* a_actor, RE::Actor* a_partner, int32_t interType)
+    static bool HasCollisionActionNiML(Interaction::NiML::NiInstance* ni, RE::Actor* a_actor, RE::Actor* a_partner, int32_t interType)
     {
         const auto& entry = kInterTypeTable[interType];
         const uint32_t idxA = a_actor ? a_actor->formID : 0;
@@ -47,7 +47,7 @@ namespace Thread::Interaction
         return !interactions.empty();
     }
 
-    static std::vector<RE::Actor*> GetPartnersByActionML(NiNode::NiInstance* ni, RE::Actor* a_actor,  int32_t interType)
+    static std::vector<RE::Actor*> GetPartnersByActionNiML(Interaction::NiML::NiInstance* ni, RE::Actor* a_actor,  int32_t interType)
     {
         const auto& entry = kInterTypeTable[interType];
         const uint32_t idx = a_actor ? a_actor->formID : 0;
@@ -58,7 +58,7 @@ namespace Thread::Interaction
             : ni->GetInteractionPartners(idx, niType);
     }
 
-    static float GetActionVelocityML(NiNode::NiInstance* ni, RE::Actor* a_actor, RE::Actor* a_partner, int32_t interType)
+    static float GetActionVelocityNiML(Interaction::NiML::NiInstance* ni, RE::Actor* a_actor, RE::Actor* a_partner, int32_t interType)
     {
         const auto& entry = kInterTypeTable[interType];
         const uint32_t idxA = a_actor ? a_actor->formID : 0;
@@ -70,9 +70,9 @@ namespace Thread::Interaction
         return interactions.empty() ? 0.0f : interactions.front()->velocity;
     }
 
-    // ============ Legacy NiInstance ============ //
+    // ============ NiSurface Interaction ============ //
 
-    static std::vector<int32_t> GetCollisionActionsLegacy(LegacyNiNode::NiInstance* ni, RE::Actor* a_actor, RE::Actor* a_partner)
+    static std::vector<int32_t> GetCollisionActionsNiSurface(Interaction::NiSurface::Scene* ni, RE::Actor* a_actor, RE::Actor* a_partner)
     {
         const uint32_t idxA = a_actor ? a_actor->formID : 0;
         const uint32_t idxB = a_partner ? a_partner->formID : 0;
@@ -108,7 +108,7 @@ namespace Thread::Interaction
         return result;
     }
 
-    static bool HasCollisionActionLegacy(LegacyNiNode::NiInstance* ni, RE::Actor* a_actor, RE::Actor* a_partner, int32_t interType)
+    static bool HasCollisionActionNiSurface(Interaction::NiSurface::Scene* ni, RE::Actor* a_actor, RE::Actor* a_partner, int32_t interType)
     {
         const auto& entry = kInterTypeTable[interType];
         const auto ct = static_cast<int32_t>(entry.ctype);
@@ -131,7 +131,7 @@ namespace Thread::Interaction
         return found;
     }
 
-    static std::vector<RE::Actor*> GetPartnersByActionLegacy(LegacyNiNode::NiInstance* ni, RE::Actor* a_actor, int32_t interType)
+    static std::vector<RE::Actor*> GetPartnersByActionNiSurface(Interaction::NiSurface::Scene* ni, RE::Actor* a_actor, int32_t interType)
     {
         const auto& entry = kInterTypeTable[interType];
         const auto ct = static_cast<int32_t>(entry.ctype);
@@ -154,7 +154,7 @@ namespace Thread::Interaction
         return result;
     }
 
-    static float GetActionVelocityLegacy(LegacyNiNode::NiInstance* ni, RE::Actor* a_actor, RE::Actor* a_partner, int32_t interType)
+    static float GetActionVelocityNiSurface(Interaction::NiSurface::Scene* ni, RE::Actor* a_actor, RE::Actor* a_partner, int32_t interType)
     {
         const auto& entry = kInterTypeTable[interType];
         const auto ct = static_cast<int32_t>(entry.ctype);
@@ -223,13 +223,13 @@ namespace Thread::Interaction
 
         std::vector<bool> interFlags(kInterTypeCount, false);
 
-        if (Settings::bUseLegacyNiType) {
-            if (auto* ni = instance->GetNiInstanceLegacy()) {
-                interFlags = flags(GetCollisionActionsLegacy(ni, a_actor, a_partner));
+        if (Settings::bUseNiSurface) {
+            if (auto* ni = instance->GetInstanceNiSurface()) {
+                interFlags = flags(GetCollisionActionsNiSurface(ni, a_actor, a_partner));
             }
         } else {
-            if (auto* ni = instance->GetNiInstance()) {
-                interFlags = flags(GetCollisionActionsML(ni, a_actor, a_partner));
+            if (auto* ni = instance->GetInstanceNiML()) {
+                interFlags = flags(GetCollisionActionsNiML(ni, a_actor, a_partner));
             }
         }
         bool allFalse = std::find(interFlags.begin(), interFlags.end(), true) == interFlags.end();
@@ -280,13 +280,13 @@ namespace Thread::Interaction
             return ret;
         }
         const auto& entry = kInterTypeTable[interType];
-        if (Settings::bUseLegacyNiType) {
-            if (auto* ni = instance->GetNiInstanceLegacy()) {
-                ret = entry.supported && HasCollisionActionLegacy(ni, a_actor, a_partner, interType);
+        if (Settings::bUseNiSurface) {
+            if (auto* ni = instance->GetInstanceNiSurface()) {
+                ret = entry.supported && HasCollisionActionNiSurface(ni, a_actor, a_partner, interType);
             }
         } else {
-            if (auto* ni = instance->GetNiInstance()) {
-                ret = entry.supported && HasCollisionActionML(ni, a_actor, a_partner, interType);
+            if (auto* ni = instance->GetInstanceNiML()) {
+                ret = entry.supported && HasCollisionActionNiML(ni, a_actor, a_partner, interType);
             }
         }
         if (!ret && ShouldUseTagsFallback(instance)) {
@@ -333,13 +333,13 @@ namespace Thread::Interaction
             return {};
         const auto& entry = kInterTypeTable[interType];
         if (entry.supported) {
-            if (Settings::bUseLegacyNiType) {
-                if (auto* ni = instance->GetNiInstanceLegacy()) {
-                    return GetPartnersByActionLegacy(ni, a_actor, interType);
+            if (Settings::bUseNiSurface) {
+                if (auto* ni = instance->GetInstanceNiSurface()) {
+                    return GetPartnersByActionNiSurface(ni, a_actor, interType);
                 }
             } else {
-                if (auto* ni = instance->GetNiInstance()) {
-                    return GetPartnersByActionML(ni, a_actor, interType);
+                if (auto* ni = instance->GetInstanceNiML()) {
+                    return GetPartnersByActionNiML(ni, a_actor, interType);
                 }
             }
         }
@@ -376,13 +376,13 @@ namespace Thread::Interaction
         }
         if (!kInterTypeTable[interType].supported)
             return 0.0f;
-        if (Settings::bUseLegacyNiType) {
-            if (auto* ni = instance->GetNiInstanceLegacy()) {
-                return GetActionVelocityLegacy(ni, a_actor, a_partner, interType);
+        if (Settings::bUseNiSurface) {
+            if (auto* ni = instance->GetInstanceNiSurface()) {
+                return GetActionVelocityNiSurface(ni, a_actor, a_partner, interType);
             }
         } else {
-            if (auto* ni = instance->GetNiInstance()) {
-                return GetActionVelocityML(ni, a_actor, a_partner, interType);
+            if (auto* ni = instance->GetInstanceNiML()) {
+                return GetActionVelocityNiML(ni, a_actor, a_partner, interType);
             }
         }
         return 0.0f;

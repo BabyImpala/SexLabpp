@@ -1,8 +1,8 @@
 #pragma once
 
 #include "Registry/Library.h"
-#include "Thread/Interaction/NodeLegacy/CollisionManager.h"
-#include "Thread/Interaction/NodeML/NiUpdate.h"
+#include "Thread/Interaction/NiML/NiUpdate.h"
+#include "Thread/Interaction/NiSurface/CollisionManager.h"
 
 namespace Thread
 {
@@ -71,13 +71,19 @@ namespace Thread
         static void UpdateAnimations(float a_delta);
 
       public:
-        bool HasNiInstance() const { return niInstance != nullptr; }
-        NiNode::NiInstance* GetNiInstance() { return niInstance.get(); }
-        void UnregisterNiInstance() { (NiNode::NiUpdate::Unregister(linkedQst->GetFormID()), niInstance = nullptr); }
+        bool HasInstanceNiML() const { return instanceNiML != nullptr; }
+        Interaction::NiML::NiInstance* GetInstanceNiML() { return instanceNiML.get(); }
+        void UnregisterInstanceNiML() {
+          (Interaction::NiML::NiUpdate::Unregister(linkedQst->GetFormID()),
+          instanceNiML = nullptr);
+        }
 
-        bool HasSurfaceCollision() const { return surfaceCollision != nullptr; }
-        NiNode::Surface::Scene* GetSurfaceCollision() { return surfaceCollision.get(); }
-        void UnregisterSurfaceCollision() { (NiNode::Surface::Manager::Unregister(linkedQst->GetFormID()), surfaceCollision = nullptr); }
+        bool HasInstanceNiSurface() const { return instanceNiSurface != nullptr; }
+        Interaction::NiSurface::Scene* GetInstanceNiSurface() { return instanceNiSurface.get(); }
+        void UnregisterInstanceNiSurface() {
+          (Interaction::NiSurface::Manager::Unregister(linkedQst->GetFormID()),
+          instanceNiSurface = nullptr);
+        }
 
         void AdvanceScene(const Registry::Stage* a_nextStage);
         bool BeginActorRecovery();
@@ -187,8 +193,8 @@ namespace Thread
         };
 
         RE::TESQuest* linkedQst;
-        std::shared_ptr<NiNode::NiInstance> niInstance{ nullptr };
-        std::shared_ptr<NiNode::Surface::Scene> surfaceCollision{ nullptr };
+        std::shared_ptr<Interaction::NiML::NiInstance> instanceNiML{ nullptr };
+        std::shared_ptr<Interaction::NiSurface::Scene> instanceNiSurface{ nullptr };
 
         Center center;
         std::vector<Position> positions;

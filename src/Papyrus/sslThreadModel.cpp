@@ -5,7 +5,7 @@
 #include "Registry/Util/RayCast.h"
 #include "Registry/Util/RayCast/ObjectBound.h"
 #include "Thread/Collision/CollisionHandler.h"
-#include "Thread/Interaction.h"
+#include "Thread/Interaction/Interaction.h"
 #include "Thread/Thread.h"
 #include "UserData/StripData.h"
 #include "Util/Script.h"
@@ -587,23 +587,23 @@ namespace Papyrus::ThreadModel
     bool IsCollisionRegistered(QUESTARGS)
     {
         GET_INSTANCE(false);
-        if (Settings::bUseLegacyNiType) {
-            return instance->HasNiInstanceLegacy();
+        if (Settings::bUseNiSurface) {
+            return instance->HasInstanceNiSurface();
         } else {
-            return instance->HasNiInstance();
+            return instance->HasInstanceNiML();
         }
     }
 
     void UnregisterCollision(QUESTARGS)
     {
         GET_INSTANCE();
-        if (Settings::bUseLegacyNiType) {
-            if (instance->HasNiInstanceLegacy()) {
-                instance->UnregisterNiInstanceLegacy();
+        if (Settings::bUseNiSurface) {
+            if (instance->HasInstanceNiSurface()) {
+                instance->UnregisterInstanceNiSurface();
             }
-        } else if (instance->HasNiInstance()) {
-            instance->UnregisterNiInstance();
-        }     
+        } else if (instance->HasInstanceNiML()) {
+            instance->UnregisterInstanceNiML();
+        }
     }
 
     std::vector<bool> GetInteractionFlagsImpl(QUESTARGS, RE::Actor* a_actor, RE::Actor* a_partner)

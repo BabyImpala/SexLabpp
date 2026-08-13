@@ -91,7 +91,7 @@ INI_SETTING(fAdjustHeadLimit, 33.0f, "Distance")
 INI_SETTING(fAdjustSchlongLimit, 90.0f, "Distance")
 INI_SETTING(fAdjustSchlongVaginalLimit, 55.0f, "Distance")
 
-INI_SETTING(bUseLegacyNiType, true, "Interaction")
+INI_SETTING(bUseNiSurface, true, "Interaction")
 INI_SETTING(bFallbackToTagsForDetection, true, "Interaction")
 
 INI_SETTING(fCloseToHead, 13.5f, "Distance")

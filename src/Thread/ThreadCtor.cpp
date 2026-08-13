@@ -265,7 +265,7 @@ namespace Thread
         for (auto&& p : positions) {
             auto act = p.data.GetActor();
             assert(act);
-            auto head = act->GetNodeByName(Thread::NiNode::Node::HEAD);
+            auto head = act->GetNodeByName(Thread::Interaction::NiML::Node::HEAD);
             if (!head)
                 continue;
             auto& t = head->world.translate;
