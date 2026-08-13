@@ -95,8 +95,8 @@ namespace Thread
     {
         assert(activeScene && activeScene->GetStageNodeType(a_nextStage) != Registry::Scene::NodeType::None);
         if (Settings::bUseLegacyNiType) {
-            if (niInstanceLegacy == nullptr) {
-                niInstanceLegacy = LegacyNiNode::NiUpdate::Register(linkedQst->formID, *activeAssignment, activeScene);
+            if (surfaceCollision == nullptr) {
+                surfaceCollision = NiNode::Surface::Manager::Register(linkedQst->formID, *activeAssignment, activeScene);
             }
         } else if (niInstance == nullptr) {
             niInstance = NiNode::NiUpdate::Register(linkedQst->formID, *activeAssignment, activeScene);

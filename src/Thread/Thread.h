@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Registry/Library.h"
-#include "Thread/Interaction/NodeLegacy/LegacyNiUpdate.h"
+#include "Thread/Interaction/NodeLegacy/CollisionManager.h"
 #include "Thread/Interaction/NodeML/NiUpdate.h"
 
 namespace Thread
@@ -75,9 +75,9 @@ namespace Thread
         NiNode::NiInstance* GetNiInstance() { return niInstance.get(); }
         void UnregisterNiInstance() { (NiNode::NiUpdate::Unregister(linkedQst->GetFormID()), niInstance = nullptr); }
 
-        bool HasNiInstanceLegacy() const { return niInstanceLegacy != nullptr; }
-        LegacyNiNode::NiInstance* GetNiInstanceLegacy() { return niInstanceLegacy.get(); }
-        void UnregisterNiInstanceLegacy() { (LegacyNiNode::NiUpdate::Unregister(linkedQst->GetFormID()), niInstanceLegacy = nullptr); }
+        bool HasSurfaceCollision() const { return surfaceCollision != nullptr; }
+        NiNode::Surface::Scene* GetSurfaceCollision() { return surfaceCollision.get(); }
+        void UnregisterSurfaceCollision() { (NiNode::Surface::Manager::Unregister(linkedQst->GetFormID()), surfaceCollision = nullptr); }
 
         void AdvanceScene(const Registry::Stage* a_nextStage);
         bool BeginActorRecovery();
@@ -188,7 +188,7 @@ namespace Thread
 
         RE::TESQuest* linkedQst;
         std::shared_ptr<NiNode::NiInstance> niInstance{ nullptr };
-        std::shared_ptr<LegacyNiNode::NiInstance> niInstanceLegacy{ nullptr };
+        std::shared_ptr<NiNode::Surface::Scene> surfaceCollision{ nullptr };
 
         Center center;
         std::vector<Position> positions;
