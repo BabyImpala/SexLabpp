@@ -2206,7 +2206,7 @@ float Function CalculateInteractionFactor(Actor akPosition, bool[] interActive)
 			; velFactor: [Range: 1.0 to 2.0]
 			; factorValue: [Default: 1 to 12] [Adjusted: 0.2 to 2.4]
 			; factorType: [Result: 0.2 to 4.8]
-			float velFactor = CalcInterVelocityFactor(akPosition, i)
+			float velFactor = 1.5 ;CalcInterVelocityFactor(akPosition, i)
 			float adjustedFactor = 0.25 + (factorValues[i] / 5.0)
 			factorTotal += (adjustedFactor * velFactor)
 			;Log("InterFactor: TYPE: " + i + ", Value: " + factorValues[i] + ", Adjusted: " + adjustedFactor)

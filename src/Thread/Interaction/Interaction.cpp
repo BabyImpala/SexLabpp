@@ -90,7 +90,7 @@ namespace Thread::Interaction
                         result.push_back(it);
                 }
             }
-            // Case 2: CType's definintional role performed by other position (covers all swapped == true entries)
+            // Case 2: CType's definitional role performed by other position (covers all swapped == true entries)
             // Restrict to a_partner's position if one was given, otherwise check every position.
             if (!a_partner || pos.actor->formID == idxB) {
                 for (const auto& type : pos.interactions) {
