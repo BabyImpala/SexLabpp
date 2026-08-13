@@ -557,19 +557,19 @@ namespace Papyrus::ThreadModel
     bool IsCollisionRegisteredLegacy(QUESTARGS)
     {
         GET_INSTANCE(false);
-        return instance->HasNiInstanceLegacy();
+        return instance->HasSurfaceCollision();
     }
 
     void UnregisterCollisionLegacy(QUESTARGS)
     {
         GET_INSTANCE();
-        instance->UnregisterNiInstanceLegacy();
+        instance->UnregisterSurfaceCollision();
     }
 
     std::vector<int> GetCollisionActionsLegacy(QUESTARGS, RE::Actor* a_position, RE::Actor* a_partner)
     {
         GET_INSTANCE({});
-        auto niInstance = instance->GetNiInstanceLegacy();
+        auto niInstance = instance->GetSurfaceCollision();
         if (!niInstance) {
             a_vm->TraceStack("Not registered", a_stackID);
             return {};
@@ -591,7 +591,7 @@ namespace Papyrus::ThreadModel
     bool HasCollisionActionLegacy(QUESTARGS, int a_type, RE::Actor* a_position, RE::Actor* a_partner)
     {
         GET_INSTANCE({});
-        auto niInstance = instance->GetNiInstanceLegacy();
+        auto niInstance = instance->GetSurfaceCollision();
         if (!niInstance) {
             a_vm->TraceStack("Not registered", a_stackID);
             return false;
@@ -617,7 +617,7 @@ namespace Papyrus::ThreadModel
             return nullptr;
         }
         GET_INSTANCE({});
-        auto niInstance = instance->GetNiInstanceLegacy();
+        auto niInstance = instance->GetSurfaceCollision();
         if (!niInstance) {
             a_vm->TraceStack("Not registered", a_stackID);
             return nullptr;
@@ -640,7 +640,7 @@ namespace Papyrus::ThreadModel
     std::vector<RE::Actor*> GetPartnersByActionLegacy(QUESTARGS, RE::Actor* a_position, int a_type)
     {
         GET_INSTANCE({});
-        auto niInstance = instance->GetNiInstanceLegacy();
+        auto niInstance = instance->GetSurfaceCollision();
         if (!niInstance) {
             a_vm->TraceStack("Not registered", a_stackID);
             return {};
@@ -666,7 +666,7 @@ namespace Papyrus::ThreadModel
             return nullptr;
         }
         GET_INSTANCE({});
-        auto niInstance = instance->GetNiInstanceLegacy();
+        auto niInstance = instance->GetSurfaceCollision();
         if (!niInstance) {
             a_vm->TraceStack("Not registered", a_stackID);
             return {};
@@ -690,7 +690,7 @@ namespace Papyrus::ThreadModel
     std::vector<RE::Actor*> GetPartnersByTypeRevLegacy(QUESTARGS, RE::Actor* a_position, int a_type)
     {
         GET_INSTANCE({});
-        auto niInstance = instance->GetNiInstanceLegacy();
+        auto niInstance = instance->GetSurfaceCollision();
         if (!niInstance) {
             a_vm->TraceStack("Not registered", a_stackID);
             return {};
@@ -720,7 +720,7 @@ namespace Papyrus::ThreadModel
             return 0.0f;
         }
         GET_INSTANCE({});
-        auto niInstance = instance->GetNiInstanceLegacy();
+        auto niInstance = instance->GetSurfaceCollision();
         if (!niInstance) {
             a_vm->TraceStack("Not registered", a_stackID);
             return 0.0f;
