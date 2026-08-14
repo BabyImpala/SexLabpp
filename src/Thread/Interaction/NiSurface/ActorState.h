@@ -31,12 +31,19 @@ namespace Thread::Interaction::NiSurface
             Total,
         };
 
-        Interaction(RE::ActorPtr a_partner, Action a_action, float a_distance) :
-          partner(a_partner), action(a_action), distance(a_distance) {}
+        Interaction(RE::ActorPtr a_partner, Action a_action, float a_distance, RE::NiPoint3 a_motion, float a_motionScale = 1.0f, std::uint8_t a_motionSource = 0) :
+          partner(a_partner), action(a_action), distance(a_distance), motion(a_motion), motionScale(a_motionScale), motionSource(a_motionSource) {}
 
         RE::ActorPtr partner{ 0 };
         Action action{ Action::None };
         float distance{ 0.0f };
+        // Relative contact position. Shaft sliding stores its normalized position in x.
+        RE::NiPoint3 motion{};
+        // Converts normalized motion to world units without making scale changes motion themselves.
+        float motionScale{ 1.0f };
+        // Distinguishes interchangeable tracked nodes so switching nodes resets rather than spikes velocity.
+        std::uint8_t motionSource{ 0 };
+        // Smoothed non-negative interaction-relative speed.
         float velocity{ 0.0f };
 
         bool operator==(const Interaction& a_rhs) const { return a_rhs.partner == partner && a_rhs.action == action; }
@@ -49,6 +56,15 @@ namespace Thread::Interaction::NiSurface
 
     struct ActorState
     {
+        struct MotionState
+        {
+            // Low-pass filtered relative contact position retained across brief detection gaps.
+            RE::NiPoint3 position{};
+            float scale{ 1.0f };
+            float velocity{ 0.0f };
+            float elapsed{ 0.0f };
+        };
+
         struct Frame
         {
             explicit Frame(ActorState& a_state);
@@ -84,6 +100,7 @@ namespace Thread::Interaction::NiSurface
         Geometry::ActorGeometry geometry;
         stl::enumeration<Registry::Sex> sex;
         std::set<Interaction> interactions{};
+        std::map<std::tuple<RE::FormID, Interaction::Action, std::uint8_t>, MotionState> motionStates{};
 
         bool operator==(const ActorState& a_rhs) const { return actor == a_rhs.actor; }
     };

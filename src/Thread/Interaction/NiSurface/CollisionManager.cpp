@@ -7,6 +7,10 @@ namespace Thread::Interaction::NiSurface
     namespace
     {
         constexpr std::uint32_t TIMING_LOG_INTERVAL{ 30 };
+        constexpr float MOTION_FILTER_TIME{ 0.05f };
+        constexpr float VELOCITY_FILTER_TIME{ 0.25f };
+        constexpr float MOTION_STATE_RETENTION{ 0.2f };
+        constexpr float MINIMUM_SAMPLE_TIME{ 0.0001f };
     }
 
     Scene::Scene(const std::vector<RE::Actor*>& a_positions, const Registry::Scene* a_scene)
@@ -70,26 +74,52 @@ namespace Thread::Interaction::NiSurface
             DetectVaginalInteractions(frames, source);
             DetectGeneralInteractions(frames, source);
         }
+        static std::uint32_t velocityLogFrame = 0;
+        const bool logVelocity = velocityLogFrame++ % TIMING_LOG_INTERVAL == 1;
         for (std::size_t i = 0; i < positions.size(); ++i) {
             auto& position = positions[i];
-            for (auto& interaction : frames[i].interactions) {
-                const auto previous = position.interactions.find(interaction);
-                if (previous == position.interactions.end()) {
-                    continue;
-                }
-                const float distanceDelta = interaction.distance - previous->distance;
-                if (a_delta != 0.0f) {
-                    interaction.velocity = (previous->velocity + distanceDelta / a_delta) * 0.5f;
-                } else {
-                    interaction.velocity = previous->velocity;
-                }
+            for (auto& [_, state] : position.motionStates) {
+                state.elapsed += std::max(a_delta, 0.0f);
             }
-            position.interactions = { frames[i].interactions.begin(), frames[i].interactions.end() };
+
+            const std::set<Interaction> detected{ frames[i].interactions.begin(), frames[i].interactions.end() };
+            std::set<Interaction> updated;
+            for (auto interaction : detected) {
+                const auto key = std::tuple{ interaction.partner->GetFormID(), interaction.action, interaction.motionSource };
+                auto [where, inserted] = position.motionStates.try_emplace(key, ActorState::MotionState{ interaction.motion, interaction.motionScale });
+                auto& state = where->second;
+                if (!inserted && state.elapsed > MINIMUM_SAMPLE_TIME && state.elapsed <= MOTION_STATE_RETENTION) {
+                    const float motionAlpha = 1.0f - std::exp(-state.elapsed / MOTION_FILTER_TIME);
+                    const auto filteredPosition = state.position + (interaction.motion - state.position) * motionAlpha;
+                    state.scale += (interaction.motionScale - state.scale) * motionAlpha;
+                    const float rawVelocity = filteredPosition.GetDistance(state.position) * state.scale / state.elapsed;
+                    if (std::isfinite(rawVelocity)) {
+                        const float velocityAlpha = 1.0f - std::exp(-state.elapsed / VELOCITY_FILTER_TIME);
+                        state.velocity += (rawVelocity - state.velocity) * velocityAlpha;
+                    }
+                    state.position = filteredPosition;
+                } else if (!inserted && state.elapsed > MOTION_STATE_RETENTION) {
+                    state.position = interaction.motion;
+                    state.scale = interaction.motionScale;
+                    state.velocity = 0.0f;
+                }
+                state.elapsed = 0.0f;
+                interaction.velocity = state.velocity;
+                updated.insert(std::move(interaction));
+            }
+            position.interactions = std::move(updated);
+
+            std::erase_if(position.motionStates, [](const auto& a_entry) {
+                return a_entry.second.elapsed > MOTION_STATE_RETENTION;
+            });
 
             // Temporary interaction validation; remove after collision behavior is verified.
-            for (const auto& interaction : positions[i].interactions) {
-                logger::info("NiSurface Interaction: actor={}, partner={}, action={}, distance={:.2f}, velocity={:.2f}", position.actor->GetName(),
-                    interaction.partner->GetName(), magic_enum::enum_name(interaction.action), interaction.distance, interaction.velocity);
+            if (logVelocity) {
+                for (const auto& interaction : positions[i].interactions) {
+                    logger::info("NiSurface Interaction: actor={}, partner={}, action={}, source={}, distance={:.2f}, motion=({:.3f}, {:.3f}, {:.3f}), scale={:.2f}, velocity={:.3f}",
+                        position.actor->GetName(), interaction.partner->GetName(), magic_enum::enum_name(interaction.action), interaction.motionSource,
+                        interaction.distance, interaction.motion.x, interaction.motion.y, interaction.motion.z, interaction.motionScale, interaction.velocity);
+                }
             }
         }
     }

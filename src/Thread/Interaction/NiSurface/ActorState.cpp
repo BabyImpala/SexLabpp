@@ -58,6 +58,13 @@ namespace Thread::Interaction::NiSurface
             }
             return direction;
         }
+
+        float GetNormalizedPositionAlongShaft(const GeometryMath::Segment& a_shaft, const RE::NiPoint3& a_point)
+        {
+            const auto shaft = a_shaft.Vector();
+            const auto lengthSq = shaft.SqrLength();
+            return lengthSq > FLT_EPSILON ? std::clamp((a_point - a_shaft.start).Dot(shaft) / lengthSq, 0.0f, 1.0f) : 0.0f;
+        }
     }
 
     bool RotateNode(RE::NiPointer<RE::NiNode> a_node, const GeometryMath::Segment& a_segment, const RE::NiPoint3& a_target, float a_maxAngle)
@@ -132,7 +139,7 @@ namespace Thread::Interaction::NiSurface
         if (std::abs(angle - 180) > Settings::fAngleKissing) {
             return false;
         }
-        interactions.emplace_back(a_partner.state.actor, Interaction::Action::Kissing, distance);
+        interactions.emplace_back(a_partner.state.actor, Interaction::Action::Kissing, distance, *mouthCenter - *partnerMouthCenter);
         return true;
     }
 
@@ -151,7 +158,10 @@ namespace Thread::Interaction::NiSurface
         const auto distanceRight = footR->world.translate.GetDistance(*mouth);
         if (distanceLeft > Settings::fDistanceFootMouth && distanceRight > Settings::fDistanceFootMouth)
             return false;
-        interactions.emplace_back(a_partner.state.actor, Interaction::Action::ToeSucking, std::min(distanceLeft, distanceRight));
+        const bool useLeft = distanceLeft < distanceRight;
+        const auto toePosition = useLeft ? footL->world.translate : footR->world.translate;
+        interactions.emplace_back(a_partner.state.actor, Interaction::Action::ToeSucking, std::min(distanceLeft, distanceRight), *mouth - toePosition,
+            1.0f, useLeft ? 1 : 2);
         return true;
     }
 
@@ -163,6 +173,7 @@ namespace Thread::Interaction::NiSurface
         assert(state.geometry.head);
         const auto& headWorld = state.geometry.head->world;
         const auto shaftSegment = a_shaft.GetReferenceSegment();
+        const auto shaftTip = shaftSegment.end;
         const auto* shaftShape = a_shaft.GetCollisionShape();
         const auto headDistance = [&]() {
             const auto closest = GeometryMath::ClosestSegmentBetweenSegments(GeometryMath::Segment{ headWorld.translate }, shaftSegment);
@@ -202,30 +213,33 @@ namespace Thread::Interaction::NiSurface
         }();
 
         if (inFrontOfHead && verticalToShaft && closeToMouth) {
-            interactions.emplace_back(a_partner.state.actor, Interaction::Action::LickingShaft, mouthDistance);
+            const auto mouth = GetMouthCenter();
+            assert(mouth);
+            interactions.emplace_back(a_partner.state.actor, Interaction::Action::LickingShaft, mouthDistance,
+                RE::NiPoint3{ GetNormalizedPositionAlongShaft(shaftSegment, *mouth), 0.0f, 0.0f }, shaftSegment.Length());
             return true;
         } else if (contactingMouth && inFrontOfHead && aimingAtHead) {
             const auto throat = GetThroatPoint(), mouth = GetMouthCenter();
             assert(throat && mouth);
             if (!baseNode || RotateNode(baseNode, shaftSegment, *throat, Settings::fAdjustSchlongLimit)) {
                 RotateNode(state.geometry.head, { *mouth, *throat }, shaftSegment.start, Settings::fAdjustHeadLimit);
-                interactions.emplace_back(a_partner.state.actor, Interaction::Action::Oral, mouthDistance);
+                interactions.emplace_back(a_partner.state.actor, Interaction::Action::Oral, mouthDistance, shaftTip - *mouth);
                 assert(partnerGeometry.pelvis);
                 const auto throatDistance = shaftShape ? shaftShape->tip.GetDistance(*throat) : GeometryMath::ClosestSegmentBetweenSegments(GeometryMath::Segment{ *throat }, shaftSegment).Length();
                 const auto tipAtThroat = throatDistance < headBounds.boundMax.y * Settings::fThroatToleranceRadius;
                 const auto pelvisAtHead = headBounds.IsPointInside(partnerGeometry.pelvis->world.translate);
                 if (tipAtThroat || pelvisAtHead) {
-                    interactions.emplace_back(a_partner.state.actor, Interaction::Action::Deepthroat, throatDistance);
+                    interactions.emplace_back(a_partner.state.actor, Interaction::Action::Deepthroat, throatDistance, shaftTip - *throat);
                 }
                 return true;
             }
         } else if (penetratingSkull && aimingAtHead) {
             if (!baseNode || RotateNode(baseNode, shaftSegment, headWorld.translate, Settings::fAdjustSchlongLimit)) {
-                interactions.emplace_back(a_partner.state.actor, Interaction::Action::Skullfuck, headDistance);
+                interactions.emplace_back(a_partner.state.actor, Interaction::Action::Skullfuck, headDistance, shaftTip - headWorld.translate);
             }
             return true;
         } else if (inFrontOfHead && aimingAtHead) {
-            interactions.emplace_back(a_partner.state.actor, Interaction::Action::Facial, headDistance);
+            interactions.emplace_back(a_partner.state.actor, Interaction::Action::Facial, headDistance, shaftTip - headWorld.translate);
             return true;
         }
         return false;
@@ -234,6 +248,7 @@ namespace Thread::Interaction::NiSurface
     bool ActorState::Frame::DetectShaftCrotch(const Frame& a_partner, const Geometry::Shaft& a_shaft)
     {
         const auto shaftSegment = a_shaft.GetReferenceSegment();
+        const auto shaftTip = shaftSegment.end;
         const auto shaftNode = a_shaft.GetBaseReferenceNode();
         const auto* shaftShape = a_shaft.GetCollisionShape();
         if (vaginalOpening && analOpening) {
@@ -290,13 +305,13 @@ namespace Thread::Interaction::NiSurface
                 const auto shaftDirection = shaftShape ? GetShaftTipDirection(*shaftShape) : shaftSegment.Vector();
                 const auto aSegment = GeometryMath::GetAngleDegree(segment.axis, shaftDirection);
                 if (aSegment <= Settings::fAnglePenetration && (!shaftNode || RotateNode(shaftNode, shaftSegment, segment.deep, Settings::fAdjustSchlongVaginalLimit))) {
-                    interactions.emplace_back(a_partner.state.actor, type, distance);
+                    interactions.emplace_back(a_partner.state.actor, type, distance, shaftTip - segment.center);
                     return true;
                 }
                 const auto crotchSegment = GeometryMath::Segment{ analOpening->center, vaginalOpening->center };
                 const auto crotchAngle = GeometryMath::GetAngleDegree(crotchSegment.Vector(), shaftSegment.Vector());
                 if (std::abs(crotchAngle - 180.0f) <= Settings::fAngleGrinding) {
-                    interactions.emplace_back(a_partner.state.actor, Interaction::Action::Grinding, distance);
+                    interactions.emplace_back(a_partner.state.actor, Interaction::Action::Grinding, distance, shaftTip - segment.center);
                     return true;
                 }
             }
@@ -307,10 +322,10 @@ namespace Thread::Interaction::NiSurface
                 const auto vBaseToSpine = crotchSegment.start - shaftSegment.start;
                 const auto crotchAngle = GeometryMath::GetAngleDegree(vBaseToSpine, shaftSegment.Vector());
                 if (crotchAngle <= Settings::fAnglePenetration && (!shaftNode || RotateNode(shaftNode, shaftSegment, crotchSegment.start, Settings::fAdjustSchlongVaginalLimit))) {
-                    interactions.emplace_back(a_partner.state.actor, Interaction::Action::Anal, crotchDistance);
+                    interactions.emplace_back(a_partner.state.actor, Interaction::Action::Anal, crotchDistance, shaftTip - crotchSegment.start);
                     return true;
                 } else if (std::abs(crotchAngle - 90.0f) <= Settings::fAngleGrinding) {
-                    interactions.emplace_back(a_partner.state.actor, Interaction::Action::Anal, crotchDistance);
+                    interactions.emplace_back(a_partner.state.actor, Interaction::Action::Anal, crotchDistance, shaftTip - crotchSegment.start);
                     return true;
                 }
             }
@@ -345,24 +360,26 @@ namespace Thread::Interaction::NiSurface
         }
         const auto referencePoint = pickLeft ? (leftPosition + leftThumb->world.translate) / 2 : (rightPosition + rightThumb->world.translate) / 2;
         RotateNode(a_shaft.GetBaseReferenceNode(), shaftSegment, referencePoint, Settings::fAdjustSchlongLimit);
-        interactions.emplace_back(a_partner.state.actor, Interaction::Action::HandJob, pickLeft ? leftDistance : rightDistance);
+        interactions.emplace_back(a_partner.state.actor, Interaction::Action::HandJob, pickLeft ? leftDistance : rightDistance,
+            RE::NiPoint3{ GetNormalizedPositionAlongShaft(shaftSegment, referencePoint), 0.0f, 0.0f }, shaftSegment.Length(), pickLeft ? 1 : 2);
         return true;
     }
 
     bool ActorState::Frame::DetectShaftFoot(const Frame& a_partner, const Geometry::Shaft& a_shaft)
     {
         const auto shaftSegment = a_shaft.GetReferenceSegment();
-        const auto get = [&](const auto& foot) {
+        const auto get = [&](const auto& foot, std::uint8_t source) {
             if (!foot)
                 return false;
             const auto footPosition = foot->world.translate;
             const auto distance = GeometryMath::ClosestSegmentBetweenSegments(GeometryMath::Segment{ footPosition }, shaftSegment).Length();
             if (distance > Settings::fDistanceFoot)
                 return false;
-            interactions.emplace_back(a_partner.state.actor, Interaction::Action::FootJob, distance);
+            interactions.emplace_back(a_partner.state.actor, Interaction::Action::FootJob, distance,
+                RE::NiPoint3{ GetNormalizedPositionAlongShaft(shaftSegment, footPosition), 0.0f, 0.0f }, shaftSegment.Length(), source);
             return true;
         };
-        return get(state.geometry.leftFoot) || get(state.geometry.rightFoot);
+        return get(state.geometry.leftFoot, 1) || get(state.geometry.rightFoot, 2);
     }
 
     bool ActorState::Frame::DetectVaginalOral(const Frame& a_partner)
@@ -381,7 +398,7 @@ namespace Thread::Interaction::NiSurface
         const auto angle = GeometryMath::GetAngleDegree(a_partner.vaginalOpening->axis, vHead);
         if (angle > Settings::fAngleCunnilingus)
             return false;
-        interactions.emplace_back(a_partner.state.actor, Interaction::Action::Oral, distance);
+        interactions.emplace_back(a_partner.state.actor, Interaction::Action::Oral, distance, *mouthCenter - a_partner.vaginalOpening->center);
         return true;
     }
 
@@ -395,7 +412,7 @@ namespace Thread::Interaction::NiSurface
         const auto angle = GeometryMath::GetAngleDegree(vaginalOpening->axis, a_partner.vaginalOpening->axis);
         if (std::abs(angle - 180) > Settings::fAngleGrindingFF)
             return false;
-        interactions.emplace_back(a_partner.state.actor, Interaction::Action::Grinding, distance);
+        interactions.emplace_back(a_partner.state.actor, Interaction::Action::Grinding, distance, vaginalOpening->center - a_partner.vaginalOpening->center);
         return true;
     }
 
@@ -403,24 +420,24 @@ namespace Thread::Interaction::NiSurface
     {
         if (!a_partner.vaginalOpening)
             return false;
-        const auto get = [&](const auto& limb, auto type, float maxDist) {
+        const auto get = [&](const auto& limb, auto type, float maxDist, std::uint8_t source) {
             if (!limb)
                 return false;
             const auto limbPosition = limb->world.translate;
             const auto distance = limbPosition.GetDistance(a_partner.vaginalOpening->center);
             if (distance > maxDist)
                 return false;
-            interactions.emplace_back(a_partner.state.actor, type, distance);
+            interactions.emplace_back(a_partner.state.actor, type, distance, limbPosition - a_partner.vaginalOpening->center, 1.0f, source);
             return true;
         };
         const auto lHand = state.geometry.leftHand;
         const auto rHand = state.geometry.rightHand;
         const auto lFoot = state.geometry.leftFoot;
         const auto rFoot = state.geometry.rightFoot;
-        return get(lHand, Interaction::Action::HandJob, Settings::fDistanceHand) ||
-               get(rHand, Interaction::Action::HandJob, Settings::fDistanceHand) ||
-               get(lFoot, Interaction::Action::FootJob, Settings::fDistanceFoot) ||
-               get(rFoot, Interaction::Action::FootJob, Settings::fDistanceFoot);
+        return get(lHand, Interaction::Action::HandJob, Settings::fDistanceHand, 1) ||
+               get(rHand, Interaction::Action::HandJob, Settings::fDistanceHand, 2) ||
+               get(lFoot, Interaction::Action::FootJob, Settings::fDistanceFoot, 1) ||
+               get(rFoot, Interaction::Action::FootJob, Settings::fDistanceFoot, 2);
     }
 
     bool ActorState::Frame::DetectAnimObjectFace(const Frame& a_partner)
@@ -432,18 +449,19 @@ namespace Thread::Interaction::NiSurface
         const auto pMouth = GetMouthCenter();
         if (!pMouth)
             return false;
-        const auto get = [&](const auto& animObj) {
+        const auto get = [&](const auto& animObj, std::uint8_t source) {
             if (!animObj)
                 return false;
             const auto animObjectPosition = animObj->world.translate;
             const auto d = animObjectPosition.GetDistance(*pMouth);
             if (d > Settings::fAnimObjDist)
                 return false;
-            interactions.emplace_back(a_partner.state.actor, Interaction::Action::AnimObjFace, d);
+            interactions.emplace_back(a_partner.state.actor, Interaction::Action::AnimObjFace, d, animObjectPosition - *pMouth, 1.0f, source);
             return true;
         };
         const auto& partnerGeometry = a_partner.state.geometry;
-        return get(partnerGeometry.animObjectA) || get(partnerGeometry.animObjectB) || get(partnerGeometry.animObjectRight) || get(partnerGeometry.animObjectLeft);
+        return get(partnerGeometry.animObjectA, 1) || get(partnerGeometry.animObjectB, 2) || get(partnerGeometry.animObjectRight, 3) ||
+               get(partnerGeometry.animObjectLeft, 4);
     }
 
     std::optional<RE::NiPoint3> ActorState::Frame::GetMouthCenter() const

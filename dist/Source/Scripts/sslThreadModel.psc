@@ -2206,7 +2206,7 @@ float Function CalculateInteractionFactor(Actor akPosition, bool[] interActive)
 			; velFactor: [Range: 1.0 to 2.0]
 			; factorValue: [Default: 1 to 12] [Adjusted: 0.2 to 2.4]
 			; factorType: [Result: 0.2 to 4.8]
-			float velFactor = 1.5 ;CalcInterVelocityFactor(akPosition, i)
+			float velFactor = CalcInterVelocityFactor(akPosition, i)
 			float adjustedFactor = 0.25 + (factorValues[i] / 5.0)
 			factorTotal += (adjustedFactor * velFactor)
 			;Log("InterFactor: TYPE: " + i + ", Value: " + factorValues[i] + ", Adjusted: " + adjustedFactor)
@@ -2217,15 +2217,15 @@ float Function CalculateInteractionFactor(Actor akPosition, bool[] interActive)
 EndFunction
 
 float Function CalcInterVelocityFactor(Actor akActor, int interType)
-	;Velocity is simply too unpredictable in its current implementation
+	; Preserve the previous neutral factor when native interaction motion is unavailable.
 	If (!IsInteractionRegistered())
 		return 1.5
 	EndIf
-	;calculate velocity multiplier... have seen velActual upto 0.097075
-	;after adjustments: 0.01-->1.11, 0.05-->1.55, 0.09-->1.99
-	float velActual = Math.Abs(GetInteractionVelocityImpl(akActor, None, interType))
-	float velAdjusted = 1.0 + (velActual * 11.0)
-	return velAdjusted
+	; Map speed to a bounded [1.0, 2.0 ) factor so motion spikes cannot dominate enjoyment
+	float velocity = Math.Abs(GetInteractionVelocityImpl(akActor, None, interType))
+	; The speed that produces a 1.5 factor. Raising this makes velocity less influential
+	float velocityMidpoint = 20.0
+	return PapyrusUtil.ClampFloat(1.0 + (velocity / (velocity + velocityMidpoint)), 1.0, 2.0)
 EndFunction
 
 ; -------------------------------------------------- ;
