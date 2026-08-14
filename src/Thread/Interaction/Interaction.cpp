@@ -160,6 +160,7 @@ namespace Thread::Interaction
         const auto ct = static_cast<int32_t>(entry.ctype);
         RE::Actor* actorA = entry.swapped ? a_partner : a_actor;
         RE::Actor* actorB = entry.swapped ? a_actor : a_partner;
+        const bool exactPair = actorA && actorB;
         float ret = 0.0f;
         ni->VisitPositions([&](auto& pos) {
             if (actorA && pos.actor->formID != actorA->formID)
@@ -169,8 +170,9 @@ namespace Thread::Interaction
                     continue;
                 if (actorB && (!type.partner || type.partner->formID != actorB->formID))
                     continue;
-                ret = type.velocity;
-                return true;
+                ret = std::max(ret, type.velocity);
+                if (exactPair)
+                    return true;
             }
             return false;
         });
