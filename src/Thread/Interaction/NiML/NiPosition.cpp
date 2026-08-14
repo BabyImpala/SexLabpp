@@ -155,7 +155,7 @@ namespace Thread::Interaction::NiML
     // 			return false;
     // 		const auto pAnimObj = animObj->world.translate;
     // 		const auto d = pAnimObj.GetDistance(*pMouth);
-    // 		if (d > Settings::fAnimObjDist)
+    // 		if (d > Settings::fDistanceAnimObj)
     // 			return false;
     // 		interactions.emplace_back(a_partner.position.actor, Interaction::Action::AnimObjFace, d);
     // 		return true;

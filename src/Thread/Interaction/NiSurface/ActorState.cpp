@@ -454,7 +454,7 @@ namespace Thread::Interaction::NiSurface
                 return false;
             const auto animObjectPosition = animObj->world.translate;
             const auto d = animObjectPosition.GetDistance(*pMouth);
-            if (d > Settings::fAnimObjDist)
+            if (d > Settings::fDistanceAnimObj)
                 return false;
             interactions.emplace_back(a_partner.state.actor, Interaction::Action::AnimObjFace, d, animObjectPosition - *pMouth, 1.0f, source);
             return true;
