@@ -146,6 +146,9 @@ namespace Thread::Interaction
     }
 
     //  C++ API (nullptr = any partner)
+    bool IsCollisionRegistered(Thread::Instance* instance);
+    void UnregisterCollision(Thread::Instance* instance);
+
     std::vector<bool> GetInteractionFlagsImpl(Thread::Instance* instance, RE::Actor* a_actor, RE::Actor* a_partner);
     std::vector<int32_t> GetActiveInterTypesImpl(Thread::Instance* instance, RE::Actor* a_actor, RE::Actor* a_partner);
 

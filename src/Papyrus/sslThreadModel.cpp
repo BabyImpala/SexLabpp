@@ -587,23 +587,13 @@ namespace Papyrus::ThreadModel
     bool IsCollisionRegistered(QUESTARGS)
     {
         GET_INSTANCE(false);
-        if (Settings::bUseNiSurface) {
-            return instance->HasInstanceNiSurface();
-        } else {
-            return instance->HasInstanceNiML();
-        }
+        return Thread::Interaction::IsCollisionRegistered(instance);
     }
 
     void UnregisterCollision(QUESTARGS)
     {
         GET_INSTANCE();
-        if (Settings::bUseNiSurface) {
-            if (instance->HasInstanceNiSurface()) {
-                instance->UnregisterInstanceNiSurface();
-            }
-        } else if (instance->HasInstanceNiML()) {
-            instance->UnregisterInstanceNiML();
-        }
+        Thread::Interaction::UnregisterCollision(instance);
     }
 
     std::vector<bool> GetInteractionFlagsImpl(QUESTARGS, RE::Actor* a_actor, RE::Actor* a_partner)

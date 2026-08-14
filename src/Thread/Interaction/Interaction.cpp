@@ -8,12 +8,23 @@ using namespace Thread::Interaction::NiSurface;
 
 namespace Thread::Interaction
 {
-    // ============ NiML Interaction ============ //
+    // ============ Utility/Helpers ============ //
 
     static NiType::Type ToNiType(CType ct)
     {
         return static_cast<NiType::Type>(static_cast<int32_t>(ct));
     }
+
+    static bool ValidateInterType(int32_t interType, const char* caller)
+    {
+        if (interType < 0 || interType >= kInterTypeCount) {
+            logger::warn("{}: interType {} out of range", caller, interType);
+            return false;
+        }
+        return true;
+    }
+
+    // ============ NiML Interaction ============ //
 
     static std::vector<int32_t> GetCollisionActionsNiML(Interaction::NiML::NiInstance* ni, RE::Actor* a_actor, RE::Actor* a_partner)
     {
@@ -38,6 +49,8 @@ namespace Thread::Interaction
     static bool HasCollisionActionNiML(Interaction::NiML::NiInstance* ni, RE::Actor* a_actor, RE::Actor* a_partner, int32_t interType)
     {
         const auto& entry = kInterTypeTable[interType];
+        if (!entry.supported)
+            return false;
         const uint32_t idxA = a_actor ? a_actor->formID : 0;
         const uint32_t idxB = a_partner ? a_partner->formID : 0;
         const auto niType = ToNiType(entry.ctype);
@@ -49,18 +62,23 @@ namespace Thread::Interaction
 
     static std::vector<RE::Actor*> GetPartnersByActionNiML(Interaction::NiML::NiInstance* ni, RE::Actor* a_actor,  int32_t interType)
     {
+        std::vector<RE::Actor*> result;
         const auto& entry = kInterTypeTable[interType];
+        if (!entry.supported)
+            return result;
         const uint32_t idx = a_actor ? a_actor->formID : 0;
         const auto niType = ToNiType(entry.ctype);
-
-        return entry.swapped
-            ? ni->GetInteractionPartnersRev(idx, niType)
-            : ni->GetInteractionPartners(idx, niType);
+        result = entry.swapped
+                    ? ni->GetInteractionPartnersRev(idx, niType)
+                    : ni->GetInteractionPartners(idx, niType);
+        return result;
     }
 
     static float GetActionVelocityNiML(Interaction::NiML::NiInstance* ni, RE::Actor* a_actor, RE::Actor* a_partner, int32_t interType)
     {
         const auto& entry = kInterTypeTable[interType];
+        if (!entry.supported)
+            return 0.0f;
         const uint32_t idxA = a_actor ? a_actor->formID : 0;
         const uint32_t idxB = a_partner ? a_partner->formID : 0;
         const auto niType = ToNiType(entry.ctype);
@@ -110,11 +128,13 @@ namespace Thread::Interaction
 
     static bool HasCollisionActionNiSurface(Interaction::NiSurface::Scene* ni, RE::Actor* a_actor, RE::Actor* a_partner, int32_t interType)
     {
+        bool found = false;
         const auto& entry = kInterTypeTable[interType];
+        if (!entry.supported)
+            return found;
         const auto ct = static_cast<int32_t>(entry.ctype);
         RE::Actor* actorA = entry.swapped ? a_partner : a_actor;
         RE::Actor* actorB = entry.swapped ? a_actor : a_partner;
-        bool found = false;
         ni->VisitPositions([&](auto& pos) {
             if (actorA && pos.actor->formID != actorA->formID)
                 return false;
@@ -133,9 +153,11 @@ namespace Thread::Interaction
 
     static std::vector<RE::Actor*> GetPartnersByActionNiSurface(Interaction::NiSurface::Scene* ni, RE::Actor* a_actor, int32_t interType)
     {
-        const auto& entry = kInterTypeTable[interType];
-        const auto ct = static_cast<int32_t>(entry.ctype);
         std::vector<RE::Actor*> result;
+        const auto& entry = kInterTypeTable[interType];
+        if (!entry.supported)
+            return result;
+        const auto ct = static_cast<int32_t>(entry.ctype);
         ni->VisitPositions([&](auto& pos) {
             if (!entry.swapped) {
                 if (pos.actor->formID != a_actor->formID)
@@ -156,12 +178,14 @@ namespace Thread::Interaction
 
     static float GetActionVelocityNiSurface(Interaction::NiSurface::Scene* ni, RE::Actor* a_actor, RE::Actor* a_partner, int32_t interType)
     {
+        float ret = 0.0f;
         const auto& entry = kInterTypeTable[interType];
+        if (!entry.supported)
+            return ret;
         const auto ct = static_cast<int32_t>(entry.ctype);
         RE::Actor* actorA = entry.swapped ? a_partner : a_actor;
         RE::Actor* actorB = entry.swapped ? a_actor : a_partner;
         const bool exactPair = actorA && actorB;
-        float ret = 0.0f;
         ni->VisitPositions([&](auto& pos) {
             if (actorA && pos.actor->formID != actorA->formID)
                 return false;
@@ -181,7 +205,7 @@ namespace Thread::Interaction
 
     // ============ PosTags Fallback ============ //
 
-    static bool ShouldUseTagsFallback(Thread::Instance* instance)
+    static bool CanUseTagsFallback(Thread::Instance* instance)
     {
         if (!Settings::bFallbackToTagsForDetection)
             return false;
@@ -211,50 +235,54 @@ namespace Thread::Interaction
         return flags;
     }
 
-    // ============ Dispatch Helpers ============ //
+    // ============ Public API ============ //
 
-    static std::vector<bool> BuildInteractionFlags(Thread::Instance* instance, RE::Actor* a_actor, RE::Actor* a_partner)
+    bool IsCollisionRegistered(Thread::Instance* instance)
     {
-        auto flags = [](const std::vector<int32_t>& its) {
+        if (Settings::bUseNiSurface) {
+            return instance->HasInstanceNiSurface();
+        } else {
+            return instance->HasInstanceNiML();
+        }
+    }
+
+    void UnregisterCollision(Thread::Instance* instance)
+    {
+        if (Settings::bUseNiSurface) {
+            if (instance->HasInstanceNiSurface()) {
+                instance->UnregisterInstanceNiSurface();
+            }
+        } else if (instance->HasInstanceNiML()) {
+            instance->UnregisterInstanceNiML();
+        }
+    }
+
+    std::vector<bool> GetInteractionFlagsImpl(Thread::Instance* instance, RE::Actor* a_actor, RE::Actor* a_partner)
+    {
+        auto toFlags = [](const std::vector<int32_t>& its) {
             std::vector<bool> f(kInterTypeCount, false);
             for (int32_t it : its)
                 if (it >= 0 && it < kInterTypeCount)
                     f[it] = true;
             return f;
         };
-
         std::vector<bool> interFlags(kInterTypeCount, false);
-
-        if (Settings::bUseNiSurface) {
-            if (auto* ni = instance->GetInstanceNiSurface()) {
-                interFlags = flags(GetCollisionActionsNiSurface(ni, a_actor, a_partner));
+        if (IsCollisionRegistered(instance)) {
+            if (Settings::bUseNiSurface) {
+                if (auto* ni = instance->GetInstanceNiSurface()) {
+                    interFlags = toFlags(GetCollisionActionsNiSurface(ni, a_actor, a_partner));
+                }
+            } else {
+                if (auto* ni = instance->GetInstanceNiML()) {
+                    interFlags = toFlags(GetCollisionActionsNiML(ni, a_actor, a_partner));
+                }
             }
         } else {
-            if (auto* ni = instance->GetInstanceNiML()) {
-                interFlags = flags(GetCollisionActionsNiML(ni, a_actor, a_partner));
+            if (CanUseTagsFallback(instance)) {
+                interFlags = GetInteractionPosTags(instance, a_actor);
             }
         }
-        bool allFalse = std::find(interFlags.begin(), interFlags.end(), true) == interFlags.end();
-        if (allFalse && ShouldUseTagsFallback(instance)) {
-            return GetInteractionPosTags(instance, a_actor);
-        }
         return interFlags;
-    }
-
-    static bool ValidateInterType(int32_t interType, const char* caller)
-    {
-        if (interType < 0 || interType >= kInterTypeCount) {
-            logger::warn("{}: interType {} out of range", caller, interType);
-            return false;
-        }
-        return true;
-    }
-
-    // ============ Public API ============ //
-
-    std::vector<bool> GetInteractionFlagsImpl(Thread::Instance* instance, RE::Actor* a_actor, RE::Actor* a_partner)
-    {
-        return BuildInteractionFlags(instance, a_actor, a_partner);
     }
 
     std::vector<int32_t> GetActiveInterTypesImpl(Thread::Instance* instance, RE::Actor* a_actor, RE::Actor* a_partner)
@@ -263,7 +291,7 @@ namespace Thread::Interaction
             logger::warn("{}: actor is none", __func__);
             return {};
         }
-        const auto flags = BuildInteractionFlags(instance, a_actor, a_partner);
+        const auto flags = GetInteractionFlagsImpl(instance, a_actor, a_partner);
         std::vector<int32_t> result;
         for (int32_t i = 0; i < kInterTypeCount; ++i)
             if (flags[i])
@@ -273,28 +301,29 @@ namespace Thread::Interaction
 
     bool HasActiveInteractionImpl(Thread::Instance* instance, RE::Actor* a_actor, RE::Actor* a_partner, int32_t interType)
     {
-        bool ret = false;
         if (!a_actor) {
             logger::warn("{}: actor is none", __func__);
-            return ret;
+            return false;
         }
         if (!ValidateInterType(interType, __func__)) {
-            return ret;
+            return false;
         }
-        const auto& entry = kInterTypeTable[interType];
-        if (Settings::bUseNiSurface) {
-            if (auto* ni = instance->GetInstanceNiSurface()) {
-                ret = entry.supported && HasCollisionActionNiSurface(ni, a_actor, a_partner, interType);
+        if (IsCollisionRegistered(instance)) {
+            if (Settings::bUseNiSurface) {
+                if (auto* ni = instance->GetInstanceNiSurface()) {
+                    return HasCollisionActionNiSurface(ni, a_actor, a_partner, interType);
+                }
+            } else {
+                if (auto* ni = instance->GetInstanceNiML()) {
+                    return HasCollisionActionNiML(ni, a_actor, a_partner, interType);
+                }
             }
         } else {
-            if (auto* ni = instance->GetInstanceNiML()) {
-                ret = entry.supported && HasCollisionActionNiML(ni, a_actor, a_partner, interType);
+            if (CanUseTagsFallback(instance)) {
+                return GetInteractionPosTags(instance, a_actor)[interType];
             }
         }
-        if (!ret && ShouldUseTagsFallback(instance)) {
-            ret = GetInteractionPosTags(instance, a_actor)[interType];
-        }
-        return ret;
+        return false;
     }
 
     bool HasActiveInteractionAllImpl(Thread::Instance* instance, RE::Actor* a_actor, const std::vector<int32_t>& interTypes)
@@ -305,7 +334,7 @@ namespace Thread::Interaction
         }
         if (interTypes.empty())
             return false;
-        const auto flags = BuildInteractionFlags(instance, a_actor, nullptr);
+        const auto flags = GetInteractionFlagsImpl(instance, a_actor, nullptr);
         return std::ranges::all_of(interTypes, [&](int32_t t) {
             return t >= 0 && t < kInterTypeCount && flags[t];
         });
@@ -319,7 +348,7 @@ namespace Thread::Interaction
         }
         if (interTypes.empty())
             return false;
-        const auto flags = BuildInteractionFlags(instance, a_actor, nullptr);
+        const auto flags = GetInteractionFlagsImpl(instance, a_actor, nullptr);
         return std::ranges::any_of(interTypes, [&](int32_t t) {
             return t >= 0 && t < kInterTypeCount && flags[t];
         });
@@ -333,8 +362,7 @@ namespace Thread::Interaction
         }
         if (!ValidateInterType(interType, __func__))
             return {};
-        const auto& entry = kInterTypeTable[interType];
-        if (entry.supported) {
+        if (IsCollisionRegistered(instance)) {
             if (Settings::bUseNiSurface) {
                 if (auto* ni = instance->GetInstanceNiSurface()) {
                     return GetPartnersByActionNiSurface(ni, a_actor, interType);
@@ -344,19 +372,20 @@ namespace Thread::Interaction
                     return GetPartnersByActionNiML(ni, a_actor, interType);
                 }
             }
-        }
-        if (ShouldUseTagsFallback(instance)) {
-            const auto complement = kInterTypeTable[interType].complement;
-            if (complement < 0 || complement >= kInterTypeCount)
-                return {};
-            std::vector<RE::Actor*> result;
-            for (auto* other : instance->GetActors()) {
-                if (!other || other->formID == a_actor->formID)
-                    continue;
-                if (GetInteractionPosTags(instance, other)[complement])
-                    result.push_back(other);
+        } else {
+            if (CanUseTagsFallback(instance)) {
+                const auto complement = kInterTypeTable[interType].complement;
+                if (complement < 0 || complement >= kInterTypeCount)
+                    return {};
+                std::vector<RE::Actor*> result;
+                for (auto* other : instance->GetActors()) {
+                    if (!other || other->formID == a_actor->formID)
+                        continue;
+                    if (GetInteractionPosTags(instance, other)[complement])
+                        result.push_back(other);
+                }
+                return result;
             }
-            return result;
         }
         return {};
     }
@@ -376,7 +405,7 @@ namespace Thread::Interaction
         if (!ValidateInterType(interType, __func__)) {
             return 0.0f;
         }
-        if (!kInterTypeTable[interType].supported)
+        if (!IsCollisionRegistered(instance) || !kInterTypeTable[interType].supported)
             return 0.0f;
         if (Settings::bUseNiSurface) {
             if (auto* ni = instance->GetInstanceNiSurface()) {
@@ -393,7 +422,7 @@ namespace Thread::Interaction
     std::vector<RE::BSFixedString> GetInteractionStringArrayImpl(Thread::Instance* instance, RE::Actor* a_actor)
     {
         std::vector<RE::BSFixedString> result;
-        const auto flags = BuildInteractionFlags(instance, a_actor, nullptr);
+        const auto flags = GetInteractionFlagsImpl(instance, a_actor, nullptr);
         for (int32_t i = 0; i < kInterTypeCount; ++i)
             if (flags[i])
                 result.emplace_back(kInterTypeTable[i].name.data());
