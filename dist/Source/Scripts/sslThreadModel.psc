@@ -2203,7 +2203,7 @@ float Function CalculateInteractionFactor(Actor akPosition, bool[] interActive)
 	int i = 0
 	While (i < len)
 		If (interActive[i])
-			; velFactor: [Range: 1.0 to 2.0]
+			; velFactor: [Range: 1.0 to 4.0]
 			; factorValue: [Default: 1 to 12] [Adjusted: 0.2 to 2.4]
 			; factorType: [Result: 0.2 to 4.8]
 			float velFactor = CalcInterVelocityFactor(akPosition, i)
@@ -2221,11 +2221,10 @@ float Function CalcInterVelocityFactor(Actor akActor, int interType)
 	If (!IsInteractionRegistered())
 		return 1.5
 	EndIf
-	; Map speed to a bounded [1.0, 2.0 ) factor so motion spikes cannot dominate enjoyment
 	float velocity = Math.Abs(GetInteractionVelocityImpl(akActor, None, interType))
 	; The speed that produces a 1.5 factor. Raising this makes velocity less influential
-	float velocityMidpoint = 20.0
-	return PapyrusUtil.ClampFloat(1.0 + (velocity / (velocity + velocityMidpoint)), 1.0, 2.0)
+	float velocityMidpoint = 10.0
+	return PapyrusUtil.ClampFloat(1.0 + (velocity / (velocity + velocityMidpoint)), 1.0, 4.0)
 EndFunction
 
 ; -------------------------------------------------- ;
