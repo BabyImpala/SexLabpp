@@ -38,13 +38,15 @@ namespace Thread::Interaction::NiSurface::Geometry
 
         std::optional<GeometryMath::Segment> GetVaginalSegment() const;
         std::optional<GeometryMath::Segment> GetAnalSegment() const;
-        std::optional<OpeningShape> GetMouthOpening() const;
+        std::optional<OpeningShape> GetMouthOpening();
         std::optional<OpeningShape> GetVaginalOpening();
         std::optional<OpeningShape> GetAnalOpening();
         void UpdateShafts();
         GeometryMath::Segment GetCrotchSegment() const;
 
       private:
+        // Non-owning alias; ActorState::actor is declared before geometry and therefore outlives it.
+        RE::Actor* ownerActor{ nullptr };
         std::optional<TrackedOpening> trackedVagina;
         std::optional<TrackedOpening> trackedAnus;
     };
