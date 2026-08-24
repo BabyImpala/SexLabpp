@@ -32,6 +32,23 @@ namespace Thread::Interaction::NiSurface::Geometry
         constexpr std::string_view ANIM_OBJECT_LEFT{ "AnimObjectL"sv };
         constexpr std::string_view ANIM_OBJECT_RIGHT{ "AnimObjectR"sv };
 
+        RE::NiPointer<RE::NiAVObject> FindMouth(RE::NiAVObject* a_root)
+        {
+            auto* faceObject = a_root ? a_root->GetObjectByName(FACE_ROOT) : nullptr;
+            auto* faceNode = faceObject ? faceObject->AsNode() : nullptr;
+            if (!faceNode) {
+                return {};
+            }
+            const auto& children = faceNode->GetChildren();
+            const auto where = std::ranges::find_if(children, [](const auto& a_child) {
+                return a_child && std::string_view(a_child->name.c_str()).contains("Mouth");
+            });
+            if (where == children.end()) {
+                return {};
+            }
+            return *where;
+        }
+
         struct ShaftBase
         {
             std::string_view name;
@@ -72,7 +89,8 @@ namespace Thread::Interaction::NiSurface::Geometry
         };
     }
 
-    ActorGeometry::ActorGeometry(RE::Actor* a_actor)
+    ActorGeometry::ActorGeometry(RE::Actor* a_actor) :
+      ownerActor(a_actor)
     {
         const auto obj = a_actor->Get3D();
         if (!obj) {
@@ -118,17 +136,7 @@ namespace Thread::Interaction::NiSurface::Geometry
         getNode(ANIM_OBJECT_RIGHT, animObjectRight, false);
 
         // FaceGen mouth meshes are denture-like; retain the named child and read its updated world bound each frame.
-        if (auto* faceObject = obj->GetObjectByName(FACE_ROOT); faceObject) {
-            if (auto* faceNode = faceObject->AsNode()) {
-                for (const auto& child : faceNode->GetChildren()) {
-                    const auto name = child && !child->name.empty() ? std::string_view(child->name.c_str()) : std::string_view{};
-                    if (name.contains("Mouth")) {
-                        mouth = child;
-                        break;
-                    }
-                }
-            }
-        }
+        mouth = FindMouth(obj);
 
         for (const auto& base : SHAFT_BASES) {
             auto* object = obj->GetObjectByName(base.name);
@@ -261,8 +269,24 @@ namespace Thread::Interaction::NiSurface::Geometry
         return GeometryMath::Segment{ start, end };
     }
 
-    std::optional<OpeningShape> ActorGeometry::GetMouthOpening() const
+    std::optional<OpeningShape> ActorGeometry::GetMouthOpening()
     {
+        auto* root = ownerActor ? ownerActor->Get3D() : nullptr;
+        const bool attachedToCurrent3D = [&]() {
+            for (auto* object = mouth.get(); object; object = object->parent) {
+                if (object == root) {
+                    return true;
+                }
+            }
+            return false;
+        }();
+        if (!attachedToCurrent3D) {
+            auto replacement = FindMouth(root);
+            if (replacement.get() != mouth.get()) {
+                logger::info("NiSurface Interaction: Actor {:X} mouth surface {}", ownerActor ? ownerActor->GetFormID() : 0, replacement ? "reacquired" : "lost");
+            }
+            mouth = std::move(replacement);
+        }
         if (!mouth || !mouth->parent || !head || mouth->worldBound.radius <= FLT_EPSILON) {
             return std::nullopt;
         }
