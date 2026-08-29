@@ -275,36 +275,35 @@ EndFunction
 	These detections rely upon collision type-guessing and optionally upon position tags as fallback.
 /;
 
-int Property bKissing       = 0  AutoReadOnly Hidden	; pos_face is in front of partner's face
-int Property bStimulation   = 1  AutoReadOnly Hidden	; pos_crotch is being fingered, fisted, or toys_inserted
-int Property aAnimObjFace   = 2  AutoReadOnly Hidden	; pos_anim_obj is in front of partner's face
-int Property pAnimObjFace   = 3  AutoReadOnly Hidden	; pos_face is in front of partner's anim_obj
-int Property aGrinding      = 4  AutoReadOnly Hidden	; pos_crotch is grinding against partner's body
-int Property pGrinding      = 5  AutoReadOnly Hidden	; pos_body is being grinded against by partner's crotch
-int Property aSuckingToes   = 6  AutoReadOnly Hidden	; pos_mouth is in front of partner's toes
-int Property pSuckingToes   = 7  AutoReadOnly Hidden	; pos_toes are close to partner's mouth
-int Property aFootJob       = 8  AutoReadOnly Hidden	; pos_foot is moving around partner's pp
-int Property pFootJob       = 9  AutoReadOnly Hidden	; pos_pp is being pleasured by partner's feet
-int Property aHandJob       = 10 AutoReadOnly Hidden	; pos_hand is moving around partner's pp
-int Property pHandJob       = 11 AutoReadOnly Hidden	; pos_pp is being pleasured by partner's hands
-int Property aBoobJob       = 12 AutoReadOnly Hidden	; pos_boob is moving around partner's pp
-int Property pBoobJob       = 13 AutoReadOnly Hidden	; pos_pp is being pleasured by partner's boobs
-int Property aFacial        = 14 AutoReadOnly Hidden	; pos_pp is in front of partner's face
-int Property pFacial        = 15 AutoReadOnly Hidden	; pos_face is in front of partner's pp
-int Property aLickingShaft  = 16 AutoReadOnly Hidden	; pos_mouth is licking shaft of partner's pp
-int Property pLickingShaft  = 17 AutoReadOnly Hidden	; pos_pp's shaft is being licked by partner's tongue
-int Property aOral          = 18 AutoReadOnly Hidden	; pos_mouth is licking/sucking partner's crotch
-int Property pOral          = 19 AutoReadOnly Hidden	; pos_crotch is being licked/sucked by partner's mouth
-int Property aDeepthroat    = 20 AutoReadOnly Hidden	; pos_mouth is deep-throating partner's pp
-int Property pDeepthroat    = 21 AutoReadOnly Hidden	; pos_pp is deep inside partner's mouth
-int Property aSkullfuck     = 22 AutoReadOnly Hidden	; pos_pp is penetrating partner's head
-int Property pSkullfuck     = 23 AutoReadOnly Hidden	; pos_head is being penetrated by partner's pp
-int Property aVaginal       = 24 AutoReadOnly Hidden	; pos_pp is penetrating partner's vagina
-int Property pVaginal       = 25 AutoReadOnly Hidden	; pos_vag is being penetrated by partner's pp
-int Property aAnal          = 26 AutoReadOnly Hidden	; pos_pp is penetrating partner's anus
-int Property pAnal          = 27 AutoReadOnly Hidden	; pos_anus is being penetrated by partner's pp
+int Property bKissing       = 0  AutoReadOnly Hidden	; Position involved in kissing interaction.
+int Property aAnimObjFace   = 1  AutoReadOnly Hidden	; Position licks/sucks the sex-toy on partner's crotch/hand.
+int Property pAnimObjFace   = 2  AutoReadOnly Hidden	; Position has sex-toy on crotch/hand that partner licks/sucks.
+int Property aGrinding      = 3  AutoReadOnly Hidden	; Position's buttocks grinds against partner's crotch.
+int Property pGrinding      = 4  AutoReadOnly Hidden	; Position's crotch is being grinded against by partner's buttocks.
+int Property aSuckingToes   = 5  AutoReadOnly Hidden	; Position licks/sucks partner's toe/foot.
+int Property pSuckingToes   = 6  AutoReadOnly Hidden	; Position's toes/foot is licked/sucked by partner.
+int Property aHandJob       = 7  AutoReadOnly Hidden	; Position's hands move around partner's genital.
+int Property pHandJob       = 8  AutoReadOnly Hidden	; Position's genital is stimulated by partner's hands.
+int Property aFootJob       = 9  AutoReadOnly Hidden	; Position's feet move around partner's genital.
+int Property pFootJob       = 10 AutoReadOnly Hidden	; Position's genital is stimulated by partner's feet.
+int Property aBoobJob       = 11 AutoReadOnly Hidden	; Position's breasts move around partner's penis.
+int Property pBoobJob       = 12 AutoReadOnly Hidden	; Position's penis is stimulated by partner's breasts.
+int Property aFacial        = 13 AutoReadOnly Hidden	; Position's climaxing genital is in front of partner's face.
+int Property pFacial        = 14 AutoReadOnly Hidden	; Position's face is in front of partner's climaxing genital.
+int Property aLickingShaft  = 15 AutoReadOnly Hidden	; Position licks partner's penis/dildo.
+int Property pLickingShaft  = 16 AutoReadOnly Hidden	; Position's penis/dildo is licked by partner.
+int Property aOral          = 17 AutoReadOnly Hidden	; Position licks/sucks partner's genital.
+int Property pOral          = 18 AutoReadOnly Hidden	; Position's genital is licked/sucked by partner.
+int Property aDeepthroat    = 19 AutoReadOnly Hidden	; Position deep-throats partner's penis.
+int Property pDeepthroat    = 20 AutoReadOnly Hidden	; Position's penis is deep-throated by partner.
+int Property aSkullfuck     = 21 AutoReadOnly Hidden	; Position's penis/dildo is penetrating partner's skull (Gore).
+int Property pSkullfuck     = 22 AutoReadOnly Hidden	; Position's skull is penetrated by partner's penis/dildo (Gore).
+int Property aVaginal       = 23 AutoReadOnly Hidden	; Position's penis/dildo is penetrating partner's vagina.
+int Property pVaginal       = 24 AutoReadOnly Hidden	; Position's vagina is penetrated by partner's penis/dildo.
+int Property aAnal          = 25 AutoReadOnly Hidden	; Position's penis/dildo is penetrating partner's anus.
+int Property pAnal          = 26 AutoReadOnly Hidden	; Position's anus is penetrated by partner's penis/dildo.
 
-int Property SUPPORTED_INTER_COUNT = 28 AutoReadOnly Hidden
+int Property SUPPORTED_INTER_COUNT = 27 AutoReadOnly Hidden
 
 ; If physics-based collision related data is currently available or not
 bool Function IsInteractionRegistered()

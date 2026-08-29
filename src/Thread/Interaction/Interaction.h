@@ -7,39 +7,38 @@ namespace Thread
 
 namespace Thread::Interaction
 {
-    constexpr int32_t kInterTypeCount = 28;
+    constexpr int32_t kInterTypeCount = 27;
     constexpr int32_t kCTypeCount = 14;
 
     enum InterType : int32_t
     {
         bKissing      = 0,
-        bStimulation  = 1,
-        aAnimObjFace  = 2,
-        pAnimObjFace  = 3,
-        aGrinding     = 4,
-        pGrinding     = 5,
-        aSuckingToes  = 6,
-        pSuckingToes  = 7,
-        aFootJob      = 8,
-        pFootJob      = 9,
-        aHandJob      = 10,
-        pHandJob      = 11,
-        aBoobJob      = 12,
-        pBoobJob      = 13,
-        aFacial       = 14,
-        pFacial       = 15,
-        aLickingShaft = 16,
-        pLickingShaft = 17,
-        aOral         = 18,
-        pOral         = 19,
-        aDeepthroat   = 20,
-        pDeepthroat   = 21,
-        aSkullfuck    = 22,
-        pSkullfuck    = 23,
-        aVaginal      = 24,
-        pVaginal      = 25,
-        aAnal         = 26,
-        pAnal         = 27,
+        aAnimObjFace  = 1,
+        pAnimObjFace  = 2,
+        aGrinding     = 3,
+        pGrinding     = 4,
+        aSuckingToes  = 5,
+        pSuckingToes  = 6,
+        aFootJob      = 7,
+        pFootJob      = 8,
+        aHandJob      = 9,
+        pHandJob      = 10,
+        aBoobJob      = 11,
+        pBoobJob      = 12,
+        aFacial       = 13,
+        pFacial       = 14,
+        aLickingShaft = 15,
+        pLickingShaft = 16,
+        aOral         = 17,
+        pOral         = 18,
+        aDeepthroat   = 19,
+        pDeepthroat   = 20,
+        aSkullfuck    = 21,
+        pSkullfuck    = 22,
+        aVaginal      = 23,
+        pVaginal      = 24,
+        aAnal         = 25,
+        pAnal         = 26,
     };
 
     // Matches enum in egacyNiPosition.h
@@ -72,33 +71,32 @@ namespace Thread::Interaction
 
     inline constexpr std::array<InterTypeEntry, kInterTypeCount> kInterTypeTable = {{
         { "bKissing",      bKissing,      CType::Kissing,      false,   true  },  //  0
-        { "bStimulation",  bStimulation,  CType::None,         false,   false },  //  1
-        { "aAnimObjFace",  pAnimObjFace,  CType::AnimObjFace,  true,    true  },  //  2
-        { "pAnimObjFace",  aAnimObjFace,  CType::AnimObjFace,  false,   true  },  //  3
-        { "aGrinding",     pGrinding,     CType::Grinding,     true,    true  },  //  4
-        { "pGrinding",     aGrinding,     CType::Grinding,     false,   true  },  //  5
-        { "aSuckingToes",  pSuckingToes,  CType::SuckingToes,  false,   true  },  //  6
-        { "pSuckingToes",  aSuckingToes,  CType::SuckingToes,  true,    true  },  //  7
-        { "aFootJob",      pFootJob,      CType::FootJob,      false,   true  },  //  8
-        { "pFootJob",      aFootJob,      CType::FootJob,      true,    true  },  //  9
-        { "aHandJob",      pHandJob,      CType::HandJob,      false,   true  },  // 10
-        { "pHandJob",      aHandJob,      CType::HandJob,      true,    true  },  // 11
-        { "aBoobJob",      pBoobJob,      CType::None,         false,   false },  // 12
-        { "pBoobJob",      aBoobJob,      CType::None,         false,   false },  // 13
-        { "aFacial",       pFacial,       CType::Facial,       true,    true  },  // 14
-        { "pFacial",       aFacial,       CType::Facial,       false,   true  },  // 15
-        { "aLickingShaft", pLickingShaft, CType::LickingShaft, false,   true  },  // 16
-        { "pLickingShaft", aLickingShaft, CType::LickingShaft, true,    true  },  // 17
-        { "aOral",         pOral,         CType::Oral,         false,   true  },  // 18
-        { "pOral",         aOral,         CType::Oral,         true,    true  },  // 19
-        { "aDeepthroat",   pDeepthroat,   CType::Deepthroat,   false,   true  },  // 20
-        { "pDeepthroat",   aDeepthroat,   CType::Deepthroat,   true,    true  },  // 21
-        { "aSkullfuck",    pSkullfuck,    CType::Skullfuck,    true,    true  },  // 22
-        { "pSkullfuck",    aSkullfuck,    CType::Skullfuck,    false,   true  },  // 23
-        { "aVaginal",      pVaginal,      CType::Vaginal,      true,    true  },  // 24
-        { "pVaginal",      aVaginal,      CType::Vaginal,      false,   true  },  // 25
-        { "aAnal",         pAnal,         CType::Anal,         true,    true  },  // 26
-        { "pAnal",         aAnal,         CType::Anal,         false,   true  },  // 27
+        { "aAnimObjFace",  pAnimObjFace,  CType::AnimObjFace,  false,   true  },  //  1
+        { "pAnimObjFace",  aAnimObjFace,  CType::AnimObjFace,  true,    true  },  //  2
+        { "aGrinding",     pGrinding,     CType::Grinding,     true,    true  },  //  3
+        { "pGrinding",     aGrinding,     CType::Grinding,     false,   true  },  //  4
+        { "aSuckingToes",  pSuckingToes,  CType::SuckingToes,  false,   true  },  //  5
+        { "pSuckingToes",  aSuckingToes,  CType::SuckingToes,  true,    true  },  //  6
+        { "aFootJob",      pFootJob,      CType::FootJob,      false,   true  },  //  7
+        { "pFootJob",      aFootJob,      CType::FootJob,      true,    true  },  //  8
+        { "aHandJob",      pHandJob,      CType::HandJob,      false,   true  },  //  9
+        { "pHandJob",      aHandJob,      CType::HandJob,      true,    true  },  // 10
+        { "aBoobJob",      pBoobJob,      CType::None,         false,   false },  // 11
+        { "pBoobJob",      aBoobJob,      CType::None,         false,   false },  // 12
+        { "aFacial",       pFacial,       CType::Facial,       true,    true  },  // 13
+        { "pFacial",       aFacial,       CType::Facial,       false,   true  },  // 14
+        { "aLickingShaft", pLickingShaft, CType::LickingShaft, false,   true  },  // 15
+        { "pLickingShaft", aLickingShaft, CType::LickingShaft, true,    true  },  // 16
+        { "aOral",         pOral,         CType::Oral,         false,   true  },  // 17
+        { "pOral",         aOral,         CType::Oral,         true,    true  },  // 18
+        { "aDeepthroat",   pDeepthroat,   CType::Deepthroat,   false,   true  },  // 19
+        { "pDeepthroat",   aDeepthroat,   CType::Deepthroat,   true,    true  },  // 20
+        { "aSkullfuck",    pSkullfuck,    CType::Skullfuck,    true,    true  },  // 21
+        { "pSkullfuck",    aSkullfuck,    CType::Skullfuck,    false,   true  },  // 22
+        { "aVaginal",      pVaginal,      CType::Vaginal,      true,    true  },  // 23
+        { "pVaginal",      aVaginal,      CType::Vaginal,      false,   true  },  // 24
+        { "aAnal",         pAnal,         CType::Anal,         true,    true  },  // 25
+        { "pAnal",         aAnal,         CType::Anal,         false,   true  },  // 26
     }};
 
     //  Built once from kInterTypeTable at static init

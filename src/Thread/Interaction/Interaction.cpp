@@ -139,8 +139,8 @@ namespace Thread::Interaction
     {
         if (!Settings::bFallbackToTagsForDetection)
             return false;
-        const auto* stage = instance->GetActiveStage();
-        return stage && stage->tags.HasTag("PosTagged");
+        const auto* scene = instance->GetActiveScene();
+        return scene && scene->tags.HasTag("PosTagged");
     }
 
     static std::vector<bool> GetInteractionPosTags(Thread::Instance* instance, RE::Actor* a_actor)
