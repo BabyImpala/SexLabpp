@@ -8,7 +8,6 @@
 #include "Thread/Interface/SceneHUD.h"
 #include "Thread/Interface/StageSelectMenu.h"
 #include "Thread/Interface/UI/Theme.h"
-#include "Thread/Interaction/NiML/NiUpdate.h"
 #include "UserData/StripData.h"
 
 // class EventHandler :
@@ -96,9 +95,6 @@ static void SKSEMessageHandler(SKSE::MessagingInterface::Message* message)
         SKSE::AllocTrampoline(static_cast<size_t>(1) << 6);
         Thread::Hooks::Install();
         Thread::Collision::CollisionHandler::Install();
-        if (!Settings::bUseNiSurface) {
-            Thread::Interaction::NiML::NiUpdate::Install();
-        }
         Registry::Library::GetSingleton()->Initialize();
         Registry::Statistics::StatisticsData::GetSingleton()->Register();
         UserData::StripData::GetSingleton()->Load();

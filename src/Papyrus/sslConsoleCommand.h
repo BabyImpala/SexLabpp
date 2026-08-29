@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Thread/Interaction/NiML/NiUpdate.h"
+/*#include "Thread/Interaction/NiML/NiUpdate.h"
 
 namespace Papyrus::ConsoleCommand
 {
@@ -61,4 +61,4 @@ namespace Papyrus::ConsoleCommand
         return true;
     }
 
-}  // namespace Papyrus::ConsoleCommand
+}  // namespace Papyrus::ConsoleCommand */

@@ -1,7 +1,6 @@
 #pragma once
 
 #include "Registry/Library.h"
-#include "Thread/Interaction/NiML/NiUpdate.h"
 #include "Thread/Interaction/NiSurface/CollisionManager.h"
 
 namespace Thread
@@ -71,13 +70,6 @@ namespace Thread
         static void UpdateAnimations(float a_delta);
 
       public:
-        bool HasInstanceNiML() const { return instanceNiML != nullptr; }
-        Interaction::NiML::NiInstance* GetInstanceNiML() { return instanceNiML.get(); }
-        void UnregisterInstanceNiML() {
-          (Interaction::NiML::NiUpdate::Unregister(linkedQst->GetFormID()),
-          instanceNiML = nullptr);
-        }
-
         bool HasInstanceNiSurface() const { return instanceNiSurface != nullptr; }
         Interaction::NiSurface::Scene* GetInstanceNiSurface() { return instanceNiSurface.get(); }
         void UnregisterInstanceNiSurface() {
@@ -193,7 +185,6 @@ namespace Thread
         };
 
         RE::TESQuest* linkedQst;
-        std::shared_ptr<Interaction::NiML::NiInstance> instanceNiML{ nullptr };
         std::shared_ptr<Interaction::NiSurface::Scene> instanceNiSurface{ nullptr };
 
         Center center;
