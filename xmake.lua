@@ -15,7 +15,7 @@ add_moduledirs("xmake/modules")
 set_project(PROJECT_NAME)
 set_version(PROJECT_VERSION)
 set_languages("cxx23")
-set_license("apache-2.0")
+set_license("GPL-3.0-or-later")
 set_warnings("allextra", "error")
 
 -- Options
@@ -153,6 +153,11 @@ add_rules("common")
 -- Target
 target(PROJECT_NAME)
     set_enabled(get_config("build_dll"))
+    add_installfiles("LICENSE", "NOTICE", "EXCEPTIONS.md", {prefixdir = "SexLab/Licenses"})
+    add_installfiles("licenses/LICENSE-Apache-2.0.txt", {prefixdir = "SexLab/Licenses/licenses"})
+    add_installfiles("lib/CommonLibSSE-NG/COPYING.txt", "lib/CommonLibSSE-NG/EXCEPTIONS.md",
+                     "lib/CommonLibSSE-NG/licenses/LICENSE-MIT.txt", {prefixdir = "SexLab/Licenses/CommonLibSSE-NG"})
+
     -- Dependencies
     add_packages("yaml-cpp", "magic_enum", "glaze", "simpleini", "glm", "eigen")
 
@@ -284,6 +289,7 @@ target("assets")
     set_enabled(get_config("build_assets"))
     set_kind("phony")
 
+    add_installfiles("Readme - SexLab Framework.txt", {prefixdir = "SexLab/Licenses"})
     add_installfiles("dist/(Interface/SexLab/**)")
     add_installfiles("dist/(Interface/Translations/*.txt)")
     add_installfiles("dist/(SKSE/CustomConsole/*.yaml)")
