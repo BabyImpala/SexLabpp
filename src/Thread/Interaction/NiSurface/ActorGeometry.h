@@ -7,6 +7,7 @@ namespace Thread::Interaction::NiSurface::Geometry
 {
     struct ActorGeometry
     {
+        ActorGeometry() = default;
         explicit ActorGeometry(RE::Actor* a_actor);
 
         RE::NiPointer<RE::NiNode> head;

@@ -174,9 +174,7 @@ namespace Thread::Interaction
 
     void UnregisterCollision(Thread::Instance* instance)
     {
-        if (instance->HasInstanceNiSurface()) {
-            instance->UnregisterInstanceNiSurface();
-        }
+        instance->UnregisterInstanceNiSurface();
     }
 
     std::vector<bool> GetInteractionFlagsImpl(Thread::Instance* instance, RE::Actor* a_actor, RE::Actor* a_partner)
@@ -189,10 +187,8 @@ namespace Thread::Interaction
             return f;
         };
         std::vector<bool> interFlags(kInterTypeCount, false);
-        if (IsCollisionRegistered(instance)) {
-            if (auto* ni = instance->GetInstanceNiSurface()) {
-                interFlags = toFlags(GetCollisionActionsNiSurface(ni, a_actor, a_partner));
-            }
+        if (auto ni = instance->GetInstanceNiSurface()) {
+            interFlags = toFlags(GetCollisionActionsNiSurface(ni.get(), a_actor, a_partner));
         } else {
             if (CanUseTagsFallback(instance)) {
                 interFlags = GetInteractionPosTags(instance, a_actor);
@@ -224,10 +220,8 @@ namespace Thread::Interaction
         if (!ValidateInterType(interType, __func__)) {
             return false;
         }
-        if (IsCollisionRegistered(instance)) {
-            if (auto* ni = instance->GetInstanceNiSurface()) {
-                return HasCollisionActionNiSurface(ni, a_actor, a_partner, interType);
-            }
+        if (auto ni = instance->GetInstanceNiSurface()) {
+            return HasCollisionActionNiSurface(ni.get(), a_actor, a_partner, interType);
         } else {
             if (CanUseTagsFallback(instance)) {
                 return GetInteractionPosTags(instance, a_actor)[interType];
@@ -272,10 +266,8 @@ namespace Thread::Interaction
         }
         if (!ValidateInterType(interType, __func__))
             return {};
-        if (IsCollisionRegistered(instance)) {
-            if (auto* ni = instance->GetInstanceNiSurface()) {
-                return GetPartnersByActionNiSurface(ni, a_actor, interType);
-            }
+        if (auto ni = instance->GetInstanceNiSurface()) {
+            return GetPartnersByActionNiSurface(ni.get(), a_actor, interType);
         } else {
             if (CanUseTagsFallback(instance)) {
                 const auto complement = kInterTypeTable[interType].complement;
@@ -309,10 +301,10 @@ namespace Thread::Interaction
         if (!ValidateInterType(interType, __func__)) {
             return 0.0f;
         }
-        if (!IsCollisionRegistered(instance) || !kInterTypeTable[interType].supported)
+        if (!kInterTypeTable[interType].supported)
             return 0.0f;
-        if (auto* ni = instance->GetInstanceNiSurface()) {
-            return GetActionVelocityNiSurface(ni, a_actor, a_partner, interType);
+        if (auto ni = instance->GetInstanceNiSurface()) {
+            return GetActionVelocityNiSurface(ni.get(), a_actor, a_partner, interType);
         }
         return 0.0f;
     }

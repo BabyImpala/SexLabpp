@@ -38,6 +38,26 @@ namespace Thread::Interaction::NiSurface
         if (!lock.try_lock()) {
             return;
         }
+        bool geometryChanged = false;
+        bool geometryReady = true;
+        for (auto& position : positions) {
+            auto* root = position.actor->Get3D();
+            if (root != position.root.get()) {
+                position.ResetGeometry(root);
+                geometryChanged = true;
+            }
+            geometryReady &= root && position.geometry.pelvis && position.geometry.lowerSpine;
+        }
+        if (geometryChanged || !geometryReady) {
+            for (auto& position : positions) {
+                position.interactions.clear();
+                position.motionStates.clear();
+            }
+        }
+        // Papyrus unload events can arrive later; never sample an unloaded or failed replacement skeleton.
+        if (!geometryReady) {
+            return;
+        }
         std::vector<ActorState::Frame> frames;
         frames.reserve(positions.size());
         for (auto& position : positions) {
@@ -192,9 +212,17 @@ namespace Thread::Interaction::NiSurface
         }
     }
 
+    std::shared_ptr<Scene> Manager::Get(RE::FormID a_id)
+    {
+        std::scoped_lock lock{ _mutex };
+        const auto where = std::ranges::find(scenes, a_id, [](const auto& a_entry) { return a_entry.first; });
+        return where != scenes.end() ? where->second : nullptr;
+    }
+
     std::shared_ptr<Scene> Manager::Register(RE::FormID a_id, std::vector<RE::Actor*> a_positions, const Registry::Scene* a_scene) noexcept
     {
         try {
+            std::scoped_lock lock{ _mutex };
             const auto where = std::ranges::find(scenes, a_id, [](const auto& a_entry) { return a_entry.first; });
             if (where != scenes.end()) {
                 logger::info("NiSurface Interaction: Object with ID {:X} already registered; resetting NiSurface for scene", a_id);
@@ -217,9 +245,9 @@ namespace Thread::Interaction::NiSurface
 
     void Manager::Unregister(RE::FormID a_id) noexcept
     {
+        std::scoped_lock lock{ _mutex };
         const auto where = std::ranges::find(scenes, a_id, [](const auto& a_entry) { return a_entry.first; });
         if (where == scenes.end()) {
-            logger::error("NiSurface Interaction: No object registered using ID {:X}", a_id);
             return;
         }
         scenes.erase(where);

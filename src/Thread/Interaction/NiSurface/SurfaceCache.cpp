@@ -700,7 +700,7 @@ namespace Thread::Interaction::NiSurface::Geometry
                 for (const auto& influence : cachedSample.influences) {
                     auto bone = std::ranges::find(bones, influence.skinIndex, &Bone::skinIndex);
                     if (bone == bones.end()) {
-                        bones.push_back({ influence.skinIndex, {} });
+                        bones.push_back({ influence.skinIndex, RE::NiPointer{ skin->bones[influence.skinIndex] }, {} });
                         bone = std::prev(bones.end());
                     }
                     sample.influences.push_back({ static_cast<std::uint16_t>(std::distance(bones.begin(), bone)), influence.weight });
@@ -781,10 +781,11 @@ namespace Thread::Interaction::NiSurface::Geometry
         }
 
         for (auto& bone : bones) {
-            if (bone.skinIndex >= skinInstance->numMatrices || !skinInstance->bones[bone.skinIndex]) {
+            if (bone.skinIndex >= skinInstance->numMatrices || bone.skinIndex >= skinData->GetBoneCount() ||
+                !bone.node || skinInstance->bones[bone.skinIndex] != bone.node.get()) {
                 return std::nullopt;
             }
-            bone.transform = skinInstance->bones[bone.skinIndex]->world * skinData->GetBoneDataSkinToBone(bone.skinIndex);
+            bone.transform = bone.node->world * skinData->GetBoneDataSkinToBone(bone.skinIndex);
         }
 
         std::array<RE::NiPoint3, 2> points;

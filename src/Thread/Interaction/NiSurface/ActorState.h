@@ -94,9 +94,13 @@ namespace Thread::Interaction::NiSurface
         };
 
         ActorState(RE::Actor* a_owner, Registry::Sex a_sex) :
-          actor(a_owner), geometry(a_owner), sex(a_sex) {}
+          actor(a_owner), root(a_owner->Get3D()), geometry(a_owner), sex(a_sex) {}
+
+        void ResetGeometry(RE::NiAVObject* a_root);
 
         RE::ActorPtr actor;
+        // Retain the root both for identity checks and until cached geometry has been released.
+        RE::NiPointer<RE::NiAVObject> root;
         Geometry::ActorGeometry geometry;
         stl::enumeration<Registry::Sex> sex;
         std::set<Interaction> interactions{};
