@@ -108,6 +108,21 @@ namespace Thread::Interaction::NiSurface
         return true;
     }
 
+    void ActorState::ResetGeometry(RE::NiAVObject* a_root)
+    {
+        geometry = {};
+        root.reset(a_root);
+        if (!root) {
+            return;
+        }
+        try {
+            geometry = Geometry::ActorGeometry{ actor.get() };
+        } catch (const std::exception& e) {
+            // Keep the attempted root so an unsupported replacement is not rescanned every frame.
+            logger::warn("NiSurface Interaction: Failed to rebind actor {:X}: {}", actor->GetFormID(), e.what());
+        }
+    }
+
     ActorState::Frame::Frame(ActorState& a_state) :
       state(a_state),
       headBounds([&]() {

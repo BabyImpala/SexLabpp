@@ -323,7 +323,7 @@ namespace Thread::Interaction::NiSurface::Geometry
                 std::uint16_t slot;
                 if (bone == result.bones.end()) {
                     slot = static_cast<std::uint16_t>(result.bones.size());
-                    result.bones.push_back({ influence.skinIndex, {} });
+                    result.bones.push_back({ influence.skinIndex, RE::NiPointer{ skin->bones[influence.skinIndex] }, {} });
                 } else {
                     slot = static_cast<std::uint16_t>(std::distance(result.bones.begin(), bone));
                 }
@@ -457,11 +457,12 @@ namespace Thread::Interaction::NiSurface::Geometry
         }
 
         for (auto& bone : surface->bones) {
-            if (bone.skinIndex >= surface->skinInstance->numMatrices || !surface->skinInstance->bones[bone.skinIndex]) {
+            if (bone.skinIndex >= surface->skinInstance->numMatrices || bone.skinIndex >= skinData->GetBoneCount() ||
+                !bone.node || surface->skinInstance->bones[bone.skinIndex] != bone.node.get()) {
                 collisionShape.reset();
                 return;
             }
-            bone.transform = surface->skinInstance->bones[bone.skinIndex]->world * skinData->GetBoneDataSkinToBone(bone.skinIndex);
+            bone.transform = bone.node->world * skinData->GetBoneDataSkinToBone(bone.skinIndex);
         }
         const auto skinSamples = [&](SampleRing& a_ring) {
             a_ring.worldPositions.resize(a_ring.samples.size());

@@ -58,7 +58,7 @@ namespace Thread
 
       public:
         Instance(RE::TESQuest* a_linkedQst, const std::vector<RE::Actor*>& a_submissives, const SceneMapping& a_scenes, FurniturePreference a_furniturePreference);
-        ~Instance() = default;
+        ~Instance() { UnregisterInstanceNiSurface(); }
 
         static void CreateInstance(RE::TESQuest* a_linkedQst, const std::vector<RE::Actor*> a_submissives, const SceneMapping& a_scenes, FurniturePreference a_furniturePreference);
         static void DestroyInstance(RE::TESQuest* a_linkedQst, bool a_preservePreparedActors = false);
@@ -70,11 +70,11 @@ namespace Thread
         static void UpdateAnimations(float a_delta);
 
       public:
-        bool HasInstanceNiSurface() const { return instanceNiSurface != nullptr; }
-        Interaction::NiSurface::Scene* GetInstanceNiSurface() { return instanceNiSurface.get(); }
-        void UnregisterInstanceNiSurface() {
-          (Interaction::NiSurface::Manager::Unregister(linkedQst->GetFormID()),
-          instanceNiSurface = nullptr);
+        bool HasInstanceNiSurface() const { return GetInstanceNiSurface() != nullptr; }
+        std::shared_ptr<Interaction::NiSurface::Scene> GetInstanceNiSurface() const { return Interaction::NiSurface::Manager::Get(linkedQst->GetFormID()); }
+        void UnregisterInstanceNiSurface()
+        {
+            Interaction::NiSurface::Manager::Unregister(linkedQst->GetFormID());
         }
 
         void AdvanceScene(const Registry::Stage* a_nextStage);
@@ -185,7 +185,6 @@ namespace Thread
         };
 
         RE::TESQuest* linkedQst;
-        std::shared_ptr<Interaction::NiSurface::Scene> instanceNiSurface{ nullptr };
 
         Center center;
         std::vector<Position> positions;

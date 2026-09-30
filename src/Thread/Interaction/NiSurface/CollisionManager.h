@@ -29,6 +29,7 @@ namespace Thread::Interaction::NiSurface
       public:
         static void OnFrameUpdate(float a_delta);
 
+        static std::shared_ptr<Scene> Get(RE::FormID a_id);
         static std::shared_ptr<Scene> Register(RE::FormID a_id, std::vector<RE::Actor*> a_positions, const Registry::Scene* a_scene) noexcept;
         static void Unregister(RE::FormID a_id) noexcept;
 

@@ -32,6 +32,7 @@ namespace Thread::Interaction::NiSurface::Geometry
         struct Bone
         {
             std::uint16_t skinIndex;
+            RE::NiPointer<RE::NiAVObject> node;
             RE::NiTransform transform;
         };
 
