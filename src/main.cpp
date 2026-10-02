@@ -8,8 +8,6 @@
 #include "Thread/Interface/SceneHUD.h"
 #include "Thread/Interface/StageSelectMenu.h"
 #include "Thread/Interface/UI/Theme.h"
-#include "Thread/NiNode/Legacy/LegacyNiUpdate.h"
-#include "Thread/NiNode/NiUpdate.h"
 #include "UserData/StripData.h"
 
 // class EventHandler :
@@ -96,11 +94,6 @@ static void SKSEMessageHandler(SKSE::MessagingInterface::Message* message)
         }
         Thread::Hooks::Install();
         Thread::Collision::CollisionHandler::Install();
-        if (Settings::bUseLegacyNiType) {
-            Thread::LegacyNiNode::NiUpdate::Install();
-        } else {
-            Thread::NiNode::NiUpdate::Install();
-        }
         Registry::Library::GetSingleton()->Initialize();
         Registry::Statistics::StatisticsData::GetSingleton()->Register();
         UserData::StripData::GetSingleton()->Load();
