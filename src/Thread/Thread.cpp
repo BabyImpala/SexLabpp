@@ -275,7 +275,7 @@ namespace Thread
             });
             baseCoordinates = center.offset.offset.ApplyReturn(center.GetRef());
             activeScene->furnitureOffset.Apply(baseCoordinates);
-            AdvanceScene(activeStage);
+            RealignActors();
 
         // position offset
         } else {
