@@ -650,7 +650,7 @@ State Paused
 		EndIf
 		_Thread.SetAnimationPlaybackSpeed(1.0)
 		UnregisterForModEvent("SSL_ORGASM_Thread" + _Thread.tid)
-		StoreExcitementState("Backup")
+		BackupExcitementState()
 		sslBaseExpression.CloseMouth(_ActorRef)
 		_ActorRef.ResetExpressionOverrides()
 		sslBaseExpression.ClearMFG(_ActorRef)
@@ -759,19 +759,17 @@ State Animating
 			return
 		EndIf
 		_CurrentInteractions = _Thread.GetInteractionFlagsImpl(_ActorRef, None)
-		; Keep the remainder so the 0.8s enjoyment loop stays accurate on 0.25s updates.
 		If (_bEnjEnabled && !_Thread.EnjoymentPaused)
-			_LoopEnjoymentDelay += UPDATE_INTERVAL
-		EndIf
-		UpdateEffectiveEnjoymentCalculations()
-		If (_bEnjEnabled && !_Thread.EnjoymentPaused && _Thread.ElementUI_EnjBars)
-			EnjBarsUpdateSlider(_FullEnjoyment as float, _Thread.GetInteractionStringImpl(_ActorRef))
+			If (_FullEnjoyment >= 100)
+				_FullEnjoyment = 100
+				DoOrgasm()
+			EndIf
+			UpdateEffectiveEnjoymentCalculations()
+			If (_Thread.ElementUI_EnjBars)
+				EnjBarsUpdateSlider(_FullEnjoyment as float, _Thread.GetInteractionStringImpl(_ActorRef))
+			EndIf
 		EndIf
 		int strength = CalcReaction()
-		; Reaction uses absolute pain for voices/expressions, orgasms only use positive enjoyment.
-		If (_FullEnjoyment >= 100)
-			DoOrgasm()
-		EndIf
 		If (_LoopVoiceDelay >= _VoiceDelay && !IsSilent)
 			_LoopVoiceDelay = 0.0
 			bool lipsync = !OpenMouth && _Config.UseLipSync && _sex <= 2
@@ -910,7 +908,7 @@ State Animating
 			EndIf
 		EndIf
 		If (_sex != 1 && _sex != 4)
-			_Thread.ApplyCumFX(_ActorRef)
+			_Thread.InitCumFX(_ActorRef)
 		EndIf
 		; Events
 		int eid = ModEvent.Create("SexLabOrgasm")
@@ -944,7 +942,6 @@ State Animating
 			EndIf
 			; The extra orgasm penalty can stack, but it shouldn't go below -100.
 			_FullEnjoyment = PapyrusUtil.ClampInt(_FullEnjoyment, -100, 100)
-			UpdateEffectiveEnjoymentCalculations()
 		EndIf
 		RegisterForSingleUpdate(UPDATE_INTERVAL)
 		_hasOrgasm = false
@@ -1206,7 +1203,6 @@ float _EnjoymentDelay
 float _LoopEnjoymentDelay
 ; Base
 bool _bEnjEnabled
-bool _CrtMaleHugePP
 int _ConSubStatus
 float _PainContext
 float _EnjFactor
@@ -1229,7 +1225,6 @@ Function ResetEnjoymentVariables()
 	_LoopEnjoymentDelay = 0.0
 	; Base
 	_bEnjEnabled = False
-	_CrtMaleHugePP = False
 	_ConSubStatus = _Thread.CONSENT_CONNONSUB
 	_PainContext = 0.0
 	_EnjFactor = 0.0
@@ -1253,8 +1248,7 @@ Function UpdateBaseEnjoymentCalculations()
 	EndIf
 	ResetEnjoymentVariables()
 	_bEnjEnabled = True
-	StoreExcitementState("Restore")
-	_CrtMaleHugePP = _Thread.CrtMaleHugePP()
+	RestoreExcitementState()
 	_ConSubStatus = _Thread.IdentifyConsentSubStatus()
 	bool SameSexThread = (_HomoTypes[1] || _HomoTypes[2] || _HomoTypes[3])
 	bool WithLover  = _Thread.ActorIsWithLover(_ActorRef)
@@ -1268,29 +1262,21 @@ Function UpdateBaseEnjoymentCalculations()
 EndFunction
 
 Function UpdateEffectiveEnjoymentCalculations()
-	If (!_bEnjEnabled)
-		return
-	EndIf
-	If (_FullEnjoyment >= 100)
-		_FullEnjoyment = 100
-		DoOrgasm()
-		return
-	EndIf
-	If ((_Thread.EnjoymentPaused) || (_LoopEnjoymentDelay < _EnjoymentDelay))
-		return
-	EndIf
-	bool NoStaminaEndScenario = (_Config.NoStaminaEndsScene && !_victim && _ActorRef.GetActorValuePercentage("Stamina") < 0.10)
-	If (NoStaminaEndScenario)
-		_Thread.EnjBasedSkipToLastStage(true)
+	_LoopEnjoymentDelay += UPDATE_INTERVAL
+	If (_LoopEnjoymentDelay < _EnjoymentDelay)
 		return
 	EndIf
 	_LoopEnjoymentDelay -= _EnjoymentDelay
 	If (_LoopEnjoymentDelay < 0.0)
 		_LoopEnjoymentDelay = 0.0
 	EndIf
-	_InterFactor = _Thread.CalculateInteractionFactor(_ActorRef, _CurrentInteractions)
-	; A single update can jump past either end, so clamp it before anything else uses it.
-	_FullEnjoyment = PapyrusUtil.ClampInt(CalcEffectiveEnjoyment() as int, -100, 100)
+	bool NoStaminaEndScenario = (_Config.NoStaminaEndsScene && !_victim && _ActorRef.GetActorValuePercentage("Stamina") < 0.10)
+	If (NoStaminaEndScenario)
+		_Thread.EnjBasedSkipToLastStage(true)
+		return
+	EndIf
+	_InterFactor = _Thread.CalcInteractionFactor(_ActorRef, _CurrentInteractions)
+	_FullEnjoyment = PapyrusUtil.ClampInt(CalcEnjoymentAndPainDelta() as int, -100, 100)
 	UpdateArousalStat()
 	If (_Config.DebugMode)
 		DebugEffectiveCalcVariables()
@@ -1349,16 +1335,23 @@ float Function CalcContextEnjFactor(bool SameSexThread, bool WithLover)
 	return EnjMult
 EndFunction
 
-float Function CalcInteractionPain()
+float Function CalcInteractionPainRaw()
+	float PainMult = 0.0
+	bool VaginaPenetrated = _CurrentInteractions[_Thread.pVaginal]
+	bool AnusPenetrated = _CurrentInteractions[_Thread.pAnal]
+	If !(VaginaPenetrated || AnusPenetrated)
+		return PainMult
+	EndIf
+	;experience
+	float xpFactor = 0.0
 	float vaginalXP = SexlabStatistics.GetStatistic(_ActorRef, 2)
 	float analXP = SexlabStatistics.GetStatistic(_ActorRef, 3)
-	bool PainCondVaginal = _CurrentInteractions[_Thread.pVaginal] && (vaginalXP < _Config.NoPainRequiredXP as float)
-	bool PainCondAnal = _CurrentInteractions[_Thread.pAnal] && (analXP < _Config.NoPainRequiredXP as float)
-	float PainInter = 0.0
+	bool PainCondVaginal = VaginaPenetrated && (vaginalXP < _Config.NoPainRequiredXP as float)
+	bool PainCondAnal = AnusPenetrated && (analXP < _Config.NoPainRequiredXP as float)
 	If (PainCondVaginal || PainCondAnal)
 		_PainInterTimer += _EnjoymentDelay
 		; Only use XP for the penetration that's actually causing pain.
-		float relevantXP
+		float relevantXP = 0.0
 		If (PainCondVaginal && PainCondAnal)
 			relevantXP = (vaginalXP + analXP) / 2
 		ElseIf (PainCondVaginal)
@@ -1366,70 +1359,92 @@ float Function CalcInteractionPain()
 		Else
 			relevantXP = analXP
 		EndIf
-		float PainFactor = (2 - (0.01 * relevantXP))
-		PainFactor = PapyrusUtil.ClampFloat(PainFactor, 0, 2)
-		If (_CrtMaleHugePP)
-			PainFactor += _Config.PainHugePPMult
-		EndIf
-		PainInter = (PainFactor * _InterFactor * _Config.EnjRaiseMultInter)
+		xpFactor = (1 - (0.01 * relevantXP))
+		xpFactor = PapyrusUtil.ClampFloat(xpFactor, 0, 1)
 	EndIf
-	return PainInter
+	;schlong
+	int sizePenPP = -1
+	If (VaginaPenetrated)
+		Actor akVagPenetrator = _Thread.GetPartnerByInteractionTypeImpl(_ActorRef, _Thread.pVaginal)
+		sizePenPP = _Thread.GetSchlongSizeTierImpl(akVagPenetrator)
+	EndIf
+	If (AnusPenetrated)
+		Actor akAnalPenetrator = _Thread.GetPartnerByInteractionTypeImpl(_ActorRef, _Thread.pAnal)
+		int sizeAnalPP = _Thread.GetSchlongSizeTierImpl(akAnalPenetrator)
+		If (sizeAnalPP > sizePenPP)
+			sizePenPP = sizeAnalPP
+		EndIf
+	EndIf
+	float ppFactor = 0.0
+	If (sizePenPP >= 3) ; L or XL
+		ppFactor = PapyrusUtil.ClampFloat(_Config.PainHugePPMult, 0, 1)
+	EndIf
+	PainMult = ((xpFactor + ppFactor) * _InterFactor)
+	return (PainMult * 10)
 EndFunction
 
-float Function CalcEffectivePain()
+float Function CalcPainAdjusted()
 	float NoPainTime = _Config.NoPainRequiredTime as float
-	float SceneDuration = _Thread.GetTimeTotal()
-	float DecayMult = 0.0
-	float _PainContextCur = 0.0
-	_PainInterCur = 0
 	If (NoPainTime < 1)
 		NoPainTime = 1
-	EndIF
+	EndIf
 	; Context Pain
+	float PainContextCur = 0.0
+	float SceneDuration = _Thread.GetTimeTotal()
 	If (SceneDuration < NoPainTime)
-		DecayMult = 1.0 - (SceneDuration / NoPainTime)
-		DecayMult = PapyrusUtil.ClampFloat(DecayMult, 0, 1)
-		_PainContextCur = _PainContext * DecayMult
+		float DecayMult = 1.0 - (SceneDuration / NoPainTime)
+		PainContextCur = _PainContext * PapyrusUtil.ClampFloat(DecayMult, 0, 1)
 	EndIf
 	; Interaction Pain
+	_PainInterCur = 0
 	If (_PainInterTimer < NoPainTime)
 		; This is the current pain level, not an amount to subtract every update.
-		float PainInter = CalcInteractionPain() * 5
-		float PainInterDecay = 1.0 - (_PainInterTimer / NoPainTime)
-		_PainInterCur = PainInter * PapyrusUtil.ClampFloat(PainInterDecay, 0, 1)
+		float DecayMult = 1.0 - (_PainInterTimer / NoPainTime)
+		_PainInterCur = CalcInteractionPainRaw() * PapyrusUtil.ClampFloat(DecayMult, 0, 1)
 	EndIf
-	return (_PainContextCur + _PainInterCur)
+	return (PainContextCur + _PainInterCur)
 EndFunction
 
-float Function CalcEffectiveEnjoyment()
+float Function CalcInteractionEnjoymentInst()
 	; ConSubMult [Default: 0.8 to 1.2], EnjRaiseMultInter [Default: 0.8], EnjFactor [Range: 0.17 to 4.3]
-	float ConSubMult = EnjFindConSubStatusMult()
-	float EffectivePain = CalcEffectivePain()
-	float EnjInter = 0.0
-	If !((_PainInterCur > 10) || (_Config.GameRequiredOnHighEnj && (_FullEnjoyment > 80) && (_ActorRef == _PlayerRef)))
-		EnjInter = (_EnjFactor * _InterFactor * _Config.EnjRaiseMultInter * ConSubMult * _ModEnjMult)
+	return (_EnjFactor * _InterFactor * _Config.EnjRaiseMultInter * EnjFindConSubStatusMult() * _ModEnjMult)
+EndFunction
+
+float Function CalcEnjoymentAdjusted()
+	bool abAddEnjInst = true
+	If ((_PainInterCur > 10) || (_Config.GameRequiredOnHighEnj && _Thread.ElementUI_EnjBars && _FullEnjoyment >= 80 && _ActorRef == _PlayerRef))
+		abAddEnjInst = false
 	EndIf
-	float EnjoymentBeforePain = _FullEnjoyment + EnjInter
-	float PainChange = EffectivePain - _PainLevel
-	_PainLevel = EffectivePain
+	float EnjInst = 0.0
+	If (abAddEnjInst)
+		EnjInst = CalcInteractionEnjoymentInst()
+	EndIf
+	return (_FullEnjoyment + EnjInst)
+EndFunction
+
+float Function CalcEnjoymentAndPainDelta()
+	float afCurrentEnjoyment = CalcEnjoymentAdjusted()
+	float afCurrentPain = CalcPainAdjusted()
+	float PainChange = afCurrentPain - _PainLevel
+	_PainLevel = afCurrentPain
 	; Only apply the change in pain level. Decay releases the pain that was actually applied.
 	If (PainChange > 0)
-		float PainRoom = EnjoymentBeforePain + 100
+		float PainRoom = afCurrentEnjoyment + 100
 		If (PainRoom > 0)
 			float PainAdded = PapyrusUtil.ClampFloat(PainChange, 0, PainRoom)
 			_PainApplied += PainAdded
-			return (EnjoymentBeforePain - PainAdded)
+			return (afCurrentEnjoyment - PainAdded)
 		EndIf
 	ElseIf (PainChange < 0 && _PainApplied > 0)
 		float PainReleased = PapyrusUtil.ClampFloat(-PainChange, 0, _PainApplied)
 		_PainApplied -= PainReleased
-		float EnjoymentRoom = 100 - EnjoymentBeforePain
+		float EnjoymentRoom = 100 - afCurrentEnjoyment
 		If (EnjoymentRoom > 0)
 			PainReleased = PapyrusUtil.ClampFloat(PainReleased, 0, EnjoymentRoom)
-			return (EnjoymentBeforePain + PainReleased)
+			return (afCurrentEnjoyment + PainReleased)
 		EndIf
 	EndIf
-	return EnjoymentBeforePain
+	return afCurrentEnjoyment
 EndFunction
 
 Function UpdateArousalStat()
@@ -1477,35 +1492,31 @@ bool Function WaitForOrgasm()
 	return False
 EndFunction
 
-Function StoreExcitementState(String arg = "")
+Function BackupExcitementState()
 	; Form IDs keep same-name actors from sharing enjoyment backups.
 	string ActorKey = _ActorRef.GetFormID() as string
-	If (arg == "Backup")
-		StorageUtil.SetFloatValue(None, ("EnjBackupTime_" + ActorKey),  SexLabUtil.GetCurrentGameRealTime())
-		StorageUtil.SetIntValue(None, ("LastOrgasmCount_" + ActorKey), _OrgasmCount)
-		If _FullEnjoyment > 10
-			StorageUtil.SetIntValue(None, ("LastEnjoyment_" + ActorKey), _FullEnjoyment)
-		Else
-			StorageUtil.SetIntValue(None, ("LastEnjoyment_" + ActorKey), 0)
-		EndIf
-	ElseIf (arg == "Restore")
-		float TimeSinceEnjBackup = (SexLabUtil.GetCurrentGameRealTime() - StorageUtil.GetFloatValue(None, ("EnjBackupTime_" + ActorKey)))
-		If (TimeSinceEnjBackup >= 0 && TimeSinceEnjBackup < 60)
-			_OrgasmCount = StorageUtil.GetIntValue(None, ("LastOrgasmCount_" + ActorKey))
-			int LastEnjoyment = StorageUtil.GetIntValue(None, ("LastEnjoyment_" + ActorKey))
-			; Decay the saved enjoyment, then keep it in the normal range.
-			_FullEnjoyment = PapyrusUtil.ClampInt((LastEnjoyment as float * (1 - (TimeSinceEnjBackup/60))) as int, -100, 100)
-		EndIf
+	StorageUtil.SetFloatValue(None, ("EnjBackupTime_" + ActorKey),  SexLabUtil.GetCurrentGameRealTime())
+	StorageUtil.SetIntValue(None, ("LastOrgasmCount_" + ActorKey), _OrgasmCount)
+	If (_FullEnjoyment > 10)
+		StorageUtil.SetIntValue(None, ("LastEnjoyment_" + ActorKey), _FullEnjoyment)
+	Else
+		StorageUtil.SetIntValue(None, ("LastEnjoyment_" + ActorKey), 0)
+	EndIf
+EndFunction
+
+Function RestoreExcitementState()
+	string ActorKey = _ActorRef.GetFormID() as string
+	float TimeSinceEnjBackup = (SexLabUtil.GetCurrentGameRealTime() - StorageUtil.GetFloatValue(None, ("EnjBackupTime_" + ActorKey)))
+	If (TimeSinceEnjBackup >= 0 && TimeSinceEnjBackup < 60)
+		_OrgasmCount = StorageUtil.GetIntValue(None, ("LastOrgasmCount_" + ActorKey))
+		int LastEnjoyment = StorageUtil.GetIntValue(None, ("LastEnjoyment_" + ActorKey))
+		; Decay the saved enjoyment, then keep it in the normal range.
+		_FullEnjoyment = PapyrusUtil.ClampInt((LastEnjoyment as float * (1 - (TimeSinceEnjBackup/60))) as int, -100, 100)
 	EndIf
 EndFunction
 
 Function InitRaiseEnjAttempt()
 	If (_ActorRef != _PlayerRef)
-		return
-	EndIf
-	If (_FullEnjoyment >= 100)
-		_FullEnjoyment = 100
-		DoOrgasm()
 		return
 	EndIf
 	; As enjoyment gets higher, the "green zone" gets narrower
@@ -1543,14 +1554,14 @@ EndFunction
 Function DebugBaseCalcVariables()
 	string BaseCalcLog = "[ENJ] EnjFactor: " + _EnjFactor + ", BaseArousal: " + _arousalBase + ", SameSexThread: " \
 	+ (_HomoTypes[2]||_HomoTypes[3]||_HomoTypes[4]) + ", Sexuality: " + SexlabStatistics.GetSexuality(_ActorRef) + ", ConSubStatus: " \
-	+ _ConSubStatus + ", IsVictim: " + _victim + ", HugePP: " + _CrtMaleHugePP + ", ContextPain: " + _PainContext as int
+	+ _ConSubStatus + ", IsVictim: " + _victim + ", ContextPain: " + _PainContext as int
 	Log(BaseCalcLog)
 EndFunction
 
 Function DebugEffectiveCalcVariables()
 	string EffectiveCalcLog = "[ENJ] Enjoyment: " + _FullEnjoyment + ", IntFactor: " \
 	+ _InterFactor + ", EnjFactor: " + _EnjFactor + ", PainInterCur: " + _PainInterCur \
-	+ ", PainApplied: " + _PainApplied + ", Interactions: " + _Thread.GetCurrentInteractionString(_ActorRef)
+	+ ", PainApplied: " + _PainApplied + ", Interactions: " + _Thread.GetInteractionStringImpl(_ActorRef)
 	Log(EffectiveCalcLog)
 EndFunction
 

@@ -6,7 +6,7 @@ namespace Thread::Interaction::NiSurface
 {
     namespace
     {
-        constexpr std::uint32_t TIMING_LOG_INTERVAL{ 30 };
+        //constexpr std::uint32_t TIMING_LOG_INTERVAL{ 30 };
         constexpr float MOTION_FILTER_TIME{ 0.05f };
         constexpr float VELOCITY_FILTER_TIME{ 0.25f };
         constexpr float MOTION_STATE_RETENTION{ 0.2f };
@@ -30,6 +30,17 @@ namespace Thread::Interaction::NiSurface
             }
         }
         return false;
+    }
+
+    std::optional<ShaftSize> Scene::GetShaftSize(RE::FormID a_actorId) const
+    {
+        std::scoped_lock lock{ _mutex };
+        for (const auto& position : positions) {
+            if (position.actor->GetFormID() == a_actorId) {
+                return position.geometry.GetShaftSize();
+            }
+        }
+        return std::nullopt;
     }
 
     void Scene::UpdateInteractions(float a_delta, bool a_drawCollision)
@@ -94,8 +105,8 @@ namespace Thread::Interaction::NiSurface
             DetectVaginalInteractions(frames, source);
             DetectGeneralInteractions(frames, source);
         }
-        static std::uint32_t velocityLogFrame = 0;
-        const bool logVelocity = velocityLogFrame++ % TIMING_LOG_INTERVAL == 1;
+        //static std::uint32_t velocityLogFrame = 0;
+        //const bool logVelocity = velocityLogFrame++ % TIMING_LOG_INTERVAL == 1;
         for (std::size_t i = 0; i < positions.size(); ++i) {
             auto& position = positions[i];
             for (auto& [_, state] : position.motionStates) {
@@ -134,13 +145,13 @@ namespace Thread::Interaction::NiSurface
             });
 
             // Temporary interaction validation; remove after collision behavior is verified.
-            if (logVelocity) {
-                for (const auto& interaction : positions[i].interactions) {
-                    logger::info("NiSurface Interaction: actor={}, partner={}, action={}, source={}, distance={:.2f}, motion=({:.3f}, {:.3f}, {:.3f}), scale={:.2f}, velocity={:.3f}",
-                        position.actor->GetName(), interaction.partner->GetName(), magic_enum::enum_name(interaction.action), interaction.motionSource,
-                        interaction.distance, interaction.motion.x, interaction.motion.y, interaction.motion.z, interaction.motionScale, interaction.velocity);
-                }
-            }
+            // if (logVelocity) {
+            //    for (const auto& interaction : positions[i].interactions) {
+            //        logger::info("NiSurface Interaction: actor={}, partner={}, action={}, source={}, distance={:.2f}, motion=({:.3f}, {:.3f}, {:.3f}), scale={:.2f}, velocity={:.3f}",
+            //            position.actor->GetName(), interaction.partner->GetName(), magic_enum::enum_name(interaction.action), interaction.motionSource,
+            //            interaction.distance, interaction.motion.x, interaction.motion.y, interaction.motion.z, interaction.motionScale, interaction.velocity);
+            //    }
+            //}
         }
     }
 
@@ -197,7 +208,7 @@ namespace Thread::Interaction::NiSurface
     {
         std::scoped_lock lock{ _mutex };
         static std::uint32_t frame = 0;
-        const bool logTiming = frame++ % TIMING_LOG_INTERVAL == 1;
+        //const bool logTiming = frame++ % TIMING_LOG_INTERVAL == 1;
         const auto start = std::chrono::high_resolution_clock::now();
         auto& debugDraw = Interface::SceneHUD::GetSingleton().GetDebugDraw();
         debugDraw.BeginFrame();
@@ -206,10 +217,10 @@ namespace Thread::Interaction::NiSurface
             scene->UpdateInteractions(a_delta, linkedThread && id == linkedThread->GetFormID());
         }
         debugDraw.Publish();
-        if (logTiming && !scenes.empty()) {
-            const auto elapsed = std::chrono::duration<double, std::milli>(std::chrono::high_resolution_clock::now() - start);
-            logger::info("NiSurface Interaction: Frame -> {:.2f}ms", elapsed.count());
-        }
+        //if (logTiming && !scenes.empty()) {
+        //    const auto elapsed = std::chrono::duration<double, std::milli>(std::chrono::high_resolution_clock::now() - start);
+        //    logger::info("NiSurface Interaction: Frame -> {:.2f}ms", elapsed.count());
+        //}
     }
 
     std::shared_ptr<Scene> Manager::Get(RE::FormID a_id)

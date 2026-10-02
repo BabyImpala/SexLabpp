@@ -1972,61 +1972,63 @@ Function SetVisibilitySceneGraphImpl(bool abOpen) native
 ; --- ORGASM FX                                       --- ;
 ; ------------------------------------------------------- ;
 
-Function ApplyCumFX(Actor SourceRef)
+Function InitCumFX(Actor SourceRef)
 	If (!Config.UseCum)
-        return
-    EndIf
+		return
+	EndIf
 	int i = 0
 	While (i < _Positions.Length)
 		Actor TargetRef = _Positions[i]
-		; Skip the source's own slot and any not-yet-loaded target, but keep scanning the
-		; rest of the positions - a bare "return" here would abort the whole loop and deny
-		; cum FX (and the SexLabApplyCumFX event) to every position after this one.
-		If (TargetRef != SourceRef && TargetRef.Is3DLoaded() && TargetRef.GetParentCell() && TargetRef.GetParentCell().IsAttached())
-			bool[] interFlags = GetInteractionFlagsImpl(SourceRef, TargetRef)
-			;variable names are from SourceRef's (male/futa) perspective
-			;bool pHandJob_ = interFlags[pHandJob]
-			;bool pFootJob_ = interFlags[pFootJob]
-			;bool pBoobJob_ = interFlags[pBoobJob]
-			;bool aFacial_ = interFlags[pBoobJob]
-			;bool aSkullfuck_ = interFlags[pBoobJob]
-			bool pOral_ = interFlags[pOral]
-			bool pDeepthroat_ = interFlags[pDeepthroat]
-			bool pLickingShaft_ = interFlags[pLickingShaft]
-			bool aVaginal_ = interFlags[aVaginal]
-			bool aGrinding_ = interFlags[aGrinding]
-			bool aAnal_ = interFlags[aAnal]
-			bool any_oral = pOral_ || pDeepthroat_ || pLickingShaft_
-			; Fall back to scene-wide tags only in a 1-on-1 pairing, where the sole target
-			; must be the recipient. In 3+ actor scenes these tags don't say WHICH actor the
-			; source finished on, so applying them sprays cum onto bystanders not interacting
-			; with the source (e.g. oral cum on a male partner in an Oral-tagged group scene).
-			; Leave aiType unset (-2) for such targets so they get none.
-			If (!any_oral && !aVaginal_ && !aGrinding_ && !aAnal_ && _Positions.Length <= 2)
-				any_oral = IsOral()
-				aVaginal_ = IsVaginal()
-				aAnal_ = IsAnal()
-			EndIf
-			Log("ApplyCumFX(): Source [" + SexLabUtil.ActorName(SourceRef) + "] Target [" + SexLabUtil.ActorName(TargetRef) + "] CumFX_Types [O: " + any_oral + ", V: " + (aVaginal_ || aGrinding_) + ", A: " + aAnal_ + "]")
-			int aiType = -2
-			If (aVaginal_ || aGrinding_)
-				aiType = ActorLib.FX_VAGINAL
-			ElseIf (aAnal_)
-				aiType = ActorLib.FX_ANAL
-			ElseIf (any_oral)
-				aiType = ActorLib.FX_ORAL
-			EndIf
-			If (aiType != -2)
-				ActorLib.AddCumFx(TargetRef, aiType)
-				Int handle = ModEvent.Create("SexLabApplyCumFX")
-				ModEvent.PushForm(handle, TargetRef)
-				ModEvent.PushForm(handle, SourceRef)
-				ModEvent.PushInt(handle, aiType)
-				ModEvent.Send(handle)
+		If (!TargetRef || TargetRef == SourceRef || !TargetRef.Is3DLoaded())
+			; skip, but keep scanning the remaining positions
+		Else
+			Cell acTargetCell = TargetRef.GetParentCell()
+			If (acTargetCell && acTargetCell.IsAttached())
+				; Note: Position tags give roles info, not pairings. If several positions share
+				; complement role (e.g. two pVaginal for one aVaginal), all will get the CumFX. 
+				ApplyCumFX(SourceRef, TargetRef)
 			EndIf
 		EndIf
 		i += 1
 	EndWhile
+EndFunction
+
+Function ApplyCumFX(Actor SourceRef, Actor TargetRef)
+	bool[] flags = GetInteractionFlagsImpl(SourceRef, TargetRef)
+	;variable names are from SourceRef's (male/futa) perspective
+	;bool handjob = flags[pHandJob]
+	;bool footjob = flags[pFootJob]
+	;bool boobjob = flags[pBoobJob]
+	;bool facial = flags[aFacial]
+	;bool skullfuck = flags[aSkullFuck]
+	bool anal = flags[aAnal]
+	bool vaginal = flags[aVaginal] || flags[aGrinding]
+	bool oral = flags[pOral] || flags[pDeepthroat] || flags[pLickingShaft]
+	; Last resort for 1-on-1 scenes where neither collision nor tags gave anything
+	If ((_Positions.Length <= 2) && (!oral && !vaginal && !anal))
+		oral = IsOral()
+		vaginal = IsVaginal()
+		anal = IsAnal()
+	EndIf
+	Log("ApplyCumFX(): Source [" + SexLabUtil.ActorName(SourceRef) + "] Target [" + SexLabUtil.ActorName(TargetRef) + "] CumFX_Types [O: " + oral + ", V: " + vaginal + ", A: " + anal + "]")
+	int aiType = -2
+	If (vaginal)
+		aiType = ActorLib.FX_VAGINAL
+	ElseIf (anal)
+		aiType = ActorLib.FX_ANAL
+	ElseIf (oral)
+		aiType = ActorLib.FX_ORAL
+	EndIf
+	If (aiType != -2)
+		ActorLib.AddCumFx(TargetRef, aiType)
+		Int handle = ModEvent.Create("SexLabApplyCumFX")
+		If (handle)
+			ModEvent.PushForm(handle, TargetRef)
+			ModEvent.PushForm(handle, SourceRef)
+			ModEvent.PushInt(handle, aiType)
+			ModEvent.Send(handle)
+		EndIf
+	EndIf
 EndFunction
 
 ; ------------------------------------------------------- ;
@@ -2162,7 +2164,7 @@ Faction Property PlayerMarriedFaction Auto
 ; --- Interactions Factors                       --- ;
 ; -------------------------------------------------- ;
 
-float Function CalculateInteractionFactor(Actor akPosition, bool[] interActive)
+float Function CalcInteractionFactor(Actor akPosition, bool[] interActive)
 	float factorTotal = 0.25
 	float[] factorValues = sslSystemConfig.GetEnjoymentFactors()
 	int len = interActive.Length
@@ -2227,30 +2229,60 @@ bool[] Function CheckActiveHomoTypes()
 	return HomoTypes
 EndFunction
 
-bool Function CrtMaleHugePP()
-	; COMEBACK: This is thread-wide. Narrow it to the actual penetrating partner if pain becomes partner-aware.
-	bool HugePP = False
-	If sslActorLibrary.CountCrtMale(_Positions) > 0
-		int CreMalePos = -1
-		int i = 0
-		While i < _Positions.Length
-			If _Positions[i] != None
-				int gender = GetNthPositionSex(i)
-				If gender == 3
-					CreMalePos = i
-				EndIf
+;/int Function GetSchlongSizeTier(Actor akActor)
+	;Sizes => -1:NoPP, 0:XS, 1:S, 2:M, 3:L, 4:XL
+	If (!akActor)
+		return -1
+	EndIf
+	int raceID = SexlabRegistry.GetRaceID(akActor)
+	If (raceID < 0)
+		return -1
+	EndIf
+	; Human
+	If (raceID == 0)
+		; TNG
+		If (SKSE.GetPluginVersion("TheNewGentleman") > -1)
+			int aiSizeTNG = TNG_PapyrusUtil.GetActorSize(akActor)
+			If (aiSizeTNG >= 0) ;0:XS, 1:S, 2:M, 3:L, 4:XL
+				return aiSizeTNG
 			EndIf
-			i += 1
-		EndWhile
-		If CreMalePos > -1
-			string CreRacekey = SexlabRegistry.GetRaceKey(_Positions[CreMalePos])
-			If CreRacekey ==  "bears" || CreRacekey ==  "chaurus" || CreRacekey ==  "chaurushunters" || CreRacekey ==  "chaurusreapers" || CreRacekey ==  "dragons" || CreRacekey ==  "dwarvencenturions" || CreRacekey ==  "frostatronach" || CreRacekey ==  "gargoyles" || CreRacekey ==  "giants" || CreRacekey ==  "giantspiders" || CreRacekey ==  "horses" || CreRacekey ==  "largespiders" || CreRacekey ==  "lurkers" || CreRacekey ==  "mammoths" || CreRacekey ==  "sabrecats" || CreRacekey ==  "trolls" || CreRacekey ==  "werewolves"
-				HugePP = true
+		EndIf
+		; SOS
+		If (Game.GetModByName("Schlongs of Skyrim.esp") != 255)
+			SOS_API SOS = SOS_API.Get()
+			If (SOS)
+				int aiSizeSOS = SOS.GetSize(akActor) ;1-20 absolute scale
+				If (aiSizeSOS > 0)
+					If (aiSizeSOS <= 2)
+						return 0 ; XS
+					ElseIf (aiSizeSOS <= 4)
+						return 1 ; S
+					ElseIf (aiSizeSOS <= 6)
+						return 2 ; M
+					ElseIf (aiSizeSOS <= 8)
+						return 3 ; L
+					Else ;(9-20)
+						return 4 ; XL
+					EndIf
+				EndIf
 			EndIf
 		EndIf
 	EndIf
-	return HugePP
-EndFunction
+	; Creature
+	If (raceID > 0)
+		string key = "|" + SexlabRegistry.GetRaceKey(akActor) + "|"
+		If (StringUtil.Find("|Dragons|Giants|Mammoths|DwarvenCenturions|FrostAtronach|StormAtronach|Horses|GiantSpiders|", key) >= 0)
+			return 4 ; XL
+		ElseIf (StringUtil.Find("|Bears|Trolls|Lurkers|Werewolves|Gargoyles|Sabrecats|LargeSpiders|Horkers|Chaurus|ChaurusReapers|ChaurusHunters|Netches|", key) >= 0)
+			return 3 ; L
+		ElseIf (StringUtil.Find("|Wisps|Chickens|Rabbits|Mudcrabs|Slaughterfishes|AshHoppers|DwarvenSpiders|Skeevers|Foxes|Goats|Rieklings|", key) >= 0)
+			return 0 ; XS
+		Else
+			return Utility.RandomInt(1, 2) ; S/M
+		EndIf
+	EndIf
+	return -1
+EndFunction/;
 
 bool Function ThreadWaitsForOrgasm()
 	If Config.InternalEnjoymentEnabled && (GetLegacyStagesCount() - GetLegacyStageNum() == 1)
@@ -2312,6 +2344,9 @@ bool[] Function CheckSpecificStageTags(string asScene, string asStage)
 	ret[12] = SexLabRegistry.IsStageTag(asScene, asStage, "PosSlow")
 	return ret
 EndFunction
+
+;Sizes => -1:NoPP, 0:XS, 1:S, 2:M, 3:L, 4:XL
+int Function GetSchlongSizeTierImpl(Actor akActor) native
 
 ; -------------------------------------------------- ;
 ; --- Best Relation                              --- ;
