@@ -66,6 +66,7 @@ namespace Papyrus::ThreadModel
     bool ReassignCenter(QUESTARGS, RE::TESObjectREFR* a_centeron);
     bool SetNextPermutation(QUESTARGS, RE::Actor* a_position);
     void UpdatePlacement(QUESTARGS, RE::Actor* a_position);
+    void MoveActorsAwayFromPlayer(QUESTARGS, bool a_movePlayer);
 
     void SetAnimationPlaybackSpeed(QUESTARGS, float a_playbackSpeed);
     bool RestartFixedLengthTimer(QUESTARGS);
@@ -125,6 +126,7 @@ namespace Papyrus::ThreadModel
         REGISTERFUNC(ReassignCenter, "sslThreadModel", false);
         REGISTERFUNC(UpdatePlacement, "sslThreadModel", false);
         REGISTERFUNC(SetNextPermutation, "sslThreadModel", false);
+        REGISTERFUNC(MoveActorsAwayFromPlayer, "sslThreadModel", false);
 
         REGISTERFUNC(SetAnimationPlaybackSpeed, "sslThreadModel", false);
         REGISTERFUNC(RestartFixedLengthTimer, "sslThreadModel", false);
