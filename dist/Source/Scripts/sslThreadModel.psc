@@ -2232,61 +2232,6 @@ bool[] Function CheckActiveHomoTypes()
 	return HomoTypes
 EndFunction
 
-;/int Function GetSchlongSizeTier(Actor akActor)
-	;Sizes => -1:NoPP, 0:XS, 1:S, 2:M, 3:L, 4:XL
-	If (!akActor)
-		return -1
-	EndIf
-	int raceID = SexlabRegistry.GetRaceID(akActor)
-	If (raceID < 0)
-		return -1
-	EndIf
-	; Human
-	If (raceID == 0)
-		; TNG
-		If (SKSE.GetPluginVersion("TheNewGentleman") > -1)
-			int aiSizeTNG = TNG_PapyrusUtil.GetActorSize(akActor)
-			If (aiSizeTNG >= 0) ;0:XS, 1:S, 2:M, 3:L, 4:XL
-				return aiSizeTNG
-			EndIf
-		EndIf
-		; SOS
-		If (Game.GetModByName("Schlongs of Skyrim.esp") != 255)
-			SOS_API SOS = SOS_API.Get()
-			If (SOS)
-				int aiSizeSOS = SOS.GetSize(akActor) ;1-20 absolute scale
-				If (aiSizeSOS > 0)
-					If (aiSizeSOS <= 2)
-						return 0 ; XS
-					ElseIf (aiSizeSOS <= 4)
-						return 1 ; S
-					ElseIf (aiSizeSOS <= 6)
-						return 2 ; M
-					ElseIf (aiSizeSOS <= 8)
-						return 3 ; L
-					Else ;(9-20)
-						return 4 ; XL
-					EndIf
-				EndIf
-			EndIf
-		EndIf
-	EndIf
-	; Creature
-	If (raceID > 0)
-		string key = "|" + SexlabRegistry.GetRaceKey(akActor) + "|"
-		If (StringUtil.Find("|Dragons|Giants|Mammoths|DwarvenCenturions|FrostAtronach|StormAtronach|Horses|GiantSpiders|", key) >= 0)
-			return 4 ; XL
-		ElseIf (StringUtil.Find("|Bears|Trolls|Lurkers|Werewolves|Gargoyles|Sabrecats|LargeSpiders|Horkers|Chaurus|ChaurusReapers|ChaurusHunters|Netches|", key) >= 0)
-			return 3 ; L
-		ElseIf (StringUtil.Find("|Wisps|Chickens|Rabbits|Mudcrabs|Slaughterfishes|AshHoppers|DwarvenSpiders|Skeevers|Foxes|Goats|Rieklings|", key) >= 0)
-			return 0 ; XS
-		Else
-			return Utility.RandomInt(1, 2) ; S/M
-		EndIf
-	EndIf
-	return -1
-EndFunction/;
-
 bool Function ThreadWaitsForOrgasm()
 	If Config.InternalEnjoymentEnabled && (GetLegacyStagesCount() - GetLegacyStageNum() == 1)
 		int i = 0
