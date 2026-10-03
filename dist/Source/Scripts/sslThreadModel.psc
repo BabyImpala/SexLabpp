@@ -1901,6 +1901,7 @@ bool Property ElementUI_EnjBars       Auto Hidden
 bool Property ElementUI_OffsetAdjust  Auto Hidden
 bool Property ElementUI_SceneSelect   Auto Hidden
 bool Property ElementUI_ThreadConfig  Auto Hidden
+bool Property ElementUI_DebugNodeDraw Auto Hidden
 
 float Property VarUI_MenuScaleMult    Auto Hidden
 float Property VarUI_TextScaleMult    Auto Hidden
@@ -1943,6 +1944,7 @@ Function RefreshPropertiesSceneHUD(string asMode)
 		ElementUI_OffsetAdjust     = Config.ElementOffsetAdjust
 		ElementUI_SceneSelect      = Config.ElementSceneSelect
 		ElementUI_ThreadConfig     = Config.ElementThreadConfig
+		ElementUI_DebugNodeDraw    = Config.ElementDebugNode
 	ElseIf (asMode == "Set")
 		Config.MenuScaleMult       = VarUI_MenuScaleMult
 		Config.MenuTextScaleMult   = VarUI_TextScaleMult
@@ -1954,6 +1956,7 @@ Function RefreshPropertiesSceneHUD(string asMode)
 		Config.ElementOffsetAdjust = ElementUI_OffsetAdjust
 		Config.ElementSceneSelect  = ElementUI_SceneSelect
 		Config.ElementThreadConfig = ElementUI_ThreadConfig
+		Config.ElementDebugNode    = ElementUI_DebugNodeDraw
 	EndIf
 EndFunction
 

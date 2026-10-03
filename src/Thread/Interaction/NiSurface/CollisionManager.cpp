@@ -75,26 +75,26 @@ namespace Thread::Interaction::NiSurface
             frames.emplace_back(position);
         }
         if (a_drawCollision) {
-            auto& debugDraw = Interface::SceneHUD::GetSingleton().GetDebugDraw();
+            auto& hud = Interface::SceneHUD::GetSingleton();
             for (const auto& frame : frames) {
                 if (frame.mouthOpening) {
-                    debugDraw.AddRing(frame.mouthOpening->center, frame.mouthOpening->right, frame.mouthOpening->up, frame.mouthOpening->radius);
+                    hud.DebugNodeDrawAddRing(frame.mouthOpening->center, frame.mouthOpening->right, frame.mouthOpening->up, frame.mouthOpening->radius);
                 }
                 if (frame.vaginalOpening) {
-                    debugDraw.AddRing(frame.vaginalOpening->center, frame.vaginalOpening->right, frame.vaginalOpening->up, frame.vaginalOpening->radius);
+                    hud.DebugNodeDrawAddRing(frame.vaginalOpening->center, frame.vaginalOpening->right, frame.vaginalOpening->up, frame.vaginalOpening->radius);
                 }
                 if (frame.analOpening) {
-                    debugDraw.AddRing(frame.analOpening->center, frame.analOpening->right, frame.analOpening->up, frame.analOpening->radius);
+                    hud.DebugNodeDrawAddRing(frame.analOpening->center, frame.analOpening->right, frame.analOpening->up, frame.analOpening->radius);
                 }
                 for (const auto& shaft : frame.state.geometry.shafts) {
                     if (const auto* collisionShape = shaft.GetCollisionShape()) {
                         // Draw the same tapered segment chain consumed by the opening collision test.
                         for (std::size_t section = 1; section < collisionShape->sections.size(); ++section) {
-                            debugDraw.AddTaperedCapsule(collisionShape->sections[section - 1].center, collisionShape->sections[section].center,
+                            hud.DebugNodeDrawAddTaperedCapsule(collisionShape->sections[section - 1].center, collisionShape->sections[section].center,
                                 collisionShape->sections[section - 1].radius, collisionShape->sections[section].radius);
                         }
                         if (!collisionShape->sections.empty()) {
-                            debugDraw.AddTaperedCapsule(collisionShape->sections.back().center, collisionShape->tip, collisionShape->sections.back().radius, 0.0f);
+                            hud.DebugNodeDrawAddTaperedCapsule(collisionShape->sections.back().center, collisionShape->tip, collisionShape->sections.back().radius, 0.0f);
                         }
                     }
                 }
@@ -210,13 +210,14 @@ namespace Thread::Interaction::NiSurface
         static std::uint32_t frame = 0;
         //const bool logTiming = frame++ % TIMING_LOG_INTERVAL == 1;
         const auto start = std::chrono::high_resolution_clock::now();
-        auto& debugDraw = Interface::SceneHUD::GetSingleton().GetDebugDraw();
-        debugDraw.BeginFrame();
-        const auto* linkedThread = Interface::SceneHUD::GetSingleton().GetLinkedThread();
+        auto& hud = Interface::SceneHUD::GetSingleton();
+        hud.DebugNodeDrawBeginFrame();
+        const auto* linkedThread = hud.GetLinkedThread();
+        const bool drawNodes = hud.IsDebugNodeDrawEnabled();
         for (auto&& [id, scene] : scenes) {
-            scene->UpdateInteractions(a_delta, linkedThread && id == linkedThread->GetFormID());
+            scene->UpdateInteractions(a_delta, drawNodes && linkedThread && id == linkedThread->GetFormID());
         }
-        debugDraw.Publish();
+        hud.DebugNodeDrawPublish();
         //if (logTiming && !scenes.empty()) {
         //    const auto elapsed = std::chrono::duration<double, std::milli>(std::chrono::high_resolution_clock::now() - start);
         //    logger::info("NiSurface Interaction: Frame -> {:.2f}ms", elapsed.count());
